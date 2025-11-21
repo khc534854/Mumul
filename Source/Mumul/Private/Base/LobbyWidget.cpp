@@ -18,6 +18,8 @@ void ULobbyWidget::NativeConstruct()
 	Super::NativeConstruct();
 	GetWorld()->GetFirstPlayerController()->SetShowMouseCursor(true);
 	gi = Cast<UMumulGameInstance>(GetGameInstance());
+	if (gi)
+		UE_LOG(LogTemp, Display, TEXT("%s"), *gi->GetSteamNickname());
 	
 	//세션 생성 버튼 클릭 함수 등록
 	btn_goCreate->OnClicked.AddDynamic(this,&ULobbyWidget::OnClickGoCreate);
@@ -58,8 +60,10 @@ void ULobbyWidget::OnClickCreate()
 {
 	FString sessionName = editSessionName->GetText().ToString();
 	int32 playerCount = sliderPlayerCount->GetValue();
-	FString mapURL = FString("Game/ThirdPerson/Maps/ThirdPersonMap?listen");
+	FString mapURL = FString("/Game/ThirdPerson/Maps/ThirdPersonMap?listen");
 	gi->CreateGameSession(sessionName, playerCount, false, mapURL);
+
+	
 }
 
 void ULobbyWidget::OnValudeChangedSessionName(const FText& text)

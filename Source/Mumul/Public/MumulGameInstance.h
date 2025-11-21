@@ -48,6 +48,8 @@ public:
 	FOnFindSessionCompleted OnFindSessionsCompleteEvent;
 
 	TSharedPtr<FOnlineSessionSearch> GetSessionSearch() { return SessionSearch; }
+
+	FString GetSteamNickname();
 private:
 	// Online Session Interface 포인터
 	IOnlineSessionPtr SessionInterface;
@@ -62,6 +64,7 @@ private:
 
 	// 실제 세션 생성 함수
 	void InternalCreateSession(FName SessionName, int32 MaxPlayers, bool bIsLAN, FString TravelURL);
+
 
 	// 생성할 세션의 이름 및 이동할 URL (세션 생성 로직에 필요)
 	FName RequestedSessionName;

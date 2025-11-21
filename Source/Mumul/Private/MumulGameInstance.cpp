@@ -81,7 +81,8 @@ void UMumulGameInstance::FindGameSessions()
 		// 2. 검색 조건 설정
 		SessionSearch->MaxSearchResults = 10;
 		SessionSearch->bIsLanQuery = false; // Steam 사용 시 false
-		SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals); // Presence 사용하는 세션만 검색
+		//SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals); // Presence 사용하는 세션만 검색
+		SessionSearch->QuerySettings.Set(SEARCH_LOBBIES, true, EOnlineComparisonOp::Equals);
 		
 		SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
 	}
@@ -246,4 +247,20 @@ void UMumulGameInstance::InternalCreateSession(FName SessionName, int32 MaxPlaye
 		UE_LOG(LogTemp, Error, TEXT("CreateSession failed to start."));
 		OnSessionCreated.Broadcast(false);
 	}
+}
+
+FString UMumulGameInstance::GetSteamNickname()
+{
+	IOnlineSubsystem* onlineSubsystem = Online::GetSubsystem(GetWorld());
+	if (!onlineSubsystem) return TEXT("Unknown");
+
+	IOnlineIdentityPtr Identity = onlineSubsystem->GetIdentityInterface();
+	if (!Identity.IsValid()) return TEXT("Unknown");
+	
+	FString Nickname = Identity->GetPlayerNickname(0);
+	if (!onlineSubsystem->GetSubsystemName().IsEqual("STEAM"))
+	{
+		Nickname = TEXT("Local_") + Nickname.Left(5);
+	}
+	return Nickname.IsEmpty() ? TEXT("Unknown") : Nickname;
 }
