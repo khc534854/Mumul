@@ -5,11 +5,10 @@
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
 #include "Interfaces/OnlineSessionInterface.h"
-#include "OnlineSubsystemTypes.h"
 #include "MumulGameInstance.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSessionCreated, bool, bWasSuccessful);
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnFindSessionCompleted, bool, bWasSuccessful);
 
 UCLASS()
 class MUMUL_API UMumulGameInstance : public UGameInstance
@@ -42,6 +41,13 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Multiplayer|Delegates")
 	FOnSessionCreated OnSessionCreated;
 
+	UFUNCTION()
+	void OnFindSessionsComplete(bool bWasSuccessful);
+
+	UPROPERTY(BlueprintAssignable)
+	FOnFindSessionCompleted OnFindSessionsCompleteEvent;
+
+	TSharedPtr<FOnlineSessionSearch> GetSessionSearch() { return SessionSearch; }
 private:
 	// Online Session Interface 포인터
 	IOnlineSessionPtr SessionInterface;
@@ -51,7 +57,6 @@ private:
 
 	// 세션 관련 델리게이트 바인딩
 	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful);
-	void OnFindSessionsComplete(bool bWasSuccessful);
 	void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
 	void OnDestroySessionComplete(FName SessionName, bool bWasSuccessful); // 세션 재사용을 위해 파괴 후 생성 로직에 필요
 

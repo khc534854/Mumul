@@ -16,8 +16,8 @@ UMumulGameInstance::UMumulGameInstance()
 void UMumulGameInstance::Init()
 {
 	Super::Init();
-
-	IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get();
+	
+	IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
 	if (Subsystem)
 	{
 		// 2. 세션 인터페이스 가져오기
@@ -98,9 +98,8 @@ void UMumulGameInstance::JoinGameSession(int32 SessionIndex)
 	// 1. 선택한 세션 결과 가져오기
 	const FOnlineSessionSearchResult& SearchResult = SessionSearch->SearchResults[SessionIndex];
 
-	// 2. 세션 참여 시도 (호출자 ID: 0)
-	// OnJoinSessionComplete가 바인딩되어 있습니다.
-	SessionInterface->JoinSession(0, RequestedSessionName, SearchResult); // 세션 참여 시 RequestedSessionName을 임시 세션 이름으로 사용
+	// 중요: 클라이언트는 RequestedSessionName 변수가 비어있으므로 NAME_GameSession 사용
+	SessionInterface->JoinSession(0, NAME_GameSession, SearchResult);
 }
 
 void UMumulGameInstance::TravelToLevel(const FString& LevelName)
@@ -144,6 +143,8 @@ void UMumulGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSuc
 
 void UMumulGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 {
+	OnFindSessionsCompleteEvent.Broadcast(bWasSuccessful);
+	
 	UE_LOG(LogTemp, Log, TEXT("OnFindSessionsComplete. Success: %s. Found Sessions: %d"), 
 		bWasSuccessful ? TEXT("true") : TEXT("false"), 
 		SessionSearch.IsValid() ? SessionSearch->SearchResults.Num() : 0);
