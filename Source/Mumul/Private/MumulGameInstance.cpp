@@ -241,6 +241,8 @@ void UMumulGameInstance::InternalCreateSession(FName SessionName, int32 MaxPlaye
 	SessionSettings->bUsesPresence = true; // Steam 오버레이 및 친구 초대에 필요
 	SessionSettings->bAllowJoinViaPresence = true;
 	SessionSettings->bIsDedicated = false; // 전용 서버가 아닌 리스닝 서버
+	SessionSettings->bUseLobbiesIfAvailable = true;
+	
 	
 	// 3. 사용자 정의 속성 추가 (검색 필터링에 사용)
 	// 예: 게임 모드 이름
