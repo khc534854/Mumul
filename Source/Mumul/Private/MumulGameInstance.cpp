@@ -78,12 +78,23 @@ void UMumulGameInstance::FindGameSessions()
 	SessionSearch = MakeShared<FOnlineSessionSearch>();
 	if (SessionSearch.IsValid())
 	{
-		// 2. 검색 조건 설정
-		SessionSearch->MaxSearchResults = 10;
-		SessionSearch->bIsLanQuery = false; // Steam 사용 시 false
-		//SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals); // Presence 사용하는 세션만 검색
+		SessionSearch->MaxSearchResults = 50; // 10개는 너무 적음 (다른 사람 방이 많으므로)
+		SessionSearch->bIsLanQuery = false;
+        
+		// Presence 검색 활성화
+		SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
+        
+		// [중요] 스팀 로비(Lobbies) 검색 활성화
 		SessionSearch->QuerySettings.Set(SEARCH_LOBBIES, true, EOnlineComparisonOp::Equals);
-		
+
+		// [지난번 강조] 우리 게임만의 키워드로 필터링 (CreateSession에도 똑같이 있어야 함)
+		// 이 코드가 없으면 전 세계 Spacewar 방이 검색되어 내 방이 밀려납니다.
+		SessionSearch->QuerySettings.Set(
+	FName(TEXT("MUMUL_MATCH_KEY")), 
+	FString(TEXT("MUMUL_SESSION")), 
+	EOnlineComparisonOp::Equals
+);
+
 		SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
 	}
 }
