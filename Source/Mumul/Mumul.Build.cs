@@ -14,6 +14,8 @@ public class Mumul : ModuleRules
 			"OnlineSubsystem", "OnlineSubsystemUtils", "OnlineSubsystemSteam", "SteamSockets", "UMG",
 			"Http", "Json", "JsonUtilities", "WebSockets",
 			"Voice",
+			"AudioCapture",
+			"AudioCaptureCore",
 			"AudioMixer"
 		});
 	}
