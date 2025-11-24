@@ -57,12 +57,10 @@ void UMumulGameInstance::CreateGameSession(FString SessionName, int32 MaxPlayers
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Existing session found. Destroying session: %s"), *RequestedSessionName.ToString());
 		SessionInterface->DestroySession(RequestedSessionName);
-		// OnDestroySessionComplete에서 InternalCreateSession이 호출됨
 	}
 	else
 	{
-		// 세션이 없으면 바로 생성
-		InternalCreateSession(RequestedSessionName, MaxPlayers, bIsLAN, RequestedTravelURL);
+		InternalCreateSession(RequestedSessionName, MaxPlayers, bIsLAN);
 	}
 }
 
@@ -83,17 +81,14 @@ void UMumulGameInstance::FindGameSessions()
         
 		// Presence 검색 활성화
 		SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
-        
-		// [중요] 스팀 로비(Lobbies) 검색 활성화
 		SessionSearch->QuerySettings.Set(SEARCH_LOBBIES, true, EOnlineComparisonOp::Equals);
+        
 
-		// [지난번 강조] 우리 게임만의 키워드로 필터링 (CreateSession에도 똑같이 있어야 함)
-		// 이 코드가 없으면 전 세계 Spacewar 방이 검색되어 내 방이 밀려납니다.
 		SessionSearch->QuerySettings.Set(
-	FName(TEXT("MUMUL_MATCH_KEY")), 
-	FString(TEXT("MUMUL_SESSION")), 
-	EOnlineComparisonOp::Equals
-);
+		FName(TEXT("MUMUL_MATCH_KEY")),
+		FString(TEXT("MUMUL_SESSION")),
+		EOnlineComparisonOp::Equals
+		);
 
 		SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
 	}
@@ -116,28 +111,34 @@ void UMumulGameInstance::JoinGameSession(int32 SessionIndex)
 
 void UMumulGameInstance::TravelToLevel(const FString& LevelName)
 {
+	// UWorld* World = GetWorld();
+	// if (!World)
+	// {
+	// 	UE_LOG(LogTemp, Error, TEXT("World is NULL. Cannot travel."));
+	// 	return;
+	// }
+	//
+	// // 호스트 (세션 생성자)의 경우: ?listen 옵션을 붙여서 리스닝 서버로 맵 이동
+	// if (LevelName.Contains("?listen"))
+	// {
+	// 	World->ServerTravel(LevelName, false);
+	// }
+	// // 클라이언트 (세션 참여자)의 경우: 이미 OnJoinSessionComplete에서 ClientTravel을 사용했으므로,
+	// // 이 함수는 주로 호스트가 맵을 로드할 때 사용됨.
+	// else
+	// {
+	// 	// 클라이언트는 서버 접속 문자열을 통해 ClientTravel을 사용해야 함.
+	// 	// 일반적인 레벨 이동은 ServerTravel 또는 ClientTravel을 사용하지만, 
+	// 	// 멀티플레이어 환경에서는 **ServerTravel**이 주로 사용됨.
+	// 	UE_LOG(LogTemp, Warning, TEXT("Attempting ServerTravel to: %s"), *LevelName);
+	// 	World->ServerTravel(LevelName, false);
+	// }
+
 	UWorld* World = GetWorld();
-	if (!World)
-	{
-		UE_LOG(LogTemp, Error, TEXT("World is NULL. Cannot travel."));
-		return;
-	}
-	
-	// 호스트 (세션 생성자)의 경우: ?listen 옵션을 붙여서 리스닝 서버로 맵 이동
-	if (LevelName.Contains("?listen"))
-	{
-		World->ServerTravel(LevelName, false);
-	}
-	// 클라이언트 (세션 참여자)의 경우: 이미 OnJoinSessionComplete에서 ClientTravel을 사용했으므로,
-	// 이 함수는 주로 호스트가 맵을 로드할 때 사용됨.
-	else
-	{
-		// 클라이언트는 서버 접속 문자열을 통해 ClientTravel을 사용해야 함.
-		// 일반적인 레벨 이동은 ServerTravel 또는 ClientTravel을 사용하지만, 
-		// 멀티플레이어 환경에서는 **ServerTravel**이 주로 사용됨.
-		UE_LOG(LogTemp, Warning, TEXT("Attempting ServerTravel to: %s"), *LevelName);
-		World->ServerTravel(LevelName, false);
-	}
+	if (!World) return;
+
+	// 호스트는 무조건 ServerTravel입니다.
+	World->ServerTravel(LevelName, false);
 }
 
 void UMumulGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
@@ -169,6 +170,7 @@ void UMumulGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 			FString SessionId = Result.Session.GetSessionIdStr();
 			FString HostUsername = Result.Session.OwningUserName;
 			int32 CurrentPlayers = Result.Session.NumOpenPublicConnections;
+			
 
 			UE_LOG(LogTemp, Warning, TEXT("Found Session: ID=%s, Host=%s, Players=%d"), 
 				*SessionId, *HostUsername, CurrentPlayers);
@@ -213,7 +215,7 @@ void UMumulGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSu
 	if (bWasSuccessful)
 	{
 		// 요청 정보로 세션 재생성
-		InternalCreateSession(RequestedSessionName, 4, false, RequestedTravelURL); // MaxPlayers와 bIsLAN은 적절한 값으로 대체 필요
+		InternalCreateSession(RequestedSessionName, 4, false); // MaxPlayers와 bIsLAN은 적절한 값으로 대체 필요
 	}
 	else
 	{
@@ -222,7 +224,7 @@ void UMumulGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSu
 	}
 }
 
-void UMumulGameInstance::InternalCreateSession(FName SessionName, int32 MaxPlayers, bool bIsLAN, FString TravelURL)
+void UMumulGameInstance::InternalCreateSession(FName SessionName, int32 MaxPlayers, bool bIsLAN)
 {
 	if (!SessionInterface.IsValid())
 	{
@@ -247,9 +249,9 @@ void UMumulGameInstance::InternalCreateSession(FName SessionName, int32 MaxPlaye
 	// 3. 사용자 정의 속성 추가 (검색 필터링에 사용)
 	// 예: 게임 모드 이름
 	SessionSettings->Set(
-		FName(TEXT("GAMEMODE_KEY")), 
-		FString(TEXT("DeathMatch")), 
-		EOnlineDataAdvertisementType::ViaOnlineService
+		FName(TEXT("MUMUL_MATCH_KEY")), 
+		FString(TEXT("MUMUL_SESSION")), 
+		EOnlineDataAdvertisementType::ViaOnlineServiceAndPing
 	);
 	
 	// 4. 세션 생성 시도

@@ -63,7 +63,7 @@ private:
 	void OnDestroySessionComplete(FName SessionName, bool bWasSuccessful); // 세션 재사용을 위해 파괴 후 생성 로직에 필요
 
 	// 실제 세션 생성 함수
-	void InternalCreateSession(FName SessionName, int32 MaxPlayers, bool bIsLAN, FString TravelURL);
+	void InternalCreateSession(FName SessionName, int32 MaxPlayers, bool bIsLAN);
 
 
 	// 생성할 세션의 이름 및 이동할 URL (세션 생성 로직에 필요)

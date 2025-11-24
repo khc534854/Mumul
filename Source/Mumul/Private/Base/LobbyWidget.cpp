@@ -60,17 +60,14 @@ void ULobbyWidget::OnClickCreate()
 {
 	FString sessionName = editSessionName->GetText().ToString();
 	int32 playerCount = sliderPlayerCount->GetValue();
-	FString mapURL = FString("/Game/ThirdPerson/Maps/ThirdPersonMap?listen");
+	FString mapURL = FString("/Game/Khc/Maps/Island?listen");
 	gi->CreateGameSession(sessionName, playerCount, false, mapURL);
-
-	
 }
 
 void ULobbyWidget::OnValudeChangedSessionName(const FText& text)
 {
 	//text.IsEmpty()
 	btn_Create->SetIsEnabled(text.ToString().Len()>0);
-	
 }
 
 
@@ -90,25 +87,25 @@ void ULobbyWidget::OnClickFind()
 	gi->FindGameSessions();
 }
 
-void ULobbyWidget::OnFindComplete(int32 idx, FString sessionName)
-{
-	if (idx == -1)
-	{
-		textFind->SetText(FText::FromString(TEXT("세션 조회중")));
-		btn_find->SetIsEnabled(true);
-	}
-	else
-	{
-		UE_LOG(LogTemp,Warning,TEXT("찾은 IDX : %d"),idx);
-		//sessionInfoWidget 만들자
-		USessionInfoWidget* item = CreateWidget<USessionInfoWidget>(GetWorld(),sessionInfoWidget);
-		//만들어진 ITEM을 scrollSessionList에 추가
-		scrollSessionList->AddChild(item);
-		//만들어진 item정보 설정
-		item->SetSessionInfo(idx,sessionName);
-	}
-	
-}
+// void ULobbyWidget::OnFindComplete(int32 idx, FString sessionName)
+// {
+// 	if (idx == -1)
+// 	{
+// 		textFind->SetText(FText::FromString(TEXT("세션 조회중")));
+// 		btn_find->SetIsEnabled(true);
+// 	}
+// 	else
+// 	{
+// 		UE_LOG(LogTemp,Warning,TEXT("찾은 IDX : %d"),idx);
+// 		//sessionInfoWidget 만들자
+// 		USessionInfoWidget* item = CreateWidget<USessionInfoWidget>(GetWorld(),sessionInfoWidget);
+// 		//만들어진 ITEM을 scrollSessionList에 추가
+// 		scrollSessionList->AddChild(item);
+// 		//만들어진 item정보 설정
+// 		item->SetSessionInfo(idx,sessionName);
+// 	}
+// 	
+// }
 
 void ULobbyWidget::OnClickBack()
 {

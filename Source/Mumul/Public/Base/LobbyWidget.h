@@ -72,8 +72,8 @@ public:
 	void OnClickFind();
 	//세션정보를 받아 SessionInfoWidget을 만드는 함수
 	//(NetGameInstance의 onFindComplete 델리게이트에 등록할 함수
-	UFUNCTION()
-	void OnFindComplete(int32 idx, FString sessionName);
+	//UFUNCTION()
+	//void OnFindComplete(int32 idx, FString sessionName);
 	UFUNCTION()
 	void OnClickBack();
 
