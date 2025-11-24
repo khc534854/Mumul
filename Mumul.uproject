@@ -28,7 +28,7 @@
 		},
 		{
 			"Name": "UdpMessaging",
-			"Enabled": false
+			"Enabled": true
 		},
 		{
 			"Name": "Water",

@@ -44,6 +44,8 @@ class AMumulCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
 
+	bool bIsJumping = false;
+
 public:
 	AMumulCharacter();
 	
@@ -55,9 +57,13 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
-			
 
-protected:
+	void OnJump(const FInputActionValue& Value);
+	UPROPERTY()
+	TObjectPtr<class UCuteAlienAnim> PlayerAnim;
+	UPROPERTY()
+	TObjectPtr<class UAnimMontage> JumpMontage;
+
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
