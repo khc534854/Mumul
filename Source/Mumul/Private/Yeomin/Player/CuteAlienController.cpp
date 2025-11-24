@@ -10,6 +10,7 @@
 #include "Blueprint/UserWidget.h"
 #include "InputMappingContext.h"
 #include "Yeomin/Tent/PreviewTentActor.h"
+#include "Yeomin/Tent/TentActor.h"
 
 ACuteAlienController::ACuteAlienController()
 {
@@ -54,24 +55,48 @@ ACuteAlienController::ACuteAlienController()
 	{
 		IA_ToggleMouse = IA_ToggleMouseFinder.Object;
 	}
+
+	static ConstructorHelpers::FObjectFinder<UInputAction> IA_ClickFinder(
+		TEXT("/Game/Yeomin/Characters/Inputs/Actions/IA_Click.IA_Click"));
+	if (IA_ClickFinder.Succeeded())
+	{
+		IA_Click = IA_ClickFinder.Object;
+	}
+
+	static ConstructorHelpers::FClassFinder<APreviewTentActor> PreviewTentFinder(
+		TEXT("/Game/Yeomin/Actors/Tent/BP_PreviewTent.BP_PreviewTent_C"));
+	if (PreviewTentFinder.Succeeded())
+	{
+		PreviewTentClass = PreviewTentFinder.Class;
+	}
+
+	static ConstructorHelpers::FClassFinder<ATentActor> TentFinder(
+		TEXT("/Game/Yeomin/Actors/Tent/BP_Tent.BP_Tent_C"));
+	if (TentFinder.Succeeded())
+	{
+		TentClass = TentFinder.Class;
+	}
 }
 
 void ACuteAlienController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
-		ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+	if (IsLocalController())
 	{
-		Subsystem->AddMappingContext(IMC_Player, 0);
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
+			ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+		{
+			Subsystem->AddMappingContext(IMC_Player, 0);
+		}
+
+		RadialUI = CreateWidget<URadialUI>(this, RadialUIClass);
+		RadialUI->AddToViewport();
+		PlayerUI = CreateWidget<UUserWidget>(this, PlayerUIClass);
+		PlayerUI->AddToViewport();
+
+		RadialUI->SetVisibility(ESlateVisibility::Hidden);
 	}
-
-	RadialUI = CreateWidget<URadialUI>(this, RadialUIClass);
-	RadialUI->AddToViewport();
-	PlayerUI = CreateWidget<UUserWidget>(this, PlayerUIClass);
-	PlayerUI->AddToViewport();
-
-	RadialUI->SetVisibility(ESlateVisibility::Hidden);
 }
 
 void ACuteAlienController::SetupInputComponent()
@@ -81,17 +106,16 @@ void ACuteAlienController::SetupInputComponent()
 
 	Input->BindAction(IA_Radial, ETriggerEvent::Started, this, &ACuteAlienController::ShowRadialUI);
 	Input->BindAction(IA_Radial, ETriggerEvent::Completed, this, &ACuteAlienController::HideRadialUI);
-	Input->BindAction(IA_Cancel, ETriggerEvent::Started, this, &ACuteAlienController::OnCancel);
+	Input->BindAction(IA_Cancel, ETriggerEvent::Started, this, &ACuteAlienController::OnCancelUI);
 	Input->BindAction(IA_ToggleMouse, ETriggerEvent::Started, this, &ACuteAlienController::OnToggleMouse);
 }
 
 void ACuteAlienController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	
+
 	if (PreviewTent)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Line Tracing!"));
 		// Line Trace from ViewPoint
 		FHitResult HitRes;
 		FCollisionQueryParams CollisionParams;
@@ -99,7 +123,7 @@ void ACuteAlienController::Tick(float DeltaSeconds)
 
 		FVector Start, End;
 		FRotator CamRot;
-		float Dist = 1000.f;
+		float Dist = 1500.f;
 		GetPlayerViewPoint(Start, CamRot);
 		End = Start + CamRot.Vector() * Dist;
 		DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 1.f, 0, 1.f);
@@ -110,15 +134,27 @@ void ACuteAlienController::Tick(float DeltaSeconds)
 			ECC_Visibility,
 			CollisionParams
 		);
-		
-		FTransform HitPointTransform(HitRes.ImpactNormal.Rotation(), HitRes.ImpactPoint, FVector::OneVector);
+
+		FTransform HitPointTransform(HitRes.ImpactNormal.Rotation() + FRotator(-90.f, 0.f, 0.f),
+		                             HitRes.ImpactPoint + FVector(0.f, 0.f, 81.f), FVector::OneVector);
 		PreviewTent->SetActorTransform(HitPointTransform);
+
+		if (WasInputKeyJustPressed(EKeys::LeftMouseButton))
+		{
+			OnClick(HitRes.ImpactPoint + FVector(0.f, 0.f, 81.f), HitRes.ImpactNormal.Rotation() + FRotator(-90.f, 0.f, 0.f));
+		}
 	}
 }
 
-void ACuteAlienController::OnCancel()
+void ACuteAlienController::OnCancelUI()
 {
 	CancelRadialUI();
+
+	if (PreviewTent)
+	{
+		PreviewTent->Destroy();
+		PreviewTent = nullptr;
+	}
 }
 
 void ACuteAlienController::OnToggleMouse()
@@ -130,6 +166,7 @@ void ACuteAlienController::OnToggleMouse()
 		SetInputMode(FInputModeGameOnly());
 		return;
 	}
+	OnCancelUI();
 	FInputModeGameAndUI InputMode;
 	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
 	SetIgnoreLookInput(true);
@@ -137,9 +174,28 @@ void ACuteAlienController::OnToggleMouse()
 	SetInputMode(InputMode);
 }
 
+void ACuteAlienController::OnClick(const FVector& TentLocation, const FRotator& TentRotation)
+{
+	if (PreviewTent)
+	{
+		PreviewTent->Destroy();
+		PreviewTent = nullptr;
+		// Spawn Tent
+		Tent = GetWorld()->SpawnActor<ATentActor>(
+			TentClass,
+			TentLocation,
+			TentRotation
+		);
+	}
+}
+
 void ACuteAlienController::ShowRadialUI()
 {
+	OnCancelUI();
+	
 	SetIgnoreLookInput(true);
+	SetShowMouseCursor(false);
+	SetInputMode(FInputModeGameOnly());
 
 	RadialUI->SetVisibility(ESlateVisibility::Visible);
 	bIsRadialVisible = true;
@@ -151,6 +207,8 @@ void ACuteAlienController::HideRadialUI()
 		return;
 
 	SetIgnoreLookInput(false);
+	SetShowMouseCursor(false);
+	SetInputMode(FInputModeGameOnly());
 
 	//////////
 	ACuteAlienPlayer* CurPlayer = Cast<ACuteAlienPlayer>(GetPawn());
@@ -171,14 +229,15 @@ void ACuteAlienController::CancelRadialUI()
 
 void ACuteAlienController::ShowPreviewTent()
 {
-	UE_LOG(LogTemp, Warning, TEXT("ShowPreviewTent"));
+	// Deactivate Mouse Cursor
+	SetIgnoreLookInput(false);
+	SetShowMouseCursor(false);
+	SetInputMode(FInputModeGameOnly());
+	
 	// Spawn Preview Tent
 	PreviewTent = GetWorld()->SpawnActor<APreviewTentActor>(
-		APreviewTentActor::StaticClass(),
+		PreviewTentClass,
 		GetPawn()->GetActorLocation(),
 		FRotator(0, 0, 0)
 	);
-
-
-	// setactorlocation previewactor tick에서
 }

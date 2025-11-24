@@ -30,10 +30,13 @@ protected:
 	TObjectPtr<class UInputAction> IA_Radial;
 	UPROPERTY()
 	TObjectPtr<class UInputAction> IA_Cancel;
-	void OnCancel();
+	void OnCancelUI();
 	UPROPERTY()
 	TObjectPtr<class UInputAction> IA_ToggleMouse;
 	void OnToggleMouse();
+	UPROPERTY()
+	TObjectPtr<class UInputAction> IA_Click;
+	void OnClick(const FVector& TentLocation, const FRotator& TentRotation);
 
 	UPROPERTY()
 	TSubclassOf<class URadialUI> RadialUIClass;
@@ -53,9 +56,15 @@ protected:
 	TObjectPtr<UUserWidget> PlayerUI;
 
 protected:
-
-public:
+	UPROPERTY()
+	TSubclassOf<class APreviewTentActor> PreviewTentClass;
 	UPROPERTY()
 	TObjectPtr<class APreviewTentActor> PreviewTent;
+	UPROPERTY()
+	TSubclassOf<class ATentActor> TentClass;
+	UPROPERTY()
+	TObjectPtr<class ATentActor> Tent;
+
+public:
 	void ShowPreviewTent();
 };
