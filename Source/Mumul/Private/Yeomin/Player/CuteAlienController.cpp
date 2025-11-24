@@ -60,6 +60,11 @@ void ACuteAlienController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (!IsLocalController())
+	{
+		return;
+	}
+
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
 		ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 	{
