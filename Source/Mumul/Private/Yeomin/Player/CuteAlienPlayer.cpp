@@ -3,6 +3,7 @@
 
 #include "Yeomin/Player/CuteAlienPlayer.h"
 
+#include "khc/Player/VoiceChatComponent.h"
 #include "Yeomin/Player/CuteAlienAnim.h"
 
 
@@ -17,6 +18,8 @@ ACuteAlienPlayer::ACuteAlienPlayer()
 	{
 		DanceMontage = DanceMontageFinder.Object;
 	}
+
+	VoiceComponent = CreateDefaultSubobject<UVoiceChatComponent>(TEXT("VoiceComponent"));
 }
 
 // Called when the game starts or when spawned

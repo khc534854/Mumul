@@ -58,4 +58,8 @@ public:
 	UPROPERTY()
 	TObjectPtr<class APreviewTentActor> PreviewTent;
 	void ShowPreviewTent();
+
+public:
+	UFUNCTION(BlueprintCallable, Category = "Voice")
+	void UpdateVoiceChannelMuting();
 };

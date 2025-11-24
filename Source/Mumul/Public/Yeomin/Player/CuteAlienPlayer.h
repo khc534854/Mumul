@@ -32,4 +32,7 @@ protected:
 
 public:
 	void PlayAlienDance();
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	class UVoiceChatComponent* VoiceComponent;
 };

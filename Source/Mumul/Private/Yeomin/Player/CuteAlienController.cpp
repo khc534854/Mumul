@@ -9,6 +9,8 @@
 #include "Yeomin/UI/RadialUI.h"
 #include "Blueprint/UserWidget.h"
 #include "InputMappingContext.h"
+#include "GameFramework/GameStateBase.h"
+#include "khc/Player/MumulPlayerState.h"
 #include "Yeomin/Tent/PreviewTentActor.h"
 
 ACuteAlienController::ACuteAlienController()
@@ -186,4 +188,42 @@ void ACuteAlienController::ShowPreviewTent()
 
 
 	// setactorlocation previewactor tick에서
+}
+
+void ACuteAlienController::UpdateVoiceChannelMuting()
+{
+	AMumulPlayerState* MyPS = GetPlayerState<AMumulPlayerState>();
+	if (!MyPS) return;
+
+	int32 MyChannelID = MyPS->VoiceChannelID;
+
+	// 2. 게임에 접속한 모든 플레이어 순회
+	if (UWorld* World = GetWorld())
+	{
+		if (AGameStateBase* GameState = World->GetGameState())
+		{
+			for (APlayerState* OtherPS : GameState->PlayerArray)
+			{
+				// 나 자신은 스킵
+				if (OtherPS == MyPS) continue;
+
+				AMumulPlayerState* AlienOtherPS = Cast<AMumulPlayerState>(OtherPS);
+				if (!AlienOtherPS) continue;
+
+				// 3. 채널 ID 비교
+				if (AlienOtherPS->VoiceChannelID == MyChannelID)
+				{
+					// 같은 채널 -> 들리게 함 (Unmute)
+					ClientUnmutePlayer(OtherPS->GetUniqueId());
+					UE_LOG(LogTemp, Log, TEXT("Unmuted: %s"), *OtherPS->GetPlayerName());
+				}
+				else
+				{
+					// 다른 채널 -> 안 들리게 함 (Mute)
+					ClientMutePlayer(OtherPS->GetUniqueId());
+					UE_LOG(LogTemp, Log, TEXT("Muted: %s"), *OtherPS->GetPlayerName());
+				}
+			}
+		}
+	}
 }

@@ -12,7 +12,9 @@ public class Mumul : ModuleRules
 		{
 			"Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", 
 			"OnlineSubsystem", "OnlineSubsystemUtils", "OnlineSubsystemSteam", "SteamSockets", "UMG",
-			"Http", "Json", "JsonUtilities"
+			"Http", "Json", "JsonUtilities", "WebSockets",
+			"Voice",
+			"AudioMixer"
 		});
 	}
 }
