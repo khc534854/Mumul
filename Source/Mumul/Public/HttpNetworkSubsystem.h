@@ -28,10 +28,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Network")
 	void SendVoiceDataToPython(const TArray<uint8>& WavData);
 
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void SendMultipartVoice(const TArray<uint8>& WavData, const FString& MetaJsonString);
 	
 private:
 	// 통신이 끝났을 때(응답 왔을 때) 호출될 콜백 함수
 	void OnSendVoiceComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+
+	void AddString(TArray<uint8>& OutPayload, const FString& InString);
 
 public:
 	UPROPERTY(EditAnywhere, Category="Network")

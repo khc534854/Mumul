@@ -31,6 +31,45 @@ void UHttpNetworkSubsystem::SendVoiceDataToPython(const TArray<uint8>& WavData)
     SendJsonRequest<FVoiceUploadRequest>(VoiceRequest, TEXT("upload-voice-json"));
 }
 
+void UHttpNetworkSubsystem::SendMultipartVoice(const TArray<uint8>& WavData, const FString& MetaJsonString)
+{
+    TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
+    
+    // URL 설정 (BaseURL + 엔드포인트)
+    FString FullURL = FString::Printf(TEXT("%s/upload-multipart"), *BaseURL);
+    Request->SetURL(FullURL);
+    Request->SetVerb(TEXT("POST"));
+
+    // Boundary 설정
+    FString Boundary = TEXT("---------------------------UnrealBoundaryHere");
+    Request->SetHeader(TEXT("Content-Type"), FString::Printf(TEXT("multipart/form-data; boundary=%s"), *Boundary));
+
+    // Body 조립
+    TArray<uint8> Payload;
+
+    // 1. 메타데이터 (JSON)
+    AddString(Payload, FString::Printf(TEXT("--%s\r\n"), *Boundary));
+    AddString(Payload, TEXT("Content-Disposition: form-data; name=\"metadata\"\r\n\r\n"));
+    AddString(Payload, MetaJsonString);
+    AddString(Payload, TEXT("\r\n"));
+
+    // 2. 파일 데이터 (WAV)
+    AddString(Payload, FString::Printf(TEXT("--%s\r\n"), *Boundary));
+    AddString(Payload, TEXT("Content-Disposition: form-data; name=\"file\"; filename=\"voice.wav\"\r\n"));
+    AddString(Payload, TEXT("Content-Type: audio/wav\r\n\r\n"));
+    Payload.Append(WavData); // 바이너리 그대로 추가
+    AddString(Payload, TEXT("\r\n"));
+
+    // 3. 종료 경계선
+    AddString(Payload, FString::Printf(TEXT("--%s--\r\n"), *Boundary));
+
+    Request->SetContent(Payload);
+    Request->OnProcessRequestComplete().BindUObject(this, &UHttpNetworkSubsystem::OnSendVoiceComplete);
+
+    UE_LOG(LogTemp, Log, TEXT("[HTTP] Sending Multipart Request to: %s (Size: %d bytes)"), *FullURL, Payload.Num());
+    Request->ProcessRequest();
+}
+
 void UHttpNetworkSubsystem::OnSendVoiceComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
     if (bWasSuccessful && Response.IsValid())
@@ -54,4 +93,10 @@ void UHttpNetworkSubsystem::OnSendVoiceComplete(FHttpRequestPtr Request, FHttpRe
         // 네트워크 연결 실패 등
         UE_LOG(LogTemp, Error, TEXT("[HTTP] Connection Failed!"));
     }
+}
+
+void UHttpNetworkSubsystem::AddString(TArray<uint8>& OutPayload, const FString& InString)
+{
+    FTCHARToUTF8 Converter(*InString);
+    OutPayload.Append((uint8*)Converter.Get(), Converter.Length());
 }

@@ -70,4 +70,7 @@ private:
 	// 생성할 세션의 이름 및 이동할 URL (세션 생성 로직에 필요)
 	FName RequestedSessionName;
 	FString RequestedTravelURL;
+
+public:
+	FString MyLoginID;
 };

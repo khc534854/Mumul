@@ -3,6 +3,7 @@
 #include "HttpNetworkSubsystem.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Pawn.h"
+#include "GameFramework/PlayerState.h"
 #include "khc/System/MumulVoiceFunctionLibrary.h"
 
 UVoiceChatComponent::UVoiceChatComponent()
@@ -113,21 +114,57 @@ void UVoiceChatComponent::StopRecording()
 	// 	}
 	// }
 
+	// if (PCMBuffer.Num() > 0)
+	// {
+	// 	TArray<uint8> WavData = UMumulVoiceFunctionLibrary::ConvertPCMToWAV(PCMBuffer, RecordingSampleRate, RecordingNumChannels);
+ //        
+	// 	// 1. 로컬 파일 저장 (확인용, 필요 없으면 삭제 가능)
+	// 	FString SavedPath;
+	// 	UMumulVoiceFunctionLibrary::SaveWavFile(WavData, TEXT("TestRecord"), SavedPath);
+	//
+	// 	// 2. [핵심] 서브시스템을 통해 서버로 전송
+	// 	UGameInstance* GI = GetWorld()->GetGameInstance();
+	// 	if (GI)
+	// 	{
+	// 		if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
+	// 		{
+	// 			HttpSystem->SendVoiceDataToPython(WavData);
+	// 		}
+	// 	}
+	// }
+
 	if (PCMBuffer.Num() > 0)
 	{
+		// WAV 변환 (기존 유지)
 		TArray<uint8> WavData = UMumulVoiceFunctionLibrary::ConvertPCMToWAV(PCMBuffer, RecordingSampleRate, RecordingNumChannels);
         
-		// 1. 로컬 파일 저장 (확인용, 필요 없으면 삭제 가능)
+		// 로컬 저장 (테스트용, 유지)
 		FString SavedPath;
 		UMumulVoiceFunctionLibrary::SaveWavFile(WavData, TEXT("TestRecord"), SavedPath);
 
-		// 2. [핵심] 서브시스템을 통해 서버로 전송
+		// [수정] 전송 로직 변경
 		UGameInstance* GI = GetWorld()->GetGameInstance();
 		if (GI)
 		{
 			if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
 			{
-				HttpSystem->SendVoiceDataToPython(WavData);
+				// 1. 메타데이터 생성 (JSON 문자열 직접 조립)
+				FString PlayerName = TEXT("Unknown");
+                
+				// PlayerState에서 이름 가져오기 시도
+				if (APawn* OwnerPawn = Cast<APawn>(GetOwner()))
+				{
+					if (APlayerState* PS = OwnerPawn->GetPlayerState())
+					{
+						PlayerName = PS->GetPlayerName();
+					}
+				}
+
+				// JSON 문자열 만들기
+				FString MetaJson = FString::Printf(TEXT("{\"player_name\": \"%s\", \"room_id\": \"Lobby\"}"), *PlayerName);
+
+				// 2. 멀티파트 전송 함수 호출
+				HttpSystem->SendMultipartVoice(WavData, MetaJson);
 			}
 		}
 	}

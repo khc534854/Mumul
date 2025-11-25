@@ -6,77 +6,94 @@
 #include "Blueprint/UserWidget.h"
 #include "LobbyWidget.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class MUMUL_API ULobbyWidget : public UUserWidget
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	virtual void NativeConstruct() override;
-	UPROPERTY()
-	class UMumulGameInstance* gi;
+    virtual void NativeConstruct() override;
+    
+    UPROPERTY()
+    class UMumulGameInstance* gi;
 
-	UPROPERTY(meta=(BindWidget))
-	class UWidgetSwitcher* WidgetSwitcher;
+    UPROPERTY(meta=(BindWidget))
+    class UWidgetSwitcher* WidgetSwitcher;
 
-	UPROPERTY(meta=(BindWidget))
-	class UButton* btn_goCreate;
+    // --- [기존] 메인 메뉴 ---
+    UPROPERTY(meta=(BindWidget))
+    class UButton* btn_goCreate;
 
-	UPROPERTY(meta=(BindWidget))
-	class UButton* btn_goFind;
-	
-	UPROPERTY(meta=(BindWidget))
-	class UScrollBox* scrollSessionList;
-	
-	UPROPERTY(meta=(BindWidget))
-	class UButton* btn_find;
+    UPROPERTY(meta=(BindWidget))
+    class UButton* btn_goFind;
+    
+    // --- [추가] 로그인 화면 UI ---
+    UPROPERTY(meta=(BindWidget))
+    class UEditableTextBox* editLoginId; // 아이디 입력
 
-	UPROPERTY(meta=(BindWidget))
-	class UTextBlock* textFind;
+    UPROPERTY(meta=(BindWidget))
+    class UEditableTextBox* editLoginPw; // 비번 입력
 
-	UPROPERTY(meta=(BindWidget))
-	class UButton* btn_BackFromFind;
+    UPROPERTY(meta=(BindWidget))
+    class UButton* btn_Login; // 로그인 버튼
 
-	UPROPERTY(meta=(BindWidget))
-	class UButton* btn_BackFromCreate;
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<class USessionInfoWidget> sessionInfoWidget;
-	
-	
+    UPROPERTY(meta=(BindWidget))
+    class UTextBlock* textLoginMsg; // 로그인 결과 메시지 (실패 등)
+
+    // --- [기존] 세션 관련 ---
+    UPROPERTY(meta=(BindWidget))
+    class UScrollBox* scrollSessionList;
+    
+    UPROPERTY(meta=(BindWidget))
+    class UButton* btn_find;
+
+    UPROPERTY(meta=(BindWidget))
+    class UTextBlock* textFind;
+
+    UPROPERTY(meta=(BindWidget))
+    class UButton* btn_BackFromFind;
+
+    UPROPERTY(meta=(BindWidget))
+    class UButton* btn_BackFromCreate;
+
+    UPROPERTY(EditAnywhere)
+    TSubclassOf<class USessionInfoWidget> sessionInfoWidget;
+    
+    UPROPERTY(meta=(BindWidget))
+    class UEditableTextBox* editSessionName;
+    
+    UPROPERTY(meta=(BindWidget))
+    class USlider* sliderPlayerCount;
+    
+    UPROPERTY(meta=(BindWidget))
+    class UTextBlock* textPlayerCount;
+    
+    UPROPERTY(meta=(BindWidget))
+    class UButton* btn_Create;
+
 public:
-	UFUNCTION()
-	void OnClickGoCreate();
-	UFUNCTION()
-	void OnClickGoFind();
-	UPROPERTY(meta=(BindWidget))
-	class UEditableTextBox* editSessionName;
-	//인원수 Slider
-	UPROPERTY(meta=(BindWidget))
-	class USlider* sliderPlayerCount;
-	//인원수 텍스트
-	UPROPERTY(meta=(BindWidget))
-	class UTextBlock* textPlayerCount;
-	//크리에이트 버튼
-	UPROPERTY(meta=(BindWidget))
-	class UButton* btn_Create;
-	UFUNCTION()
-	void OnClickCreate();
-	UFUNCTION()
-	void OnValudeChangedSessionName(const FText& text);
-	UFUNCTION()
-	void OnValudeChangedPlayerCount(float value);
-	UFUNCTION()
-	void OnClickFind();
-	//세션정보를 받아 SessionInfoWidget을 만드는 함수
-	//(NetGameInstance의 onFindComplete 델리게이트에 등록할 함수
-	//UFUNCTION()
-	//void OnFindComplete(int32 idx, FString sessionName);
-	UFUNCTION()
-	void OnClickBack();
+    UFUNCTION()
+    void OnClickGoCreate();
+    UFUNCTION()
+    void OnClickGoFind();
+    UFUNCTION()
+    void OnClickCreate();
+    UFUNCTION()
+    void OnValudeChangedSessionName(const FText& text);
+    UFUNCTION()
+    void OnValudeChangedPlayerCount(float value);
+    UFUNCTION()
+    void OnClickFind();
+    UFUNCTION()
+    void OnClickBack();
+    UFUNCTION()
+    void RefreshSessionList(bool bWasSuccessful);
 
-	UFUNCTION()
-	void RefreshSessionList(bool bWasSuccessful);
+    // --- [추가] 로그인 로직 ---
+    UFUNCTION()
+    void OnClickLogin(); // 로그인 버튼 클릭 시
+
+private:
+    // 아이디, 비밀번호 저장소 (Key: ID, Value: PW)
+    TMap<FString, FString> AccountMap;
 };

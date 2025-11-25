@@ -184,26 +184,21 @@ void UMumulGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 
 void UMumulGameInstance::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result)
 {
-	if (Result != EOnJoinSessionCompleteResult::Success)
-	{
-		UE_LOG(LogTemp, Error, TEXT("JoinSession failed. Result: %d"), (int32)Result);
-		return;
-	}
+	if (Result != EOnJoinSessionCompleteResult::Success) return;
 
-	// 1. 접속 정보 (Connect String) 가져오기
 	FString ConnectString;
-	if (!SessionInterface->GetResolvedConnectString(SessionName, ConnectString))
+	if (SessionInterface->GetResolvedConnectString(SessionName, ConnectString))
 	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to get resolved connect string."));
-		return;
-	}
+		// [수정] 접속 주소 뒤에 내 아이디를 옵션으로 붙임
+		// 결과 예시: "123.456.78.9:7777?Name=user1"
+		FString TravelURL = FString::Printf(TEXT("%s?Name=%s"), *ConnectString, *MyLoginID);
 
-	UE_LOG(LogTemp, Log, TEXT("JoinSession Success! Connect String: %s"), *ConnectString);
+		UE_LOG(LogTemp, Log, TEXT("Traveling to: %s"), *TravelURL);
 
-	// 2. 접속 문자열을 사용하여 레벨 이동 (클라이언트로서 서버에 접속)
-	if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0))
-	{
-		PlayerController->ClientTravel(ConnectString, TRAVEL_Absolute);
+		if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+		{
+			PlayerController->ClientTravel(TravelURL, TRAVEL_Absolute);
+		}
 	}
 }
 
