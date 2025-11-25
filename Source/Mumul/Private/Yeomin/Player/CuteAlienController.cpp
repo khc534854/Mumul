@@ -9,6 +9,7 @@
 #include "Yeomin/UI/RadialUI.h"
 #include "Blueprint/UserWidget.h"
 #include "InputMappingContext.h"
+#include "MumulMumulGameMode.h"
 #include "Yeomin/Tent/PreviewTentActor.h"
 #include "Yeomin/Tent/TentActor.h"
 
@@ -176,27 +177,43 @@ void ACuteAlienController::OnToggleMouse()
 
 void ACuteAlienController::OnClick(const FVector& TentLocation, const FRotator& TentRotation)
 {
+	// Install Tent
 	if (PreviewTent)
 	{
 		PreviewTent->Destroy();
 		PreviewTent = nullptr;
-		// Spawn Tent
-		Tent = GetWorld()->SpawnActor<ATentActor>(
-			TentClass,
-			TentLocation,
-			TentRotation
-		);
+
+		if (Tent)
+		{
+			// Move Tent
+			Tent->SetActorLocationAndRotation(TentLocation, TentRotation);
+		}
+		else
+		{
+			// Spawn Tent
+			// Tent = GetWorld()->SpawnActor<ATentActor>(
+			// 	TentClass,
+			// 	TentLocation,
+			// 	TentRotation
+			// );
+			Server_SpawnTent(FTransform(TentRotation, TentLocation));
+		}
+		
 	}
 }
 
 void ACuteAlienController::ShowRadialUI()
 {
+	// Init UI
 	OnCancelUI();
-	
+
+	// Lock Look Rotation
 	SetIgnoreLookInput(true);
+	// Hide Mouse Cursor
 	SetShowMouseCursor(false);
 	SetInputMode(FInputModeGameOnly());
 
+	//Show Radial UI
 	RadialUI->SetVisibility(ESlateVisibility::Visible);
 	bIsRadialVisible = true;
 }
@@ -210,10 +227,10 @@ void ACuteAlienController::HideRadialUI()
 	SetShowMouseCursor(false);
 	SetInputMode(FInputModeGameOnly());
 
-	//////////
+	/* TODO: 임시 확인용 */
 	ACuteAlienPlayer* CurPlayer = Cast<ACuteAlienPlayer>(GetPawn());
 	CurPlayer->PlayAlienDance();
-	//////////
+	
 
 	RadialUI->SetVisibility(ESlateVisibility::Hidden);
 	bIsRadialVisible = false;
@@ -238,6 +255,15 @@ void ACuteAlienController::ShowPreviewTent()
 	PreviewTent = GetWorld()->SpawnActor<APreviewTentActor>(
 		PreviewTentClass,
 		GetPawn()->GetActorLocation(),
-		FRotator(0, 0, 0)
-	);
+		FRotator::ZeroRotator
+		);
+}
+
+void ACuteAlienController::Server_SpawnTent_Implementation(const FTransform& TentTransform)
+{
+	AMumulMumulGameMode* GM = GetWorld()->GetAuthGameMode<AMumulMumulGameMode>();
+	if (GM)
+	{
+		GM->SpawnTent(TentTransform);
+	}
 }
