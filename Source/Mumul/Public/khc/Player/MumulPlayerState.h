@@ -29,4 +29,7 @@ protected:
 	// ID가 변경되면 호출되는 함수 (클라이언트)
 	UFUNCTION()
 	void OnRep_VoiceChannelID();
+
+public:
+	FText PlayerName;
 };

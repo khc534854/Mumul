@@ -214,13 +214,13 @@ void ACuteAlienController::UpdateVoiceChannelMuting()
 				if (AlienOtherPS->VoiceChannelID == MyChannelID)
 				{
 					// 같은 채널 -> 들리게 함 (Unmute)
-					ClientUnmutePlayer(OtherPS->GetUniqueId());
+					GameplayUnmutePlayer(OtherPS->GetUniqueId());
 					UE_LOG(LogTemp, Log, TEXT("Unmuted: %s"), *OtherPS->GetPlayerName());
 				}
 				else
 				{
 					// 다른 채널 -> 안 들리게 함 (Mute)
-					ClientMutePlayer(OtherPS->GetUniqueId());
+					GameplayMutePlayer(OtherPS->GetUniqueId());
 					UE_LOG(LogTemp, Log, TEXT("Muted: %s"), *OtherPS->GetPlayerName());
 				}
 			}

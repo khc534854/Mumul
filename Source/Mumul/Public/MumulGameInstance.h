@@ -49,6 +49,7 @@ public:
 
 	TSharedPtr<FOnlineSessionSearch> GetSessionSearch() { return SessionSearch; }
 
+	UFUNCTION(BlueprintCallable)
 	FString GetSteamNickname();
 private:
 	// Online Session Interface 포인터
