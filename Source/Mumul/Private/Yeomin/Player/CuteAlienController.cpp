@@ -11,10 +11,10 @@
 #include "InputMappingContext.h"
 #include "GameFramework/GameStateBase.h"
 #include "khc/Player/MumulPlayerState.h"
-//#include "Net/VoiceConfig.h"
 #include "MumulMumulGameMode.h"
 #include "Yeomin/Tent/PreviewTentActor.h"
 #include "Yeomin/Tent/TentActor.h"
+#include "Net/VoiceConfig.h"
 
 ACuteAlienController::ACuteAlienController()
 {
@@ -284,50 +284,63 @@ void ACuteAlienController::Server_SpawnTent_Implementation(const FTransform& Ten
 void ACuteAlienController::UpdateVoiceChannelMuting()
 {
 	AMumulPlayerState* MyPS = GetPlayerState<AMumulPlayerState>();
-	if (!MyPS) return;
+    if (!MyPS) return;
 
-	int32 MyChannelID = MyPS->VoiceChannelID;
+    int32 MyChannelID = MyPS->VoiceChannelID;
 
-	if (UWorld* World = GetWorld())
-	{
-		if (AGameStateBase* GameState = World->GetGameState())
-		{
-			for (APlayerState* OtherPS : GameState->PlayerArray)
-			{
-				if (OtherPS == MyPS) continue;
+    if (UWorld* World = GetWorld())
+    {
+        if (AGameStateBase* GameState = World->GetGameState())
+        {
+            for (APlayerState* OtherPS : GameState->PlayerArray)
+            {
+                if (OtherPS == MyPS) continue; // 나는 건너뜀
 
-				AMumulPlayerState* AlienOtherPS = Cast<AMumulPlayerState>(OtherPS);
-				if (!AlienOtherPS) continue;
+                AMumulPlayerState* AlienOtherPS = Cast<AMumulPlayerState>(OtherPS);
+                if (!AlienOtherPS) continue;
 
-				// [중요] UniqueId가 유효한지 먼저 체크
-				if (!OtherPS->GetUniqueId().IsValid()) 
-				{
-					// ID가 아직 없으면 다음 틱이나 나중에 다시 시도하게 둠 (여기선 로그만)
-					UE_LOG(LogTemp, Warning, TEXT("Player ID invalid yet: %s"), *OtherPS->GetPlayerName());
-					continue;
-				}
+                // [핵심 1] 상대방의 고유 ID(스팀 ID)가 유효한지 먼저 확인
+                if (!OtherPS->GetUniqueId().IsValid())
+                {
+                    UE_LOG(LogTemp, Warning, TEXT("[Voice] ID Invalid for %s. Retrying in 0.5s..."), *OtherPS->GetPlayerName());
+                    
+                    // ID가 없으면 0.5초 뒤에 이 함수 전체를 다시 실행해서 재시도하게 함
+                    FTimerHandle RetryHandle;
+                    GetWorld()->GetTimerManager().SetTimer(RetryHandle, this, &ACuteAlienController::UpdateVoiceChannelMuting, 0.5f, false);
+                    return; // 루프 중단하고 나중에 다시 함
+                }
 
-				// [핵심 변경] 즉시 실행하지 않고 타이머로 살짝 미룸 (보이스 시스템 동기화 대기)
-				FTimerHandle UnusedHandle;
-				GetWorld()->GetTimerManager().SetTimer(UnusedHandle, [this, AlienOtherPS, MyChannelID]()
-				{
-					// 람다 함수 내부에서 다시 유효성 체크 (그 사이 나갔을 수도 있으니)
-					if (!IsValid(this) || !IsValid(AlienOtherPS)) return;
+                // [핵심 2] ID가 확실히 있을 때만 뮤트/언뮤트 실행
+            	if (OtherPS->GetUniqueId().IsValid()) 
+            	{
+            		// 1. 타입 변환: FUniqueNetIdRepl -> FUniqueNetId
+            		// (* 연산자가 안전하게 변환해줌)
+            		const FUniqueNetId& PlayerUniqueId = *OtherPS->GetUniqueId();
 
-					if (AlienOtherPS->VoiceChannelID == MyChannelID)
-					{
-						// 같은 채널 -> 언뮤트
-						GameplayUnmutePlayer(AlienOtherPS->GetUniqueId());
-						UE_LOG(LogTemp, Log, TEXT("[Voice] Unmute: %s"), *AlienOtherPS->GetPlayerName());
-					}
-					else
-					{
-						// 다른 채널 -> 뮤트
-						GameplayMutePlayer(AlienOtherPS->GetUniqueId());
-						UE_LOG(LogTemp, Log, TEXT("[Voice] Mute: %s"), *AlienOtherPS->GetPlayerName());
-					}
-				}, 0.5f, false); // 0.5초 뒤에 실행
-			}
-		}
-	}
+            		if (AlienOtherPS->VoiceChannelID == MyChannelID)
+            		{
+            			// 같은 채널 -> 언뮤트 (이미 뮤트된 경우만)
+            			if (IsPlayerMuted(PlayerUniqueId)) 
+            			{
+            				GameplayUnmutePlayer(OtherPS->GetUniqueId());
+            				UE_LOG(LogTemp, Log, TEXT(">>> [UNMUTE] %s (Same Channel %d)"), *OtherPS->GetPlayerName(), MyChannelID);
+            			}
+            		}
+            		else
+            		{
+            			// 다른 채널 -> 뮤트 (뮤트 안 된 경우만)
+            			if (!IsPlayerMuted(PlayerUniqueId)) 
+            			{
+            				GameplayMutePlayer(OtherPS->GetUniqueId());
+            				UE_LOG(LogTemp, Log, TEXT(">>> [MUTE] %s (Other Channel %d)"), *OtherPS->GetPlayerName(), AlienOtherPS->VoiceChannelID);
+            			}
+            		}
+            	}
+            	else
+            	{
+            		UE_LOG(LogTemp, Warning, TEXT("ID Invalid yet..."));
+            	}
+            }
+        }
+    }
 }

@@ -8,7 +8,11 @@
 void AMumulPlayerState::Server_SetVoiceChannelID_Implementation(int32 NewChannelID)
 {
 	VoiceChannelID = NewChannelID;
-	OnRep_VoiceChannelID();
+
+	if (GetNetMode() != NM_Client) 
+	{
+		OnRep_VoiceChannelID();
+	}
 }
 
 void AMumulPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
