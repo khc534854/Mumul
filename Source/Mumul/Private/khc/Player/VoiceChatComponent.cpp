@@ -1,4 +1,6 @@
 ﻿#include "khc/Player/VoiceChatComponent.h"
+
+#include "HttpNetworkSubsystem.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Pawn.h"
 #include "khc/System/MumulVoiceFunctionLibrary.h"
@@ -96,18 +98,37 @@ void UVoiceChatComponent::StopRecording()
 
 	UE_LOG(LogTemp, Log, TEXT("Voice Recording Stopped. Buffer Size: %d bytes"), PCMBuffer.Num());
 
-	// 2. WAV 변환 및 저장 (라이브러리 사용)
+	// // 2. WAV 변환 및 저장 (라이브러리 사용)
+	// if (PCMBuffer.Num() > 0)
+	// {
+	// 	TArray<uint8> WavData = UMumulVoiceFunctionLibrary::ConvertPCMToWAV(PCMBuffer, RecordingSampleRate, RecordingNumChannels);
+ //        
+	// 	FString SavedPath;
+	// 	// 파일명: Record_시간.wav
+	// 	FString FileName = FString::Printf(TEXT("Record_%s"), *FDateTime::Now().ToString());
+ //        
+	// 	if (UMumulVoiceFunctionLibrary::SaveWavFile(WavData, FileName, SavedPath))
+	// 	{
+	// 		UE_LOG(LogTemp, Log, TEXT("WAV Saved Successfully: %s"), *SavedPath);
+	// 	}
+	// }
+
 	if (PCMBuffer.Num() > 0)
 	{
 		TArray<uint8> WavData = UMumulVoiceFunctionLibrary::ConvertPCMToWAV(PCMBuffer, RecordingSampleRate, RecordingNumChannels);
         
+		// 1. 로컬 파일 저장 (확인용, 필요 없으면 삭제 가능)
 		FString SavedPath;
-		// 파일명: Record_시간.wav
-		FString FileName = FString::Printf(TEXT("Record_%s"), *FDateTime::Now().ToString());
-        
-		if (UMumulVoiceFunctionLibrary::SaveWavFile(WavData, FileName, SavedPath))
+		UMumulVoiceFunctionLibrary::SaveWavFile(WavData, TEXT("TestRecord"), SavedPath);
+
+		// 2. [핵심] 서브시스템을 통해 서버로 전송
+		UGameInstance* GI = GetWorld()->GetGameInstance();
+		if (GI)
 		{
-			UE_LOG(LogTemp, Log, TEXT("WAV Saved Successfully: %s"), *SavedPath);
+			if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
+			{
+				HttpSystem->SendVoiceDataToPython(WavData);
+			}
 		}
 	}
 }

@@ -11,6 +11,7 @@
 #include "InputMappingContext.h"
 #include "GameFramework/GameStateBase.h"
 #include "khc/Player/MumulPlayerState.h"
+//#include "Net/VoiceConfig.h"
 #include "Yeomin/Tent/PreviewTentActor.h"
 
 ACuteAlienController::ACuteAlienController()
@@ -197,32 +198,45 @@ void ACuteAlienController::UpdateVoiceChannelMuting()
 
 	int32 MyChannelID = MyPS->VoiceChannelID;
 
-	// 2. 게임에 접속한 모든 플레이어 순회
 	if (UWorld* World = GetWorld())
 	{
 		if (AGameStateBase* GameState = World->GetGameState())
 		{
 			for (APlayerState* OtherPS : GameState->PlayerArray)
 			{
-				// 나 자신은 스킵
 				if (OtherPS == MyPS) continue;
 
 				AMumulPlayerState* AlienOtherPS = Cast<AMumulPlayerState>(OtherPS);
 				if (!AlienOtherPS) continue;
 
-				// 3. 채널 ID 비교
-				if (AlienOtherPS->VoiceChannelID == MyChannelID)
+				// [중요] UniqueId가 유효한지 먼저 체크
+				if (!OtherPS->GetUniqueId().IsValid()) 
 				{
-					// 같은 채널 -> 들리게 함 (Unmute)
-					GameplayUnmutePlayer(OtherPS->GetUniqueId());
-					UE_LOG(LogTemp, Log, TEXT("Unmuted: %s"), *OtherPS->GetPlayerName());
+					// ID가 아직 없으면 다음 틱이나 나중에 다시 시도하게 둠 (여기선 로그만)
+					UE_LOG(LogTemp, Warning, TEXT("Player ID invalid yet: %s"), *OtherPS->GetPlayerName());
+					continue;
 				}
-				else
+
+				// [핵심 변경] 즉시 실행하지 않고 타이머로 살짝 미룸 (보이스 시스템 동기화 대기)
+				FTimerHandle UnusedHandle;
+				GetWorld()->GetTimerManager().SetTimer(UnusedHandle, [this, AlienOtherPS, MyChannelID]()
 				{
-					// 다른 채널 -> 안 들리게 함 (Mute)
-					GameplayMutePlayer(OtherPS->GetUniqueId());
-					UE_LOG(LogTemp, Log, TEXT("Muted: %s"), *OtherPS->GetPlayerName());
-				}
+					// 람다 함수 내부에서 다시 유효성 체크 (그 사이 나갔을 수도 있으니)
+					if (!IsValid(this) || !IsValid(AlienOtherPS)) return;
+
+					if (AlienOtherPS->VoiceChannelID == MyChannelID)
+					{
+						// 같은 채널 -> 언뮤트
+						GameplayUnmutePlayer(AlienOtherPS->GetUniqueId());
+						UE_LOG(LogTemp, Log, TEXT("[Voice] Unmute: %s"), *AlienOtherPS->GetPlayerName());
+					}
+					else
+					{
+						// 다른 채널 -> 뮤트
+						GameplayMutePlayer(AlienOtherPS->GetUniqueId());
+						UE_LOG(LogTemp, Log, TEXT("[Voice] Mute: %s"), *AlienOtherPS->GetPlayerName());
+					}
+				}, 0.5f, false); // 0.5초 뒤에 실행
 			}
 		}
 	}
