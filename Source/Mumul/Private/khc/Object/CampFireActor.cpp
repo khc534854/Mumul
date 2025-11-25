@@ -61,12 +61,13 @@ void ACampFireActor::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* O
 	APawn* ExitingPawn = Cast<APawn>(OtherActor);
 	if (!ExitingPawn) return;
 
-	// 나갈 때도 로컬 플레이어인 경우만 처리
 	if (!ExitingPawn->IsLocallyControlled()) return;
 
 	if (AMumulPlayerState* PS = ExitingPawn->GetPlayerState<AMumulPlayerState>())
 	{
-		UE_LOG(LogTemp, Log, TEXT("Exit Campfire Zone! Return to Lobby (0)"));
-		PS->Server_SetVoiceChannelID(0); // 로비(전체) 채널로 복귀
+		// [디버깅 로그] 현재 채널과 변경할 채널 확인
+		UE_LOG(LogTemp, Error, TEXT("Exit Campfire! Current Ch: %d -> Change to 0"), PS->VoiceChannelID);
+       
+		PS->Server_SetVoiceChannelID(0); 
 	}
 }
