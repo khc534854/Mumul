@@ -7,7 +7,7 @@
 void UHttpNetworkSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
     Super::Initialize(Collection);
-    UE_LOG(LogTemp, Log, TEXT("HttpNetworkSubsystem Initialized!"));
+    UE_LOG(LogTemp, Log, TEXT("[HTTP] Subsystem Initialized!"));
 }
 
 void UHttpNetworkSubsystem::Deinitialize()
@@ -15,21 +15,21 @@ void UHttpNetworkSubsystem::Deinitialize()
     Super::Deinitialize();
 }
 
-void UHttpNetworkSubsystem::SendVoiceDataToPython(const TArray<uint8>& WavData)
-{
-    FVoiceUploadRequest VoiceRequest;
-    
-    // 데이터를 채웁니다.
-    VoiceRequest.PlayerName = TEXT("Player1"); // 나중에 실제 이름으로
-    VoiceRequest.SampleRate = 48000; // 메타데이터 필요시
-
-    // [핵심] 2. WAV 바이너리 -> Base64 문자열 변환
-    // TArray<uint8>을 FString으로 인코딩합니다.
-    VoiceRequest.AudioData_Base64 = FBase64::Encode(WavData);
-
-    // 3. 템플릿 함수 호출 (알아서 JSON으로 바꿔서 쏨)
-    SendJsonRequest<FVoiceUploadRequest>(VoiceRequest, TEXT("upload-voice-json"));
-}
+// void UHttpNetworkSubsystem::SendVoiceDataToPython(const TArray<uint8>& WavData)
+// {
+//     FVoiceUploadRequest VoiceRequest;
+//     
+//     // 데이터를 채웁니다.
+//     VoiceRequest.PlayerName = TEXT("Player1"); // 나중에 실제 이름으로
+//     VoiceRequest.SampleRate = 48000; // 메타데이터 필요시
+//
+//     // [핵심] 2. WAV 바이너리 -> Base64 문자열 변환
+//     // TArray<uint8>을 FString으로 인코딩합니다.
+//     VoiceRequest.AudioData_Base64 = FBase64::Encode(WavData);
+//
+//     // 3. 템플릿 함수 호출 (알아서 JSON으로 바꿔서 쏨)
+//     SendJsonRequest<FVoiceUploadRequest>(VoiceRequest, TEXT("upload-voice-json"));
+// }
 
 void UHttpNetworkSubsystem::SendMultipartVoice(const TArray<uint8>& WavData, const FString& MetaJsonString)
 {
