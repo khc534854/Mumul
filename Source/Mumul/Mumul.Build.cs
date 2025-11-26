@@ -10,8 +10,9 @@ public class Mumul : ModuleRules
 
 		PublicDependencyModuleNames.AddRange(new string[]
 		{
-			"Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", 
-			"OnlineSubsystem", "OnlineSubsystemUtils", "OnlineSubsystemSteam", "SteamSockets", "UMG",
+			"Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput",
+			"OnlineSubsystem", "OnlineSubsystemUtils", "OnlineSubsystemSteam", "SteamSockets", "UMG", "Slate",
+			"SlateCore",
 			"HTTP", "Json", "JsonUtilities", "WebSockets",
 			"Voice",
 			"AudioCapture",
