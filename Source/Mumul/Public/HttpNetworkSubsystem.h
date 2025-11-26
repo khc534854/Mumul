@@ -39,7 +39,7 @@ private:
 
 public:
 	UPROPERTY(EditAnywhere, Category="Network")
-	FString BaseURL = TEXT("http://127.0.0.1:8000");
+	FString BaseURL = TEXT("http://127.0.0.1:8000/");
 };
 
 template <typename RequestType>

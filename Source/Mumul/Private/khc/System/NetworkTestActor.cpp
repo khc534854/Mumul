@@ -67,11 +67,14 @@ void ANetworkTestActor::TestSendMultipartVoice()
 		// 1. 가짜 WAV 데이터 생성 (10KB)
 		TArray<uint8> DummyWav = GenerateDummyWavData(10240);
 
-		// 2. 메타데이터 JSON 문자열 생성
-		FString MetaJson = FString::Printf(
-			TEXT("{\"player_name\": \"%s\", \"room_id\": \"%s\", \"team_id\": 1}"), 
-			*TestUserID, *TestRoomID
-		);
+		FVoiceMetadata MetaData;
+		MetaData.PlayerName = TestUserID;
+		MetaData.RoomID = TestRoomID;
+		MetaData.TeamID = 1;
+
+		// 2. USTRUCT -> JSON 문자열 자동 변환
+		FString MetaJson;
+		FJsonObjectConverter::UStructToJsonObjectString(FVoiceMetadata::StaticStruct(), &MetaData, MetaJson, 0, 0);
 
 		// 3. 전송
 		HttpSystem->SendMultipartVoice(DummyWav, MetaJson);

@@ -36,7 +36,7 @@ void UHttpNetworkSubsystem::SendMultipartVoice(const TArray<uint8>& WavData, con
     TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
     
     // URL 설정 (BaseURL + 엔드포인트)
-    FString FullURL = FString::Printf(TEXT("%s/upload-multipart"), *BaseURL);
+    FString FullURL = FString::Printf(TEXT("%supload-multipart"), *BaseURL);
     Request->SetURL(FullURL);
     Request->SetVerb(TEXT("POST"));
 
