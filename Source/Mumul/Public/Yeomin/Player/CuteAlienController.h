@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "Sound/SoundAttenuation.h"
 #include "CuteAlienController.generated.h"
 
 /**
@@ -68,11 +69,21 @@ protected:
 public:
 	void ShowPreviewTent();
 
-public:
-	UFUNCTION(BlueprintCallable, Category = "Voice")
-	void UpdateVoiceChannelMuting();
-	
 	UFUNCTION(Server, Reliable)
 	void Server_SpawnTent(const FTransform& TentTransform);
 	void Server_MoveTent(const FTransform& TentTransform);
+	
+public:
+	UFUNCTION(BlueprintCallable, Category = "Voice")
+	void UpdateVoiceChannelMuting();
+
+protected:
+	// 무음 처리용 감쇠 설정
+	UPROPERTY(EditDefaultsOnly, Category = "Voice")
+	TObjectPtr<USoundAttenuation> SilentAttenuation;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Voice")
+	TObjectPtr<USoundAttenuation> NormalAttenuation;
+	
+
 };

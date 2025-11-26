@@ -80,6 +80,20 @@ ACuteAlienController::ACuteAlienController()
 	{
 		TentClass = TentFinder.Class;
 	}
+
+	static ConstructorHelpers::FObjectFinder<USoundAttenuation> SilentAttFinder(
+	   TEXT("/Game/Khc/Audio/SA_Silent.SA_Silent")); // 예시 경로
+	if (SilentAttFinder.Succeeded())
+	{
+		SilentAttenuation = SilentAttFinder.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<USoundAttenuation> NormalAttFinder(
+	   TEXT("/Game/Khc/Audio/SA_Proximity.SA_Proximity")); // 경로 확인 필수!
+	if (NormalAttFinder.Succeeded())
+	{
+		NormalAttenuation = NormalAttFinder.Object;
+	}
 }
 
 void ACuteAlienController::BeginPlay()
@@ -296,49 +310,50 @@ void ACuteAlienController::UpdateVoiceChannelMuting()
             {
                 if (OtherPS == MyPS) continue; // 나는 건너뜀
 
-                AMumulPlayerState* AlienOtherPS = Cast<AMumulPlayerState>(OtherPS);
-                if (!AlienOtherPS) continue;
+            	AMumulPlayerState* AlienOtherPS = Cast<AMumulPlayerState>(OtherPS);
+            	if (!AlienOtherPS) continue;
 
-                // [핵심 1] 상대방의 고유 ID(스팀 ID)가 유효한지 먼저 확인
-                if (!OtherPS->GetUniqueId().IsValid())
-                {
-                    UE_LOG(LogTemp, Warning, TEXT("[Voice] ID Invalid for %s. Retrying in 0.5s..."), *OtherPS->GetPlayerName());
-                    
-                    // ID가 없으면 0.5초 뒤에 이 함수 전체를 다시 실행해서 재시도하게 함
-                    FTimerHandle RetryHandle;
-                    GetWorld()->GetTimerManager().SetTimer(RetryHandle, this, &ACuteAlienController::UpdateVoiceChannelMuting, 0.5f, false);
-                    return; // 루프 중단하고 나중에 다시 함
-                }
-
-                // [핵심 2] ID가 확실히 있을 때만 뮤트/언뮤트 실행
-            	if (OtherPS->GetUniqueId().IsValid()) 
+            	// [핵심] 이 플레이어의 목소리를 담당하는 Talker 객체를 가져옵니다.
+            	UVOIPTalker* Talker = UVOIPTalker::CreateTalkerForPlayer(OtherPS);
+                
+            	if (Talker)
             	{
-            		// 1. 타입 변환: FUniqueNetIdRepl -> FUniqueNetId
-            		// (* 연산자가 안전하게 변환해줌)
-            		const FUniqueNetId& PlayerUniqueId = *OtherPS->GetUniqueId();
-
+            		// 1. 채널이 같은가?
             		if (AlienOtherPS->VoiceChannelID == MyChannelID)
             		{
-            			// 같은 채널 -> 언뮤트 (이미 뮤트된 경우만)
-            			if (IsPlayerMuted(PlayerUniqueId)) 
+            			// [상황 A] 둘 다 0번(로비) 채널 -> 거리 기반(3D) 적용
+            			if (MyChannelID == 0)
             			{
-            				GameplayUnmutePlayer(OtherPS->GetUniqueId());
-            				UE_LOG(LogTemp, Log, TEXT(">>> [UNMUTE] %s (Same Channel %d)"), *OtherPS->GetPlayerName(), MyChannelID);
+            				Talker->Settings.AttenuationSettings = NormalAttenuation;
+                            
+            				// [중요] 3D 사운드는 소리 나는 위치(상대방 캐릭터)를 지정해야 함
+            				if (APawn* OtherPawn = OtherPS->GetPawn())
+            				{
+            					Talker->Settings.ComponentToAttachTo = OtherPawn->GetRootComponent();
+            				}
+                            
+            				UE_LOG(LogTemp, Log, TEXT(">>> [VOICE 3D] %s (Proximity)"), *OtherPS->GetPlayerName());
+            			}
+            			// [상황 B] 둘 다 모닥불(특정) 채널 -> 전체 들림(2D) 적용
+            			else
+            			{
+            				Talker->Settings.AttenuationSettings = nullptr; // 감쇠 없음 = 2D
+            				Talker->Settings.ComponentToAttachTo = nullptr; // 위치 상관 없음
+                            
+            				UE_LOG(LogTemp, Log, TEXT(">>> [VOICE 2D] %s (Room Mode)"), *OtherPS->GetPlayerName());
             			}
             		}
+            		// 2. 채널이 다른가?
             		else
             		{
-            			// 다른 채널 -> 뮤트 (뮤트 안 된 경우만)
-            			if (!IsPlayerMuted(PlayerUniqueId)) 
+            			// [상황 C] 다른 채널 -> 소리 소멸(Silent) 적용
+            			if (SilentAttenuation)
             			{
-            				GameplayMutePlayer(OtherPS->GetUniqueId());
-            				UE_LOG(LogTemp, Log, TEXT(">>> [MUTE] %s (Other Channel %d)"), *OtherPS->GetPlayerName(), AlienOtherPS->VoiceChannelID);
+            				Talker->Settings.AttenuationSettings = SilentAttenuation;
+            				Talker->Settings.ComponentToAttachTo = nullptr;
             			}
+            			UE_LOG(LogTemp, Log, TEXT(">>> [VOICE MUTE] %s"), *OtherPS->GetPlayerName());
             		}
-            	}
-            	else
-            	{
-            		UE_LOG(LogTemp, Warning, TEXT("ID Invalid yet..."));
             	}
             }
         }
