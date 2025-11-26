@@ -4,7 +4,7 @@
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerState.h"
-#include "khc/System/MumulVoiceFunctionLibrary.h"
+#include "Library/MumulVoiceFunctionLibrary.h"
 
 UVoiceChatComponent::UVoiceChatComponent()
 {
