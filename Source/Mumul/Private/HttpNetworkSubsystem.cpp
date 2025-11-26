@@ -77,7 +77,7 @@ void UHttpNetworkSubsystem::SendAudioChunk(const TArray<uint8>& WavData, FString
 
     // 1. URL 설정 (파이썬 요구사항: meetings/{meeting_id}/audio_chunk)
     // BaseURL 뒤에 슬래시가 없다고 가정하고 포맷팅
-    FString FullURL = FString::Printf(TEXT("%s/meetings/%s/audio_chunk"), *BaseURL, *MeetingID);
+    FString FullURL = FString::Printf(TEXT("%s/meeting/%s/audio_chunk"), *BaseURL, *MeetingID);
     Request->SetURL(FullURL);
     Request->SetVerb(TEXT("POST"));
 
@@ -117,6 +117,93 @@ void UHttpNetworkSubsystem::SendAudioChunk(const TArray<uint8>& WavData, FString
 
     UE_LOG(LogTemp, Log, TEXT("[HTTP] Sending Audio Chunk to: %s (Size: %d bytes)"), *FullURL, Payload.Num());
     Request->ProcessRequest();
+}
+
+void UHttpNetworkSubsystem::SendLoginRequest(FString ID, FString PW)
+{
+    // 1. 요청 데이터 생성
+    FLoginRequest LoginData;
+    LoginData.loginId = ID;
+    LoginData.password = PW;
+    
+    // 2. JSON 변환
+    FString JsonString;
+    FJsonObjectConverter::UStructToJsonObjectString(FLoginRequest::StaticStruct(), &LoginData, JsonString, 0, 0);
+
+    // 3. HTTP 요청 생성
+    TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
+    FString FullURL = FString::Printf(TEXT("%s/login"), *BaseURL); // 엔드포인트: /login
+    
+    Request->SetURL(FullURL);
+    Request->SetVerb("POST");
+    Request->SetHeader("Content-Type", "application/json");
+    Request->SetContentAsString(JsonString);
+
+    // 4. 콜백 연결
+
+    Request->OnProcessRequestComplete().BindUObject(this, &UHttpNetworkSubsystem::OnLoginComplete);
+    Request->ProcessRequest();
+}
+
+void UHttpNetworkSubsystem::OnLoginComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+    // bool bLoginSuccess = false;
+    //
+    // if (bWasSuccessful && Response.IsValid() && Response->GetResponseCode() == 200)
+    // {
+    //     // 응답 파싱
+    //     FString Content = Response->GetContentAsString();
+    //     FLoginResponse RespData;
+    //     
+    //     if (FJsonObjectConverter::JsonObjectStringToUStruct(Content, &RespData, 0, 0))
+    //     {
+    //         bLoginSuccess = RespData.success;
+    //         UE_LOG(LogTemp, Log, TEXT("[HTTP] Login Result: %s"), bLoginSuccess ? TEXT("Success") : TEXT("Fail"));
+    //     }
+    // }
+    //
+    // // UI에게 결과 알림
+    // OnLoginResponse.Broadcast(bLoginSuccess);
+    if (!bWasSuccessful || !Response.IsValid())
+    {
+        OnLoginResponse.Broadcast(false, TEXT("네트워크 연결 실패"));
+        return;
+    }
+
+    int32 Code = Response->GetResponseCode();
+    FString Content = Response->GetContentAsString();
+
+    if (Code == 200) // 성공
+    {
+        FLoginSuccessResponse SuccessData;
+        if (FJsonObjectConverter::JsonObjectStringToUStruct(Content, &SuccessData, 0, 0))
+        {
+            // 성공 메시지로 이름 전달 (예: "홍길동님 환영합니다")
+            FString Msg = FString::Printf(TEXT("%s님 환영합니다."), *SuccessData.name);
+            OnLoginResponse.Broadcast(true, Msg);
+        }
+        else
+        {
+            OnLoginResponse.Broadcast(false, TEXT("응답 데이터 파싱 실패"));
+        }
+    }
+    else if (Code == 401) // 실패 (아이디/비번 틀림)
+    {
+        FLoginFailResponse FailData;
+        if (FJsonObjectConverter::JsonObjectStringToUStruct(Content, &FailData, 0, 0))
+        {
+            // 서버가 보낸 에러 메시지 그대로 전달
+            OnLoginResponse.Broadcast(false, FailData.detail.message);
+        }
+        else
+        {
+            OnLoginResponse.Broadcast(false, TEXT("로그인 실패 (알 수 없는 오류)"));
+        }
+    }
+    else
+    {
+        OnLoginResponse.Broadcast(false, FString::Printf(TEXT("서버 오류: %d"), Code));
+    }
 }
 
 void UHttpNetworkSubsystem::OnSendVoiceComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)

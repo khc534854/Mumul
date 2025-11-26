@@ -41,6 +41,10 @@ public:
     // ==============================================================================
     UPROPERTY(EditAnywhere, Category = "HTTP | Test Data")
     FString TestUserID = TEXT("User_01");
+    
+    UPROPERTY(EditAnywhere, Category = "HTTP | Test Data")
+    int32 TestUserIDX = 1;
+    
 
     UPROPERTY(EditAnywhere, Category = "HTTP | Test Data")
     FString TestPassword = TEXT("1234password");
@@ -52,7 +56,7 @@ public:
     int32 DummyFileSize = 10240; // 전송할 가짜 음성 파일 크기 (Byte)
     
     UPROPERTY(EditAnywhere, Category = "HTTP | Test Data")
-    FString TestFileName = TEXT("TestRecord"); 
+    FString TestFileName = TEXT("TestRecord.wav");
 
     // ==============================================================================
     // [기능] 테스트 실행 버튼

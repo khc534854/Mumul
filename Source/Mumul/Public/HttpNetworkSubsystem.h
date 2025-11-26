@@ -11,6 +11,9 @@
 /**
  * 
  */
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnLoginResponseReceived, bool, bSuccess, FString, Message);
+
 UCLASS()
 class MUMUL_API UHttpNetworkSubsystem : public UGameInstanceSubsystem
 {
@@ -30,6 +33,13 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Network")
 	void SendAudioChunk(const TArray<uint8>& WavData, FString MeetingID, FString UserID, int32 ChunkIndex);
+
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void SendLoginRequest(FString ID, FString PW);
+
+	UPROPERTY(BlueprintAssignable)
+	FOnLoginResponseReceived OnLoginResponse;
+	
 	
 private:
 	// 통신이 끝났을 때(응답 왔을 때) 호출될 콜백 함수
@@ -37,9 +47,12 @@ private:
 
 	void AddString(TArray<uint8>& OutPayload, const FString& InString);
 
+	void OnLoginComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+
 public:
 	UPROPERTY(EditAnywhere, Category="Network")
 	FString BaseURL = TEXT("http://127.0.0.1:8000");
+
 };
 
 template <typename RequestType>

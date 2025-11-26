@@ -58,8 +58,8 @@ void ANetworkTestActor::TestSendLogin()
     if (UHttpNetworkSubsystem* HttpSystem = PrepareSubsystem())
     {
         FLoginRequest LoginData;
-        LoginData.UserID = TestUserID;
-        LoginData.Password = TestPassword;
+        LoginData.loginId = TestUserID;
+        LoginData.password = TestPassword;
 
         // 디테일 패널에 적은 Endpoint 사용
         HttpSystem->SendJsonRequest(LoginData, Endpoint_Login);
@@ -86,44 +86,20 @@ void ANetworkTestActor::TestSendLog()
 // 3. 멀티파트 음성 전송 테스트
 void ANetworkTestActor::TestSendMultipartVoice()
 {
-    // if (UHttpNetworkSubsystem* HttpSystem = PrepareSubsystem())
-    // {
-    //     // 1. 더미 WAV 데이터 생성 (설정된 크기만큼)
-    //     TArray<uint8> DummyWav = GenerateDummyWavData(DummyFileSize);
-    //
-    //     // 2. 메타데이터 구조체 생성
-    //     FVoiceMetadata MetaData;
-    //     MetaData.PlayerName = TestUserID;
-    //     MetaData.RoomID = TestRoomID;
-    //     MetaData.TeamID = 1;
-    //
-    //     // 3. USTRUCT -> JSON 문자열 변환
-    //     FString MetaJson;
-    //     if (FJsonObjectConverter::UStructToJsonObjectString(FVoiceMetadata::StaticStruct(), &MetaData, MetaJson, 0, 0))
-    //     {
-    //         // 4. 전송 (설정된 Endpoint 무시하고 함수 내부 로직을 따름, 필요시 함수 인자로 Endpoint 넘기게 수정 가능)
-    //         // 현재 HttpSystem->SendMultipartVoice는 URL을 내부에서 조합하므로, 
-    //         // 만약 Endpoint도 바꾸고 싶다면 HttpNetworkSubsystem의 해당 함수를 수정해야 합니다.
-    //         // 여기서는 일단 호출합니다.
-    //         HttpSystem->SendMultipartVoice(DummyWav, MetaJson);
-    //         
-    //         UE_LOG(LogTemp, Log, TEXT("[Test] Multipart Voice Sent. Size: %d bytes"), DummyWav.Num());
-    //     }
-    //     else
-    //     {
-    //         UE_LOG(LogTemp, Error, TEXT("[Test] MetaData JSON Conversion Failed"));
-    //     }
-    // }
-
     if (UHttpNetworkSubsystem* HttpSystem = PrepareSubsystem())
     {
-        TArray<uint8> DummyWav = GenerateDummyWavData(DummyFileSize);
-
-        // [수정] JSON 만드는 과정 삭제하고, 인자를 직접 넣습니다.
-        // 예: MeetingID="Room_Alpha", UserID="User_01", Index=1
-        HttpSystem->SendAudioChunk(DummyWav, TestRoomID, TestUserID, 1);
+        TArray<uint8> LoadedWavData;
         
-        UE_LOG(LogTemp, Log, TEXT("[Test] Audio Chunk Sent."));
+        if (UMumulVoiceFunctionLibrary::LoadWavFile(TestFileName, LoadedWavData))
+        {
+            HttpSystem->SendAudioChunk(LoadedWavData, TestRoomID, TestUserID, 1);
+            
+            UE_LOG(LogTemp, Log, TEXT("[Test] Real Audio File Sent: %s (Size: %d bytes)"), *TestFileName, LoadedWavData.Num());
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("[Test] Failed to load file: %s. Please check if the file exists in Saved/RecordedVoice/"), *TestFileName);
+        }
     }
 }
 
