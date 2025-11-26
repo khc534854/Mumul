@@ -9,40 +9,75 @@
 UCLASS()
 class MUMUL_API ANetworkTestActor : public AActor
 {
-	GENERATED_BODY()
-
-public:
-	// Sets default values for this actor's properties
-	ANetworkTestActor();
+    GENERATED_BODY()
+    
+public:    
+    ANetworkTestActor();
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+    virtual void BeginPlay() override;
 
 public:
-	// --- [테스트 데이터 설정] ---
-	// 에디터에서 값을 바꿔가며 테스트할 수 있게 변수로 노출
-	UPROPERTY(EditAnywhere, Category = "Test Data")
-	FString TestUserID = TEXT("User_01");
+    // ==============================================================================
+    // [설정 1] 서버 설정 (여기서 URL을 바꾸면 서브시스템에 적용됨)
+    // ==============================================================================
+    UPROPERTY(EditAnywhere, Category = "HTTP | Server Config")
+    bool bOverrideBaseURL = true; // 체크하면 아래 URL을 사용, 끄면 서브시스템 기본값 사용
 
-	UPROPERTY(EditAnywhere, Category = "Test Data")
-	FString TestRoomID = TEXT("Room_Alpha");
+    UPROPERTY(EditAnywhere, Category = "HTTP | Server Config", meta = (EditCondition = "bOverrideBaseURL"))
+    FString TargetServerURL = TEXT("http://127.0.0.1:8000");
 
-	// --- [테스트 버튼들] ---
+    UPROPERTY(EditAnywhere, Category = "HTTP | Server Config")
+    FString Endpoint_Login = TEXT("login");
 
-	// 1. 단순 로그인 테스트 (JSON 전송)
-	UFUNCTION(CallInEditor, Category = "Http Test")
-	void TestSendLogin();
+    UPROPERTY(EditAnywhere, Category = "HTTP | Server Config")
+    FString Endpoint_Log = TEXT("log-player");
 
-	// 2. 로그 데이터 전송 테스트 (JSON 템플릿 함수 사용)
-	UFUNCTION(CallInEditor, Category = "Http Test")
-	void TestSendLog();
+    UPROPERTY(EditAnywhere, Category = "HTTP | Server Config")
+    FString Endpoint_Voice = TEXT("upload-multipart");
 
-	// 3. 가짜 음성 파일 전송 테스트 (Multipart 전송)
-	UFUNCTION(CallInEditor, Category = "Http Test")
-	void TestSendMultipartVoice();
+    // ==============================================================================
+    // [설정 2] 테스트 데이터 (보낼 내용)
+    // ==============================================================================
+    UPROPERTY(EditAnywhere, Category = "HTTP | Test Data")
+    FString TestUserID = TEXT("User_01");
+
+    UPROPERTY(EditAnywhere, Category = "HTTP | Test Data")
+    FString TestPassword = TEXT("1234password");
+
+    UPROPERTY(EditAnywhere, Category = "HTTP | Test Data")
+    FString TestRoomID = TEXT("Room_Alpha");
+
+    UPROPERTY(EditAnywhere, Category = "HTTP | Test Data", meta = (ClampMin = "1024"))
+    int32 DummyFileSize = 10240; // 전송할 가짜 음성 파일 크기 (Byte)
+    
+    UPROPERTY(EditAnywhere, Category = "HTTP | Test Data")
+    FString TestFileName = TEXT("TestRecord"); 
+
+    // ==============================================================================
+    // [기능] 테스트 실행 버튼
+    // ==============================================================================
+    
+    // 1. 로그인 테스트
+    UFUNCTION(CallInEditor, Category = "HTTP | Actions")
+    void TestSendLogin();
+
+    // 2. 로그 전송 테스트
+    UFUNCTION(CallInEditor, Category = "HTTP | Actions")
+    void TestSendLog();
+
+    // 3. 멀티파트 음성 전송 테스트
+    UFUNCTION(CallInEditor, Category = "HTTP | Actions")
+    void TestSendMultipartVoice();
+
+    // [추가] 로컬 파일 전송 버튼
+    // UFUNCTION(CallInEditor, Category = "HTTP | Actions")
+    // void TestSendLocalFile();
 
 private:
-	// 테스트용 더미 WAV 데이터를 만드는 함수
-	TArray<uint8> GenerateDummyWavData(int32 SizeInBytes);
+    // 헬퍼 함수: 테스트 시작 전 URL 설정 등을 처리
+    class UHttpNetworkSubsystem* PrepareSubsystem();
+
+    // 더미 데이터 생성
+    TArray<uint8> GenerateDummyWavData(int32 SizeInBytes);
 };

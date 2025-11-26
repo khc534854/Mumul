@@ -99,40 +99,6 @@ void UVoiceChatComponent::StopRecording()
 
 	UE_LOG(LogTemp, Log, TEXT("Voice Recording Stopped. Buffer Size: %d bytes"), PCMBuffer.Num());
 
-	// // 2. WAV 변환 및 저장 (라이브러리 사용)
-	// if (PCMBuffer.Num() > 0)
-	// {
-	// 	TArray<uint8> WavData = UMumulVoiceFunctionLibrary::ConvertPCMToWAV(PCMBuffer, RecordingSampleRate, RecordingNumChannels);
- //        
-	// 	FString SavedPath;
-	// 	// 파일명: Record_시간.wav
-	// 	FString FileName = FString::Printf(TEXT("Record_%s"), *FDateTime::Now().ToString());
- //        
-	// 	if (UMumulVoiceFunctionLibrary::SaveWavFile(WavData, FileName, SavedPath))
-	// 	{
-	// 		UE_LOG(LogTemp, Log, TEXT("WAV Saved Successfully: %s"), *SavedPath);
-	// 	}
-	// }
-
-	// if (PCMBuffer.Num() > 0)
-	// {
-	// 	TArray<uint8> WavData = UMumulVoiceFunctionLibrary::ConvertPCMToWAV(PCMBuffer, RecordingSampleRate, RecordingNumChannels);
- //        
-	// 	// 1. 로컬 파일 저장 (확인용, 필요 없으면 삭제 가능)
-	// 	FString SavedPath;
-	// 	UMumulVoiceFunctionLibrary::SaveWavFile(WavData, TEXT("TestRecord"), SavedPath);
-	//
-	// 	// 2. [핵심] 서브시스템을 통해 서버로 전송
-	// 	UGameInstance* GI = GetWorld()->GetGameInstance();
-	// 	if (GI)
-	// 	{
-	// 		if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
-	// 		{
-	// 			HttpSystem->SendVoiceDataToPython(WavData);
-	// 		}
-	// 	}
-	// }
-
 	if (PCMBuffer.Num() > 0)
 	{
 		// WAV 변환 (기존 유지)
@@ -141,6 +107,8 @@ void UVoiceChatComponent::StopRecording()
 		// 로컬 저장 (테스트용, 유지)
 		FString SavedPath;
 		UMumulVoiceFunctionLibrary::SaveWavFile(WavData, TEXT("TestRecord"), SavedPath);
+		// FString FileName = FString::Printf(TEXT("Record_%s"), *FDateTime::Now().ToString());
+		// UMumulVoiceFunctionLibrary::SaveWavFile(WavData, FileName, SavedPath);
 
 		// [수정] 전송 로직 변경
 		UGameInstance* GI = GetWorld()->GetGameInstance();
@@ -148,23 +116,31 @@ void UVoiceChatComponent::StopRecording()
 		{
 			if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
 			{
-				// 1. 메타데이터 생성 (JSON 문자열 직접 조립)
-				FString PlayerName = TEXT("Unknown");
-                
-				// PlayerState에서 이름 가져오기 시도
+				FString UserID = TEXT("UnknownUser");
+             
+				// MeetingID (방 이름) 설정 
+				// (나중에는 PlayerState의 VoiceChannelID 등을 문자열로 변환해서 넣으면 됩니다)
+				FString MeetingID = TEXT("Lobby"); 
+
 				if (APawn* OwnerPawn = Cast<APawn>(GetOwner()))
 				{
 					if (APlayerState* PS = OwnerPawn->GetPlayerState())
 					{
-						PlayerName = PS->GetPlayerName();
+						UserID = PS->GetPlayerName();
+                   
+						// 예시: 채널 ID를 방 이름으로 사용하려면 아래 주석 해제
+						// AMumulPlayerState* MyPS = Cast<AMumulPlayerState>(PS);
+						// if(MyPS) MeetingID = FString::FromInt(MyPS->VoiceChannelID);
 					}
 				}
 
-				// JSON 문자열 만들기
-				FString MetaJson = FString::Printf(TEXT("{\"player_name\": \"%s\", \"room_id\": \"Lobby\"}"), *PlayerName);
+				// 2. Chunk Index 설정
+				// (현재는 단발성 전송이므로 1로 고정하거나, 멤버 변수로 카운팅 가능)
+				int32 ChunkIndex = 1;
 
-				// 2. 멀티파트 전송 함수 호출
-				HttpSystem->SendMultipartVoice(WavData, MetaJson);
+				// 3. [핵심] 파이썬 규격에 맞춘 함수 호출
+				// (기존 SendMultipartVoice 대신 SendAudioChunk 사용)
+				HttpSystem->SendAudioChunk(WavData, MeetingID, UserID, ChunkIndex);
 			}
 		}
 	}

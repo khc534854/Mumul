@@ -71,3 +71,18 @@ struct FLoginRequest
 	UPROPERTY()
 	FString Password;
 };
+
+USTRUCT()
+struct FVoiceChunkResponse
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FString meeting_id;
+
+	UPROPERTY()
+	FString user_id;
+
+	UPROPERTY()
+	int32 chunk_index = 0;
+};

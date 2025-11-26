@@ -29,7 +29,7 @@ public:
 	// void SendVoiceDataToPython(const TArray<uint8>& WavData);
 
 	UFUNCTION(BlueprintCallable, Category = "Network")
-	void SendMultipartVoice(const TArray<uint8>& WavData, const FString& MetaJsonString);
+	void SendAudioChunk(const TArray<uint8>& WavData, FString MeetingID, FString UserID, int32 ChunkIndex);
 	
 private:
 	// 통신이 끝났을 때(응답 왔을 때) 호출될 콜백 함수
@@ -39,7 +39,7 @@ private:
 
 public:
 	UPROPERTY(EditAnywhere, Category="Network")
-	FString BaseURL = TEXT("http://127.0.0.1:8000/");
+	FString BaseURL = TEXT("http://127.0.0.1:8000");
 };
 
 template <typename RequestType>
