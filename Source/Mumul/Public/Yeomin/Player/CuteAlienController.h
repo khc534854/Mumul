@@ -74,5 +74,4 @@ public:
 	
 	UFUNCTION(Server, Reliable)
 	void Server_SpawnTent(const FTransform& TentTransform);
-	void Server_MoveTent(const FTransform& TentTransform);
 };

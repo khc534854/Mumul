@@ -22,8 +22,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	int32 PoolSize = 6;
 	UPROPERTY()
-	TArray<TObjectPtr<class ATentActor>> TentPool;
+	TMap<TObjectPtr<class ATentActor>, FString> TentPool;
 
 public:
-	ATentActor* SpawnTent(const FTransform& SpawnTransform);
+	void SpawnTent(const FTransform& SpawnTransform, FString Name);
 };

@@ -22,23 +22,45 @@ void AMumulMumulGameMode::BeginPlay()
 	for (int i = 0; i < PoolSize; i++)
 	{
 		ATentActor* Tent = GetWorld()->SpawnActor<ATentActor>(TentClass);
+
+		if (Tent == nullptr)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Tent Spawn FAILED at %d"), i);
+			continue;
+		}
+		
 		Tent->Deactivate();
 		TentPool.Add(Tent);
 	}
 }
 
-ATentActor* AMumulMumulGameMode::SpawnTent(const FTransform& SpawnTransform)
+void AMumulMumulGameMode::SpawnTent(const FTransform& SpawnTransform, FString Name)
 {
-	for (ATentActor* Tent : TentPool)
+	for (const TPair<TObjectPtr<ATentActor>, FString>& PoolElem : TentPool)
 	{
-		if (!Tent->bIsActive)
+		if (PoolElem.Value == Name)
 		{
-			Tent->Activate(SpawnTransform);
-			return Tent;
+			PoolElem.Key->ChangeTransform(SpawnTransform);
+			PoolElem.Key->Mulicast_OnScaleAnimation();
+			return;
+		}
+	}
+	for (TPair<TObjectPtr<ATentActor>, FString>& PoolElem : TentPool)
+	{
+		if (!PoolElem.Key->bIsActive)
+		{
+			PoolElem.Key->Activate(SpawnTransform);
+			PoolElem.Key->Mulicast_OnScaleAnimation();
+			PoolElem.Value = Name;
+			return;
 		}
 	}
 	ATentActor* Tent = GetWorld()->SpawnActor<ATentActor>(TentClass);
+	if (Tent == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Tent Spawn FAILED to ADD"));
+		return;
+	}
 	Tent->Activate(SpawnTransform);
-	TentPool.Add(Tent);
-	return Tent;
+	TentPool.Add(Tent, Name);
 }

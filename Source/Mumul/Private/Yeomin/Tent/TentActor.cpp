@@ -20,7 +20,6 @@ ATentActor::ATentActor()
 void ATentActor::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 void ATentActor::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -34,6 +33,12 @@ void ATentActor::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& Out
 void ATentActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (!FMath::IsNearlyEqual(TentScale, 1.f, 0.1f))
+	{
+		TentScale -= 0.1f;
+		SetActorScale3D(FVector(TentScale));
+	}
 }
 
 void ATentActor::Activate(const FTransform& SpawnTransform)
@@ -45,6 +50,11 @@ void ATentActor::Activate(const FTransform& SpawnTransform)
 	bIsActive = true;
 }
 
+void ATentActor::ChangeTransform(const FTransform& SpawnTransform)
+{
+	SetActorTransform(SpawnTransform);
+}
+
 void ATentActor::Deactivate()
 {
 	SetActorHiddenInGame(true);
@@ -53,3 +63,7 @@ void ATentActor::Deactivate()
 	bIsActive = false;
 }
 
+void ATentActor::Mulicast_OnScaleAnimation_Implementation()
+{
+	TentScale = 5.f;
+}
