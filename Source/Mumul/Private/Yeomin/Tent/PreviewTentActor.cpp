@@ -39,6 +39,7 @@ void APreviewTentActor::OnOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 {
 	if (OtherActor->IsA(ATentActor::StaticClass()))
 	{
+		bIsPlaceable = false;
 		for (TPair<TObjectPtr<UStaticMeshComponent>, TObjectPtr<UMaterialInstanceDynamic>>& Comp : SMeshMap)
 		{
 			Comp.Value->SetVectorParameterValue(TEXT("EmissiveColor"), FLinearColor(1, 0, 0));
@@ -51,6 +52,7 @@ void APreviewTentActor::EndOverlap(UPrimitiveComponent* OverlappedComponent, AAc
 {
 	if (OtherActor->IsA(ATentActor::StaticClass()))
 	{
+		bIsPlaceable = true;
 		for (TPair<TObjectPtr<UStaticMeshComponent>, TObjectPtr<UMaterialInstanceDynamic>>& Comp : SMeshMap)
 		{
 			if (Comp.Key->GetName() == TEXT("Cylinder"))

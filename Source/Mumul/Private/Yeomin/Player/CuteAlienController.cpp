@@ -169,7 +169,8 @@ void ACuteAlienController::Tick(float DeltaSeconds)
 
 		if (WasInputKeyJustPressed(EKeys::LeftMouseButton))
 		{
-			OnClick(HitRes.ImpactPoint + FVector(0.f, 0.f, 81.f), HitRes.ImpactNormal.Rotation() + FRotator(-90.f, 0.f, 0.f));
+			OnClick(HitRes.ImpactPoint + FVector(0.f, 0.f, 81.f),
+			        HitRes.ImpactNormal.Rotation() + FRotator(-90.f, 0.f, 0.f));
 		}
 	}
 }
@@ -204,28 +205,18 @@ void ACuteAlienController::OnToggleMouse()
 
 void ACuteAlienController::OnClick(const FVector& TentLocation, const FRotator& TentRotation)
 {
-	// Install Tent
+	// Place Tent
 	if (PreviewTent)
 	{
-		PreviewTent->Destroy();
-		PreviewTent = nullptr;
+		// If Tent is Placeable
+		if (PreviewTent->bIsPlaceable)
+		{
+			PreviewTent->Destroy();
+			PreviewTent = nullptr;
 
-		if (Tent)
-		{
-			// Move Tent
-			Tent->SetActorLocationAndRotation(TentLocation, TentRotation);
-		}
-		else
-		{
-			// Spawn Tent
-			// Tent = GetWorld()->SpawnActor<ATentActor>(
-			// 	TentClass,
-			// 	TentLocation,
-			// 	TentRotation
-			// );
+			// Spawn or Move Tent
 			Server_SpawnTent(FTransform(TentRotation, TentLocation));
 		}
-		
 	}
 }
 
@@ -257,7 +248,7 @@ void ACuteAlienController::HideRadialUI()
 	/* TODO: 임시 확인용 */
 	ACuteAlienPlayer* CurPlayer = Cast<ACuteAlienPlayer>(GetPawn());
 	CurPlayer->PlayAlienDance();
-	
+
 
 	RadialUI->SetVisibility(ESlateVisibility::Hidden);
 	bIsRadialVisible = false;
@@ -277,13 +268,13 @@ void ACuteAlienController::ShowPreviewTent()
 	SetIgnoreLookInput(false);
 	SetShowMouseCursor(false);
 	SetInputMode(FInputModeGameOnly());
-	
+
 	// Spawn Preview Tent
 	PreviewTent = GetWorld()->SpawnActor<APreviewTentActor>(
 		PreviewTentClass,
 		GetPawn()->GetActorLocation(),
 		FRotator::ZeroRotator
-		);
+	);
 }
 
 void ACuteAlienController::Server_SpawnTent_Implementation(const FTransform& TentTransform)
@@ -291,7 +282,7 @@ void ACuteAlienController::Server_SpawnTent_Implementation(const FTransform& Ten
 	AMumulMumulGameMode* GM = GetWorld()->GetAuthGameMode<AMumulMumulGameMode>();
 	if (GM)
 	{
-		GM->SpawnTent(TentTransform);
+		GM->SpawnTent(TentTransform, GetPlayerState<AMumulPlayerState>()->GetPlayerName());
 	}
 }
 

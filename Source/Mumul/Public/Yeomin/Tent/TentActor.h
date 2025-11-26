@@ -27,5 +27,11 @@ public:
 	UPROPERTY(Replicated)
 	bool bIsActive = false;
 	void Activate(const FTransform& SpawnTransform);
+	void ChangeTransform(const FTransform& SpawnTransform);
 	void Deactivate();
+	
+	float TentScale;
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Mulicast_OnScaleAnimation();
 };
