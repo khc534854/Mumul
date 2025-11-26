@@ -164,12 +164,12 @@ void ACuteAlienController::Tick(float DeltaSeconds)
 		);
 
 		FTransform HitPointTransform(HitRes.ImpactNormal.Rotation() + FRotator(-90.f, 0.f, 0.f),
-		                             HitRes.ImpactPoint + FVector(0.f, 0.f, 81.f), FVector::OneVector);
+		                             HitRes.ImpactPoint, FVector::OneVector);
 		PreviewTent->SetActorTransform(HitPointTransform);
 
 		if (WasInputKeyJustPressed(EKeys::LeftMouseButton))
 		{
-			OnClick(HitRes.ImpactPoint + FVector(0.f, 0.f, 81.f),
+			OnClick(HitRes.ImpactPoint,
 			        HitRes.ImpactNormal.Rotation() + FRotator(-90.f, 0.f, 0.f));
 		}
 	}
