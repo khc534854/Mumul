@@ -90,7 +90,7 @@ void AMumulCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	{
 		// Jumping
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this,
-										   &AMumulCharacter::OnJump);
+										   &AMumulCharacter::Server_OnJump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		// Moving
@@ -143,7 +143,12 @@ void AMumulCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
-void AMumulCharacter::OnJump(const FInputActionValue& Value)
+void AMumulCharacter::Server_OnJump_Implementation(const FInputActionValue& Value)
+{
+	Multicast_OnJumpAnimation();
+}
+
+void AMumulCharacter::Multicast_OnJumpAnimation_Implementation()
 {
 	if (PlayerAnim->Montage_IsPlaying(JumpMontage) == false && GetCharacterMovement()->IsFalling() == false)
 	{

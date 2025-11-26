@@ -31,7 +31,10 @@ protected:
 	TObjectPtr<class UAnimMontage> DanceMontage;
 
 public:
-	void PlayAlienDance();
+	UFUNCTION(Server, Reliable)
+	void Server_PlayAlienDance();
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_PlayAlienDance();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class UVoiceChatComponent* VoiceComponent;

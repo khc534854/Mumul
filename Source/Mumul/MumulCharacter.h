@@ -58,7 +58,10 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
-	void OnJump(const FInputActionValue& Value);
+	UFUNCTION(Server, Reliable)
+	void Server_OnJump(const FInputActionValue& Value);
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_OnJumpAnimation();
 	UPROPERTY()
 	TObjectPtr<class UCuteAlienAnim> PlayerAnim;
 	UPROPERTY()

@@ -247,7 +247,7 @@ void ACuteAlienController::HideRadialUI()
 
 	/* TODO: 임시 확인용 */
 	ACuteAlienPlayer* CurPlayer = Cast<ACuteAlienPlayer>(GetPawn());
-	CurPlayer->PlayAlienDance();
+	CurPlayer->Server_PlayAlienDance();
 
 
 	RadialUI->SetVisibility(ESlateVisibility::Hidden);

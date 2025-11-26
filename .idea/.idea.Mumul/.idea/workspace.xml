@@ -14,9 +14,12 @@
   <component name="ChangeListManager">
     <list default="true" id="32391458-97f0-4d0c-b2e0-5a0e3dac1d86" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Mumul/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Mumul/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/StarterContent/Architecture/Floor_400x400.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/StarterContent/Architecture/Floor_400x400.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/StarterContent/HDRI/HDRI_Epic_Courtyard_Daylight.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/StarterContent/HDRI/HDRI_Epic_Courtyard_Daylight.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Mumul/Private/Yeomin/Tent/TentActor.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Private/Yeomin/Tent/TentActor.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Config/DefaultEngine.ini" beforeDir="false" afterPath="$PROJECT_DIR$/Config/DefaultEngine.ini" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Mumul/MumulCharacter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/MumulCharacter.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Mumul/MumulCharacter.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/MumulCharacter.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Mumul/Private/Yeomin/Player/CuteAlienController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Private/Yeomin/Player/CuteAlienController.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Mumul/Private/Yeomin/Player/CuteAlienPlayer.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Private/Yeomin/Player/CuteAlienPlayer.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Mumul/Public/Yeomin/Player/CuteAlienPlayer.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Public/Yeomin/Player/CuteAlienPlayer.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -164,7 +167,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1764142453327</updated>
-      <workItem from="1764142453329" duration="1294000" />
+      <workItem from="1764142453329" duration="3839000" />
     </task>
     <servers />
   </component>
