@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "WebSocketSubsystem.h"
 #include "GameFramework/Actor.h"
 #include "NetworkTestActor.generated.h"
 
@@ -59,6 +60,22 @@ public:
     FString TestFileName = TEXT("TestRecord.wav");
 
     // ==============================================================================
+    // [설정 3] WebSocket 테스트 데이터
+    // ==============================================================================
+    
+    UPROPERTY(EditAnywhere, Category = "WebSocket | Config")
+    FString WebSocketURL = TEXT("ws://127.0.0.1:8000/ws"); // 서버 주소
+
+    UPROPERTY(EditAnywhere, Category = "WebSocket | Data")
+    FString WS_SessionID = TEXT("sess_001");
+
+    UPROPERTY(EditAnywhere, Category = "WebSocket | Data")
+    FString WS_UserID = TEXT("user123");
+
+    UPROPERTY(EditAnywhere, Category = "WebSocket | Data")
+    FString WS_QueryText = TEXT("파이썬 함수를 쉽게 설명해줘");
+    
+    // ==============================================================================
     // [기능] 테스트 실행 버튼
     // ==============================================================================
     
@@ -73,10 +90,30 @@ public:
     // 3. 멀티파트 음성 전송 테스트
     UFUNCTION(CallInEditor, Category = "HTTP | Actions")
     void TestSendMultipartVoice();
+    UWebSocketSubsystem* GetWSSubsystem();
 
     // [추가] 로컬 파일 전송 버튼
     // UFUNCTION(CallInEditor, Category = "HTTP | Actions")
     // void TestSendLocalFile();
+
+    // ==============================================================================
+    // [기능] WebSocket 테스트 버튼
+    // ==============================================================================
+    
+    UFUNCTION(CallInEditor, Category = "WebSocket | Actions")
+    void TestWS_Connect();
+
+    UFUNCTION(CallInEditor, Category = "WebSocket | Actions")
+    void TestWS_StartChat();
+
+    UFUNCTION(CallInEditor, Category = "WebSocket | Actions")
+    void TestWS_SendQuery();
+
+    UFUNCTION(CallInEditor, Category = "WebSocket | Actions")
+    void TestWS_EndChat();
+
+    UFUNCTION(CallInEditor, Category = "WebSocket | Actions")
+    void TestWS_Close();
 
 private:
     // 헬퍼 함수: 테스트 시작 전 URL 설정 등을 처리

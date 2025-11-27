@@ -13,6 +13,8 @@
 #include "Components/WidgetSwitcher.h"
 #include "Base/SessionInfoWidget.h"
 #include "Components/ScrollBox.h"
+#include "khc/Player/MumulPlayerState.h"
+#include "khc/System/NetworkStructs.h"
 
 void ULobbyWidget::NativeConstruct()
 {
@@ -73,6 +75,11 @@ void ULobbyWidget::OnClickLogin()
         if (AccountMap.Contains(InputId) && AccountMap[InputId] == InputPw)
         {
             // 성공 처리 함수 직접 호출 (true)
+            if (InputId == TEXT("admin"))
+                WidgetSwitcher->SetActiveWidgetIndex(2);
+            else if (InputId == TEXT("user1"))
+                WidgetSwitcher->SetActiveWidgetIndex(1);
+                
             OnServerLoginResponse(true, TEXT("관리자/테스트 계정 접속"));
         }
         else
@@ -99,27 +106,56 @@ void ULobbyWidget::OnClickLogin()
 void ULobbyWidget::OnServerLoginResponse(bool bSuccess, FString Message)
 {
     btn_Login->SetIsEnabled(true);
-    textLoginMsg->SetText(FText::FromString(Message)); // 서버 메시지 출력
 
     if (bSuccess)
     {
-        textLoginMsg->SetColorAndOpacity(FLinearColor::Green);
-        Cast<UMumulGameInstance>(GetGameInstance())->MyLoginID = PendingID;
-
-        // 관리자 여부 판단 (서버 응답에 권한 정보가 없으므로 기존대로 ID로 판단)
-        if (PendingID == TEXT("admin"))
+        // 1. JSON 파싱 (Message에는 JSON 원본이 들어있음)
+        FLoginSuccessResponse LoginData;
+        if (FJsonObjectConverter::JsonObjectStringToUStruct(Message, &LoginData, 0, 0))
         {
-            btn_goCreate->SetVisibility(ESlateVisibility::Visible);
+            // 2. UI 메시지 업데이트
+            FString WelcomeMsg = FString::Printf(TEXT("%s님 환영합니다."), *LoginData.name);
+            textLoginMsg->SetText(FText::FromString(WelcomeMsg));
+            textLoginMsg->SetColorAndOpacity(FLinearColor::Green);
+
+            // 3. GameInstance에 정보 저장
+            UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
+            if (GI)
+            {
+                GI->PlayerUniqueID = LoginData.userId; 
+                GI->PlayerName = LoginData.name;     
+                GI->CampID = LoginData.campId;
+                GI->PlayerType = LoginData.userType;
+                GI->bHasSurveyCompleted = LoginData.tendencyCompleted;
+                // ... 필요한 정보 다 저장
+            }
+
+            // 5. 관리자 여부 확인 및 화면 이동
+            // (UserType이나 Name으로 판단. 여기선 기존대로 입력한 ID로 판단하거나 서버 데이터 활용)
+            if (PendingID == TEXT("admin") || LoginData.name == TEXT("관리자") || PendingID == TEXT("admin1")) 
+            {
+                //btn_goCreate->SetVisibility(ESlateVisibility::Visible);
+                WidgetSwitcher->SetActiveWidgetIndex(2);
+            }
+            else if (PendingID == TEXT("user1"))
+            {
+                //btn_goCreate->SetVisibility(ESlateVisibility::Collapsed);
+                WidgetSwitcher->SetActiveWidgetIndex(1);
+            }
+
+            // 다음 화면으로
         }
         else
         {
-            btn_goCreate->SetVisibility(ESlateVisibility::Collapsed);
+            // JSON 파싱 실패 시
+            textLoginMsg->SetText(FText::FromString(TEXT("데이터 처리 오류")));
+            textLoginMsg->SetColorAndOpacity(FLinearColor::Red);
         }
-
-        WidgetSwitcher->SetActiveWidgetIndex(1);
     }
     else
     {
+        // 실패 시 Message는 에러 메시지 텍스트임
+        textLoginMsg->SetText(FText::FromString(Message));
         textLoginMsg->SetColorAndOpacity(FLinearColor::Red);
     }
 }
@@ -128,7 +164,7 @@ void ULobbyWidget::OnServerLoginResponse(bool bSuccess, FString Message)
 void ULobbyWidget::OnClickGoCreate()
 {
     // [수정] 인덱스 번호 변경 (2번이 생성 화면이라고 가정)
-    WidgetSwitcher->SetActiveWidgetIndex(2);
+    WidgetSwitcher->SetActiveWidgetIndex(3);
 }
 
 void ULobbyWidget::OnClickGoFind()
@@ -140,11 +176,13 @@ void ULobbyWidget::OnClickGoFind()
 
 void ULobbyWidget::OnClickCreate()
 {
-    FString sessionName = editSessionName->GetText().ToString();
-    // 최소 2명 이상 보장
-    int32 playerCount = FMath::Max(2, (int32)sliderPlayerCount->GetValue());
+    //FString sessionName = editSessionName->GetText().ToString();
+    FString sessionName = FString("머물머물");
     FString mapURL = FString("/Game/Khc/Maps/Island?listen");
-    gi->CreateGameSession(sessionName, playerCount, false, mapURL);
+    // 최소 2명 이상 보장
+    //int32 playerCount = FMath::Max(2, (int32)sliderPlayerCount->GetValue());
+    //gi->CreateGameSession(sessionName, playerCount, false, mapURL);
+    gi->CreateGameSession(sessionName, 20, false, mapURL);
 }
 
 void ULobbyWidget::OnValudeChangedSessionName(const FText& text)

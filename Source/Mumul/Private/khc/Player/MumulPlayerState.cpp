@@ -20,6 +20,12 @@ void AMumulPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	// 변수 동기화 등록
 	DOREPLIFETIME(AMumulPlayerState, VoiceChannelID);
+	DOREPLIFETIME(AMumulPlayerState, PS_UserIndex);
+	DOREPLIFETIME(AMumulPlayerState, PS_RealName);
+	DOREPLIFETIME(AMumulPlayerState, PS_UserType);
+	DOREPLIFETIME(AMumulPlayerState, PS_TendencyID);
+	DOREPLIFETIME(AMumulPlayerState, PS_PlayerTeamList);
+	DOREPLIFETIME(AMumulPlayerState, bIsTentInstalled);
 }
 
 void AMumulPlayerState::OnRep_VoiceChannelID()

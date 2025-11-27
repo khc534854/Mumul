@@ -117,24 +117,15 @@ void UHttpNetworkSubsystem::OnLoginComplete(FHttpRequestPtr Request, FHttpRespon
 
     if (Code == 200) // 성공
     {
-        FLoginSuccessResponse SuccessData;
-        if (FJsonObjectConverter::JsonObjectStringToUStruct(Content, &SuccessData, 0, 0))
-        {
-            // 성공 메시지로 이름 전달 (예: "홍길동님 환영합니다")
-            FString Msg = FString::Printf(TEXT("%s님 환영합니다."), *SuccessData.name);
-            OnLoginResponse.Broadcast(true, Msg);
-        }
-        else
-        {
-            OnLoginResponse.Broadcast(false, TEXT("응답 데이터 파싱 실패"));
-        }
+        // [수정] 성공 시에는 가공하지 말고 JSON 원본(Content)을 그대로 보냅니다.
+        // 그래야 위젯에서 데이터를 뽑아 쓸 수 있습니다.
+        OnLoginResponse.Broadcast(true, Content);
     }
-    else if (Code == 401) // 실패 (아이디/비번 틀림)
+    else if (Code == 401) // 실패
     {
         FLoginFailResponse FailData;
         if (FJsonObjectConverter::JsonObjectStringToUStruct(Content, &FailData, 0, 0))
         {
-            // 서버가 보낸 에러 메시지 그대로 전달
             OnLoginResponse.Broadcast(false, FailData.detail.message);
         }
         else

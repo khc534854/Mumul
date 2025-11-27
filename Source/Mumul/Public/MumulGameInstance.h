@@ -71,6 +71,29 @@ private:
 	FName RequestedSessionName;
 	FString RequestedTravelURL;
 
+	// Player Unique Information
 public:
-	FString MyLoginID;
+	UPROPERTY(BlueprintReadOnly, Category = "User Info")
+	int32 PlayerUniqueID;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "User Info")
+	FString PlayerName;
+
+	UPROPERTY(BlueprintReadOnly, Category = "User Info")
+	FString PlayerType;
+
+	UPROPERTY(BlueprintReadOnly, Category = "User Info")
+	int32 PlayerTendency;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "User Info")
+	TArray<FString> PlayerTeamList;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "User Info")
+	int32 CampID;
+
+	
+	// 로컬 흐름 제어용 (Replication 불필요)
+	bool bHasSurveyCompleted = false;
+	bool bHasTutorialCompleted = false;
+	
 };

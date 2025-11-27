@@ -191,7 +191,7 @@ void UMumulGameInstance::OnJoinSessionComplete(FName SessionName, EOnJoinSession
 	{
 		// [수정] 접속 주소 뒤에 내 아이디를 옵션으로 붙임
 		// 결과 예시: "123.456.78.9:7777?Name=user1"
-		FString TravelURL = FString::Printf(TEXT("%s?Name=%s"), *ConnectString, *MyLoginID);
+		FString TravelURL = FString::Printf(TEXT("%s?Name=%d"), *ConnectString, PlayerUniqueID);
 
 		UE_LOG(LogTemp, Log, TEXT("Traveling to: %s"), *TravelURL);
 

@@ -8,6 +8,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Misc/DateTime.h"
 #include "JsonObjectConverter.h" // [필수] JSON 변환용
+#include "MumulGameInstance.h"
 #include "Library/MumulVoiceFunctionLibrary.h"
 
 ANetworkTestActor::ANetworkTestActor()
@@ -23,7 +24,8 @@ void ANetworkTestActor::BeginPlay()
 // [헬퍼] 서브시스템을 가져오고 URL 설정을 적용하는 함수
 UHttpNetworkSubsystem* ANetworkTestActor::PrepareSubsystem()
 {
-    UGameInstance* GI = GetGameInstance();
+    UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
+    
     if (!GI) 
     {
         UE_LOG(LogTemp, Error, TEXT("[Test] GameInstance Not Found! Please PLAY the game first."));
@@ -100,6 +102,71 @@ void ANetworkTestActor::TestSendMultipartVoice()
         {
             UE_LOG(LogTemp, Error, TEXT("[Test] Failed to load file: %s. Please check if the file exists in Saved/RecordedVoice/"), *TestFileName);
         }
+    }
+}
+
+UWebSocketSubsystem* ANetworkTestActor::GetWSSubsystem()
+{
+    UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
+    if (GI)
+    {
+        return GI->GetSubsystem<UWebSocketSubsystem>();
+    }
+    return nullptr;
+}
+
+void ANetworkTestActor::TestWS_Connect()
+{
+    if (UWebSocketSubsystem* WS = GetWSSubsystem())
+    {
+        WS->Connect(WebSocketURL);
+    }
+}
+
+void ANetworkTestActor::TestWS_StartChat()
+{
+    if (UWebSocketSubsystem* WS = GetWSSubsystem())
+    {
+        FWSRequest_StartChat Req;
+        Req.sessionId = WS_SessionID;
+        Req.userId = WS_UserID;
+
+        // 구조체를 JSON으로 변환하여 전송
+        WS->SendStructMessage(Req);
+        UE_LOG(LogTemp, Log, TEXT("[Test] WS Start Chat Sent"));
+    }
+}
+
+void ANetworkTestActor::TestWS_SendQuery()
+{
+    if (UWebSocketSubsystem* WS = GetWSSubsystem())
+    {
+        FWSRequest_Query Req;
+        Req.sessionId = WS_SessionID;
+        Req.query = WS_QueryText;
+
+        WS->SendStructMessage(Req);
+        UE_LOG(LogTemp, Log, TEXT("[Test] WS Query Sent: %s"), *WS_QueryText);
+    }
+}
+
+void ANetworkTestActor::TestWS_EndChat()
+{
+    if (UWebSocketSubsystem* WS = GetWSSubsystem())
+    {
+        FWSRequest_EndChat Req;
+        Req.sessionId = WS_SessionID;
+
+        WS->SendStructMessage(Req);
+        UE_LOG(LogTemp, Log, TEXT("[Test] WS End Chat Sent"));
+    }
+}
+
+void ANetworkTestActor::TestWS_Close()
+{
+    if (UWebSocketSubsystem* WS = GetWSSubsystem())
+    {
+        WS->Close();
     }
 }
 

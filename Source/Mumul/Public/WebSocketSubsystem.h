@@ -5,7 +5,12 @@
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "IWebSocket.h"
+#include "JsonObjectConverter.h"
 #include "WebSocketSubsystem.generated.h"
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAIChatAnswer, FString, Answer); // 답변 왔을 때
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAIChatStarted, FString, Message); // 시작됨
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAIChatEnded, FString, Message);   // 종료됨
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWebSocketConnected);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWebSocketClosed, int32, StatusCode);
@@ -21,24 +26,23 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 
-	// [핵심] 서버 연결 함수
 	UFUNCTION(BlueprintCallable, Category = "Network|WebSocket")
 	void Connect(const FString& Url);
 
-	// [핵심] 연결 종료 함수
 	UFUNCTION(BlueprintCallable, Category = "Network|WebSocket")
 	void Close();
 
-	// [핵심] 메시지 전송 함수
 	UFUNCTION(BlueprintCallable, Category = "Network|WebSocket")
 	void SendMessage(const FString& Message);
 
-	// 연결 상태 확인
+	// [추가] 구조체를 JSON으로 변환해서 보내는 템플릿 함수
+	template <typename StructType>
+	void SendStructMessage(const StructType& InStruct);
+
 	UFUNCTION(BlueprintPure, Category = "Network|WebSocket")
 	bool IsConnected() const;
 
 public:
-	// 외부에서 바인딩할 델리게이트들
 	UPROPERTY(BlueprintAssignable)
 	FOnWebSocketConnected OnConnected;
 
@@ -46,12 +50,39 @@ public:
 	FOnWebSocketClosed OnClosed;
 
 	UPROPERTY(BlueprintAssignable)
-	FOnWebSocketMessage OnMessageReceived;
+	FOnWebSocketMessage OnMessageReceived; // 원본 메시지 알림
 
 	UPROPERTY(BlueprintAssignable)
 	FOnWebSocketError OnError;
 
+	// [추가] AI 채팅용 델리게이트
+	UPROPERTY(BlueprintAssignable)
+	FOnAIChatAnswer OnAIChatAnswer;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnAIChatStarted OnAIChatStarted;
+    
+	UPROPERTY(BlueprintAssignable)
+	FOnAIChatEnded OnAIChatEnded;
+
 private:
-	// 실제 웹소켓 객체 (포인터로 관리)
 	TSharedPtr<IWebSocket> WebSocket;
+
+	// [추가] 수신된 메시지 파싱 함수
+	void HandleWebSocketMessage(const FString& Message);
 };
+
+// 템플릿 함수 구현
+template <typename StructType>
+void UWebSocketSubsystem::SendStructMessage(const StructType& InStruct)
+{
+	FString JsonString;
+	if (FJsonObjectConverter::UStructToJsonObjectString(StructType::StaticStruct(), &InStruct, JsonString, 0, 0))
+	{
+		SendMessage(JsonString);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("[WebSocket] Failed to serialize struct to JSON"));
+	}
+}

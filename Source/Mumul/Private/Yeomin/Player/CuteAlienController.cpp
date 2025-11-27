@@ -9,6 +9,7 @@
 #include "Yeomin/UI/RadialUI.h"
 #include "Blueprint/UserWidget.h"
 #include "InputMappingContext.h"
+#include "MumulGameInstance.h"
 #include "GameFramework/GameStateBase.h"
 #include "khc/Player/MumulPlayerState.h"
 #include "MumulMumulGameMode.h"
@@ -125,6 +126,20 @@ void ACuteAlienController::BeginPlay()
 
 		RadialUI->SetVisibility(ESlateVisibility::Hidden);
 	}
+
+	if (IsLocalController())
+	{
+		UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
+		if (GI)
+		{
+			// 서버 RPC 호출
+			Server_InitPlayerInfo(
+			GI->PlayerUniqueID,
+				GI->PlayerName,
+				GI->PlayerType,
+				GI->PlayerTendency);
+		}
+	}
 }
 
 void ACuteAlienController::SetupInputComponent()
@@ -136,6 +151,20 @@ void ACuteAlienController::SetupInputComponent()
 	Input->BindAction(IA_Radial, ETriggerEvent::Completed, this, &ACuteAlienController::HideRadialUI);
 	Input->BindAction(IA_Cancel, ETriggerEvent::Started, this, &ACuteAlienController::OnCancelUI);
 	Input->BindAction(IA_ToggleMouse, ETriggerEvent::Started, this, &ACuteAlienController::OnToggleMouse);
+}
+
+void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const FString& Name, const FString& Type, int32 Tendency)
+{
+	AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>();
+	if (PS)
+	{
+		PS->PS_UserIndex = UID;
+		PS->SetPlayerName(Name); // 엔진 기본 이름 설정
+		PS->PS_UserType = Type;
+		PS->PS_TendencyID = Tendency;
+        
+		ForceNetUpdate(); // 즉시 동기화
+	}
 }
 
 void ACuteAlienController::Tick(float DeltaSeconds)

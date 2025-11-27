@@ -116,6 +116,9 @@ struct FLoginSuccessResponse
 
 	UPROPERTY()
 	bool tendencyCompleted = false;
+
+	UPROPERTY()
+	FString userType;
 };
 
 // [응답] 로그인 실패 (401 Error) - 내부 detail 구조체 필요
@@ -153,4 +156,71 @@ struct FMeetingSummaryResponse
 
 	UPROPERTY()
 	FString summary_text; // 요약된 내용
+};
+
+// NetworkStructs.h 에 추가
+
+// --- [WebSocket 요청용 구조체] ---
+
+// 1. 세션 시작 (start_chat)
+USTRUCT()
+struct FWSRequest_StartChat
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FString event = TEXT("start_chat");
+
+	UPROPERTY()
+	FString sessionId;
+
+	UPROPERTY()
+	FString userId;
+};
+
+// 2. 질문 보내기 (query)
+USTRUCT()
+struct FWSRequest_Query
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FString event = TEXT("query");
+
+	UPROPERTY()
+	FString sessionId;
+
+	UPROPERTY()
+	FString query;
+};
+
+// 3. 세션 종료 (end_chat)
+USTRUCT()
+struct FWSRequest_EndChat
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FString event = TEXT("end_chat");
+
+	UPROPERTY()
+	FString sessionId;
+};
+
+// --- [WebSocket 응답 데이터용 구조체] ---
+
+// 답변 수신용 (answer)
+USTRUCT()
+struct FWSResponse_Answer
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FString event;
+
+	UPROPERTY()
+	FString sessionId;
+
+	UPROPERTY()
+	FString answer;
 };

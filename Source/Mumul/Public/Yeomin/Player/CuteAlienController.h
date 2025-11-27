@@ -20,6 +20,9 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
 
+	UFUNCTION(Server, Reliable)
+	void Server_InitPlayerInfo(int32 UID, const FString& Name, const FString& Type, int32 Tendency);
+
 	UPROPERTY()
 	TObjectPtr<class UInputMappingContext> IMC_Player;
 
