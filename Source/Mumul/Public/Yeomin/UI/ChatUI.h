@@ -14,24 +14,23 @@ class MUMUL_API UChatUI : public UUserWidget
 {
 	GENERATED_BODY()
 
-
 protected:
 	virtual void NativeConstruct() override;
 	
 	UFUNCTION()
-	void OnTextBoxCommitted(const FText& text, ETextCommit::Type commitMethod);
+	void OnTextBoxCommitted(const FText& Text, ETextCommit::Type CommitMethod);
 
 	// 채팅 내용 담고 있는 ScrollBox
 	UPROPERTY(meta=(BindWidget))
-	class UScrollBox* scrollChat;
+	TObjectPtr<class UScrollBox> ScrollBox;
 	// 채팅 내용 입력 하는 EditableTextBox
 	UPROPERTY(meta=(BindWidget))
-	class UEditableTextBox* editChat;
+	TObjectPtr<class UEditableTextBox> EditBox;
 	
 	// ChatWidget 블루프린트
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<class UChatMessageBlockUI> chatWiget;
+	TSubclassOf<class UChatMessageBlockUI> ChatMessageBlockUIClass;
 	// 채팅 UI 추가 함수
-	void AddChat(FString text);
+	void AddChat(FString Text);
 
 };

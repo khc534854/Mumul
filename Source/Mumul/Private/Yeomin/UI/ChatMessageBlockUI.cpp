@@ -2,10 +2,9 @@
 
 
 #include "Yeomin/UI/ChatMessageBlockUI.h"
-
 #include "Components/TextBlock.h"
 
-void UChatMessageBlockUI::SetContent(FString content)
+void UChatMessageBlockUI::SetContent(FString Content)
 {
-	textContent->SetText(FText::FromString(content));
+	TextContent->SetText(FText::FromString(Content));
 }

@@ -7,18 +7,26 @@
 #include "khc/Player/MumulPlayerState.h"
 #include "Yeomin/UI/ChatMessageBlockUI.h"
 
+
 void UChatUI::NativeConstruct()
 {
 	Super::NativeConstruct();
+	
+	static ConstructorHelpers::FClassFinder<UChatMessageBlockUI> ChatChunkUIFinder(
+		TEXT("/Game/Yeomin/Characters/UI/BP/WBP_ChatMessageUI.WBP_ChatMessageUI_C"));
+	if (ChatChunkUIFinder.Succeeded())
+	{
+		ChatMessageBlockUIClass = ChatChunkUIFinder.Class;
+	}
 
-	// 채팅 입력 후 엔터쳤을 때 호출되는 함수 등록
-	editChat->OnTextCommitted.AddDynamic(this, &UChatUI::OnTextBoxCommitted);
+	// Register Text Commit callback function
+	EditBox->OnTextCommitted.AddDynamic(this, &UChatUI::OnTextBoxCommitted);
 }
 
-void UChatUI::OnTextBoxCommitted(const FText& text, ETextCommit::Type commitMethod)
+void UChatUI::OnTextBoxCommitted(const FText& Text, ETextCommit::Type CommitMethod)
 {
-	// 만약에 엔터를 친 이벤트면
-	if (commitMethod == ETextCommit::OnEnter)
+	// If On Enter
+	if (CommitMethod == ETextCommit::OnEnter)
 	{
 		// 서버에게 채팅 내용 전달
 		// 내 PlayerState 가져오자.
@@ -26,39 +34,38 @@ void UChatUI::OnTextBoxCommitted(const FText& text, ETextCommit::Type commitMeth
 		AMumulPlayerState* ps = pc->GetPlayerState<AMumulPlayerState>();
 		//TODO: ps->ServerRPC_SendChat(text.ToString());
 
-		// editChat 에 남아있는 내용 초기화
-		editChat->SetText(FText());
+		// Init EditBox
+		EditBox->SetText(FText());
 	}
-	else if (commitMethod == ETextCommit::OnCleared)
+	// 
+	else if (CommitMethod == ETextCommit::OnCleared)
 	{
-		// 강제로 editChat 을 활성화
-		editChat->SetFocus();
+		// Focus EditBox
+		EditBox->SetFocus();
 	}
 }
 
-void UChatUI::AddChat(FString text)
+void UChatUI::AddChat(FString Text)
 {
-	// 현재 스크롤 위치 값
-	float scrollOffset = scrollChat->GetScrollOffset();
-	// 스크롤이 맨 끝일때 값
-	float scrollOffsetOfEnd = scrollChat->GetScrollOffsetOfEnd();
+	// Scroll Current Location
+	float ScrollOffset = ScrollBox->GetScrollOffset();
+	// Scroll End Location
+	float EndOfScrollOffset = ScrollBox->GetScrollOffsetOfEnd();
 	
-	// 채팅 UI 만들어서 채팅 내용에 추가
-	UChatMessageBlockUI* chat = CreateWidget<UChatMessageBlockUI>(GetWorld(), chatWiget);
-	scrollChat->AddChild(chat);
-	chat->SetContent(text);
+	// Add Chat Chunk to ScrollBox
+	UChatMessageBlockUI* Chat = CreateWidget<UChatMessageBlockUI>(GetWorld(), ChatMessageBlockUIClass);
+	ScrollBox->AddChild(Chat);
+	Chat->SetContent(Text);
 	
-
-	// 만약에 스크롤이 위치가 맨 끝이라면
-	if (scrollOffset == scrollOffsetOfEnd)
+	// If Scroll is at End
+	if (ScrollOffset == EndOfScrollOffset)
 	{
-		// 개행되는 채팅이 추가되면 한줄로 크기를 인식해서 발생하는 문제 때문에
-		// ScrollToEnd 를 0.01 초 뒤에 실행
-		FTimerHandle handle;
-		GetWorld()->GetTimerManager().SetTimer(handle, [this]()
+		// Scroll To End after 0.01s
+		FTimerHandle Handle;
+		GetWorld()->GetTimerManager().SetTimer(Handle, [this]()
 		{
-			// 스크롤 위치를 맨 끝으로 해라!
-			scrollChat->ScrollToEnd();
+			// Scroll To End
+			ScrollBox->ScrollToEnd();
 		}, 0.01f, false);
 	}
 }

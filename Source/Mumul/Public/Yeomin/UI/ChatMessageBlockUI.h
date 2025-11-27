@@ -14,10 +14,9 @@ class MUMUL_API UChatMessageBlockUI : public UUserWidget
 {
 	GENERATED_BODY()
 
-public:
-	// 채팅 내용
+protected:
 	UPROPERTY(meta=(BindWidget))
-	class UTextBlock* textContent;
-	// 내용 변경 함수
-	void SetContent(FString content);
+	TObjectPtr<class UTextBlock> TextContent;
+public:
+	void SetContent(FString Content);
 };
