@@ -45,10 +45,10 @@ void ATentActor::Tick(float DeltaTime)
 		TentSequence1st = FMath::Clamp(TentSequence1st + DeltaTime * SequenceTime, 0.f, 1.f);
 
 		float StartXY = 0.f;
-		float StartZ = 6.2f;
+		float StartZ = 6.22f;
 
-		float EndXY = 1.8f;
-		float EndZ = 0.2f;
+		float EndXY = 1.84f;
+		float EndZ = 0.19f;
 		
 		float EaseXY = UMathLibrary::EaseInOutExpo(TentSequence1st);
 		float EaseZ = UMathLibrary::EaseOutExpo(TentSequence1st);
@@ -66,8 +66,8 @@ void ATentActor::Tick(float DeltaTime)
 		float SequenceTime = 1.4f;
 		TentSequence2nd = FMath::Clamp(TentSequence2nd + DeltaTime * SequenceTime, 0.f, 1.f);
 
-		float StartXY = 1.8f;
-		float StartZ = 0.2f;
+		float StartXY = 1.84f;
+		float StartZ = 0.19f;
 
 		float End = 1.f;
 

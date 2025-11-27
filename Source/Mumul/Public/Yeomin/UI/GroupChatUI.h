@@ -4,33 +4,37 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "ChatUI.generated.h"
+#include "GroupChatUI.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class MUMUL_API UChatUI : public UUserWidget
+class MUMUL_API UGroupChatUI : public UUserWidget
 {
 	GENERATED_BODY()
-
+	
 protected:
 	virtual void NativeConstruct() override;
 	
 	UFUNCTION()
 	void OnTextBoxCommitted(const FText& Text, ETextCommit::Type CommitMethod);
-
-	// 채팅 내용 담고 있는 ScrollBox
+	
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UScrollBox> ScrollBox;
-	// 채팅 내용 입력 하는 EditableTextBox
+	TObjectPtr<class UScrollBox> ChatScrollBox;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UEditableTextBox> EditBox;
 	
-	// ChatWidget 블루프린트
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditDefaultsOnly, Category="UI Class")
 	TSubclassOf<class UChatMessageBlockUI> ChatMessageBlockUIClass;
-	// 채팅 UI 추가 함수
 	void AddChat(FString Text);
-
+	
+	UPROPERTY(EditDefaultsOnly, Category="UI Class")
+	TSubclassOf<class UChatMessageBlockUI> GroupProfileUIClass;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UButton> AddGroupBtn;
+	UFUNCTION()
+	void ShowInvitationUI();
+	
+	
 };

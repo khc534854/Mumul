@@ -1,29 +1,24 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Yeomin/UI/ChatUI.h"
+#include "Yeomin/UI/GroupChatUI.h"
+
+#include "Components/Button.h"
 #include "Components/EditableTextBox.h"
 #include "Components/ScrollBox.h"
 #include "khc/Player/MumulPlayerState.h"
 #include "Yeomin/UI/ChatMessageBlockUI.h"
 
-
-void UChatUI::NativeConstruct()
+void UGroupChatUI::NativeConstruct()
 {
 	Super::NativeConstruct();
 	
-	static ConstructorHelpers::FClassFinder<UChatMessageBlockUI> ChatChunkUIFinder(
-		TEXT("/Game/Yeomin/Characters/UI/BP/WBP_ChatMessageUI.WBP_ChatMessageUI_C"));
-	if (ChatChunkUIFinder.Succeeded())
-	{
-		ChatMessageBlockUIClass = ChatChunkUIFinder.Class;
-	}
-
 	// Register Text Commit callback function
-	EditBox->OnTextCommitted.AddDynamic(this, &UChatUI::OnTextBoxCommitted);
+	EditBox->OnTextCommitted.AddDynamic(this, &UGroupChatUI::OnTextBoxCommitted);
+	AddGroupBtn->OnPressed.AddDynamic(this, &UGroupChatUI::ShowInvitationUI);
 }
 
-void UChatUI::OnTextBoxCommitted(const FText& Text, ETextCommit::Type CommitMethod)
+void UGroupChatUI::OnTextBoxCommitted(const FText& Text, ETextCommit::Type CommitMethod)
 {
 	// If On Enter
 	if (CommitMethod == ETextCommit::OnEnter)
@@ -45,16 +40,16 @@ void UChatUI::OnTextBoxCommitted(const FText& Text, ETextCommit::Type CommitMeth
 	}
 }
 
-void UChatUI::AddChat(FString Text)
+void UGroupChatUI::AddChat(FString Text)
 {
 	// Scroll Current Location
-	float ScrollOffset = ScrollBox->GetScrollOffset();
+	float ScrollOffset = ChatScrollBox->GetScrollOffset();
 	// Scroll End Location
-	float EndOfScrollOffset = ScrollBox->GetScrollOffsetOfEnd();
+	float EndOfScrollOffset = ChatScrollBox->GetScrollOffsetOfEnd();
 	
 	// Add Chat Chunk to ScrollBox
 	UChatMessageBlockUI* Chat = CreateWidget<UChatMessageBlockUI>(GetWorld(), ChatMessageBlockUIClass);
-	ScrollBox->AddChild(Chat);
+	ChatScrollBox->AddChild(Chat);
 	Chat->SetContent(Text);
 	
 	// If Scroll is at End
@@ -65,7 +60,12 @@ void UChatUI::AddChat(FString Text)
 		GetWorld()->GetTimerManager().SetTimer(Handle, [this]()
 		{
 			// Scroll To End
-			ScrollBox->ScrollToEnd();
+			ChatScrollBox->ScrollToEnd();
 		}, 0.01f, false);
 	}
+}
+
+void UGroupChatUI::ShowInvitationUI()
+{
+	
 }
