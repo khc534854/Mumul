@@ -41,11 +41,15 @@ void ACuteAlienPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
 
-void ACuteAlienPlayer::PlayAlienDance()
+void ACuteAlienPlayer::Server_PlayAlienDance_Implementation()
 {
-	if (PlayerAnim->Montage_IsPlaying(DanceMontage))
-		return;
-	
-	PlayerAnim->Montage_Play(DanceMontage);
+	Multicast_PlayAlienDance();
 }
 
+void ACuteAlienPlayer::Multicast_PlayAlienDance_Implementation()
+{
+		if (PlayerAnim->Montage_IsPlaying(DanceMontage))
+			return;
+	
+		PlayerAnim->Montage_Play(DanceMontage);
+}

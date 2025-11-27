@@ -3,6 +3,10 @@
 
 #include "Yeomin/Tent/TentActor.h"
 
+#include "INodeAndChannelMappings.h"
+#include "DSP/MidiNoteQuantizer.h"
+#include "DynamicMesh/MeshTransforms.h"
+#include "Library/MathLibrary.h"
 #include "Net/UnrealNetwork.h"
 
 
@@ -29,15 +33,50 @@ void ATentActor::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& Out
 	DOREPLIFETIME(ATentActor, bIsActive)
 }
 
-// Called every frame
+
 void ATentActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (!FMath::IsNearlyEqual(TentScale, 1.f, 0.1f))
+	// 1st Sequence: Slime Effect
+	if (TentSequence1st < 1.f)
 	{
-		TentScale -= 0.1f;
-		SetActorScale3D(FVector(TentScale));
+		float SequenceTime = 1.f;
+		TentSequence1st = FMath::Clamp(TentSequence1st + DeltaTime * SequenceTime, 0.f, 1.f);
+
+		float StartXY = 0.f;
+		float StartZ = 6.2f;
+
+		float EndXY = 1.8f;
+		float EndZ = 0.2f;
+		
+		float EaseXY = UMathLibrary::EaseInOutExpo(TentSequence1st);
+		float EaseZ = UMathLibrary::EaseOutExpo(TentSequence1st);
+
+		float XY = FMath::Lerp(StartXY, EndXY, EaseXY);
+		float Z = FMath::Lerp(StartZ, EndZ, EaseZ);
+
+		SetActorScale3D(FVector(XY, XY, Z));
+		return;
+	}
+
+	// 2nd Sequence: Elastic Bounce
+	if (TentSequence2nd < 1.f)
+	{
+		float SequenceTime = 1.4f;
+		TentSequence2nd = FMath::Clamp(TentSequence2nd + DeltaTime * SequenceTime, 0.f, 1.f);
+
+		float StartXY = 1.8f;
+		float StartZ = 0.2f;
+
+		float End = 1.f;
+
+		float Ease = UMathLibrary::EaseOutElastic(TentSequence2nd);
+
+		float XY = FMath::Lerp(StartXY, End, Ease);
+		float Z = FMath::Lerp(StartZ, End, Ease);
+
+		SetActorScale3D(FVector(XY, XY, Z));
 	}
 }
 
@@ -65,5 +104,6 @@ void ATentActor::Deactivate()
 
 void ATentActor::Mulicast_OnScaleAnimation_Implementation()
 {
-	TentScale = 5.f;
+	TentSequence1st = 0.f;
+	TentSequence2nd = 0.f;
 }

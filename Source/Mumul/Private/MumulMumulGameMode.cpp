@@ -40,6 +40,7 @@ void AMumulMumulGameMode::SpawnTent(const FTransform& SpawnTransform, FString Na
 	{
 		if (PoolElem.Value == Name)
 		{
+			PoolElem.Key->SetOwnerName(FName(Name));
 			PoolElem.Key->ChangeTransform(SpawnTransform);
 			PoolElem.Key->Mulicast_OnScaleAnimation();
 			return;
@@ -49,6 +50,7 @@ void AMumulMumulGameMode::SpawnTent(const FTransform& SpawnTransform, FString Na
 	{
 		if (!PoolElem.Key->bIsActive)
 		{
+			PoolElem.Key->SetOwnerName(FName(Name));
 			PoolElem.Key->Activate(SpawnTransform);
 			PoolElem.Key->Mulicast_OnScaleAnimation();
 			PoolElem.Value = Name;
@@ -61,6 +63,7 @@ void AMumulMumulGameMode::SpawnTent(const FTransform& SpawnTransform, FString Na
 		UE_LOG(LogTemp, Error, TEXT("Tent Spawn FAILED to ADD"));
 		return;
 	}
+	Tent->SetOwnerName(FName(Name));
 	Tent->Activate(SpawnTransform);
 	TentPool.Add(Tent, Name);
 }
