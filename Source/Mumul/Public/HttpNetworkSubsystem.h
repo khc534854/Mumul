@@ -27,10 +27,6 @@ public:
 	template <typename RequestType>
 	void SendJsonRequest(const RequestType& StructData, const FString& UrlEndpoint);
 
-	// 외부(VoiceComponent)에서 WAV 데이터를 넘겨주면 전송하는 함수
-	// UFUNCTION(BlueprintCallable, Category = "Network")
-	// void SendVoiceDataToPython(const TArray<uint8>& WavData);
-
 	UFUNCTION(BlueprintCallable, Category = "Network")
 	void SendAudioChunk(const TArray<uint8>& WavData, FString MeetingID, FString UserID, int32 ChunkIndex);
 

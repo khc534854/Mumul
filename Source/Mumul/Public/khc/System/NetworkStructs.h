@@ -139,3 +139,18 @@ struct FLoginFailResponse
 	UPROPERTY()
 	FErrorDetail detail;
 };
+
+USTRUCT()
+struct FMeetingSummaryResponse
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FString type; // "summary_complete" 등 메시지 타입 구분
+
+	UPROPERTY()
+	FString meeting_id;
+
+	UPROPERTY()
+	FString summary_text; // 요약된 내용
+};

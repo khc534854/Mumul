@@ -1,5 +1,6 @@
 ﻿#include "HttpNetworkSubsystem.h"
 #include "HttpModule.h"
+#include "MumulGameSettings.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Misc/Base64.h" // [필수] Base64 인코딩용
 #include "khc/System/NetworkStructs.h"
@@ -8,67 +9,18 @@ void UHttpNetworkSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
     Super::Initialize(Collection);
     UE_LOG(LogTemp, Log, TEXT("[HTTP] Subsystem Initialized!"));
+
+    const UMumulGameSettings* Settings = GetDefault<UMumulGameSettings>();
+    if (Settings)
+    {
+        BaseURL = Settings->BaseURL;
+    }
 }
 
 void UHttpNetworkSubsystem::Deinitialize()
 {
     Super::Deinitialize();
 }
-
-// void UHttpNetworkSubsystem::SendVoiceDataToPython(const TArray<uint8>& WavData)
-// {
-//     FVoiceUploadRequest VoiceRequest;
-//     
-//     // 데이터를 채웁니다.
-//     VoiceRequest.PlayerName = TEXT("Player1"); // 나중에 실제 이름으로
-//     VoiceRequest.SampleRate = 48000; // 메타데이터 필요시
-//
-//     // [핵심] 2. WAV 바이너리 -> Base64 문자열 변환
-//     // TArray<uint8>을 FString으로 인코딩합니다.
-//     VoiceRequest.AudioData_Base64 = FBase64::Encode(WavData);
-//
-//     // 3. 템플릿 함수 호출 (알아서 JSON으로 바꿔서 쏨)
-//     SendJsonRequest<FVoiceUploadRequest>(VoiceRequest, TEXT("upload-voice-json"));
-// }
-
-// void UHttpNetworkSubsystem::SendMultipartVoice(const TArray<uint8>& WavData, const FString& MetaJsonString)
-// {
-//     TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
-//     
-//     // URL 설정 (BaseURL + 엔드포인트)
-//     FString FullURL = FString::Printf(TEXT("%s/upload-multipart"), *BaseURL);
-//     Request->SetURL(FullURL);
-//     Request->SetVerb(TEXT("POST"));
-//
-//     // Boundary 설정
-//     FString Boundary = TEXT("---------------------------UnrealBoundaryHere");
-//     Request->SetHeader(TEXT("Content-Type"), FString::Printf(TEXT("multipart/form-data; boundary=%s"), *Boundary));
-//
-//     // Body 조립
-//     TArray<uint8> Payload;
-//
-//     // 1. 메타데이터 (JSON)
-//     AddString(Payload, FString::Printf(TEXT("--%s\r\n"), *Boundary));
-//     AddString(Payload, TEXT("Content-Disposition: form-data; name=\"metadata\"\r\n\r\n"));
-//     AddString(Payload, MetaJsonString);
-//     AddString(Payload, TEXT("\r\n"));
-//
-//     // 2. 파일 데이터 (WAV)
-//     AddString(Payload, FString::Printf(TEXT("--%s\r\n"), *Boundary));
-//     AddString(Payload, TEXT("Content-Disposition: form-data; name=\"file\"; filename=\"voice.wav\"\r\n"));
-//     AddString(Payload, TEXT("Content-Type: audio/wav\r\n\r\n"));
-//     Payload.Append(WavData); // 바이너리 그대로 추가
-//     AddString(Payload, TEXT("\r\n"));
-//
-//     // 3. 종료 경계선
-//     AddString(Payload, FString::Printf(TEXT("--%s--\r\n"), *Boundary));
-//
-//     Request->SetContent(Payload);
-//     Request->OnProcessRequestComplete().BindUObject(this, &UHttpNetworkSubsystem::OnSendVoiceComplete);
-//
-//     UE_LOG(LogTemp, Log, TEXT("[HTTP] Sending Multipart Request to: %s (Size: %d bytes)"), *FullURL, Payload.Num());
-//     Request->ProcessRequest();
-// }
 
 void UHttpNetworkSubsystem::SendAudioChunk(const TArray<uint8>& WavData, FString MeetingID, FString UserID,
     int32 ChunkIndex)
@@ -79,6 +31,7 @@ void UHttpNetworkSubsystem::SendAudioChunk(const TArray<uint8>& WavData, FString
     // BaseURL 뒤에 슬래시가 없다고 가정하고 포맷팅
     FString FullURL = FString::Printf(TEXT("%s/meeting/%s/audio_chunk"), *BaseURL, *MeetingID);
     Request->SetURL(FullURL);
+    
     Request->SetVerb(TEXT("POST"));
 
     // 2. Boundary 생성
@@ -99,6 +52,12 @@ void UHttpNetworkSubsystem::SendAudioChunk(const TArray<uint8>& WavData, FString
     AddString(Payload, TEXT("Content-Disposition: form-data; name=\"chunk_index\"\r\n\r\n"));
     AddString(Payload, FString::FromInt(ChunkIndex)); // 숫자를 문자열로 변환해서 전송
     AddString(Payload, TEXT("\r\n"));
+
+    // Is Last
+    //AddString(Payload, FString::Printf(TEXT("--%s\r\n"), *Boundary));
+    //AddString(Payload, TEXT("Content-Disposition: form-data; name=\"is_last\"\r\n\r\n"));
+    //AddString(Payload, bIsLast ? TEXT("true") : TEXT("false")); // 파이썬이 문자열 "true"/"false"로 받음
+    //AddString(Payload, TEXT("\r\n"));
 
     // --- [필드 3] audio_file (WAV 데이터) ---
     AddString(Payload, FString::Printf(TEXT("--%s\r\n"), *Boundary));
@@ -132,7 +91,7 @@ void UHttpNetworkSubsystem::SendLoginRequest(FString ID, FString PW)
 
     // 3. HTTP 요청 생성
     TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
-    FString FullURL = FString::Printf(TEXT("%s/login"), *BaseURL); // 엔드포인트: /login
+    FString FullURL = FString::Printf(TEXT("%s/user/login"), *BaseURL); // 엔드포인트: /login
     
     Request->SetURL(FullURL);
     Request->SetVerb("POST");
@@ -147,23 +106,6 @@ void UHttpNetworkSubsystem::SendLoginRequest(FString ID, FString PW)
 
 void UHttpNetworkSubsystem::OnLoginComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-    // bool bLoginSuccess = false;
-    //
-    // if (bWasSuccessful && Response.IsValid() && Response->GetResponseCode() == 200)
-    // {
-    //     // 응답 파싱
-    //     FString Content = Response->GetContentAsString();
-    //     FLoginResponse RespData;
-    //     
-    //     if (FJsonObjectConverter::JsonObjectStringToUStruct(Content, &RespData, 0, 0))
-    //     {
-    //         bLoginSuccess = RespData.success;
-    //         UE_LOG(LogTemp, Log, TEXT("[HTTP] Login Result: %s"), bLoginSuccess ? TEXT("Success") : TEXT("Fail"));
-    //     }
-    // }
-    //
-    // // UI에게 결과 알림
-    // OnLoginResponse.Broadcast(bLoginSuccess);
     if (!bWasSuccessful || !Response.IsValid())
     {
         OnLoginResponse.Broadcast(false, TEXT("네트워크 연결 실패"));

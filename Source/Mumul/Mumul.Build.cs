@@ -17,7 +17,8 @@ public class Mumul : ModuleRules
 			"Voice",
 			"AudioCapture",
 			"AudioCaptureCore",
-			"AudioMixer"
+			"AudioMixer",
+			"DeveloperSettings"
 		});
 	}
 }

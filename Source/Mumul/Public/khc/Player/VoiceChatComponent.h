@@ -54,6 +54,14 @@ private:
 	int32 RecordingSampleRate = 48000;
 	int32 RecordingNumChannels = 1;
 
+	FTimerHandle ChunkTimerHandle;
+
+	// [추가] 현재 청크 인덱스
+	int32 CurrentChunkIndex = 0;
+	FString CurrentMeetingID = TEXT("Test");
+
+	void SendCurrentChunk(bool bIsLast);
+	
 	// 오디오 데이터가 들어올 때 호출되는 콜백
 	void OnAudioCapture(const float* InAudio, int32 InNumFrames, int32 InNumChannels, int32 InSampleRate);
 };

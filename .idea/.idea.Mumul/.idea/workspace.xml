@@ -4,6 +4,10 @@
     <projectFile>../../../../../../Program Files/Epic Games/UE_5.4/Engine/Source/Programs/AutomationTool/AutomationTool.csproj</projectFile>
     <projectFile kind="Docker">../../../../../../Program Files/Epic Games/UE_5.4/Engine/Source/Programs/Shared/EpicGames.Perforce.Fixture/EpicGames.Perforce.Fixture.csproj</projectFile>
     <projectFile>../../../../../../Program Files/Epic Games/UE_5.4/Engine/Source/Programs/UnrealBuildTool/UnrealBuildTool.csproj</projectFile>
+    <projectFile>../../../Program Files/Epic Games/UE_5.4/Engine/Source/Programs/AutomationTool/AutomationTool.csproj</projectFile>
+    <projectFile profileName="EpicGames.AspNet">../../../Program Files/Epic Games/UE_5.4/Engine/Source/Programs/Shared/EpicGames.AspNet/EpicGames.AspNet.csproj</projectFile>
+    <projectFile kind="Docker">../../../Program Files/Epic Games/UE_5.4/Engine/Source/Programs/Shared/EpicGames.Perforce.Fixture/EpicGames.Perforce.Fixture.csproj</projectFile>
+    <projectFile>../../../Program Files/Epic Games/UE_5.4/Engine/Source/Programs/UnrealBuildTool/UnrealBuildTool.csproj</projectFile>
     <projectFile>Intermediate/ProjectFiles/Mumul.vcxproj</projectFile>
     <projectFile>Intermediate/ProjectFiles/UE5.vcxproj</projectFile>
   </component>
@@ -12,16 +16,20 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ca0510d7-5f11-4fb1-8e86-1d98d16f0dbb" name="변경" comment="">
-      <change afterPath="$PROJECT_DIR$/Source/Mumul/Private/Yeomin/UI/ChatMessageBlockUI.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/Mumul/Private/Yeomin/UI/ChatUI.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/Mumul/Public/Yeomin/UI/ChatMessageBlockUI.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/Mumul/Public/Yeomin/UI/ChatUI.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Mumul/.idea/encodings.xml" beforeDir="false" />
+      <change afterPath="$PROJECT_DIR$/Source/Mumul/Private/MumulGameSettings.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Source/Mumul/Public/MumulGameSettings.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Mumul/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Mumul/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Config/DefaultEngine.ini" beforeDir="false" afterPath="$PROJECT_DIR$/Config/DefaultEngine.ini" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/StarterContent/Architecture/Floor_400x400.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/StarterContent/Architecture/Floor_400x400.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/StarterContent/HDRI/HDRI_Epic_Courtyard_Daylight.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/StarterContent/HDRI/HDRI_Epic_Courtyard_Daylight.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Config/DefaultGame.ini" beforeDir="false" afterPath="$PROJECT_DIR$/Config/DefaultGame.ini" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Khc/Maps/Island.umap" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Khc/Maps/Island.umap" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Khc/Maps/Main.umap" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Khc/Maps/Main.umap" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Yeomin/Characters/CuteAlien/Mesh/M_Alien_2.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Yeomin/Characters/CuteAlien/Mesh/M_Alien_2.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Yeomin/Characters/CuteAlien/Mesh/M_Alien_4.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Yeomin/Characters/CuteAlien/Mesh/M_Alien_4.uasset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Mumul/Mumul.Build.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Mumul.Build.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Mumul/Private/HttpNetworkSubsystem.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Private/HttpNetworkSubsystem.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Mumul/Private/khc/Player/VoiceChatComponent.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Private/khc/Player/VoiceChatComponent.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Mumul/Public/HttpNetworkSubsystem.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Public/HttpNetworkSubsystem.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Mumul/Public/khc/Player/VoiceChatComponent.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Public/khc/Player/VoiceChatComponent.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Mumul/Public/khc/System/NetworkStructs.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Public/khc/System/NetworkStructs.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -44,9 +52,9 @@
   <component name="ProblemsViewState">
     <option name="selectedTabId" value="CurrentFile" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 0
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 0
+}</component>
   <component name="ProjectId" id="3611gWi7n3aA1xUNvOyz1Wd1780" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -58,7 +66,7 @@
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "Yeomin",
+    "git-widget-placeholder": "khc",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -105,10 +113,10 @@
       <option name="ENV_FILE_PATHS" value="" />
       <option name="REDIRECT_INPUT_PATH" value="" />
       <option name="PTY_MODE" value="Auto" />
-      <option name="MIXED_MODE_DEBUG" value="0" />
       <option name="USE_MONO" value="0" />
       <option name="RUNTIME_ARGUMENTS" value="" />
       <option name="AUTO_ATTACH_CHILDREN" value="0" />
+      <option name="MIXED_MODE_DEBUG" value="0" />
       <option name="PROJECT_PATH" value="$PROJECT_DIR$/../../../../../../Program Files/Epic Games/UE_5.4/Engine/Source/Programs/AutomationTool/AutomationTool.csproj" />
       <option name="PROJECT_EXE_PATH_TRACKING" value="1" />
       <option name="PROJECT_ARGUMENTS_TRACKING" value="1" />
@@ -128,10 +136,10 @@
       <option name="ENV_FILE_PATHS" value="" />
       <option name="REDIRECT_INPUT_PATH" value="" />
       <option name="PTY_MODE" value="Auto" />
-      <option name="MIXED_MODE_DEBUG" value="0" />
       <option name="USE_MONO" value="0" />
       <option name="RUNTIME_ARGUMENTS" value="" />
       <option name="AUTO_ATTACH_CHILDREN" value="0" />
+      <option name="MIXED_MODE_DEBUG" value="0" />
       <option name="PROJECT_PATH" value="$PROJECT_DIR$/../../../../../../Program Files/Epic Games/UE_5.4/Engine/Source/Programs/UnrealBuildTool/UnrealBuildTool.csproj" />
       <option name="PROJECT_EXE_PATH_TRACKING" value="1" />
       <option name="PROJECT_ARGUMENTS_TRACKING" value="1" />
@@ -143,7 +151,10 @@
       </method>
     </configuration>
     <configuration default="true" type="docker-deploy" factoryName="dockerfile" temporary="true">
-      <deployment type="dockerfile" />
+      <deployment type="dockerfile">
+        <settings />
+      </deployment>
+      <EXTENSION ID="com.jetbrains.rider.docker.debug" isFastModeEnabled="true" isSslEnabled="false" />
       <method v="2" />
     </configuration>
     <configuration name="EpicGames.Perforce.Fixture/Dockerfile" type="docker-deploy" factoryName="dockerfile" server-name="Docker">
