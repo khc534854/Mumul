@@ -3,6 +3,7 @@
 
 #include "Base/LobbyWidget.h"
 
+#include "HttpNetworkSubsystem.h"
 #include "MumulGameInstance.h"
 #include "OnlineSessionSettings.h"
 #include "Components/Button.h"
@@ -48,6 +49,14 @@ void ULobbyWidget::NativeConstruct()
     {
         WidgetSwitcher->SetActiveWidgetIndex(0);
     }
+
+    if (UGameInstance* GI = GetGameInstance())
+    {
+        if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
+        {
+            HttpSystem->OnLoginResponse.AddDynamic(this, &ULobbyWidget::OnServerLoginResponse);
+        }
+    }
 }
 
 // --- [추가] 로그인 처리 함수 ---
@@ -55,35 +64,66 @@ void ULobbyWidget::OnClickLogin()
 {
     FString InputId = editLoginId->GetText().ToString();
     FString InputPw = editLoginPw->GetText().ToString();
+    
+    PendingID = InputId; // ID 임시 저장
 
-    // 1. 아이디 존재 여부 및 비밀번호 일치 확인
-    if (AccountMap.Contains(InputId) && AccountMap[InputId] == InputPw)
+    // 1. 예외 처리: admin, user1은 로컬 검사 (기존 방식)
+    if (InputId == TEXT("admin") || InputId == TEXT("user1"))
     {
-        // 로그인 성공 처리
-        textLoginMsg->SetText(FText::FromString(TEXT("로그인 성공!")));
-        textLoginMsg->SetColorAndOpacity(FLinearColor::Green);
-        Cast<UMumulGameInstance>(GetGameInstance())->MyLoginID = InputId;
+        if (AccountMap.Contains(InputId) && AccountMap[InputId] == InputPw)
+        {
+            // 성공 처리 함수 직접 호출 (true)
+            OnServerLoginResponse(true, TEXT("관리자/테스트 계정 접속"));
+        }
+        else
+        {
+            OnServerLoginResponse(false, TEXT("비밀번호가 틀렸습니다."));
+        }
+        return; // 서버 통신 안 함
+    }
 
-        // 2. admin 여부에 따라 생성 버튼 가리기
-        if (InputId == TEXT("admin"))
+    // 2. 그 외 계정은 서버로 요청 전송
+    if (UGameInstance* GI = GetGameInstance())
+    {
+        if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
+        {
+            // 버튼 비활성화 (중복 클릭 방지)
+            btn_Login->SetIsEnabled(false);
+            textLoginMsg->SetText(FText::FromString(TEXT("서버 확인 중...")));
+            
+            HttpSystem->SendLoginRequest(InputId, InputPw);
+        }
+    }
+}
+
+void ULobbyWidget::OnServerLoginResponse(bool bSuccess, FString Message)
+{
+    btn_Login->SetIsEnabled(true);
+    textLoginMsg->SetText(FText::FromString(Message)); // 서버 메시지 출력
+
+    if (bSuccess)
+    {
+        textLoginMsg->SetColorAndOpacity(FLinearColor::Green);
+        Cast<UMumulGameInstance>(GetGameInstance())->MyLoginID = PendingID;
+
+        // 관리자 여부 판단 (서버 응답에 권한 정보가 없으므로 기존대로 ID로 판단)
+        if (PendingID == TEXT("admin"))
         {
             btn_goCreate->SetVisibility(ESlateVisibility::Visible);
         }
         else
         {
-            btn_goCreate->SetVisibility(ESlateVisibility::Collapsed); // 아예 안 보이게 처리
+            btn_goCreate->SetVisibility(ESlateVisibility::Collapsed);
         }
 
-        // 3. 메인 메뉴(Index 1)로 이동
         WidgetSwitcher->SetActiveWidgetIndex(1);
     }
     else
     {
-        // 로그인 실패 처리
-        textLoginMsg->SetText(FText::FromString(TEXT("아이디 또는 비밀번호가 틀렸습니다.")));
         textLoginMsg->SetColorAndOpacity(FLinearColor::Red);
     }
 }
+
 
 void ULobbyWidget::OnClickGoCreate()
 {

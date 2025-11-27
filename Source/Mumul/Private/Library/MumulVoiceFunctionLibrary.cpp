@@ -67,3 +67,30 @@ bool UMumulVoiceFunctionLibrary::SaveWavFile(const TArray<uint8>& WavData, FStri
 	// [필수] 실제 파일 생성 및 쓰기 수행 (성공 시 true 반환)
 	return FFileHelper::SaveArrayToFile(WavData, *OutPath);
 }
+
+bool UMumulVoiceFunctionLibrary::LoadWavFile(FString FileName, TArray<uint8>& OutWavData)
+{
+	// 저장 경로 설정 (SaveWavFile과 동일한 경로 사용)
+	FString FolderPath = FPaths::ProjectSavedDir() / TEXT("RecordedVoice");
+    
+	// 확장자 처리
+	if (!FileName.EndsWith(".wav")) FileName += ".wav";
+	FString FullPath = FolderPath / FileName;
+
+	// 파일 존재 여부 확인
+	if (!IFileManager::Get().FileExists(*FullPath))
+	{
+		UE_LOG(LogTemp, Error, TEXT("[VoiceLib] File not found: %s"), *FullPath);
+		return false;
+	}
+
+	// 파일 읽기 (바이너리 -> 배열)
+	if (FFileHelper::LoadFileToArray(OutWavData, *FullPath))
+	{
+		UE_LOG(LogTemp, Log, TEXT("[VoiceLib] Loaded WAV file: %s (Size: %d bytes)"), *FullPath, OutWavData.Num());
+		return true;
+	}
+
+	UE_LOG(LogTemp, Error, TEXT("[VoiceLib] Failed to load file: %s"), *FullPath);
+	return false;
+}

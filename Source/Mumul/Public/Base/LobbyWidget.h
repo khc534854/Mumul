@@ -96,4 +96,9 @@ public:
 private:
     // 아이디, 비밀번호 저장소 (Key: ID, Value: PW)
     TMap<FString, FString> AccountMap;
+
+    UFUNCTION()
+    void OnServerLoginResponse(bool bSuccess, FString Message);
+
+    FString PendingID;
 };

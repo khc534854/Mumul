@@ -59,15 +59,83 @@ struct FVoiceUploadRequest
 	int32 SampleRate = 0;
 };
 
-// 3. 다른 기능용 구조체 예시 (로그인 등)
+
+USTRUCT()
+struct FVoiceChunkResponse
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FString meeting_id;
+
+	UPROPERTY()
+	FString user_id;
+
+	UPROPERTY()
+	int32 chunk_index = 0;
+};
+
+USTRUCT()
+struct FLoginResponse
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	bool success = false; // 로그인 성공 여부
+
+	UPROPERTY()
+	FString message;      // (선택) 실패 사유 등 메시지
+};
+
 USTRUCT()
 struct FLoginRequest
 {
 	GENERATED_BODY()
 
 	UPROPERTY()
-	FString UserID;
+	FString loginId;
 
 	UPROPERTY()
-	FString Password;
+	FString password;
+};
+
+// [응답] 로그인 성공 (200 OK)
+USTRUCT()
+struct FLoginSuccessResponse
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	int32 userId = 0;
+
+	UPROPERTY()
+	FString name;
+
+	UPROPERTY()
+	int32 campId = 0;
+
+	UPROPERTY()
+	bool tendencyCompleted = false;
+};
+
+// [응답] 로그인 실패 (401 Error) - 내부 detail 구조체 필요
+USTRUCT()
+struct FErrorDetail
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FString errorCode;
+
+	UPROPERTY()
+	FString message;
+};
+
+USTRUCT()
+struct FLoginFailResponse
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FErrorDetail detail;
 };

@@ -20,4 +20,7 @@ public:
 	// WAV 바이너리를 파일로 저장
 	UFUNCTION(BlueprintCallable, Category = "Voice|File")
 	static bool SaveWavFile(const TArray<uint8>& WavData, FString FileName, FString& OutPath);
+
+	UFUNCTION(BlueprintCallable, Category = "Voice|File")
+	static bool LoadWavFile(FString FileName, TArray<uint8>& OutWavData);
 };
