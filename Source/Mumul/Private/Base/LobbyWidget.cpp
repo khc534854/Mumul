@@ -69,24 +69,42 @@ void ULobbyWidget::OnClickLogin()
     
     PendingID = InputId; // ID 임시 저장
 
-    // 1. 예외 처리: admin, user1은 로컬 검사 (기존 방식)
+    // [수정] 테스트 계정 예외 처리 및 임시 데이터 주입
     if (InputId == TEXT("admin") || InputId == TEXT("user1"))
     {
         if (AccountMap.Contains(InputId) && AccountMap[InputId] == InputPw)
         {
-            // 성공 처리 함수 직접 호출 (true)
+            // --- [신규] 테스트용 임시 데이터 설정 ---
+            UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
+            if (GI)
+            {
+                // 100번대 ID 부여 (admin=100, user1=101)
+                GI->PlayerUniqueID = (InputId == TEXT("admin")) ? 100 : 101;
+                GI->PlayerName = InputId; // 이름도 아이디로 설정
+                GI->CampID = 1;           // 임시 캠프 ID
+                GI->PlayerType = (InputId == TEXT("admin")) ? TEXT("운영진") : TEXT("학생");
+                GI->PlayerTendency = 0;
+                GI->bHasSurveyCompleted = true;
+
+                UE_LOG(LogTemp, Warning, TEXT("[Test Login] Set Dummy Data for %s (ID: %d)"), *InputId, GI->PlayerUniqueID);
+            }
+            // ------------------------------------
+
             if (InputId == TEXT("admin"))
-                WidgetSwitcher->SetActiveWidgetIndex(2);
-            else if (InputId == TEXT("user1"))
+                WidgetSwitcher->SetActiveWidgetIndex(2); // 방 생성 화면으로
+            else
                 WidgetSwitcher->SetActiveWidgetIndex(1);
                 
-            OnServerLoginResponse(true, TEXT("관리자/테스트 계정 접속"));
+            // 성공 메시지만 띄우고 데이터 처리는 위에서 끝냄
+            textLoginMsg->SetText(FText::FromString(TEXT("테스트 로그인 성공")));
+            textLoginMsg->SetColorAndOpacity(FLinearColor::Green);
         }
         else
         {
-            OnServerLoginResponse(false, TEXT("비밀번호가 틀렸습니다."));
+            textLoginMsg->SetText(FText::FromString(TEXT("비밀번호 틀림")));
+            textLoginMsg->SetColorAndOpacity(FLinearColor::Red);
         }
-        return; // 서버 통신 안 함
+        return; 
     }
 
     // 2. 그 외 계정은 서버로 요청 전송

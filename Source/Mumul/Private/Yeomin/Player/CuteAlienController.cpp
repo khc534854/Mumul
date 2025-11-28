@@ -101,44 +101,64 @@ void ACuteAlienController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// 1. 로컬 컨트롤러가 아니면 바로 종료 (이후 코드는 모두 로컬용)
 	if (!IsLocalController())
 	{
 		return;
 	}
 
+	// 2. 입력 시스템 설정 (한 번만 호출)
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
-		ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+	   ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 	{
 		Subsystem->AddMappingContext(IMC_Player, 0);
 	}
-	if (IsLocalController())
+
+	// 3. UI 생성
+	if (RadialUIClass)
 	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
-			ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
-		{
-			Subsystem->AddMappingContext(IMC_Player, 0);
-		}
-
 		RadialUI = CreateWidget<URadialUI>(this, RadialUIClass);
-		RadialUI->AddToViewport();
-		PlayerUI = CreateWidget<UUserWidget>(this, PlayerUIClass);
-		PlayerUI->AddToViewport();
-
-		RadialUI->SetVisibility(ESlateVisibility::Hidden);
+		if (RadialUI)
+		{
+			RadialUI->AddToViewport();
+			RadialUI->SetVisibility(ESlateVisibility::Hidden);
+		}
 	}
 
-	if (IsLocalController())
+	if (PlayerUIClass)
 	{
-		UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
-		if (GI)
+		PlayerUI = CreateWidget<UUserWidget>(this, PlayerUIClass);
+		if (PlayerUI)
 		{
-			// 서버 RPC 호출
-			Server_InitPlayerInfo(
-			GI->PlayerUniqueID,
-				GI->PlayerName,
-				GI->PlayerType,
-				GI->PlayerTendency);
+			PlayerUI->AddToViewport();
 		}
+	}
+
+	// 4. 데이터 초기화 및 서버 전송
+	UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
+	if (GI)
+	{
+		// [체크] 로비 스킵 여부 확인 (데이터가 비어있으면 더미 데이터 주입)
+		if (GI->PlayerUniqueID == 0) 
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[Test] Detected Direct Level Start! Injecting Dummy Data..."));
+            
+			GI->PlayerUniqueID = 999 + GetWorld()->GetGameState()->PlayerArray.Num();       // 테스트 ID
+			GI->PlayerName = TEXT("EditorTester");
+			GI->PlayerType = TEXT("운영진"); // 테스트용 권한
+			GI->CampID = 1;
+			GI->PlayerTendency = 0;
+		}
+
+		// [전송] 확정된 데이터를 서버로 1회 전송
+		Server_InitPlayerInfo(
+			GI->PlayerUniqueID,
+			GI->PlayerName,
+			GI->PlayerType,
+			GI->PlayerTendency
+		);
+        
+		UE_LOG(LogTemp, Log, TEXT("[Client] Sent Init Info: %s (ID: %d)"), *GI->PlayerName, GI->PlayerUniqueID);
 	}
 }
 
@@ -159,11 +179,15 @@ void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const
 	if (PS)
 	{
 		PS->PS_UserIndex = UID;
-		PS->SetPlayerName(Name); // 엔진 기본 이름 설정
+		PS->SetPlayerName(Name);
 		PS->PS_UserType = Type;
 		PS->PS_TendencyID = Tendency;
+		// PS->CampID = CampID; (인자 추가 시)
         
-		ForceNetUpdate(); // 즉시 동기화
+		// 강제 동기화 (선택)
+		PS->ForceNetUpdate(); 
+       
+		UE_LOG(LogTemp, Log, TEXT("[Server] PlayerState Initialized: %s (ID: %d)"), *Name, UID);
 	}
 }
 
