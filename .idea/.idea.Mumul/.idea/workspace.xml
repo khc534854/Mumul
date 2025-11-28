@@ -16,24 +16,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ca0510d7-5f11-4fb1-8e86-1d98d16f0dbb" name="변경" comment="">
-      <change afterPath="$PROJECT_DIR$/Content/Yeomin/Characters/UI/BP/WBP_GroupChatUI.uasset" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/Mumul/Private/Base/MumulGameState.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/Mumul/Private/Yeomin/UI/GroupChatUI.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/Mumul/Private/Yeomin/UI/GroupIconUI.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/Mumul/Private/Yeomin/UI/GroupProfileUI.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/Mumul/Public/Base/MumulGameState.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/Mumul/Public/Yeomin/UI/GroupChatUI.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/Mumul/Public/Yeomin/UI/GroupIconUI.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/Mumul/Public/Yeomin/UI/GroupProfileUI.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Mumul/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Mumul/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Config/DefaultEngine.ini" beforeDir="false" afterPath="$PROJECT_DIR$/Config/DefaultEngine.ini" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Yeomin/Characters/UI/BP/WBP_ChatMessageUI.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Yeomin/Characters/UI/BP/WBP_ChatMessageUI.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Yeomin/Characters/UI/BP/WBP_ChatUI.uasset" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Yeomin/Characters/UI/BP/WBP_PlayerUI.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Yeomin/Characters/UI/BP/WBP_PlayerUI.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Mumul/Private/Yeomin/Player/CuteAlienController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Private/Yeomin/Player/CuteAlienController.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Mumul/Private/Yeomin/Tent/TentActor.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Private/Yeomin/Tent/TentActor.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Mumul/Private/Yeomin/UI/ChatUI.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Mumul/Public/Yeomin/UI/ChatUI.h" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
