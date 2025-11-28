@@ -17,30 +17,8 @@
   <component name="ChangeListManager">
     <list default="true" id="ca0510d7-5f11-4fb1-8e86-1d98d16f0dbb" name="변경" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Mumul/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Mumul/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Khc/Blueprint/BP_Tent.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Khc/Blueprint/BP_Tent.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Khc/Blueprint/UI/WBP_Lobby.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Khc/Blueprint/UI/WBP_Lobby.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Khc/Maps/Island.umap" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Khc/Maps/Island.umap" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Khc/Model/LUSH_StylizedEnvironmentSet/Foliage/Grass/Materials/MI_Grass_01.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Khc/Model/LUSH_StylizedEnvironmentSet/Foliage/Grass/Materials/MI_Grass_01.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Khc/Model/LUSH_StylizedEnvironmentSet/Foliage/Grass/Materials/MI_Grass_Tiny_A.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Khc/Model/LUSH_StylizedEnvironmentSet/Foliage/Grass/Materials/MI_Grass_Tiny_A.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Khc/Model/LUSH_StylizedEnvironmentSet/Foliage/Grass/SM_Grass_Generic.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Khc/Model/LUSH_StylizedEnvironmentSet/Foliage/Grass/SM_Grass_Generic.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Khc/Model/LUSH_StylizedEnvironmentSet/Foliage/Grass/SM_Grass_Tiny.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Khc/Model/LUSH_StylizedEnvironmentSet/Foliage/Grass/SM_Grass_Tiny.uasset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Content/Yeomin/Actors/Tent/BP_Tent.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Yeomin/Actors/Tent/BP_Tent.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Yeomin/Characters/CuteAlien/Mesh/M_Alien_0.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Yeomin/Characters/CuteAlien/Mesh/M_Alien_0.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Yeomin/Characters/CuteAlien/Mesh/M_Alien_2.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Yeomin/Characters/CuteAlien/Mesh/M_Alien_2.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Yeomin/Characters/CuteAlien/Mesh/M_Alien_4.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Yeomin/Characters/CuteAlien/Mesh/M_Alien_4.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Mumul/Private/Base/LobbyWidget.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Private/Base/LobbyWidget.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Mumul/Private/HttpNetworkSubsystem.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Private/HttpNetworkSubsystem.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Mumul/Private/MumulGameInstance.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Private/MumulGameInstance.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Mumul/Private/WebSocketSubsystem.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Private/WebSocketSubsystem.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Mumul/Private/Yeomin/Player/CuteAlienController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Private/Yeomin/Player/CuteAlienController.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Mumul/Private/khc/Player/MumulPlayerState.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Private/khc/Player/MumulPlayerState.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Mumul/Private/khc/System/NetworkTestActor.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Private/khc/System/NetworkTestActor.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Mumul/Public/MumulGameInstance.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Public/MumulGameInstance.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Mumul/Public/WebSocketSubsystem.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Public/WebSocketSubsystem.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Mumul/Public/Yeomin/Player/CuteAlienController.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Public/Yeomin/Player/CuteAlienController.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Mumul/Public/khc/Player/MumulPlayerState.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Public/khc/Player/MumulPlayerState.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Mumul/Public/khc/System/NetworkStructs.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Public/khc/System/NetworkStructs.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Mumul/Public/khc/System/NetworkTestActor.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Public/khc/System/NetworkTestActor.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Mumul/Private/MumulMumulGameMode.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Private/MumulMumulGameMode.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,6 +32,28 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="cidr-memory-view://0" root0="FORCE_HIGHLIGHTING" />
+    <setting file="cidr-memory-view://1" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Plugins/Online/OnlineSubsystem/Source/Public/OnlineSessionSettings.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Plugins/Online/OnlineSubsystemEOS/Source/OnlineSubsystemEOSPlus/Private/OnlineSessionEOSPlus.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Plugins/Online/OnlineSubsystemOculus/Source/Classes/OculusFindSessionsCallbackProxy.h" root0="SKIP_HIGHLIGHTING" />
@@ -63,31 +63,30 @@
     <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Plugins/Online/OnlineSubsystemUtils/Source/OnlineSubsystemUtils/Private/Tests/TestSessionInterface.h" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Source/Programs/UnrealBuildTool/Modes/QueryMode.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Source/Programs/UnrealBuildTool/System/ActionGraph.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Source/Programs/UnrealBuildTool/System/CppCompileEnvironment.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Source/Programs/UnrealBuildTool/System/LinkEnvironment.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Source/Programs/UnrealBuildTool/System/Unity.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Source/Programs/UnrealBuildTool/ToolChain/AppleToolChain.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Source/Runtime/Core/Private/Misc/Paths.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Source/Runtime/Core/Public/String/FormatStringSan.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Source/Runtime/CoreUObject/Public/Templates/Casts.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Source/Runtime/Engine/Classes/Engine/GameInstance.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Source/Runtime/Engine/Classes/GameFramework/PlayerController.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Source/Runtime/Engine/Classes/GameFramework/PlayerMuteList.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Source/Runtime/Engine/Classes/GameFramework/PlayerState.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Source/Runtime/Engine/Private/NetConnection.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Source/Runtime/Engine/Private/PlayerController.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Source/Runtime/Engine/Private/PlayerMuteList.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Source/Runtime/Engine/Private/PlayerState.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Source/Runtime/Engine/Public/EngineSharedPCH.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Source/Runtime/Engine/Public/Net/VoiceConfig.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Source/Runtime/JsonUtilities/Public/JsonObjectConverter.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Source/Runtime/Online/Voice/Private/Mac/VoiceModuleMac.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Source/Runtime/Online/Voice/Public/Interfaces/VoiceCapture.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Source/Runtime/Online/Voice/Public/VoiceModule.h" root0="FORCE_HIGHLIGHTING" />
-    <setting file="mock://C:/Project/Team/Mumul/Source/Mumul/Private/Yeomin/Player/CuteAlienController.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock://C:/Project/Team/Mumul/Source/Mumul/Private/Yeomin/Player/CuteAlienController.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Source/Runtime/UMG/Public/Components/ScrollBox.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Mumul/Private/Yeomin/UI/ChatMessageBlockUI.cpp" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Source/Mumul/Private/Yeomin/UI/ChatUI.cpp" root0="FORCE_HIGHLIGHTING" />
-    <setting file="mock://C:/Project/Team/Mumul/Source/Mumul/Public/Yeomin/Player/CuteAlienController.h" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock://C:/Project/Team/Mumul/Source/Mumul/Public/Yeomin/Player/CuteAlienController.h" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Mumul/Public/Yeomin/UI/ChatMessageBlockUI.h" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Source/Mumul/Public/Yeomin/UI/ChatUI.h" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
   <component name="ProblemsViewState">
@@ -103,7 +102,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    "C/C++ 프로젝트.Mumul.executor": "Run",
+    "C/C++ 프로젝트.Mumul.executor": "Debug",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
