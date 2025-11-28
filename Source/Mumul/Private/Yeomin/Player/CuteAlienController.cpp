@@ -183,7 +183,7 @@ void ACuteAlienController::Tick(float DeltaSeconds)
 		float Dist = 1500.f;
 		GetPlayerViewPoint(Start, CamRot);
 		End = Start + CamRot.Vector() * Dist;
-		DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 1.f, 0, 1.f);
+		
 		bool bIsHit = GetWorld()->LineTraceSingleByChannel(
 			HitRes,
 			Start,
