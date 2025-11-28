@@ -311,7 +311,7 @@ void ACuteAlienController::Server_SpawnTent_Implementation(const FTransform& Ten
 	AMumulMumulGameMode* GM = GetWorld()->GetAuthGameMode<AMumulMumulGameMode>();
 	if (GM)
 	{
-		GM->SpawnTent(TentTransform, GetPlayerState<AMumulPlayerState>()->GetPlayerName());
+		GM->SpawnTent(TentTransform, GetPlayerState<AMumulPlayerState>()->PS_UserIndex);
 	}
 }
 

@@ -10,23 +10,20 @@ UCLASS()
 class MUMUL_API ATentActor : public AActor
 {
 	GENERATED_BODY()
-
-public:
-	// Sets default values for this actor's properties
 	ATentActor();
-
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
-	FName OwnerName;
+	int32 OwnerUserIndex;
 	
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void SetOwnerName(const FName Name) { OwnerName = Name; };
+	void SetOwnerUserIndex(const int32 UserIndex) { OwnerUserIndex = UserIndex; }
 	UPROPERTY(Replicated)
 	bool bIsActive = false;
 	void Activate(const FTransform& SpawnTransform);

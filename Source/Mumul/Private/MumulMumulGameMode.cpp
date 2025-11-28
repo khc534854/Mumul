@@ -32,101 +32,28 @@ void AMumulMumulGameMode::BeginPlay()
 		Tent->Deactivate();
 		TentPool.Add(Tent);
 	}
-
-	UE_LOG(LogTemp, Warning, TEXT("========== [TentPool Init Check] =========="));
-    
-	int32 Index = 0;
-	for (const TPair<TObjectPtr<ATentActor>, FString>& Pair : TentPool)
-	{
-		// 키(액터)의 이름 가져오기 (유효성 체크 포함)
-		FString ActorName = (Pair.Key != nullptr) ? Pair.Key->GetName() : TEXT("NULL");
-        
-		// 밸류(주인 이름) 가져오기 (비어있으면 "None"으로 표시)
-		FString OwnerName = Pair.Value.IsEmpty() ? TEXT("None") : Pair.Value;
-
-		UE_LOG(LogTemp, Display, TEXT("[%d] Key(Actor): %s || Value(Owner): %s"), Index, *ActorName, *OwnerName);
-        
-		Index++;
-	}
-    
-	UE_LOG(LogTemp, Warning, TEXT("==========================================="));
 }
 
-void AMumulMumulGameMode::SpawnTent(const FTransform& SpawnTransform, FString Name)
+void AMumulMumulGameMode::SpawnTent(const FTransform& SpawnTransform, int32 UserIndex)
 {
-	UE_LOG(LogTemp, Warning, TEXT("========== [TentPool Spawn Check] =========="));
-    
-	int32 Index = 0;
-	for (const TPair<TObjectPtr<ATentActor>, FString>& Pair : TentPool)
+	for (const TPair<TObjectPtr<ATentActor>, int32>& PoolElem : TentPool)
 	{
-		// 키(액터)의 이름 가져오기 (유효성 체크 포함)
-		FString ActorName = (Pair.Key != nullptr) ? Pair.Key->GetName() : TEXT("NULL");
-        
-		// 밸류(주인 이름) 가져오기 (비어있으면 "None"으로 표시)
-		FString OwnerName = Pair.Value.IsEmpty() ? TEXT("None") : Pair.Value;
-
-		UE_LOG(LogTemp, Display, TEXT("[%d] Key(Actor): %s || Value(Owner): %s"), Index, *ActorName, *OwnerName);
-        
-		Index++;
-	}
-    
-	UE_LOG(LogTemp, Warning, TEXT("==========================================="));
-	
-	
-	for (const TPair<TObjectPtr<ATentActor>, FString>& PoolElem : TentPool)
-	{
-		//if (PoolElem.Value == Name)
-		if (PoolElem.Value == Name && PoolElem.Key->bIsActive)
+		// If Owner has a tent
+		if (PoolElem.Value == UserIndex && PoolElem.Key->bIsActive)
 		{
-			PoolElem.Key->SetOwnerName(FName(Name));
 			PoolElem.Key->ChangeTransform(SpawnTransform);
 			PoolElem.Key->Mulicast_OnScaleAnimation();
-			
-			UE_LOG(LogTemp, Warning, TEXT("========== [TentPool Spawn Again Check] =========="));
-			Index = 0;
-			for (const TPair<TObjectPtr<ATentActor>, FString>& Pair : TentPool)
-			{
-				// 키(액터)의 이름 가져오기 (유효성 체크 포함)
-				FString ActorName = (Pair.Key != nullptr) ? Pair.Key->GetName() : TEXT("NULL");
-        
-				// 밸류(주인 이름) 가져오기 (비어있으면 "None"으로 표시)
-				FString OwnerName = Pair.Value.IsEmpty() ? TEXT("None") : Pair.Value;
-
-				UE_LOG(LogTemp, Display, TEXT("[%d] Key(Actor): %s || Value(Owner): %s"), Index, *ActorName, *OwnerName);
-        
-				Index++;
-			}
-    
-			UE_LOG(LogTemp, Warning, TEXT("==========================================="));
 			return;
 		}
 	}
-	for (TPair<TObjectPtr<ATentActor>, FString>& PoolElem : TentPool)
+	for (TPair<TObjectPtr<ATentActor>, int32>& PoolElem : TentPool)
 	{
 		if (!PoolElem.Key->bIsActive)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("========== [TentPool Set Owner Check] =========="));
-    
-			Index = 0;
-			for (const TPair<TObjectPtr<ATentActor>, FString>& Pair : TentPool)
-			{
-				// 키(액터)의 이름 가져오기 (유효성 체크 포함)
-				FString ActorName = (Pair.Key != nullptr) ? Pair.Key->GetName() : TEXT("NULL");
-        
-				// 밸류(주인 이름) 가져오기 (비어있으면 "None"으로 표시)
-				FString OwnerName = Pair.Value.IsEmpty() ? TEXT("None") : Pair.Value;
-
-				UE_LOG(LogTemp, Display, TEXT("[%d] Key(Actor): %s || Value(Owner): %s"), Index, *ActorName, *OwnerName);
-        
-				Index++;
-			}
-    
-			UE_LOG(LogTemp, Warning, TEXT("==========================================="));
-			
-			PoolElem.Key->SetOwnerName(FName(Name));
+			PoolElem.Key->SetOwnerUserIndex(UserIndex);
 			PoolElem.Key->Activate(SpawnTransform);
 			PoolElem.Key->Mulicast_OnScaleAnimation();
-			PoolElem.Value = Name;
+			PoolElem.Value = UserIndex;
 			return;
 		}
 	}
@@ -136,7 +63,7 @@ void AMumulMumulGameMode::SpawnTent(const FTransform& SpawnTransform, FString Na
 		UE_LOG(LogTemp, Error, TEXT("Tent Spawn FAILED to ADD"));
 		return;
 	}
-	Tent->SetOwnerName(FName(Name));
+	Tent->SetOwnerUserIndex(UserIndex);
 	Tent->Activate(SpawnTransform);
-	TentPool.Add(Tent, Name);
+	TentPool.Add(Tent, UserIndex);
 }
