@@ -46,5 +46,6 @@ void UCreateGroupChatUI::InitParentUI(UGroupChatUI* Parent)
 void UCreateGroupChatUI::CreateGroupChat()
 {
 	UGroupIconUI* GroupIconUI = CreateWidget<UGroupIconUI>(GetWorld(), GroupIconUIClass);
+	GroupIconUI->InitParentUI(ParentUI);
 	ParentUI->AddGroupIcon(GroupIconUI);
 }

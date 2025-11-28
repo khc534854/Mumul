@@ -7,10 +7,11 @@
 #include "Components/ScrollBox.h"
 #include "Components/SizeBox.h"
 #include "khc/Player/MumulPlayerState.h"
+#include "Yeomin/UI/ChatBlockUI.h"
 #include "Yeomin/UI/ChatMessageBlockUI.h"
-#include "Yeomin/UI/ChatUI.h"
 #include "Yeomin/UI/CreateGroupChatUI.h"
 #include "Yeomin/UI/GroupIconUI.h"
+#include "Yeomin/UI/InvitationUI.h"
 
 void UGroupChatUI::NativeConstruct()
 {
@@ -20,10 +21,34 @@ void UGroupChatUI::NativeConstruct()
 	EditBox->OnTextCommitted.AddDynamic(this, &UGroupChatUI::OnTextBoxCommitted);
 	
 	AddGroupBtn->OnPressed.AddDynamic(this, &UGroupChatUI::ShowCreateGroupChatUI);
+
 	CreateGroupChatUI = CreateWidget<UCreateGroupChatUI>(this, CreateGroupChatUIClass);
 	CreateGroupChatUI->InitParentUI(this);
 	CreateGroupChatBox->AddChild(CreateGroupChatUI);
 	CreateGroupChatBox->SetVisibility(ESlateVisibility::Hidden);
+	
+	InvitationUI = CreateWidget<UInvitationUI>(this, InvitationUIClass);
+	InvitationBox->AddChild(InvitationUI);
+	InvitationBox->SetVisibility(ESlateVisibility::Hidden);
+	
+	InviteBtn->OnPressed.AddDynamic(this, &UGroupChatUI::ShowInvitationUI);
+	DeleteBtn->OnPressed.AddDynamic(this, &UGroupChatUI::ShowDeleteUI);
+}
+
+void UGroupChatUI::ToggleVisibility(UWidget* Widget)
+{
+	const bool bIsVisible = (Widget->GetVisibility() == ESlateVisibility::Visible);
+	Widget->SetVisibility(bIsVisible ? ESlateVisibility::Hidden : ESlateVisibility::Visible);
+}
+
+void UGroupChatUI::AddChatBlock(UChatBlockUI* UI)
+{
+	ChatSizeBox->AddChild(UI);
+}
+
+void UGroupChatUI::RemoveChatBlock()
+{
+	ChatSizeBox->ClearChildren();
 }
 
 void UGroupChatUI::OnTextBoxCommitted(const FText& Text, ETextCommit::Type CommitMethod)
@@ -52,7 +77,7 @@ void UGroupChatUI::OnTextBoxCommitted(const FText& Text, ETextCommit::Type Commi
 void UGroupChatUI::AddChat(FString Text)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Enter AddChat"));
-	if (UChatUI* ChatChunck = Cast<UChatUI>(ChatSizeBox->GetChildAt(0)))
+	if (UChatBlockUI* ChatChunck = Cast<UChatBlockUI>(ChatSizeBox->GetChildAt(0)))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("UGroupChatUI::AddChat(): Adding chat text"));
 		// Scroll Current Location
@@ -81,15 +106,19 @@ void UGroupChatUI::AddChat(FString Text)
 
 void UGroupChatUI::ShowCreateGroupChatUI()
 {
-	if (CreateGroupChatBox->GetVisibility() == ESlateVisibility::Visible)
-	{
-		CreateGroupChatBox->SetVisibility(ESlateVisibility::Hidden);
-		return;
-	}
-	CreateGroupChatBox->SetVisibility(ESlateVisibility::Visible);
+	ToggleVisibility(CreateGroupChatBox);
 }
 
 void UGroupChatUI::AddGroupIcon(UGroupIconUI* UI)
 {
 	GroupScrollBox->AddChild(UI);
+}
+
+void UGroupChatUI::ShowInvitationUI()
+{
+	ToggleVisibility(InvitationBox);
+}
+
+void UGroupChatUI::ShowDeleteUI()
+{
 }

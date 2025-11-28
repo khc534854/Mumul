@@ -1,16 +1,16 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "ChatUI.generated.h"
+#include "ChatBlockUI.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class MUMUL_API UChatUI : public UUserWidget
+class MUMUL_API UChatBlockUI : public UUserWidget
 {
 	GENERATED_BODY()
 	

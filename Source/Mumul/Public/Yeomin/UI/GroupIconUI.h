@@ -25,9 +25,9 @@ public:
 	void InitParentUI(class UGroupChatUI* Parent);
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> GroupIconBtn;
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UUserWidget> ChatUIClass;
+	UPROPERTY(EditDefaultsOnly, Category="UI Class")
+	TSubclassOf<class UChatBlockUI> ChatBlockUIClass;
 	UPROPERTY()
-	TObjectPtr<class UChatUI> GroupChatUI;
+	TObjectPtr<class UChatBlockUI> GroupChatUI;
 	TArray<FString> PlayersInGroup;
 };
