@@ -5,6 +5,7 @@
 
 #include "Components/SphereComponent.h"
 #include "khc/Player/MumulPlayerState.h"
+#include "Net/UnrealNetwork.h"
 
 
 // Sets default values
@@ -33,6 +34,12 @@ void ACampFireActor::BeginPlay()
 {
 	Super::BeginPlay();
 	
+}
+
+void ACampFireActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ACampFireActor, CampfireChannelID);
 }
 
 void ACampFireActor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,

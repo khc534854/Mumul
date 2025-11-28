@@ -23,7 +23,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void SetOwnerUserIndex(const int32 UserIndex) { OwnerUserIndex = UserIndex; }
+	void SetOwnerUserIndex(const int32 UserIndex);
 	UPROPERTY(Replicated)
 	bool bIsActive = false;
 	void Activate(const FTransform& SpawnTransform);
@@ -35,4 +35,7 @@ public:
 	float TentSequence2nd;
 	UFUNCTION(NetMulticast, Reliable)
 	void Mulicast_OnScaleAnimation();
+
+	UPROPERTY()
+	class ACampFireActor* ChildCampFire;
 };

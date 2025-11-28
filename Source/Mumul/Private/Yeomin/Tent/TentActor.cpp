@@ -6,6 +6,7 @@
 #include "INodeAndChannelMappings.h"
 #include "DSP/MidiNoteQuantizer.h"
 #include "DynamicMesh/MeshTransforms.h"
+#include "khc/Object/CampFireActor.h"
 #include "Library/MathLibrary.h"
 #include "Net/UnrealNetwork.h"
 
@@ -24,6 +25,12 @@ ATentActor::ATentActor()
 void ATentActor::BeginPlay()
 {
 	Super::BeginPlay();
+
+	UChildActorComponent* ChildComp = FindComponentByClass<UChildActorComponent>();
+	if (ChildComp)
+	{
+		ChildCampFire = Cast<ACampFireActor>(ChildComp->GetChildActor());
+	}
 }
 
 void ATentActor::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -106,4 +113,14 @@ void ATentActor::Mulicast_OnScaleAnimation_Implementation()
 {
 	TentSequence1st = 0.f;
 	TentSequence2nd = 0.f;
+}
+
+void ATentActor::SetOwnerUserIndex(int32 NewUserIndex)
+{
+	OwnerUserIndex = NewUserIndex;
+
+	if (ChildCampFire)
+	{
+		ChildCampFire->CampfireChannelID = NewUserIndex;
+	}
 }

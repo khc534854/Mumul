@@ -17,6 +17,8 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+
 public:
 	// 모닥불 외형
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
@@ -27,7 +29,7 @@ public:
 	class USphereComponent* VoiceRangeSphere;
 
 	// 이 모닥불의 고유 채널 ID (에디터에서 설정 가능)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Voice")
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Voice")
 	int32 CampfireChannelID = 1;
 
 	// 오버랩 시작 처리
