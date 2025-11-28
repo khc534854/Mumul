@@ -19,9 +19,15 @@ class MUMUL_API UGroupIconUI : public UUserWidget
 protected:
 	UFUNCTION()
 	void DisplayGroupChat();
-	
-public:
 	UPROPERTY()
+	TObjectPtr<class UGroupChatUI> ParentUI;
+public:
+	void InitParentUI(class UGroupChatUI* Parent);
+	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> GroupIconBtn;
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUserWidget> ChatUIClass;
+	UPROPERTY()
+	TObjectPtr<class UChatUI> GroupChatUI;
 	TArray<FString> PlayersInGroup;
 };

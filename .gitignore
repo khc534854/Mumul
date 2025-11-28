@@ -74,5 +74,4 @@ Plugins/**/Intermediate/*
 DerivedDataCache/*
 
 # JetBrains project files
-.idea/*
-!.idea/.name
+.idea/
