@@ -17,24 +17,30 @@ class MUMUL_API UGroupChatUI : public UUserWidget
 protected:
 	virtual void NativeConstruct() override;
 	
-	UFUNCTION()
-	void OnTextBoxCommitted(const FText& Text, ETextCommit::Type CommitMethod);
-	
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UScrollBox> ChatScrollBox;
+	TObjectPtr<class USizeBox> ChatSizeBox;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UEditableTextBox> EditBox;
-	
+	UFUNCTION()
+	void OnTextBoxCommitted(const FText& Text, ETextCommit::Type CommitMethod);
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
 	TSubclassOf<class UChatMessageBlockUI> ChatMessageBlockUIClass;
 	void AddChat(FString Text);
 	
-	UPROPERTY(EditDefaultsOnly, Category="UI Class")
-	TSubclassOf<class UChatMessageBlockUI> GroupProfileUIClass;
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UButton> AddGroupBtn;
-	UFUNCTION()
-	void ShowInvitationUI();
+	TObjectPtr<class UButton> AddGroupBtn; 
 	
+	UPROPERTY(EditDefaultsOnly, Category="UI Class")
+	TSubclassOf<class UCreateGroupChatUI> CreateGroupChatUIClass;
+	UPROPERTY()
+	TObjectPtr<class UCreateGroupChatUI> CreateGroupChatUI;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class USizeBox> CreateGroupChatBox;
+	UFUNCTION()
+	void ShowCreateGroupChatUI();
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UScrollBox> GroupScrollBox;
+public:
+	void AddGroupIcon(class UGroupIconUI* UI);
 	
 };

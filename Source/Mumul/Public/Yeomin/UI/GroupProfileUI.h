@@ -13,4 +13,16 @@ UCLASS()
 class MUMUL_API UGroupProfileUI : public UUserWidget
 {
 	GENERATED_BODY()
+	
+	
+protected:
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UTextBlock> PlayerNameText; 
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UCheckBox> JoinedStateBox;
+	
+public:
+	void SetPlayerName(FString Name);
+	FString GetPlayerName();
+	bool GetCheckBoxState();
 };

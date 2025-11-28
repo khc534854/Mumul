@@ -2,12 +2,15 @@
 
 
 #include "Yeomin/UI/GroupChatUI.h"
-
 #include "Components/Button.h"
 #include "Components/EditableTextBox.h"
 #include "Components/ScrollBox.h"
+#include "Components/SizeBox.h"
 #include "khc/Player/MumulPlayerState.h"
 #include "Yeomin/UI/ChatMessageBlockUI.h"
+#include "Yeomin/UI/ChatUI.h"
+#include "Yeomin/UI/CreateGroupChatUI.h"
+#include "Yeomin/UI/GroupIconUI.h"
 
 void UGroupChatUI::NativeConstruct()
 {
@@ -15,7 +18,12 @@ void UGroupChatUI::NativeConstruct()
 	
 	// Register Text Commit callback function
 	EditBox->OnTextCommitted.AddDynamic(this, &UGroupChatUI::OnTextBoxCommitted);
-	AddGroupBtn->OnPressed.AddDynamic(this, &UGroupChatUI::ShowInvitationUI);
+	
+	AddGroupBtn->OnPressed.AddDynamic(this, &UGroupChatUI::ShowCreateGroupChatUI);
+	CreateGroupChatUI = CreateWidget<UCreateGroupChatUI>(this, CreateGroupChatUIClass);
+	CreateGroupChatUI->InitParentUI(this);
+	CreateGroupChatBox->AddChild(CreateGroupChatUI);
+	CreateGroupChatBox->SetVisibility(ESlateVisibility::Hidden);
 }
 
 void UGroupChatUI::OnTextBoxCommitted(const FText& Text, ETextCommit::Type CommitMethod)
@@ -28,6 +36,7 @@ void UGroupChatUI::OnTextBoxCommitted(const FText& Text, ETextCommit::Type Commi
 		APlayerController* pc = GetWorld()->GetFirstPlayerController();
 		AMumulPlayerState* ps = pc->GetPlayerState<AMumulPlayerState>();
 		//TODO: ps->ServerRPC_SendChat(text.ToString());
+		AddChat(Text.ToString());
 
 		// Init EditBox
 		EditBox->SetText(FText());
@@ -42,30 +51,45 @@ void UGroupChatUI::OnTextBoxCommitted(const FText& Text, ETextCommit::Type Commi
 
 void UGroupChatUI::AddChat(FString Text)
 {
-	// Scroll Current Location
-	float ScrollOffset = ChatScrollBox->GetScrollOffset();
-	// Scroll End Location
-	float EndOfScrollOffset = ChatScrollBox->GetScrollOffsetOfEnd();
-	
-	// Add Chat Chunk to ScrollBox
-	UChatMessageBlockUI* Chat = CreateWidget<UChatMessageBlockUI>(GetWorld(), ChatMessageBlockUIClass);
-	ChatScrollBox->AddChild(Chat);
-	Chat->SetContent(Text);
-	
-	// If Scroll is at End
-	if (ScrollOffset == EndOfScrollOffset)
+	UE_LOG(LogTemp, Warning, TEXT("Enter AddChat"));
+	if (UChatUI* ChatChunck = Cast<UChatUI>(ChatSizeBox->GetChildAt(0)))
 	{
-		// Scroll To End after 0.01s
-		FTimerHandle Handle;
-		GetWorld()->GetTimerManager().SetTimer(Handle, [this]()
+		UE_LOG(LogTemp, Warning, TEXT("UGroupChatUI::AddChat(): Adding chat text"));
+		// Scroll Current Location
+		float ScrollOffset = ChatChunck->ChatScrollBox->GetScrollOffset();
+		// Scroll End Location
+		float EndOfScrollOffset = ChatChunck->ChatScrollBox->GetScrollOffsetOfEnd();
+	
+		// Add Chat Chunk to ScrollBox
+		UChatMessageBlockUI* Chat = CreateWidget<UChatMessageBlockUI>(GetWorld(), ChatMessageBlockUIClass);
+		ChatChunck->ChatScrollBox->AddChild(Chat);
+		Chat->SetContent(Text);
+	
+		// If Scroll is at End
+		if (ScrollOffset == EndOfScrollOffset)
 		{
-			// Scroll To End
-			ChatScrollBox->ScrollToEnd();
-		}, 0.01f, false);
+			// Scroll To End after 0.01s
+			FTimerHandle Handle;
+			GetWorld()->GetTimerManager().SetTimer(Handle, [ChatChunck]()
+			{
+				// Scroll To End
+				ChatChunck->ChatScrollBox->ScrollToEnd();
+			}, 0.01f, false);
+		}
 	}
 }
 
-void UGroupChatUI::ShowInvitationUI()
+void UGroupChatUI::ShowCreateGroupChatUI()
 {
-	
+	if (CreateGroupChatBox->GetVisibility() == ESlateVisibility::Visible)
+	{
+		CreateGroupChatBox->SetVisibility(ESlateVisibility::Hidden);
+		return;
+	}
+	CreateGroupChatBox->SetVisibility(ESlateVisibility::Visible);
+}
+
+void UGroupChatUI::AddGroupIcon(UGroupIconUI* UI)
+{
+	GroupScrollBox->AddChild(UI);
 }

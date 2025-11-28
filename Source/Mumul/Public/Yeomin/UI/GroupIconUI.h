@@ -13,4 +13,15 @@ UCLASS()
 class MUMUL_API UGroupIconUI : public UUserWidget
 {
 	GENERATED_BODY()
+	
+	virtual void NativeConstruct() override;
+	
+protected:
+	UFUNCTION()
+	void DisplayGroupChat();
+	
+public:
+	UPROPERTY()
+	TObjectPtr<class UButton> GroupIconBtn;
+	TArray<FString> PlayersInGroup;
 };

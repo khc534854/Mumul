@@ -16,11 +16,26 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ca0510d7-5f11-4fb1-8e86-1d98d16f0dbb" name="변경" comment="">
+      <change afterPath="$PROJECT_DIR$/Source/Mumul/Private/Yeomin/UI/ChatUI.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Source/Mumul/Private/Yeomin/UI/CreateGroupChatUI.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Source/Mumul/Public/Yeomin/UI/ChatUI.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Source/Mumul/Public/Yeomin/UI/CreateGroupChatUI.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Mumul/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Mumul/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Mumul/Private/MumulMumulGameMode.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Private/MumulMumulGameMode.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Mumul/Private/Yeomin/Player/CuteAlienController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Private/Yeomin/Player/CuteAlienController.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Mumul/Public/MumulMumulGameMode.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Public/MumulMumulGameMode.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Mumul/Public/Yeomin/Tent/TentActor.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Public/Yeomin/Tent/TentActor.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Config/DefaultEngine.ini" beforeDir="false" afterPath="$PROJECT_DIR$/Config/DefaultEngine.ini" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Yeomin/Actors/Tent/BP_PreviewTent.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Yeomin/Actors/Tent/BP_PreviewTent.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Yeomin/Characters/UI/BP/WBP_CreateGroupChatUI.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Yeomin/Characters/UI/BP/WBP_CreateGroupChatUI.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Yeomin/Characters/UI/BP/WBP_GroupChatUI.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Yeomin/Characters/UI/BP/WBP_GroupChatUI.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Yeomin/Characters/UI/BP/WBP_GroupProfileUI.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Yeomin/Characters/UI/BP/WBP_GroupProfileUI.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Yeomin/Characters/UI/BP/WBP_ProfileUI.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Yeomin/Characters/UI/BP/WBP_ProfileUI.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Yeomin/Characters/UI/BP/WBP_RadialUI.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Yeomin/Characters/UI/BP/WBP_RadialUI.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Yeomin/Maps/BP/BP_TestGM.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Yeomin/Maps/BP/BP_TestGM.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Mumul/Private/Yeomin/Tent/PreviewTentActor.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Private/Yeomin/Tent/PreviewTentActor.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Mumul/Private/Yeomin/UI/GroupChatUI.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Private/Yeomin/UI/GroupChatUI.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Mumul/Private/Yeomin/UI/GroupIconUI.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Private/Yeomin/UI/GroupIconUI.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Mumul/Private/Yeomin/UI/GroupProfileUI.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Private/Yeomin/UI/GroupProfileUI.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Mumul/Public/Yeomin/UI/GroupChatUI.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Public/Yeomin/UI/GroupChatUI.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Mumul/Public/Yeomin/UI/GroupIconUI.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Public/Yeomin/UI/GroupIconUI.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Mumul/Public/Yeomin/UI/GroupProfileUI.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Mumul/Public/Yeomin/UI/GroupProfileUI.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -34,28 +49,6 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="cidr-memory-view://0" root0="FORCE_HIGHLIGHTING" />
-    <setting file="cidr-memory-view://1" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Plugins/Online/OnlineSubsystem/Source/Public/OnlineSessionSettings.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Plugins/Online/OnlineSubsystemEOS/Source/OnlineSubsystemEOSPlus/Private/OnlineSessionEOSPlus.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Plugins/Online/OnlineSubsystemOculus/Source/Classes/OculusFindSessionsCallbackProxy.h" root0="SKIP_HIGHLIGHTING" />
@@ -87,8 +80,20 @@
     <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Source/Runtime/Online/Voice/Public/Interfaces/VoiceCapture.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Source/Runtime/Online/Voice/Public/VoiceModule.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/../../../Program Files/Epic Games/UE_5.4/Engine/Source/Runtime/UMG/Public/Components/ScrollBox.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Mumul/Private/Base/MumulGameState.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Mumul/Private/Yeomin/UI/ChatMessageBlockUI.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Mumul/Private/Yeomin/UI/ChatUI.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Mumul/Private/Yeomin/UI/CreateGroupChatUI.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Mumul/Private/Yeomin/UI/GroupChatUI.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Mumul/Private/Yeomin/UI/GroupIconUI.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Mumul/Private/Yeomin/UI/GroupProfileUI.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Mumul/Public/Base/MumulGameState.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Mumul/Public/Yeomin/UI/ChatMessageBlockUI.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Mumul/Public/Yeomin/UI/ChatUI.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Mumul/Public/Yeomin/UI/CreateGroupChatUI.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Mumul/Public/Yeomin/UI/GroupChatUI.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Mumul/Public/Yeomin/UI/GroupIconUI.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Mumul/Public/Yeomin/UI/GroupProfileUI.h" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
   <component name="ProblemsViewState">
@@ -102,23 +107,23 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "C/C++ Project.Mumul.executor": "Run",
-    "C/C++ 프로젝트.Mumul.executor": "Debug",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "Yeomin",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "editor.preferences.tabs",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;C/C++ Project.Mumul.executor&quot;: &quot;Run&quot;,
+    &quot;C/C++ 프로젝트.Mumul.executor&quot;: &quot;Debug&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;Yeomin&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;editor.preferences.tabs&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager" selected="C/C++ Project.Mumul">
     <configuration name="Mumul" type="CppProject" factoryName="C++ Project">
       <configuration_1 setup="1">
