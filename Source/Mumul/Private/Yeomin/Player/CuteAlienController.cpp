@@ -335,7 +335,12 @@ void ACuteAlienController::Server_SpawnTent_Implementation(const FTransform& Ten
 	AMumulMumulGameMode* GM = GetWorld()->GetAuthGameMode<AMumulMumulGameMode>();
 	if (GM)
 	{
-		GM->SpawnTent(TentTransform, GetPlayerState<AMumulPlayerState>()->PS_UserIndex);
+		AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>();
+		if (PS)
+		{
+			// [수정] UserIndex도 같이 넘기고, bSaveToDisk = true로 설정
+			GM->SpawnTent(TentTransform, PS->PS_UserIndex, true);
+		}
 	}
 }
 

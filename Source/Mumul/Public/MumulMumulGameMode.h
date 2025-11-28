@@ -25,5 +25,5 @@ protected:
 	TMap<TObjectPtr<class ATentActor>, int32> TentPool;
 
 public:
-	void SpawnTent(const FTransform& SpawnTransform, int32 UserIndex);
+	void SpawnTent(const FTransform& SpawnTransform, int32 UserIndex, bool bSaveToDisk);
 };
