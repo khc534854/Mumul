@@ -88,7 +88,7 @@ void UVoiceChatComponent::StartRecording()
 			{
 				// 타이머가 울리면 현재까지 쌓인 데이터를 보냄 (마지막 아님)
 				SendCurrentChunk(false);
-			}, 10.0f, true); // true: 반복 실행
+			}, 60.0f, true); // true: 반복 실행
 		}
 	}
 	else
@@ -225,7 +225,7 @@ void UVoiceChatComponent::SendCurrentChunk(bool bIsLast)
 			// 전송 (ChunkIndex 사용 후 증가)
 			// HttpSystem->SendAudioChunk 함수에 bIsLast 인자 추가 필요 (아래 참고)
 			//HttpSystem->SendAudioChunk(WavData, CurrentMeetingID, UserID, CurrentChunkIndex++); 
-			HttpSystem->SendAudioChunk(WavData, CurrentMeetingID, "1", CurrentChunkIndex++); 
+			HttpSystem->SendAudioChunk(WavData, "meeting_20251125_d5c9b047", "1", CurrentChunkIndex++); 
 		}
 	}
 

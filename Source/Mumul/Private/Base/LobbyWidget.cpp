@@ -195,7 +195,7 @@ void ULobbyWidget::OnClickGoFind()
 void ULobbyWidget::OnClickCreate()
 {
     //FString sessionName = editSessionName->GetText().ToString();
-    FString sessionName = FString("머물머물");
+    FString sessionName = FString("Mumul");
     FString mapURL = FString("/Game/Khc/Maps/Island?listen");
     // 최소 2명 이상 보장
     //int32 playerCount = FMath::Max(2, (int32)sliderPlayerCount->GetValue());

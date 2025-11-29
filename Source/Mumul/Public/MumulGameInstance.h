@@ -51,6 +51,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	FString GetSteamNickname();
+	
 private:
 	// Online Session Interface 포인터
 	IOnlineSessionPtr SessionInterface;
@@ -70,6 +71,7 @@ private:
 	// 생성할 세션의 이름 및 이동할 URL (세션 생성 로직에 필요)
 	FName RequestedSessionName;
 	FString RequestedTravelURL;
+	bool bIsCreatingSession = false;
 
 	// Player Unique Information
 public:

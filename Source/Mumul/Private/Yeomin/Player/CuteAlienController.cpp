@@ -346,7 +346,7 @@ void ACuteAlienController::Server_SpawnTent_Implementation(const FTransform& Ten
 
 void ACuteAlienController::UpdateVoiceChannelMuting()
 {
-	AMumulPlayerState* MyPS = GetPlayerState<AMumulPlayerState>();
+    AMumulPlayerState* MyPS = GetPlayerState<AMumulPlayerState>();
     if (!MyPS) return;
 
     int32 MyChannelID = MyPS->VoiceChannelID;
@@ -357,53 +357,57 @@ void ACuteAlienController::UpdateVoiceChannelMuting()
         {
             for (APlayerState* OtherPS : GameState->PlayerArray)
             {
-                if (OtherPS == MyPS) continue; // 나는 건너뜀
+                if (OtherPS == MyPS) continue;
 
-            	AMumulPlayerState* AlienOtherPS = Cast<AMumulPlayerState>(OtherPS);
-            	if (!AlienOtherPS) continue;
+                AMumulPlayerState* AlienOtherPS = Cast<AMumulPlayerState>(OtherPS);
+                if (!AlienOtherPS) continue;
 
-            	// [핵심] 이 플레이어의 목소리를 담당하는 Talker 객체를 가져옵니다.
-            	UVOIPTalker* Talker = UVOIPTalker::CreateTalkerForPlayer(OtherPS);
+                // [핵심 수정] 무조건 Create 하지 말고, Get으로 먼저 찾습니다.
+                UVOIPTalker* Talker = UVOIPStatics::GetVOIPTalkerForPlayer(OtherPS->GetUniqueId());
                 
-            	if (Talker)
-            	{
-            		// 1. 채널이 같은가?
-            		if (AlienOtherPS->VoiceChannelID == MyChannelID)
-            		{
-            			// [상황 A] 둘 다 0번(로비) 채널 -> 거리 기반(3D) 적용
-            			if (MyChannelID == 0)
-            			{
-            				Talker->Settings.AttenuationSettings = NormalAttenuation;
+                // 없으면 그때 생성
+                if (!Talker)
+                {
+                    Talker = UVOIPTalker::CreateTalkerForPlayer(OtherPS);
+                }
+                
+                if (Talker)
+                {
+                   if (AlienOtherPS->VoiceChannelID == MyChannelID)
+                   {
+                      // [0번 채널] 3D 거리 기반
+                      if (MyChannelID == 0)
+                      {
+                         Talker->Settings.AttenuationSettings = NormalAttenuation;
                             
-            				// [중요] 3D 사운드는 소리 나는 위치(상대방 캐릭터)를 지정해야 함
-            				if (APawn* OtherPawn = OtherPS->GetPawn())
-            				{
-            					Talker->Settings.ComponentToAttachTo = OtherPawn->GetRootComponent();
-            				}
-                            
-            				UE_LOG(LogTemp, Log, TEXT(">>> [VOICE 3D] %s (Proximity)"), *OtherPS->GetPlayerName());
-            			}
-            			// [상황 B] 둘 다 모닥불(특정) 채널 -> 전체 들림(2D) 적용
-            			else
-            			{
-            				Talker->Settings.AttenuationSettings = nullptr; // 감쇠 없음 = 2D
-            				Talker->Settings.ComponentToAttachTo = nullptr; // 위치 상관 없음
-                            
-            				UE_LOG(LogTemp, Log, TEXT(">>> [VOICE 2D] %s (Room Mode)"), *OtherPS->GetPlayerName());
-            			}
-            		}
-            		// 2. 채널이 다른가?
-            		else
-            		{
-            			// [상황 C] 다른 채널 -> 소리 소멸(Silent) 적용
-            			if (SilentAttenuation)
-            			{
-            				Talker->Settings.AttenuationSettings = SilentAttenuation;
-            				Talker->Settings.ComponentToAttachTo = nullptr;
-            			}
-            			UE_LOG(LogTemp, Log, TEXT(">>> [VOICE MUTE] %s"), *OtherPS->GetPlayerName());
-            		}
-            	}
+                         if (APawn* OtherPawn = OtherPS->GetPawn())
+                         {
+                            Talker->Settings.ComponentToAttachTo = OtherPawn->GetRootComponent();
+                         }
+                         else
+                         {
+                            // 폰이 안 보이면(멀리 있으면) 소리 위치를 잡을 수 없음 -> 2D로 들리거나 안 들릴 수 있음
+                            // 확실히 하기 위해 폰이 없으면 소리를 끄는 것도 방법
+                             Talker->Settings.ComponentToAttachTo = nullptr;
+                         }
+                      }
+                      // [그 외] 2D 전체
+                      else
+                      {
+                         Talker->Settings.AttenuationSettings = nullptr;
+                         Talker->Settings.ComponentToAttachTo = nullptr;
+                      }
+                   }
+                   else
+                   {
+                      // [다른 채널] 무음
+                      if (SilentAttenuation)
+                      {
+                         Talker->Settings.AttenuationSettings = SilentAttenuation;
+                         Talker->Settings.ComponentToAttachTo = nullptr;
+                      }
+                   }
+                }
             }
         }
     }
