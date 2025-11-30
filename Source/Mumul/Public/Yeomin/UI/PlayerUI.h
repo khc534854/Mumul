@@ -17,7 +17,11 @@ class MUMUL_API UPlayerUI : public UUserWidget
 	
 protected:
 	virtual void NativeConstruct() override;
+
+	UFUNCTION(BlueprintCallable)
 	UVoiceChatComponent* GetVoiceComponent() const;
+	UFUNCTION(BlueprintImplementableEvent)
+	void ChangeMicStateImage();
 
 	UPROPERTY()
 	TObjectPtr<class ACuteAlienController> PC;
@@ -29,7 +33,20 @@ protected:
 	TObjectPtr<class UButton> MicrophoneBtn;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> RecordBtn;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UTextBlock> RecOnTxt;
 	
+	UPROPERTY(Transient, meta = (BindWidgetAnim))
+	TObjectPtr<class UWidgetAnimation > MicOn;
+
+protected:
+	// 버튼 스타일 업데이트 함수 분리
+	UFUNCTION()
+	void UpdateMicButtonState(bool bActive);
+	UFUNCTION()
+	void UpdateRecordButtonState(bool bActive);
+
 	UFUNCTION()
 	void OnTentClicked();
 
@@ -37,12 +54,4 @@ protected:
 	void OnMicClicked();
 	UFUNCTION()
 	void OnRecordClicked();
-
-
-public:
-	UPROPERTY(BlueprintReadOnly)
-	bool bIsSpeaking = false;
-	UPROPERTY(BlueprintReadOnly)
-	bool bIsRecoding = false;
-	
 };

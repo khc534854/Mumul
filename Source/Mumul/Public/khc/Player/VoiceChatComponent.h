@@ -7,6 +7,8 @@
 #include "Components/ActorComponent.h"
 #include "VoiceChatComponent.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnVoiceStateChanged, bool, bActive);
+
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class MUMUL_API UVoiceChatComponent : public UActorComponent
@@ -23,6 +25,12 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 public:	
+	UFUNCTION(BlueprintCallable, Category = "Voice")
+	void ToggleSpeaking();
+
+	UFUNCTION(BlueprintCallable, Category = "Voice")
+	void ToggleRecording();
+
 	// 외부(캐릭터의 Input)에서 호출할 함수들
 	UFUNCTION(BlueprintCallable, Category="Voice")
 	void StartSpeaking();
@@ -40,6 +48,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Voice|Recording")
 	bool IsRecording() const { return bIsRecording; }
 
+	UFUNCTION(BlueprintCallable, Category = "Voice|Recording")
+	bool IsSpeaking() const { return bIsSpeaking; }
+
+
+	UFUNCTION(BlueprintCallable, Category = "Voice|Recording")
+	FString GetCurrentMeetingID() const { return CurrentMeetingID; }
+	
+	UFUNCTION(BlueprintCallable, Category = "Voice|Recording")
+	void SetCurrentMeetingID(FString NewMeetingId) { CurrentMeetingID = NewMeetingId; }
+
 private:
 	// 오디오 캡처 객체
 	Audio::FAudioCapture AudioCapture;
@@ -49,6 +67,7 @@ private:
     
 	// 녹음 상태 플래그
 	bool bIsRecording = false;
+	bool bIsSpeaking = false;
 
 	// 캡처 정보 저장 (나중에 WAV 변환 시 필요)
 	int32 RecordingSampleRate = 48000;
@@ -56,7 +75,7 @@ private:
 
 	FTimerHandle ChunkTimerHandle;
 
-	// [추가] 현재 청크 인덱스
+	// 현재 청크 인덱스
 	int32 CurrentChunkIndex = 0;
 	FString CurrentMeetingID = TEXT("Test");
 
@@ -64,4 +83,12 @@ private:
 	
 	// 오디오 데이터가 들어올 때 호출되는 콜백
 	void OnAudioCapture(const float* InAudio, int32 InNumFrames, int32 InNumChannels, int32 InSampleRate);
+
+public:
+	// 외부(UI)에서 바인딩할 이벤트
+	UPROPERTY(BlueprintAssignable, Category = "Voice|Event")
+	FOnVoiceStateChanged OnSpeakingStateChanged;
+
+	UPROPERTY(BlueprintAssignable, Category = "Voice|Event")
+	FOnVoiceStateChanged OnRecordingStateChanged;
 };

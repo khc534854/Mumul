@@ -4,6 +4,7 @@
 #include "Yeomin/UI/PlayerUI.h"
 
 #include "Components/Button.h"
+#include "Components/TextBlock.h"
 #include "khc/Player/VoiceChatComponent.h"
 #include "Yeomin/Player/CuteAlienController.h"
 #include "Yeomin/Player/CuteAlienPlayer.h"
@@ -21,6 +22,15 @@ void UPlayerUI::NativeConstruct()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("RadialUI Can't Find PlayerController"))
 	}
+
+	if (UVoiceChatComponent* VoiceComp = GetVoiceComponent())
+	{
+		UpdateMicButtonState(VoiceComp->IsSpeaking());
+		UpdateRecordButtonState(VoiceComp->IsRecording());
+
+		VoiceComp->OnSpeakingStateChanged.AddDynamic(this, &UPlayerUI::UpdateMicButtonState);
+		VoiceComp->OnRecordingStateChanged.AddDynamic(this, &UPlayerUI::UpdateRecordButtonState);
+	}
 }
 
 UVoiceChatComponent* UPlayerUI::GetVoiceComponent() const
@@ -30,9 +40,32 @@ UVoiceChatComponent* UPlayerUI::GetVoiceComponent() const
 	APawn* Pawn = PC->GetPawn();
 	if (!Pawn) return nullptr;
 
-	// GetComponentByClass는 느릴 수 있으니, 가능하다면 캐릭터에 캐싱된 변수를 쓰는 게 좋습니다.
-	// 여기서는 안전하게 FindComponentByClass를 사용합니다.
 	return Pawn->FindComponentByClass<UVoiceChatComponent>();
+}
+
+void UPlayerUI::UpdateMicButtonState(bool bActive)
+{
+	if (bActive)
+	{
+		PlayAnimation(MicOn, 0, 0);
+	}
+	else
+	{
+		StopAnimation(MicOn);
+	}
+	ChangeMicStateImage();
+}
+
+void UPlayerUI::UpdateRecordButtonState(bool bActive)
+{
+	if (bActive)
+	{
+		RecOnTxt->SetVisibility(ESlateVisibility::Visible);
+	}
+	else
+	{
+		RecOnTxt->SetVisibility(ESlateVisibility::Hidden);
+	}
 }
 
 void UPlayerUI::OnTentClicked()
@@ -42,20 +75,26 @@ void UPlayerUI::OnTentClicked()
 
 void UPlayerUI::OnMicClicked()
 {
-	UVoiceChatComponent* VoiceComp = GetVoiceComponent();
-	if (!VoiceComp) return;
-	
-	bIsSpeaking = !bIsSpeaking;
-	
-	bIsSpeaking ? VoiceComp->StartSpeaking() : VoiceComp->StopSpeaking();
+	if (UVoiceChatComponent* VoiceComp = GetVoiceComponent())
+	{
+		VoiceComp->ToggleSpeaking();
+	}
 }
 
 void UPlayerUI::OnRecordClicked()
 {
-	UVoiceChatComponent* VoiceComp = GetVoiceComponent();
-	if (!VoiceComp) return;
-	
-	bIsRecoding = !bIsRecoding;
-
-	bIsRecoding ? VoiceComp->StartRecording() : VoiceComp->StopRecording();
+	if (UVoiceChatComponent* VoiceComp = GetVoiceComponent())
+	{
+		if (PC)
+		{
+			if (VoiceComp->IsRecording())
+			{
+				PC->RequestStopMeetingRecording();
+			}
+			else
+			{
+				PC->RequestStartMeetingRecording();
+			}
+		}
+	}
 }

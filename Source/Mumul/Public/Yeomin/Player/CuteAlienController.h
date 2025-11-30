@@ -74,6 +74,21 @@ public:
 
 	UFUNCTION(Server, Reliable)
 	void Server_SpawnTent(const FTransform& TentTransform);
+
+	void RequestStartMeetingRecording();
+	void RequestStopMeetingRecording();
+
+	UFUNCTION(Server, Reliable)
+	void Server_StartChannelRecording(int32 TargetChannelID);
+
+	UFUNCTION(Client, Reliable)
+	void Client_StartChannelRecording(int32 TargetChannelID);
+
+	UFUNCTION(Server, Reliable)
+	void Server_StopChannelRecording(int32 TargetChannelID);
+
+	UFUNCTION(Client, Reliable)
+	void Client_StopChannelRecording();
 	
 public:
 	UFUNCTION(BlueprintCallable, Category = "Voice")

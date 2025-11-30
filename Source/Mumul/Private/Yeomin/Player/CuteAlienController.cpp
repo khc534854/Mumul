@@ -16,6 +16,7 @@
 #include "Yeomin/Tent/PreviewTentActor.h"
 #include "Yeomin/Tent/TentActor.h"
 #include "Net/VoiceConfig.h"
+#include <khc/Player/VoiceChatComponent.h>
 
 ACuteAlienController::ACuteAlienController()
 {
@@ -328,6 +329,112 @@ void ACuteAlienController::ShowPreviewTent()
 		GetPawn()->GetActorLocation(),
 		FRotator::ZeroRotator
 	);
+}
+
+void ACuteAlienController::RequestStartMeetingRecording()
+{
+	AMumulPlayerState* MyPS = GetPlayerState<AMumulPlayerState>();
+	if (MyPS)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Req] Start Recording Requested by: %d (Ch: %d)"), MyPS->PS_UserIndex, MyPS->VoiceChannelID);
+
+		Server_StartChannelRecording(MyPS->VoiceChannelID);
+	}
+}
+
+void ACuteAlienController::RequestStopMeetingRecording()
+{
+	AMumulPlayerState* MyPS = GetPlayerState<AMumulPlayerState>();
+	if (MyPS)
+	{
+		Server_StopChannelRecording(MyPS->VoiceChannelID);
+	}
+}
+
+void ACuteAlienController::Server_StartChannelRecording_Implementation(int32 TargetChannelID)
+{
+	UE_LOG(LogTemp, Warning, TEXT("[Server] Request Start for Ch: %d"), TargetChannelID);
+
+
+	// [핵심 변경] GameState를 통해 접속한 모든 플레이어(Controller)를 찾음
+	if (UWorld* World = GetWorld())
+	{
+		if (AGameStateBase* GameState = World->GetGameState())
+		{
+			for (APlayerState* PS : GameState->PlayerArray)
+			{
+				if (!PS) continue;
+
+				AMumulPlayerState* MumulPS = Cast<AMumulPlayerState>(PS);
+				// 채널이 같은지 확인
+				if (MumulPS && MumulPS->VoiceChannelID == TargetChannelID)
+				{
+					// 해당 플레이어의 컨트롤러를 가져옴 (서버에는 모든 컨트롤러가 있음)
+					if (ACuteAlienController* TargetPC = Cast<ACuteAlienController>(PS->GetOwner()))
+					{
+						// 그 컨트롤러에게 "녹음 시작해"라고 명령 (Client RPC)
+						TargetPC->Client_StartChannelRecording(TargetChannelID);
+
+						UE_LOG(LogTemp, Log, TEXT("[Server] Sent Start Command to: %s"), *PS->GetPlayerName());
+					}
+				}
+			}
+		}
+	}
+}
+
+void ACuteAlienController::Client_StartChannelRecording_Implementation(int32 TargetChannelID)
+{
+	APawn* MyPawn = GetPawn();
+	if (MyPawn)
+	{
+		if (UVoiceChatComponent* VoiceComp = MyPawn->FindComponentByClass<UVoiceChatComponent>())
+		{
+			VoiceComp->StartRecording(); // 실제 녹음 시작
+
+			UE_LOG(LogTemp, Warning, TEXT(">>> [RECORD START] MeetingID: %d"), TargetChannelID);
+		}
+	}
+}
+
+void ACuteAlienController::Server_StopChannelRecording_Implementation(int32 TargetChannelID)
+{
+	UE_LOG(LogTemp, Warning, TEXT("[Server] Request Stop for Ch: %d"), TargetChannelID);
+
+	if (UWorld* World = GetWorld())
+	{
+		if (AGameStateBase* GameState = World->GetGameState())
+		{
+			for (APlayerState* PS : GameState->PlayerArray)
+			{
+				if (!PS) continue;
+
+				AMumulPlayerState* MumulPS = Cast<AMumulPlayerState>(PS);
+				if (MumulPS && MumulPS->VoiceChannelID == TargetChannelID)
+				{
+					if (ACuteAlienController* TargetPC = Cast<ACuteAlienController>(PS->GetOwner()))
+					{
+						// 그 컨트롤러에게 "녹음 꺼"라고 명령 (Client RPC)
+						TargetPC->Client_StopChannelRecording();
+					}
+				}
+			}
+		}
+	}
+}
+
+void ACuteAlienController::Client_StopChannelRecording_Implementation()
+{
+	APawn* MyPawn = GetPawn();
+	if (MyPawn)
+	{
+		if (UVoiceChatComponent* VoiceComp = MyPawn->FindComponentByClass<UVoiceChatComponent>())
+		{
+			VoiceComp->StopRecording(); // 녹음 종료
+
+			UE_LOG(LogTemp, Warning, TEXT(">>> [RECORD STOP]"));
+		}
+	}
 }
 
 void ACuteAlienController::Server_SpawnTent_Implementation(const FTransform& TentTransform)
