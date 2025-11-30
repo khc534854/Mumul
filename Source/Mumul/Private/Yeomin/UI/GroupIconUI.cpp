@@ -10,7 +10,7 @@ void UGroupIconUI::NativeConstruct()
 {
 	Super::NativeConstruct();
 	
-	GroupChatUI = CreateWidget<UChatBlockUI>(GetWorld(), ChatBlockUIClass);
+	ChatBlockUI = CreateWidget<UChatBlockUI>(GetWorld(), ChatBlockUIClass);
 	GroupIconBtn->OnPressed.AddDynamic(this, &UGroupIconUI::DisplayGroupChat);
 }
 
@@ -19,7 +19,7 @@ void UGroupIconUI::NativeConstruct()
 void UGroupIconUI::DisplayGroupChat()
 {
 	ParentUI->RemoveChatBlock();
-	ParentUI->AddChatBlock(GroupChatUI);
+	ParentUI->AddChatBlock(ChatBlockUI);
 }
 
 void UGroupIconUI::InitParentUI(UGroupChatUI* Parent)

@@ -16,8 +16,11 @@ class MUMUL_API UChatBlockUI : public UUserWidget
 	
 protected:
 	virtual void NativeConstruct() override;
+	TArray<int32> PlayersInGroup;
 	
 public:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UScrollBox> ChatScrollBox;
+	void SetPlayersInGroup(const TArray<int32>& Players) { PlayersInGroup = Players; }
+	TArray<int32>& GetPlayersInGroup() { return PlayersInGroup; }
 };

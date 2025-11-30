@@ -24,8 +24,6 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
 	TSubclassOf<class UGroupProfileUI> GroupProfileUIClass;
-	UPROPERTY(EditDefaultsOnly, Category="UI Class")
-	TSubclassOf<class UGroupIconUI> GroupIconUIClass;
 	
 	FTimerHandle SearchDelayTimer;
 	UPROPERTY(meta=(BindWidget))

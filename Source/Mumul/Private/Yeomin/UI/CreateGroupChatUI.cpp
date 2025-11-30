@@ -8,8 +8,10 @@
 #include "Components/EditableTextBox.h"
 #include "Components/ScrollBox.h"
 #include "GameFramework/PlayerState.h"
+#include "khc/Player/MumulPlayerState.h"
+#include "Yeomin/Network/DebugUtils.h"
+#include "Yeomin/Player/CuteAlienController.h"
 #include "Yeomin/UI/GroupChatUI.h"
-#include "Yeomin/UI/GroupIconUI.h"
 #include "Yeomin/UI/GroupProfileUI.h"
 
 void UCreateGroupChatUI::NativeConstruct()
@@ -36,8 +38,8 @@ void UCreateGroupChatUI::RefreshJoinedPlayerList()
 		{
 			UGroupProfileUI* ProfileUI = CreateWidget<UGroupProfileUI>(GetWorld(), GroupProfileUIClass);
 			PlayerScrollBox->AddChild(ProfileUI);
-			// 플레이어 이름 갱신
 			ProfileUI->SetPlayerName(PS->GetPlayerName());
+			ProfileUI->SetUserIndex(Cast<AMumulPlayerState>(PS)->PS_UserIndex);
 		}
 	}
 }
@@ -65,15 +67,15 @@ void UCreateGroupChatUI::RefreshFilteredPlayerList(const FText& Text)
 	for (UWidget* Child : Children)
 	{
 		UGroupProfileUI* ProfileUI = Cast<UGroupProfileUI>(Child);
-		
+
 		const FString Name = ProfileUI->GetPlayerName();
-		
+
 		if (Text.IsEmpty())
 		{
 			ProfileUI->SetVisibility(ESlateVisibility::Visible);
 			continue;
 		}
-		
+
 		const bool bIsContaining = Name.Contains(Text.ToString());
 		ProfileUI->SetVisibility(bIsContaining ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 	}
@@ -86,7 +88,25 @@ void UCreateGroupChatUI::InitParentUI(UGroupChatUI* Parent)
 
 void UCreateGroupChatUI::CreateGroupChat()
 {
-	UGroupIconUI* GroupIconUI = CreateWidget<UGroupIconUI>(GetWorld(), GroupIconUIClass);
-	GroupIconUI->InitParentUI(ParentUI);
-	ParentUI->AddGroupIcon(GroupIconUI);
+	// Check Players
+	TArray<UWidget*> Children = PlayerScrollBox->GetAllChildren();
+	TArray<int32> CheckedPlayers;
+	LOG_ARRAY(CheckedPlayers)
+	for (UWidget* Child : Children)
+	{
+		UGroupProfileUI* ProfileUI = Cast<UGroupProfileUI>(Child);
+		if (ProfileUI->GetCheckBoxState())
+		{
+			CheckedPlayers.Add(ProfileUI->GetUserIndex());
+		}
+	}
+
+	if (CheckedPlayers.Num() == 0)
+		return;
+	// Request Server to add GroupChatUI
+	ACuteAlienController* PC = GetWorld()->GetFirstPlayerController<ACuteAlienController>();
+	PC->Server_RequestGroupChatUI(CheckedPlayers);
+
+	ParentUI->ToggleCreateGroupChatUI();
 }
+

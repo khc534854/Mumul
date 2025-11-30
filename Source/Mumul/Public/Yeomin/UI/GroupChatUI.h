@@ -32,8 +32,10 @@ protected:
 	void OnTextBoxCommitted(const FText& Text, ETextCommit::Type CommitMethod);
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
 	TSubclassOf<class UChatMessageBlockUI> ChatMessageBlockUIClass;
-	void AddChat(FString Text);
+public:
+	void AddChat(FString Text, FString Name, FString CurrentTime);
 	
+protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> AddGroupBtn; 
 	
@@ -43,8 +45,10 @@ protected:
 	TObjectPtr<class UCreateGroupChatUI> CreateGroupChatUI;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class USizeBox> CreateGroupChatBox;
+public:
 	UFUNCTION()
-	void ShowCreateGroupChatUI();
+	void ToggleCreateGroupChatUI();
+protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UScrollBox> GroupScrollBox;
 public:
@@ -62,7 +66,7 @@ protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> DeleteBtn;
 	UFUNCTION()
-	void ShowInvitationUI();
+	void ToggleInvitationUI();
 	UFUNCTION()
 	void ShowDeleteUI();
 };

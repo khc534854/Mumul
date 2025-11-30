@@ -16,6 +16,11 @@
 #include "Yeomin/Tent/PreviewTentActor.h"
 #include "Yeomin/Tent/TentActor.h"
 #include "Net/VoiceConfig.h"
+#include "Yeomin/Network/DebugUtils.h"
+#include "Yeomin/UI/ChatBlockUI.h"
+#include "Yeomin/UI/GroupChatUI.h"
+#include "Yeomin/UI/GroupIconUI.h"
+#include "Yeomin/UI/PlayerUI.h"
 
 ACuteAlienController::ACuteAlienController()
 {
@@ -26,11 +31,25 @@ ACuteAlienController::ACuteAlienController()
 		RadialUIClass = RadialUIFinder.Class;
 	}
 
-	static ConstructorHelpers::FClassFinder<UUserWidget> PlayerUIFinder(
+	static ConstructorHelpers::FClassFinder<UPlayerUI> PlayerUIFinder(
 		TEXT("/Game/Yeomin/Characters/UI/BP/WBP_PlayerUI.WBP_PlayerUI_C"));
 	if (PlayerUIFinder.Succeeded())
 	{
 		PlayerUIClass = PlayerUIFinder.Class;
+	}
+
+	static ConstructorHelpers::FClassFinder<UGroupChatUI> GroupChatUIFinder(
+		TEXT("/Game/Yeomin/Characters/UI/BP/WBP_GroupChatUI.WBP_GroupChatUI_C"));
+	if (GroupChatUIFinder.Succeeded())
+	{
+		GroupChatUIClass = GroupChatUIFinder.Class;
+	}
+
+	static ConstructorHelpers::FClassFinder<UGroupIconUI> GroupIconUIFinder(
+		TEXT("/Game/Yeomin/Characters/UI/BP/WBP_GroupProfileUI.WBP_GroupProfileUI_C"));
+	if (GroupIconUIFinder.Succeeded())
+	{
+		GroupIconUIClass = GroupIconUIFinder.Class;
 	}
 
 	static ConstructorHelpers::FObjectFinder<UInputMappingContext> IMCFinder(
@@ -100,17 +119,7 @@ ACuteAlienController::ACuteAlienController()
 void ACuteAlienController::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (!IsLocalController())
-	{
-		return;
-	}
-
-	if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
-		ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
-	{
-		Subsystem->AddMappingContext(IMC_Player, 0);
-	}
+	
 	if (IsLocalController())
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
@@ -121,9 +130,11 @@ void ACuteAlienController::BeginPlay()
 
 		RadialUI = CreateWidget<URadialUI>(this, RadialUIClass);
 		RadialUI->AddToViewport();
-		PlayerUI = CreateWidget<UUserWidget>(this, PlayerUIClass);
+		PlayerUI = CreateWidget<UPlayerUI>(this, PlayerUIClass);
 		PlayerUI->AddToViewport();
-
+		GroupChatUI = CreateWidget<UGroupChatUI>(this, GroupChatUIClass);
+		GroupChatUI->AddToViewport();
+		
 		RadialUI->SetVisibility(ESlateVisibility::Hidden);
 	}
 
@@ -378,4 +389,52 @@ void ACuteAlienController::UpdateVoiceChannelMuting()
             }
         }
     }
+}
+
+
+void ACuteAlienController::Server_RequestGroupChatUI_Implementation(const TArray<int32>& Players)
+{
+	// Add GroupChatUI for each Client
+	for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
+	{
+		if (Players.Contains(Cast<AMumulPlayerState>(PS)->PS_UserIndex))
+		{
+			ACuteAlienController* PC = Cast<ACuteAlienController>(PS->GetOwningController());
+			if (PC)
+			{
+				PC->Client_CreateGroupChatUI(Players);
+			}
+		}
+	}
+}
+
+void ACuteAlienController::Client_CreateGroupChatUI_Implementation(const TArray<int32>& Players)
+{
+	// Set Players in Group Icon
+	UGroupIconUI* GroupIconUI = CreateWidget<UGroupIconUI>(GetWorld(), GroupIconUIClass);
+	GroupIconUI->InitParentUI(GroupChatUI);
+	GroupChatUI->AddGroupIcon(GroupIconUI);
+	GroupIconUI->ChatBlockUI->SetPlayersInGroup(Players);
+}
+
+
+void ACuteAlienController::Server_RequestChat_Implementation(const TArray<int32>& Players, const FString& Text, const FString& Name, const FString& CurrentTime)
+{
+	// Add GroupChatUI for each Client
+	for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
+	{
+		if (Players.Contains(Cast<AMumulPlayerState>(PS)->PS_UserIndex))
+		{
+			ACuteAlienController* PC = Cast<ACuteAlienController>(PS->GetOwningController());
+			if (PC)
+			{
+				PC->Client_SendChat(Text, Name, CurrentTime);
+			}
+		}
+	}
+}
+
+void ACuteAlienController::Client_SendChat_Implementation(const FString& Text, const FString& Name, const FString& CurrentTime)
+{
+	GroupChatUI->AddChat(Text, Name, CurrentTime);
 }

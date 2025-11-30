@@ -23,11 +23,12 @@ protected:
 	TObjectPtr<class UGroupChatUI> ParentUI;
 public:
 	void InitParentUI(class UGroupChatUI* Parent);
+protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> GroupIconBtn;
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
 	TSubclassOf<class UChatBlockUI> ChatBlockUIClass;
+public:
 	UPROPERTY()
-	TObjectPtr<class UChatBlockUI> GroupChatUI;
-	TArray<FString> PlayersInGroup;
+	TObjectPtr<class UChatBlockUI> ChatBlockUI;
 };

@@ -7,6 +7,7 @@
 #include "Components/ScrollBox.h"
 #include "Components/SizeBox.h"
 #include "khc/Player/MumulPlayerState.h"
+#include "Yeomin/Player/CuteAlienController.h"
 #include "Yeomin/UI/ChatBlockUI.h"
 #include "Yeomin/UI/ChatMessageBlockUI.h"
 #include "Yeomin/UI/CreateGroupChatUI.h"
@@ -16,22 +17,22 @@
 void UGroupChatUI::NativeConstruct()
 {
 	Super::NativeConstruct();
-	
+
 	// Register Text Commit callback function
 	EditBox->OnTextCommitted.AddDynamic(this, &UGroupChatUI::OnTextBoxCommitted);
-	
-	AddGroupBtn->OnPressed.AddDynamic(this, &UGroupChatUI::ShowCreateGroupChatUI);
+
+	AddGroupBtn->OnPressed.AddDynamic(this, &UGroupChatUI::ToggleCreateGroupChatUI);
 
 	CreateGroupChatUI = CreateWidget<UCreateGroupChatUI>(this, CreateGroupChatUIClass);
 	CreateGroupChatUI->InitParentUI(this);
 	CreateGroupChatBox->AddChild(CreateGroupChatUI);
 	CreateGroupChatBox->SetVisibility(ESlateVisibility::Hidden);
-	
+
 	InvitationUI = CreateWidget<UInvitationUI>(this, InvitationUIClass);
 	InvitationBox->AddChild(InvitationUI);
 	InvitationBox->SetVisibility(ESlateVisibility::Hidden);
-	
-	InviteBtn->OnPressed.AddDynamic(this, &UGroupChatUI::ShowInvitationUI);
+
+	InviteBtn->OnPressed.AddDynamic(this, &UGroupChatUI::ToggleInvitationUI);
 	DeleteBtn->OnPressed.AddDynamic(this, &UGroupChatUI::ShowDeleteUI);
 }
 
@@ -56,12 +57,12 @@ void UGroupChatUI::OnTextBoxCommitted(const FText& Text, ETextCommit::Type Commi
 	// If On Enter
 	if (CommitMethod == ETextCommit::OnEnter)
 	{
-		// 서버에게 채팅 내용 전달
-		// 내 PlayerState 가져오자.
-		APlayerController* pc = GetWorld()->GetFirstPlayerController();
-		AMumulPlayerState* ps = pc->GetPlayerState<AMumulPlayerState>();
+		ACuteAlienController* PC = Cast<ACuteAlienController>(GetWorld()->GetFirstPlayerController());
+		AMumulPlayerState* PS = PC->GetPlayerState<AMumulPlayerState>();
+		// UGroupIconUI->GetPlayersInGroup()
 		//TODO: ps->ServerRPC_SendChat(text.ToString());
-		AddChat(Text.ToString());
+		UChatBlockUI* ChatChunk = Cast<UChatBlockUI>(ChatSizeBox->GetChildAt(0));
+		PC->Server_RequestChat(ChatChunk->GetPlayersInGroup(), Text.ToString(), PS->PS_RealName, FDateTime::Now().ToString(TEXT("%H:%M")));
 
 		// Init EditBox
 		EditBox->SetText(FText());
@@ -74,22 +75,20 @@ void UGroupChatUI::OnTextBoxCommitted(const FText& Text, ETextCommit::Type Commi
 	}
 }
 
-void UGroupChatUI::AddChat(FString Text)
+void UGroupChatUI::AddChat(FString Text, FString Name, FString CurrentTime)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Enter AddChat"));
 	if (UChatBlockUI* ChatChunck = Cast<UChatBlockUI>(ChatSizeBox->GetChildAt(0)))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("UGroupChatUI::AddChat(): Adding chat text"));
 		// Scroll Current Location
 		float ScrollOffset = ChatChunck->ChatScrollBox->GetScrollOffset();
 		// Scroll End Location
 		float EndOfScrollOffset = ChatChunck->ChatScrollBox->GetScrollOffsetOfEnd();
-	
+
 		// Add Chat Chunk to ScrollBox
 		UChatMessageBlockUI* Chat = CreateWidget<UChatMessageBlockUI>(GetWorld(), ChatMessageBlockUIClass);
 		ChatChunck->ChatScrollBox->AddChild(Chat);
-		Chat->SetContent(Text);
-	
+		Chat->SetContent(Text, Name, CurrentTime);
+
 		// If Scroll is at End
 		if (ScrollOffset == EndOfScrollOffset)
 		{
@@ -104,9 +103,13 @@ void UGroupChatUI::AddChat(FString Text)
 	}
 }
 
-void UGroupChatUI::ShowCreateGroupChatUI()
+void UGroupChatUI::ToggleCreateGroupChatUI()
 {
 	ToggleVisibility(CreateGroupChatBox);
+	if (InvitationBox->GetVisibility() == ESlateVisibility::Visible)
+	{
+		ToggleVisibility(InvitationBox);
+	}
 }
 
 void UGroupChatUI::AddGroupIcon(UGroupIconUI* UI)
@@ -114,9 +117,13 @@ void UGroupChatUI::AddGroupIcon(UGroupIconUI* UI)
 	GroupScrollBox->AddChild(UI);
 }
 
-void UGroupChatUI::ShowInvitationUI()
+void UGroupChatUI::ToggleInvitationUI()
 {
 	ToggleVisibility(InvitationBox);
+	if (CreateGroupChatBox->GetVisibility() == ESlateVisibility::Visible)
+	{
+		ToggleVisibility(CreateGroupChatBox);
+	}
 }
 
 void UGroupChatUI::ShowDeleteUI()

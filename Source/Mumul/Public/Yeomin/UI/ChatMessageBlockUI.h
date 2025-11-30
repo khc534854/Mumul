@@ -17,6 +17,10 @@ class MUMUL_API UChatMessageBlockUI : public UUserWidget
 protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UTextBlock> TextContent;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UTextBlock> PlayerName;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UTextBlock> Time;
 public:
-	void SetContent(FString Content);
+	void SetContent(FString Content, FString Name, FString CurrentTime);
 };
