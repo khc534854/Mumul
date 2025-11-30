@@ -17,7 +17,7 @@ class MUMUL_API UCreateGroupChatUI : public UUserWidget
 protected:
 	virtual void NativeConstruct() override;
 	UFUNCTION()
-	void RefreshPlayerList();
+	void RefreshJoinedPlayerList();
 	
 	UPROPERTY()
 	TObjectPtr<class AMumulGameState> GS;
@@ -27,8 +27,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
 	TSubclassOf<class UGroupIconUI> GroupIconUIClass;
 	
+	FTimerHandle SearchDelayTimer;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UEditableTextBox> SearchBox;
+	UFUNCTION()
+	void OnSearchTextChanged(const FText& Text);
+	void RefreshFilteredPlayerList(const FText& Text);
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UScrollBox> PlayerScrollBox;
 	
