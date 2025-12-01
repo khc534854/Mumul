@@ -15,12 +15,12 @@ void UInvitationUI::NativeConstruct()
 	GS = GetWorld()->GetGameState<AMumulGameState>();
 	if (GS)
 	{
-		GS->OnPlayerArrayUpdated.AddDynamic(this, &UInvitationUI::RefreshPlayerList);
-		RefreshPlayerList();
+		GS->OnPlayerArrayUpdated.AddDynamic(this, &UInvitationUI::RefreshJoinedPlayerList);
+		RefreshJoinedPlayerList();
 	}
 }
 
-void UInvitationUI::RefreshPlayerList()
+void UInvitationUI::RefreshJoinedPlayerList()
 {
 	if (GS)
 	{

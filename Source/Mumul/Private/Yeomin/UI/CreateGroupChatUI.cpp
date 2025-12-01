@@ -36,10 +36,12 @@ void UCreateGroupChatUI::RefreshJoinedPlayerList()
 		PlayerScrollBox->ClearChildren();
 		for (APlayerState* PS : GS->PlayerArray)
 		{
+			AMumulPlayerState* MPS = Cast<AMumulPlayerState>(PS);
+
 			UGroupProfileUI* ProfileUI = CreateWidget<UGroupProfileUI>(GetWorld(), GroupProfileUIClass);
 			PlayerScrollBox->AddChild(ProfileUI);
-			ProfileUI->SetPlayerName(PS->GetPlayerName());
-			ProfileUI->SetUserIndex(Cast<AMumulPlayerState>(PS)->PS_UserIndex);
+			ProfileUI->SetPlayerName(MPS->PS_RealName);
+			ProfileUI->SetUserIndex(MPS->PS_UserIndex);
 		}
 	}
 }
@@ -91,22 +93,47 @@ void UCreateGroupChatUI::CreateGroupChat()
 	// Check Players
 	TArray<UWidget*> Children = PlayerScrollBox->GetAllChildren();
 	TArray<int32> CheckedPlayers;
-	LOG_ARRAY(CheckedPlayers)
+
 	for (UWidget* Child : Children)
 	{
 		UGroupProfileUI* ProfileUI = Cast<UGroupProfileUI>(Child);
 		if (ProfileUI->GetCheckBoxState())
 		{
 			CheckedPlayers.Add(ProfileUI->GetUserIndex());
+			UE_LOG(LogTemp, Warning, TEXT("%d"), ProfileUI->GetUserIndex())
 		}
 	}
 
 	if (CheckedPlayers.Num() == 0)
 		return;
+	
+	
+	FString GroupName = GroupNameText->GetText().ToString();
+	GroupName = MakeUniqueGroupName(GroupName);
+	GS->Server_RequestGroupChatHistory(GroupName);
+	
 	// Request Server to add GroupChatUI
 	ACuteAlienController* PC = GetWorld()->GetFirstPlayerController<ACuteAlienController>();
-	PC->Server_RequestGroupChatUI(CheckedPlayers);
+	PC->Server_RequestGroupChatUI(GroupName, CheckedPlayers);
 
 	ParentUI->ToggleCreateGroupChatUI();
 }
 
+FString UCreateGroupChatUI::MakeUniqueGroupName(const FString& BaseName) const
+{
+	if (BaseName.IsEmpty())
+	{
+		return MakeUniqueGroupName(TEXT("그룹"));
+	}
+
+	FString Result = BaseName;
+
+	int32 Index = 1;
+	while (GS->GetGroupChatHistory().Contains(Result))
+	{
+		Result = FString::Printf(TEXT("%s%d"), *BaseName, Index);
+		Index++;
+	}
+
+	return Result;
+}

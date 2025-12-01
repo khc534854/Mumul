@@ -5,7 +5,7 @@
 #include "Components/TextBlock.h"
 
 
-void UChatMessageBlockUI::SetContent(FString Content, FString Name, FString CurrentTime)
+void UChatMessageBlockUI::SetContent(const FString& CurrentTime, const FString& Name, const FString& Content) const
 {
 	TextContent->SetText(FText::FromString(Content));
 	PlayerName->SetText(FText::FromString(Name));

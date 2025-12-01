@@ -600,7 +600,7 @@ void ACuteAlienController::UpdateVoiceChannelMuting()
 }
 
 
-void ACuteAlienController::Server_RequestGroupChatUI_Implementation(const TArray<int32>& Players)
+void ACuteAlienController::Server_RequestGroupChatUI_Implementation(const FString& GroupName, const TArray<int32>& Players)
 {
 	// Add GroupChatUI for each Client
 	for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
@@ -610,23 +610,25 @@ void ACuteAlienController::Server_RequestGroupChatUI_Implementation(const TArray
 			ACuteAlienController* PC = Cast<ACuteAlienController>(PS->GetOwningController());
 			if (PC)
 			{
-				PC->Client_CreateGroupChatUI(Players);
+				PC->Client_CreateGroupChatUI(GroupName, Players);
 			}
 		}
 	}
 }
 
-void ACuteAlienController::Client_CreateGroupChatUI_Implementation(const TArray<int32>& Players)
+void ACuteAlienController::Client_CreateGroupChatUI_Implementation(const FString& GroupName, const TArray<int32>& Players)
 {
+	
 	// Set Players in Group Icon
 	UGroupIconUI* GroupIconUI = CreateWidget<UGroupIconUI>(GetWorld(), GroupIconUIClass);
 	GroupIconUI->InitParentUI(GroupChatUI);
 	GroupChatUI->AddGroupIcon(GroupIconUI);
 	GroupIconUI->ChatBlockUI->SetPlayersInGroup(Players);
+	GroupIconUI->ChatBlockUI->SetGroupName(GroupName);
 }
 
 
-void ACuteAlienController::Server_RequestChat_Implementation(const TArray<int32>& Players, const FString& Text, const FString& Name, const FString& CurrentTime)
+void ACuteAlienController::Server_RequestChat_Implementation(const TArray<int32>& Players, const FString& CurrentTime, const FString& Name, const FString& Text)
 {
 	// Add GroupChatUI for each Client
 	for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
@@ -636,13 +638,13 @@ void ACuteAlienController::Server_RequestChat_Implementation(const TArray<int32>
 			ACuteAlienController* PC = Cast<ACuteAlienController>(PS->GetOwningController());
 			if (PC)
 			{
-				PC->Client_SendChat(Text, Name, CurrentTime);
+				PC->Client_SendChat(CurrentTime, Name, Text);
 			}
 		}
 	}
 }
 
-void ACuteAlienController::Client_SendChat_Implementation(const FString& Text, const FString& Name, const FString& CurrentTime)
+void ACuteAlienController::Client_SendChat_Implementation(const FString& CurrentTime, const FString& Name, const FString& Text)
 {
-	GroupChatUI->AddChat(Text, Name, CurrentTime);
+	GroupChatUI->AddChat(CurrentTime, Name, Text);
 }

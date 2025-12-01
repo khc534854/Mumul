@@ -22,8 +22,8 @@ protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class USizeBox> ChatSizeBox;
 public:
-	void AddChatBlock(class UChatBlockUI* UI);
-	void RemoveChatBlock();
+	void AddChatBlock(class UChatBlockUI* UI) const;
+	void RemoveChatBlock() const;
 	
 protected:
 	UPROPERTY(meta=(BindWidget))
@@ -33,11 +33,13 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
 	TSubclassOf<class UChatMessageBlockUI> ChatMessageBlockUIClass;
 public:
-	void AddChat(FString Text, FString Name, FString CurrentTime);
+	void AddChat(const FString& CurrentTime, const FString& Name, const FString& Text) const;
 	
 protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> AddGroupBtn; 
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UTextBlock> GroupNameTitle; 
 	
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
 	TSubclassOf<class UCreateGroupChatUI> CreateGroupChatUIClass;
@@ -46,13 +48,14 @@ protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class USizeBox> CreateGroupChatBox;
 public:
+	void SetGroupNameTitle(const FString& GroupName);
 	UFUNCTION()
 	void ToggleCreateGroupChatUI();
 protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UScrollBox> GroupScrollBox;
 public:
-	void AddGroupIcon(class UGroupIconUI* UI);
+	void AddGroupIcon(class UGroupIconUI* UI) const;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")

@@ -22,5 +22,5 @@ protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UTextBlock> Time;
 public:
-	void SetContent(FString Content, FString Name, FString CurrentTime);
+	void SetContent(const FString& CurrentTime, const FString& Name, const FString& Content) const;
 };

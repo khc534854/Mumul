@@ -2,10 +2,13 @@
 
 
 #include "Yeomin/UI/GroupChatUI.h"
+
+#include "Base/MumulGameState.h"
 #include "Components/Button.h"
 #include "Components/EditableTextBox.h"
 #include "Components/ScrollBox.h"
 #include "Components/SizeBox.h"
+#include "Components/TextBlock.h"
 #include "khc/Player/MumulPlayerState.h"
 #include "Yeomin/Player/CuteAlienController.h"
 #include "Yeomin/UI/ChatBlockUI.h"
@@ -42,12 +45,12 @@ void UGroupChatUI::ToggleVisibility(UWidget* Widget)
 	Widget->SetVisibility(bIsVisible ? ESlateVisibility::Hidden : ESlateVisibility::Visible);
 }
 
-void UGroupChatUI::AddChatBlock(UChatBlockUI* UI)
+void UGroupChatUI::AddChatBlock(UChatBlockUI* UI) const
 {
 	ChatSizeBox->AddChild(UI);
 }
 
-void UGroupChatUI::RemoveChatBlock()
+void UGroupChatUI::RemoveChatBlock() const
 {
 	ChatSizeBox->ClearChildren();
 }
@@ -57,12 +60,17 @@ void UGroupChatUI::OnTextBoxCommitted(const FText& Text, ETextCommit::Type Commi
 	// If On Enter
 	if (CommitMethod == ETextCommit::OnEnter)
 	{
+		AMumulGameState* GS = Cast<AMumulGameState>(GetWorld()->GetGameState());
 		ACuteAlienController* PC = Cast<ACuteAlienController>(GetWorld()->GetFirstPlayerController());
 		AMumulPlayerState* PS = PC->GetPlayerState<AMumulPlayerState>();
-		// UGroupIconUI->GetPlayersInGroup()
-		//TODO: ps->ServerRPC_SendChat(text.ToString());
+		
 		UChatBlockUI* ChatChunk = Cast<UChatBlockUI>(ChatSizeBox->GetChildAt(0));
-		PC->Server_RequestChat(ChatChunk->GetPlayersInGroup(), Text.ToString(), PS->PS_RealName, FDateTime::Now().ToString(TEXT("%H:%M")));
+		FString TimeStamp = FDateTime::Now().ToString(TEXT("%H:%M"));
+		FString Player = PS->PS_RealName;
+		FString Content = Text.ToString();
+		FString GroupName = ChatChunk->GetGroupName();
+		GS->Server_RequestChatHistory(GroupName, Player, TimeStamp, Content);
+		PC->Server_RequestChat(ChatChunk->GetPlayersInGroup(), TimeStamp, Player, Content);
 
 		// Init EditBox
 		EditBox->SetText(FText());
@@ -75,32 +83,37 @@ void UGroupChatUI::OnTextBoxCommitted(const FText& Text, ETextCommit::Type Commi
 	}
 }
 
-void UGroupChatUI::AddChat(FString Text, FString Name, FString CurrentTime)
+void UGroupChatUI::AddChat(const FString& CurrentTime, const FString& Name, const FString& Text) const
 {
-	if (UChatBlockUI* ChatChunck = Cast<UChatBlockUI>(ChatSizeBox->GetChildAt(0)))
+	if (UChatBlockUI* ChatChunk = Cast<UChatBlockUI>(ChatSizeBox->GetChildAt(0)))
 	{
 		// Scroll Current Location
-		float ScrollOffset = ChatChunck->ChatScrollBox->GetScrollOffset();
+		const float ScrollOffset = ChatChunk->ChatScrollBox->GetScrollOffset();
 		// Scroll End Location
-		float EndOfScrollOffset = ChatChunck->ChatScrollBox->GetScrollOffsetOfEnd();
+		const float EndOfScrollOffset = ChatChunk->ChatScrollBox->GetScrollOffsetOfEnd();
 
 		// Add Chat Chunk to ScrollBox
 		UChatMessageBlockUI* Chat = CreateWidget<UChatMessageBlockUI>(GetWorld(), ChatMessageBlockUIClass);
-		ChatChunck->ChatScrollBox->AddChild(Chat);
-		Chat->SetContent(Text, Name, CurrentTime);
+		ChatChunk->ChatScrollBox->AddChild(Chat);
+		Chat->SetContent(CurrentTime, Name, Text);
 
 		// If Scroll is at End
 		if (ScrollOffset == EndOfScrollOffset)
 		{
 			// Scroll To End after 0.01s
 			FTimerHandle Handle;
-			GetWorld()->GetTimerManager().SetTimer(Handle, [ChatChunck]()
+			GetWorld()->GetTimerManager().SetTimer(Handle, [ChatChunk]()
 			{
 				// Scroll To End
-				ChatChunck->ChatScrollBox->ScrollToEnd();
+				ChatChunk->ChatScrollBox->ScrollToEnd();
 			}, 0.01f, false);
 		}
 	}
+}
+
+void UGroupChatUI::SetGroupNameTitle(const FString& GroupName)
+{
+	GroupNameTitle->SetText(FText::FromString(GroupName));
 }
 
 void UGroupChatUI::ToggleCreateGroupChatUI()
@@ -112,7 +125,7 @@ void UGroupChatUI::ToggleCreateGroupChatUI()
 	}
 }
 
-void UGroupChatUI::AddGroupIcon(UGroupIconUI* UI)
+void UGroupChatUI::AddGroupIcon(UGroupIconUI* UI) const
 {
 	GroupScrollBox->AddChild(UI);
 }
