@@ -36,7 +36,7 @@ void UGroupChatUI::NativeConstruct()
 	InvitationBox->SetVisibility(ESlateVisibility::Hidden);
 
 	InviteBtn->OnPressed.AddDynamic(this, &UGroupChatUI::ToggleInvitationUI);
-	DeleteBtn->OnPressed.AddDynamic(this, &UGroupChatUI::ShowDeleteUI);
+	ToggleVisibilityBtn->OnPressed.AddDynamic(this, &UGroupChatUI::OnToggleVisibilityBtn);
 }
 
 void UGroupChatUI::ToggleVisibility(UWidget* Widget)
@@ -60,17 +60,16 @@ void UGroupChatUI::OnTextBoxCommitted(const FText& Text, ETextCommit::Type Commi
 	// If On Enter
 	if (CommitMethod == ETextCommit::OnEnter)
 	{
-		AMumulGameState* GS = Cast<AMumulGameState>(GetWorld()->GetGameState());
 		ACuteAlienController* PC = Cast<ACuteAlienController>(GetWorld()->GetFirstPlayerController());
 		AMumulPlayerState* PS = PC->GetPlayerState<AMumulPlayerState>();
-		
+
 		UChatBlockUI* ChatChunk = Cast<UChatBlockUI>(ChatSizeBox->GetChildAt(0));
 		FString TimeStamp = FDateTime::Now().ToString(TEXT("%H:%M"));
 		FString Player = PS->PS_RealName;
 		FString Content = Text.ToString();
 		FString GroupName = ChatChunk->GetGroupName();
-		GS->Server_RequestChatHistory(GroupName, Player, TimeStamp, Content);
-		PC->Server_RequestChat(ChatChunk->GetPlayersInGroup(), TimeStamp, Player, Content);
+		PC->Server_RequestChatHistory(GroupName, Player, TimeStamp, Content);
+		PC->Server_RequestChat(GroupName, ChatChunk->GetPlayersInGroup(), TimeStamp, Player, Content);
 
 		// Init EditBox
 		EditBox->SetText(FText());
@@ -83,10 +82,15 @@ void UGroupChatUI::OnTextBoxCommitted(const FText& Text, ETextCommit::Type Commi
 	}
 }
 
-void UGroupChatUI::AddChat(const FString& CurrentTime, const FString& Name, const FString& Text) const
+void UGroupChatUI::AddChat(const FString& Group, const FString& CurrentTime, const FString& Name,
+                           const FString& Text) const
 {
 	if (UChatBlockUI* ChatChunk = Cast<UChatBlockUI>(ChatSizeBox->GetChildAt(0)))
 	{
+		// Does Group Name Match?
+		if (ChatChunk->GetGroupName() != Group)
+			return;
+
 		// Scroll Current Location
 		const float ScrollOffset = ChatChunk->ChatScrollBox->GetScrollOffset();
 		// Scroll End Location
@@ -139,6 +143,31 @@ void UGroupChatUI::ToggleInvitationUI()
 	}
 }
 
-void UGroupChatUI::ShowDeleteUI()
+void UGroupChatUI::OnToggleVisibilityBtn()
 {
+	CreateGroupChatUI->RefreshJoinedPlayerList();
+	AMumulGameState* GS = Cast<AMumulGameState>(GetWorld()->GetGameState());
+	
+	UE_LOG(LogTemp, Warning, TEXT("===== GroupChatList Dump ====="));
+
+	for (const FGroupChatData& GroupData : GS->GetGroupChatHistory())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Group: %s (Count = %d)"),
+			*GroupData.GroupName, GroupData.ChatBlocks.Num());
+
+		for (int32 i = 0; i < GroupData.ChatBlocks.Num(); i++)
+		{
+			const FChatBlock& Block = GroupData.ChatBlocks[i];
+
+			UE_LOG(LogTemp, Warning,
+				TEXT("   [%d] Time: %s | Player: %s | Content: %s"),
+				i,
+				*Block.TimeStamp,
+				*Block.PlayerName,
+				*Block.Content
+			);
+		}
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("===== End Dump ====="));
 }

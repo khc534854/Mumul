@@ -16,9 +16,12 @@ class MUMUL_API UCreateGroupChatUI : public UUserWidget
 	
 protected:
 	virtual void NativeConstruct() override;
+	
+public:
 	UFUNCTION()
 	void RefreshJoinedPlayerList();
 	
+protected:
 	UPROPERTY()
 	TObjectPtr<class AMumulGameState> GS;
 	

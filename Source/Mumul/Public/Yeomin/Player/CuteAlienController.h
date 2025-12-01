@@ -19,6 +19,9 @@ class MUMUL_API ACuteAlienController : public APlayerController
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
+	
+	UPROPERTY()
+	TObjectPtr<class AMumulGameState> GS;
 
 	UFUNCTION(Server, Reliable)
 	void Server_InitPlayerInfo(int32 UID, const FString& Name, const FString& Type, int32 Tendency);
@@ -123,7 +126,12 @@ public:
 	void Client_CreateGroupChatUI(const FString& GroupName, const TArray<int32>& Players);
 
 	UFUNCTION(Server, Reliable)
-	void Server_RequestChat(const TArray<int32>& Players, const FString& CurrentTime, const FString& Name, const FString& Text);
+	void Server_RequestChat(const FString& Group, const TArray<int32>& Players, const FString& CurrentTime, const FString& Name, const FString& Text);
 	UFUNCTION(Client, Reliable)
-	void Client_SendChat(const FString& CurrentTime, const FString& Name, const FString& Text);
+	void Client_SendChat(const FString& Group, const FString& CurrentTime, const FString& Name, const FString& Text);
+
+	UFUNCTION(Server, Reliable)
+	void Server_RequestGroupChatHistory(const FString& GroupName);
+	UFUNCTION(Server, Reliable)
+	void Server_RequestChatHistory(const FString& GroupName, const FString& Time, const FString& PlayerName, const FString& Text);
 };

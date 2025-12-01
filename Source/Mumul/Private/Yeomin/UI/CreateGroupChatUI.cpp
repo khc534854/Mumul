@@ -9,7 +9,6 @@
 #include "Components/ScrollBox.h"
 #include "GameFramework/PlayerState.h"
 #include "khc/Player/MumulPlayerState.h"
-#include "Yeomin/Network/DebugUtils.h"
 #include "Yeomin/Player/CuteAlienController.h"
 #include "Yeomin/UI/GroupChatUI.h"
 #include "Yeomin/UI/GroupProfileUI.h"
@@ -22,11 +21,10 @@ void UCreateGroupChatUI::NativeConstruct()
 	if (GS)
 	{
 		GS->OnPlayerArrayUpdated.AddDynamic(this, &UCreateGroupChatUI::RefreshJoinedPlayerList);
-		RefreshJoinedPlayerList();
 	}
-
 	CreateGroupBtn->OnPressed.AddDynamic(this, &UCreateGroupChatUI::CreateGroupChat);
 	SearchBox->OnTextChanged.AddDynamic(this, &UCreateGroupChatUI::OnSearchTextChanged);
+	RefreshJoinedPlayerList();
 }
 
 void UCreateGroupChatUI::RefreshJoinedPlayerList()
@@ -49,7 +47,6 @@ void UCreateGroupChatUI::RefreshJoinedPlayerList()
 void UCreateGroupChatUI::OnSearchTextChanged(const FText& Text)
 {
 	GetWorld()->GetTimerManager().ClearTimer(SearchDelayTimer);
-
 	GetWorld()->GetTimerManager().SetTimer
 	(
 		SearchDelayTimer,
@@ -100,20 +97,20 @@ void UCreateGroupChatUI::CreateGroupChat()
 		if (ProfileUI->GetCheckBoxState())
 		{
 			CheckedPlayers.Add(ProfileUI->GetUserIndex());
-			UE_LOG(LogTemp, Warning, TEXT("%d"), ProfileUI->GetUserIndex())
 		}
 	}
 
+
 	if (CheckedPlayers.Num() == 0)
 		return;
-	
-	
+
 	FString GroupName = GroupNameText->GetText().ToString();
 	GroupName = MakeUniqueGroupName(GroupName);
-	GS->Server_RequestGroupChatHistory(GroupName);
-	
-	// Request Server to add GroupChatUI
 	ACuteAlienController* PC = GetWorld()->GetFirstPlayerController<ACuteAlienController>();
+	// RequestServer to add Group Chat History
+	PC->Server_RequestGroupChatHistory(GroupName);
+
+	// Request Server to add GroupChatUI
 	PC->Server_RequestGroupChatUI(GroupName, CheckedPlayers);
 
 	ParentUI->ToggleCreateGroupChatUI();
@@ -121,19 +118,43 @@ void UCreateGroupChatUI::CreateGroupChat()
 
 FString UCreateGroupChatUI::MakeUniqueGroupName(const FString& BaseName) const
 {
-	if (BaseName.IsEmpty())
+	const FString NewBaseName = BaseName.IsEmpty() ? TEXT("그룹") : BaseName;
+
+	int32 MaxIndex = 0;
+	bool bIsNameExisting = false;
+
+	// Search FGroupChatData
+	for (const FGroupChatData& GroupData : GS->GetGroupChatHistory())
 	{
-		return MakeUniqueGroupName(TEXT("그룹"));
+		const FString& OtherName = GroupData.GroupName;
+
+		// if Same Name?
+		if (OtherName == NewBaseName)
+		{
+			bIsNameExisting = true;
+			continue;
+		}
+
+		// if Name starts with BaseName
+		if (OtherName.StartsWith(NewBaseName))
+		{
+			// Check Suffix (BaseName + Number)
+			const FString Suffix = OtherName.RightChop(NewBaseName.Len());
+
+			if (Suffix.IsNumeric())
+			{
+				const int32 Num = FCString::Atoi(*Suffix);
+				MaxIndex = FMath::Max(MaxIndex, Num);
+			}
+		}
 	}
 
-	FString Result = BaseName;
-
-	int32 Index = 1;
-	while (GS->GetGroupChatHistory().Contains(Result))
+	// if No Name Existing
+	if (!bIsNameExisting)
 	{
-		Result = FString::Printf(TEXT("%s%d"), *BaseName, Index);
-		Index++;
+		return NewBaseName;
 	}
 
-	return Result;
+	// BaseName + (MaxIndex + 1)
+	return FString::Printf(TEXT("%s%d"), *NewBaseName, MaxIndex + 1);
 }
