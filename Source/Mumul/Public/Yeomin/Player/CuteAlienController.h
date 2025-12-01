@@ -109,12 +109,12 @@ protected:
 	TSubclassOf<class UGroupIconUI> GroupIconUIClass;
 public:
 	UFUNCTION(Server, Reliable)
-	void Server_RequestGroupChatUI(const TArray<int32>& Players);
+	void Server_RequestGroupChatUI(const FString& GroupName, const TArray<int32>& Players);
 	UFUNCTION(Client, Reliable)
-	void Client_CreateGroupChatUI(const TArray<int32>& Players);
+	void Client_CreateGroupChatUI(const FString& GroupName, const TArray<int32>& Players);
 
 	UFUNCTION(Server, Reliable)
-	void Server_RequestChat(const TArray<int32>& Players, const FString& Text, const FString& Name, const FString& CurrentTime);
+	void Server_RequestChat(const TArray<int32>& Players, const FString& CurrentTime, const FString& Name, const FString& Text);
 	UFUNCTION(Client, Reliable)
-	void Client_SendChat(const FString& Text, const FString& Name, const FString& CurrentTime);
+	void Client_SendChat(const FString& CurrentTime, const FString& Name, const FString& Text);
 };

@@ -6,6 +6,7 @@
 #include "khc/Save/MapDataSaveGame.h"
 #include "Kismet/GameplayStatics.h"
 
+
 void AMumulGameState::AddPlayerState(APlayerState* PlayerState)
 {
 	Super::AddPlayerState(PlayerState);
@@ -21,6 +22,7 @@ void AMumulGameState::RemovePlayerState(APlayerState* PlayerState)
 	UE_LOG(LogTemp, Warning, TEXT("Player Left: %s"), *PlayerState->GetPlayerName());
 	OnPlayerArrayUpdated.Broadcast();
 }
+
 
 void AMumulGameState::Multicast_SaveTentData_Implementation(int32 UserIndex, FTransform TentTransform)
 {
@@ -57,5 +59,34 @@ void AMumulGameState::Multicast_SaveTentData_Implementation(int32 UserIndex, FTr
 	if (UGameplayStatics::SaveGameToSlot(SaveInst, SlotName, 0))
 	{
 		UE_LOG(LogTemp, Log, TEXT("[SaveGame] Tent Saved for User %d"), UserIndex);
+	}
+}
+
+
+
+void AMumulGameState::Server_RequestGroupChatHistory_Implementation(const FString& GroupName)
+{
+	Multicast_AddGroupChatHistory(GroupName);
+}
+
+void AMumulGameState::Multicast_AddGroupChatHistory_Implementation(const FString& GroupName)
+{
+	GroupChatHistory.Add(GroupName, TArray<FChatBlock>());
+}
+
+void AMumulGameState::Server_RequestChatHistory_Implementation(const FString& GroupName, const FString& Time,
+	const FString& Player, const FString& Text)
+{
+	Multicast_InsertChatHistory(GroupName, Time, Player, Text);
+}
+
+void AMumulGameState::Multicast_InsertChatHistory_Implementation(const FString& GroupName, const FString& Time,
+	const FString& Player, const FString& Text)
+{
+	if (TArray<FChatBlock>* ChatBlockIndex = GroupChatHistory.Find(GroupName))
+	{
+		FChatBlock ChatBlock;
+		ChatBlock.SetContent(Time, Player, Text);
+		ChatBlockIndex->Add(ChatBlock);
 	}
 }

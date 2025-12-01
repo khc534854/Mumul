@@ -43,4 +43,8 @@ protected:
 	TObjectPtr<class UButton> CreateGroupBtn;
 	UFUNCTION()
 	void CreateGroupChat();
+
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UEditableTextBox> GroupNameText;
+	FString MakeUniqueGroupName(const FString& BaseName) const;
 };

@@ -17,7 +17,7 @@ class MUMUL_API UInvitationUI : public UUserWidget
 protected:
 	virtual void NativeConstruct() override;
 	UFUNCTION()
-	void RefreshPlayerList();
+	void RefreshJoinedPlayerList();
 	
 	UPROPERTY()
 	TObjectPtr<class AMumulGameState> GS;

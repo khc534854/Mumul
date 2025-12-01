@@ -20,6 +20,7 @@ void UGroupIconUI::DisplayGroupChat()
 {
 	ParentUI->RemoveChatBlock();
 	ParentUI->AddChatBlock(ChatBlockUI);
+	ParentUI->SetGroupNameTitle(ChatBlockUI->GetGroupName());
 }
 
 void UGroupIconUI::InitParentUI(UGroupChatUI* Parent)
