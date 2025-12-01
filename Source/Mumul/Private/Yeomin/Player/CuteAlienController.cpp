@@ -149,7 +149,7 @@ void ACuteAlienController::BeginPlay()
 			UE_LOG(LogTemp, Warning, TEXT("[Test] Detected Direct Level Start! Injecting Dummy Data..."));
             
 			GI->PlayerUniqueID = 999 + GetWorld()->GetGameState()->PlayerArray.Num();       // 테스트 ID
-			GI->PlayerName = TEXT("EditorTester");
+			GI->PlayerName = FString::Printf("EditorTester : %d", GetWorld()->GetGameState()->PlayerArray.Num());
 			GI->PlayerType = TEXT("운영진"); // 테스트용 권한
 			GI->CampID = 1;
 			GI->PlayerTendency = 0;
