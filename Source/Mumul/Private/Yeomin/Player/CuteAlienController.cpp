@@ -17,7 +17,10 @@
 #include "Yeomin/Tent/TentActor.h"
 #include "Net/VoiceConfig.h"
 #include <khc/Player/VoiceChatComponent.h>
-#include "Yeomin/Network/DebugUtils.h"
+
+#include "Base/MumulGameState.h"
+#include "khc/Save/MapDataSaveGame.h"
+#include "Kismet/GameplayStatics.h"
 #include "Yeomin/UI/ChatBlockUI.h"
 #include "Yeomin/UI/GroupChatUI.h"
 #include "Yeomin/UI/GroupIconUI.h"
@@ -88,6 +91,13 @@ ACuteAlienController::ACuteAlienController()
 		IA_Click = IA_ClickFinder.Object;
 	}
 
+	static ConstructorHelpers::FObjectFinder<UInputAction> IA_QuitGameFinder(
+	TEXT("/Game/Yeomin/Characters/Inputs/Actions/IA_QuitGame.IA_QuitGame"));
+	if (IA_QuitGameFinder.Succeeded())
+	{
+		IA_QuitGame = IA_QuitGameFinder.Object;
+	}
+
 	static ConstructorHelpers::FClassFinder<APreviewTentActor> PreviewTentFinder(
 		TEXT("/Game/Yeomin/Actors/Tent/BP_PreviewTent.BP_PreviewTent_C"));
 	if (PreviewTentFinder.Succeeded())
@@ -144,15 +154,16 @@ void ACuteAlienController::BeginPlay()
 	if (GI)
 	{
 		// [체크] 로비 스킵 여부 확인 (데이터가 비어있으면 더미 데이터 주입)
-		if (GI->PlayerUniqueID == 0) 
+		if (GI->PlayerUniqueID == 100) 
 		{
 			UE_LOG(LogTemp, Warning, TEXT("[Test] Detected Direct Level Start! Injecting Dummy Data..."));
-            
-			GI->PlayerUniqueID = 999 + GetWorld()->GetGameState()->PlayerArray.Num();       // 테스트 ID
-			GI->PlayerName = FString::Printf(TEXT("EditorTester : %d"), GetWorld()->GetGameState()->PlayerArray.Num());
-			GI->PlayerType = TEXT("운영진"); // 테스트용 권한
-			GI->CampID = 1;
+
+			GI->PlayerUniqueID = 99 + GetWorld()->GetGameState()->PlayerArray.Num();       // 테스트 ID
+			GI->PlayerName = GI->PlayerName + FString::FromInt(GI->PlayerUniqueID); // 이름 + index
+			GI->CampID = 1;           // 임시 캠프 ID
+			GI->PlayerType = (GI->PlayerUniqueID == 100) ? TEXT("운영진") : TEXT("학생");
 			GI->PlayerTendency = 0;
+			GI->bHasSurveyCompleted = true;
 		}
 
 		// [전송] 확정된 데이터를 서버로 1회 전송
@@ -176,6 +187,7 @@ void ACuteAlienController::SetupInputComponent()
 	Input->BindAction(IA_Radial, ETriggerEvent::Completed, this, &ACuteAlienController::HideRadialUI);
 	Input->BindAction(IA_Cancel, ETriggerEvent::Started, this, &ACuteAlienController::OnCancelUI);
 	Input->BindAction(IA_ToggleMouse, ETriggerEvent::Started, this, &ACuteAlienController::OnToggleMouse);
+	Input->BindAction(IA_QuitGame, ETriggerEvent::Started, this, &ACuteAlienController::OnPressEsc);
 }
 
 void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const FString& Name, const FString& Type, int32 Tendency)
@@ -185,12 +197,37 @@ void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const
 	{
 		PS->PS_UserIndex = UID;
 		PS->SetPlayerName(Name);
+		PS->PS_RealName = Name;
 		PS->PS_UserType = Type;
 		PS->PS_TendencyID = Tendency;
 		// PS->CampID = CampID; (인자 추가 시)
         
 		// 강제 동기화 (선택)
-		PS->ForceNetUpdate(); 
+		PS->ForceNetUpdate();
+
+		FString SlotName = TEXT("IslandMapSave");
+		if (UGameplayStatics::DoesSaveGameExist(SlotName, 0))
+		{
+			UMapDataSaveGame* LoadInst = Cast<UMapDataSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, 0));
+           
+			// 해당 유저의 저장된 위치가 있는지 확인
+			if (LoadInst && LoadInst->PlayerLocations.Contains(UID))
+			{
+				FTransform SavedTr = LoadInst->PlayerLocations[UID];
+               
+				// 폰 이동 (텔레포트)
+				if (APawn* MyPawn = GetPawn())
+				{
+					// Z축(높이)을 살짝 띄워주는 게 안전합니다 (바닥 끼임 방지)
+					FVector SafeLoc = SavedTr.GetLocation() + FVector(0, 0, 50.0f);
+					SavedTr.SetLocation(SafeLoc);
+
+					MyPawn->SetActorTransform(SavedTr, false, nullptr, ETeleportType::TeleportPhysics);
+                   
+					UE_LOG(LogTemp, Warning, TEXT("[Server] Restored User %d Location to %s"), UID, *SafeLoc.ToString());
+				}
+			}
+		}
        
 		UE_LOG(LogTemp, Log, TEXT("[Server] PlayerState Initialized: %s (ID: %d)"), *Name, UID);
 	}
@@ -231,6 +268,44 @@ void ACuteAlienController::Tick(float DeltaSeconds)
 			        HitRes.ImpactNormal.Rotation() + FRotator(-90.f, 0.f, 0.f));
 		}
 	}
+}
+
+void ACuteAlienController::OnPressEsc()
+{
+	Server_SaveAndExit();
+}
+
+void ACuteAlienController::Server_SaveAndExit_Implementation()
+{
+	// 1. 저장 (아직 폰과 연결되어 있으므로 안전함)
+	if (AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>())
+	{
+		if (APawn* MyPawn = GetPawn())
+		{
+			if (AMumulGameState* GS = GetWorld()->GetGameState<AMumulGameState>())
+			{
+				GS->Multicast_SavePlayerLocation(PS->PS_UserIndex, MyPawn->GetActorTransform());
+				UE_LOG(LogTemp, Warning, TEXT("[Exit] Saved Location for User %d"), PS->PS_UserIndex);
+			}
+		}
+	}
+
+	// 2. 저장 후 종료 처리 (방장은 맵 이동, 클라이언트는 접속 종료)
+	// 상황에 맞게 선택하세요.
+    
+	// Case A: 아예 게임 끄기 (Quit)
+	UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, false); 
+    
+	// Case B: 로비(메인 메뉴)로 돌아가기
+	// if (HasAuthority()) // 방장이라면
+	// {
+	// 	// 방장이 나가면 다 같이 튕기거나 로비로 이동
+	// 	GetWorld()->ServerTravel("/Game/Khc/Maps/Main?listen"); 
+	// }
+	// else // 클라이언트라면
+	// {
+	// 	ClientTravel("/Game/Khc/Maps/Main", TRAVEL_Absolute);
+	// }
 }
 
 void ACuteAlienController::OnCancelUI()

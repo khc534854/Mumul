@@ -3,6 +3,7 @@
 
 #include "MumulMumulGameMode.h"
 #include "Base/MumulGameState.h"
+#include "khc/Player/MumulPlayerState.h"
 #include "khc/Save/MapDataSaveGame.h"
 #include "Kismet/GameplayStatics.h"
 #include "Yeomin/Tent/TentActor.h"
@@ -52,6 +53,51 @@ void AMumulMumulGameMode::BeginPlay()
                 
 				// 일단 직접 배치 로직 (SpawnTent 함수 활용)
 				SpawnTent(Data.Transform, Data.OwnerUserIndex, false); // false: 저장하지 마라 (불러오는 중이니까)
+			}
+		}
+	}
+}
+
+void AMumulMumulGameMode::Logout(AController* Exiting)
+{
+	SaveUserData(Exiting);
+	Super::Logout(Exiting);
+}
+
+void AMumulMumulGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
+	{
+		APlayerController* PC = Iterator->Get();
+		if (PC)
+		{
+			SaveUserData(PC);
+		}
+	}
+
+	Super::EndPlay(EndPlayReason);
+}
+
+void AMumulMumulGameMode::SaveUserData(AController* Controller)
+{
+	if (!Controller) return;
+
+	AMumulPlayerState* PS = Controller->GetPlayerState<AMumulPlayerState>();
+	APawn* Pawn = Controller->GetPawn();
+
+	// 폰이 없으면 저장할 위치도 없으므로 패스 (혹은 PlayerState에 저장된 마지막 위치 사용)
+	if (PS && Pawn)
+	{
+		int32 UserIndex = PS->PS_UserIndex;
+        
+		// 유효한 유저라면 저장
+		if (UserIndex > 0)
+		{
+			if (AMumulGameState* GS = GetGameState<AMumulGameState>())
+			{
+				// 위치 저장
+				GS->Multicast_SavePlayerLocation(UserIndex, Pawn->GetActorTransform());
+				UE_LOG(LogTemp, Warning, TEXT("[GameMode] Saved User %d Location: %s"), UserIndex, *Pawn->GetActorTransform().GetLocation().ToString());
 			}
 		}
 	}

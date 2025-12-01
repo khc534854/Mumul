@@ -29,6 +29,12 @@ protected:
 public:
 	virtual void Tick(float DeltaSeconds) override;
 
+	// ESC 키에 바인딩할 함수
+
+	// 저장 후 로비로 가거나 게임 종료
+	UFUNCTION(Server, Reliable)
+	void Server_SaveAndExit();
+	
 protected:
 	UPROPERTY()
 	TObjectPtr<class UInputAction> IA_Radial;
@@ -41,7 +47,10 @@ protected:
 	UPROPERTY()
 	TObjectPtr<class UInputAction> IA_Click;
 	void OnClick(const FVector& TentLocation, const FRotator& TentRotation);
-
+	UPROPERTY()
+	TObjectPtr<class UInputAction> IA_QuitGame;
+	void OnPressEsc();
+	
 	UPROPERTY()
 	TSubclassOf<class URadialUI> RadialUIClass;
 	UPROPERTY()

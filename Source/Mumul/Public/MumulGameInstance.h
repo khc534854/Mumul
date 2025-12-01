@@ -76,10 +76,10 @@ private:
 	// Player Unique Information
 public:
 	UPROPERTY(BlueprintReadOnly, Category = "User Info")
-	int32 PlayerUniqueID;
+	int32 PlayerUniqueID = 100;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "User Info")
-	FString PlayerName;
+	FString PlayerName = TEXT("TestName");
 
 	UPROPERTY(BlueprintReadOnly, Category = "User Info")
 	FString PlayerType;

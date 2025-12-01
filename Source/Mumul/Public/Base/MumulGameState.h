@@ -25,4 +25,7 @@ public:
 	// [핵심] 모든 클라이언트에게 "네 컴퓨터에 텐트 정보 저장해!"라고 명령하는 함수
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_SaveTentData(int32 UserIndex, FTransform TentTransform);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_SavePlayerLocation(int32 UserIndex, FTransform Location);
 };

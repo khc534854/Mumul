@@ -22,6 +22,24 @@ void AMumulGameState::RemovePlayerState(APlayerState* PlayerState)
 	OnPlayerArrayUpdated.Broadcast();
 }
 
+void AMumulGameState::Multicast_SavePlayerLocation_Implementation(int32 UserIndex, FTransform Location)
+{
+	FString SlotName = TEXT("IslandMapSave");
+    
+	// 1. 로드 (없으면 생성)
+	UMapDataSaveGame* SaveInst = Cast<UMapDataSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, 0));
+	if (!SaveInst) SaveInst = Cast<UMapDataSaveGame>(UGameplayStatics::CreateSaveGameObject(UMapDataSaveGame::StaticClass()));
+
+	// 2. 맵에 데이터 추가/갱신 (Key가 같으면 덮어씌워짐)
+	SaveInst->PlayerLocations.Add(UserIndex, Location);
+
+	// 3. 저장
+	if (UGameplayStatics::SaveGameToSlot(SaveInst, SlotName, 0))
+	{
+		UE_LOG(LogTemp, Log, TEXT("[SaveGame] Location Saved for User %d: %s"), UserIndex, *Location.GetLocation().ToString());
+	}
+}
+
 void AMumulGameState::Multicast_SaveTentData_Implementation(int32 UserIndex, FTransform TentTransform)
 {
 	FString SlotName = TEXT("IslandMapSave"); // 세이브 파일 이름 고정

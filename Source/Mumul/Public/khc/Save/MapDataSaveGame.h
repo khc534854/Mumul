@@ -33,4 +33,7 @@ public:
 	// 맵에 존재하는 모든 텐트 리스트
 	UPROPERTY()
 	TArray<FTentSaveData> SavedTents;
+
+	UPROPERTY()
+	TMap<int32, FTransform> PlayerLocations;
 };

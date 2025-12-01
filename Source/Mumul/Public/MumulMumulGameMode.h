@@ -17,6 +17,9 @@ class MUMUL_API AMumulMumulGameMode : public AGameMode
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void Logout(AController* Exiting) override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 	UPROPERTY()
 	TSubclassOf<class ATentActor> TentClass;
 	UPROPERTY(EditDefaultsOnly)
@@ -24,6 +27,8 @@ protected:
 	UPROPERTY()
 	TMap<TObjectPtr<class ATentActor>, int32> TentPool;
 
+	// 저장 로직이 중복되므로 함수로 분리
+	void SaveUserData(AController* Controller);
 public:
 	void SpawnTent(const FTransform& SpawnTransform, int32 UserIndex, bool bSaveToDisk);
 };

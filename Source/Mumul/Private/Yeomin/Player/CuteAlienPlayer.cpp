@@ -3,6 +3,8 @@
 
 #include "Yeomin/Player/CuteAlienPlayer.h"
 
+#include "Base/MumulGameState.h"
+#include "khc/Player/MumulPlayerState.h"
 #include "khc/Player/VoiceChatComponent.h"
 #include "Yeomin/Player/CuteAlienAnim.h"
 
@@ -27,6 +29,25 @@ void ACuteAlienPlayer::BeginPlay()
 {
 	Super::BeginPlay();
 	
+}
+
+void ACuteAlienPlayer::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (HasAuthority() && GetPlayerState())
+	{
+		AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>();
+		if (PS && PS->PS_UserIndex > 0)
+		{
+			if (AMumulGameState* GS = GetWorld()->GetGameState<AMumulGameState>())
+			{
+				// 소멸 직전의 현재 위치를 저장
+				GS->Multicast_SavePlayerLocation(PS->PS_UserIndex, GetActorTransform());
+				UE_LOG(LogTemp, Warning, TEXT("[Player] Saved Location on EndPlay: User %d"), PS->PS_UserIndex);
+			}
+		}
+	}
+
+	Super::EndPlay(EndPlayReason);
 }
 
 // Called every frame

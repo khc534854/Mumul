@@ -80,7 +80,7 @@ void ULobbyWidget::OnClickLogin()
             {
                 // 100번대 ID 부여 (admin=100, user1=101)
                 GI->PlayerUniqueID = (InputId == TEXT("admin")) ? 100 : 101;
-                GI->PlayerName = InputId; // 이름도 아이디로 설정
+                GI->PlayerName = GI->PlayerName + FString::FromInt(GI->PlayerUniqueID); // 이름 + index
                 GI->CampID = 1;           // 임시 캠프 ID
                 GI->PlayerType = (InputId == TEXT("admin")) ? TEXT("운영진") : TEXT("학생");
                 GI->PlayerTendency = 0;
@@ -88,7 +88,6 @@ void ULobbyWidget::OnClickLogin()
 
                 UE_LOG(LogTemp, Warning, TEXT("[Test Login] Set Dummy Data for %s (ID: %d)"), *InputId, GI->PlayerUniqueID);
             }
-            // ------------------------------------
 
             if (InputId == TEXT("admin"))
                 WidgetSwitcher->SetActiveWidgetIndex(2); // 방 생성 화면으로
