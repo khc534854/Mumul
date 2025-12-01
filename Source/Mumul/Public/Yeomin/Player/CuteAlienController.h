@@ -52,14 +52,17 @@ protected:
 	void ShowRadialUI();
 	void HideRadialUI();
 	void CancelRadialUI();
-
-protected:
+	
 	UPROPERTY()
-	TSubclassOf<class UUserWidget> PlayerUIClass;
+	TSubclassOf<class UPlayerUI> PlayerUIClass;
 	UPROPERTY()
-	TObjectPtr<UUserWidget> PlayerUI;
+	TObjectPtr<UPlayerUI> PlayerUI;
 
-protected:
+	UPROPERTY()
+	TSubclassOf<class UGroupChatUI> GroupChatUIClass;
+	UPROPERTY()
+	TObjectPtr<UGroupChatUI> GroupChatUI;
+	
 	UPROPERTY()
 	TSubclassOf<class APreviewTentActor> PreviewTentClass;
 	UPROPERTY()
@@ -101,6 +104,17 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Voice")
 	TObjectPtr<USoundAttenuation> NormalAttenuation;
-	
 
+	UPROPERTY()
+	TSubclassOf<class UGroupIconUI> GroupIconUIClass;
+public:
+	UFUNCTION(Server, Reliable)
+	void Server_RequestGroupChatUI(const TArray<int32>& Players);
+	UFUNCTION(Client, Reliable)
+	void Client_CreateGroupChatUI(const TArray<int32>& Players);
+
+	UFUNCTION(Server, Reliable)
+	void Server_RequestChat(const TArray<int32>& Players, const FString& Text, const FString& Name, const FString& CurrentTime);
+	UFUNCTION(Client, Reliable)
+	void Client_SendChat(const FString& Text, const FString& Name, const FString& CurrentTime);
 };

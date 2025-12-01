@@ -17,24 +17,56 @@ class MUMUL_API UGroupChatUI : public UUserWidget
 protected:
 	virtual void NativeConstruct() override;
 	
-	UFUNCTION()
-	void OnTextBoxCommitted(const FText& Text, ETextCommit::Type CommitMethod);
+	void ToggleVisibility(UWidget* Widget);
 	
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UScrollBox> ChatScrollBox;
+	TObjectPtr<class USizeBox> ChatSizeBox;
+public:
+	void AddChatBlock(class UChatBlockUI* UI);
+	void RemoveChatBlock();
+	
+protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UEditableTextBox> EditBox;
-	
+	UFUNCTION()
+	void OnTextBoxCommitted(const FText& Text, ETextCommit::Type CommitMethod);
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
 	TSubclassOf<class UChatMessageBlockUI> ChatMessageBlockUIClass;
-	void AddChat(FString Text);
+public:
+	void AddChat(FString Text, FString Name, FString CurrentTime);
+	
+protected:
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UButton> AddGroupBtn; 
 	
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
-	TSubclassOf<class UChatMessageBlockUI> GroupProfileUIClass;
+	TSubclassOf<class UCreateGroupChatUI> CreateGroupChatUIClass;
+	UPROPERTY()
+	TObjectPtr<class UCreateGroupChatUI> CreateGroupChatUI;
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UButton> AddGroupBtn;
+	TObjectPtr<class USizeBox> CreateGroupChatBox;
+public:
 	UFUNCTION()
-	void ShowInvitationUI();
+	void ToggleCreateGroupChatUI();
+protected:
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UScrollBox> GroupScrollBox;
+public:
+	void AddGroupIcon(class UGroupIconUI* UI);
 	
-	
+protected:
+	UPROPERTY(EditDefaultsOnly, Category="UI Class")
+	TSubclassOf<class UInvitationUI> InvitationUIClass;
+	UPROPERTY()
+	TObjectPtr<class UInvitationUI> InvitationUI;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class USizeBox> InvitationBox;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UButton> InviteBtn;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UButton> DeleteBtn;
+	UFUNCTION()
+	void ToggleInvitationUI();
+	UFUNCTION()
+	void ShowDeleteUI();
 };

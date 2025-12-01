@@ -12,5 +12,5 @@ struct FDBData
 	FString UserID;
 
 	UPROPERTY(BlueprintReadWrite)
-	int32 Score;
+	int32 Score = 0;
 };

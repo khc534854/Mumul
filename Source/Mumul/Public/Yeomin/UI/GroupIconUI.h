@@ -13,4 +13,22 @@ UCLASS()
 class MUMUL_API UGroupIconUI : public UUserWidget
 {
 	GENERATED_BODY()
+	
+	virtual void NativeConstruct() override;
+	
+protected:
+	UFUNCTION()
+	void DisplayGroupChat();
+	UPROPERTY()
+	TObjectPtr<class UGroupChatUI> ParentUI;
+public:
+	void InitParentUI(class UGroupChatUI* Parent);
+protected:
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UButton> GroupIconBtn;
+	UPROPERTY(EditDefaultsOnly, Category="UI Class")
+	TSubclassOf<class UChatBlockUI> ChatBlockUIClass;
+public:
+	UPROPERTY()
+	TObjectPtr<class UChatBlockUI> ChatBlockUI;
 };

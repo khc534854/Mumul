@@ -27,7 +27,6 @@ void APreviewTentActor::BeginPlay()
 	GetComponents<UStaticMeshComponent>(SMeshComps);
 	for (UStaticMeshComponent* Comp : SMeshComps)
 	{
-		Comp->bDisallowNanite = true;
 		UMaterialInstanceDynamic* DynMat = Comp->CreateAndSetMaterialInstanceDynamic(0);
 		SMeshMap.Add(Comp, DynMat);
 	}
