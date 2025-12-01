@@ -30,6 +30,11 @@ void ATentActor::BeginPlay()
 	if (ChildComp)
 	{
 		ChildCampFire = Cast<ACampFireActor>(ChildComp->GetChildActor());
+
+		if (ChildCampFire)
+		{
+			ChildCampFire->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+		}
 	}
 }
 
@@ -89,16 +94,30 @@ void ATentActor::Tick(float DeltaTime)
 
 void ATentActor::Activate(const FTransform& SpawnTransform)
 {
-	SetActorTransform(SpawnTransform);
+	SetActorTransform(SpawnTransform, false, nullptr, ETeleportType::TeleportPhysics);
 	SetActorHiddenInGame(false);
 	SetActorEnableCollision(true);
 	SetActorTickEnabled(true);
 	bIsActive = true;
+
+	if (ChildCampFire)
+	{
+		ChildCampFire->SetActorRelativeLocation(FVector(140, 130, 0));
+	}
+
+	ForceNetUpdate();
 }
 
 void ATentActor::ChangeTransform(const FTransform& SpawnTransform)
 {
-	SetActorTransform(SpawnTransform);
+	SetActorTransform(SpawnTransform, false, nullptr, ETeleportType::TeleportPhysics);
+	
+	if (ChildCampFire)
+	{
+		ChildCampFire->SetActorRelativeLocation(FVector(140, 130, 0));
+	}
+
+	ForceNetUpdate();
 }
 
 void ATentActor::Deactivate()
