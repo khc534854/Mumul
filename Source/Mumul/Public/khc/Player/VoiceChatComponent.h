@@ -5,9 +5,12 @@
 #include "CoreMinimal.h"
 #include "AudioCaptureCore.h"
 #include "Components/ActorComponent.h"
+#include "Interfaces/IHttpRequest.h"
+#include "Http.h"
 #include "VoiceChatComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnVoiceStateChanged, bool, bActive);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRecordingStopped);
 
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -85,7 +88,15 @@ private:
 	// 오디오 데이터가 들어올 때 호출되는 콜백
 	void OnAudioCapture(const float* InAudio, int32 InNumFrames, int32 InNumChannels, int32 InSampleRate);
 
+private:
+	bool bWaitingForLastChunk = false; // 마지막 청크 전송 대기 중인지 플래그
+
+	void OnLastChunkUploadComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+
 public:
+	UPROPERTY(BlueprintAssignable)
+	FOnRecordingStopped OnRecordingStopped;
+	
 	// 외부(UI)에서 바인딩할 이벤트
 	UPROPERTY(BlueprintAssignable, Category = "Voice|Event")
 	FOnVoiceStateChanged OnSpeakingStateChanged;

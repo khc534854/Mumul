@@ -76,7 +76,7 @@ private:
 	// Player Unique Information
 public:
 	UPROPERTY(BlueprintReadOnly, Category = "User Info")
-	int32 PlayerUniqueID = 100;
+	int32 PlayerUniqueID = 10;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "User Info")
 	FString PlayerName = TEXT("TestName");

@@ -2,6 +2,7 @@
 
 #include "khc/Player/MumulPlayerState.h"
 #include "HttpNetworkSubsystem.h"
+#include "MumulGameInstance.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerState.h"
@@ -141,23 +142,37 @@ void UVoiceChatComponent::StopRecording()
 {
 	if (!bIsRecording) return;
 
+	// 1. 타이머 및 캡처 정지 (기존 코드)
 	if (UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().ClearTimer(ChunkTimerHandle);
 	}
-
-	// 2. 캡처 중지
 	AudioCapture.StopStream();
 	AudioCapture.CloseStream();
 	bIsRecording = false;
-	OnRecordingStateChanged.Broadcast(false);
 
-	UE_LOG(LogTemp, Log, TEXT("Voice Recording Stopped."));
+	UE_LOG(LogTemp, Log, TEXT("Voice Recording Stopped. Sending Last Chunk..."));
 
-	// 3. [추가] 남아있는 마지막 버퍼 전송 (마지막임 = true)
-	SendCurrentChunk(true);
-	
+	// 2. [수정] 마지막 전송 요청 및 델리게이트 연결
+	bWaitingForLastChunk = true; // 대기 상태 진입
 
+	// HTTP 시스템 가져오기
+	UGameInstance* GI = GetWorld()->GetGameInstance();
+	if (UMumulGameInstance* MumulGI = Cast<UMumulGameInstance>(GI))
+	{
+		if (UHttpNetworkSubsystem* HttpSystem = MumulGI->GetSubsystem<UHttpNetworkSubsystem>())
+		{
+			// [수정] AddDynamic -> AddUObject 로 변경
+			HttpSystem->OnSendVoiceCompleteDelegate_LowLevel.AddUObject(this, &UVoiceChatComponent::OnLastChunkUploadComplete);
+
+			SendCurrentChunk(true);
+		}
+	}
+	else
+	{
+		// 만약 시스템이 없다면 바로 종료 알림 (예외 처리)
+		OnRecordingStopped.Broadcast();
+	}
 }
 
 void UVoiceChatComponent::SendCurrentChunk(bool bIsLast)
@@ -219,4 +234,26 @@ void UVoiceChatComponent::OnAudioCapture(const float* InAudio, int32 InNumFrames
 		PCMBuffer.Add((uint8)(PCM16 & 0xFF));
 		PCMBuffer.Add((uint8)((PCM16 >> 8) & 0xFF));
 	}
+}
+
+void UVoiceChatComponent::OnLastChunkUploadComplete(FHttpRequestPtr Request, FHttpResponsePtr Response,
+	bool bWasSuccessful)
+{
+	if (!bWaitingForLastChunk) return;
+
+	UE_LOG(LogTemp, Warning, TEXT("[VoiceComponent] Last Chunk Upload Completed. Success: %d"), bWasSuccessful);
+
+	bWaitingForLastChunk = false;
+
+	// [수정] RemoveDynamic -> RemoveAll 로 변경 (깔끔하게 해제)
+	UGameInstance* GI = GetWorld()->GetGameInstance();
+	if (UMumulGameInstance* MumulGI = Cast<UMumulGameInstance>(GI))
+	{
+		if (UHttpNetworkSubsystem* HttpSystem = MumulGI->GetSubsystem<UHttpNetworkSubsystem>())
+		{
+			HttpSystem->OnSendVoiceCompleteDelegate_LowLevel.RemoveAll(this);
+		}
+	}
+
+	OnRecordingStopped.Broadcast();
 }

@@ -155,14 +155,14 @@ void ACuteAlienController::BeginPlay()
 	if (GI)
 	{
 		// [체크] 로비 스킵 여부 확인 (데이터가 비어있으면 더미 데이터 주입)
-		if (GI->PlayerUniqueID == 100) 
+		if (GI->PlayerUniqueID == 10) 
 		{
 			UE_LOG(LogTemp, Warning, TEXT("[Test] Detected Direct Level Start! Injecting Dummy Data..."));
 
-			GI->PlayerUniqueID = 99 + GetWorld()->GetGameState()->PlayerArray.Num();       // 테스트 ID
+			GI->PlayerUniqueID = 9 + GetWorld()->GetGameState()->PlayerArray.Num();       // 테스트 ID
 			GI->PlayerName = GI->PlayerName + FString::FromInt(GI->PlayerUniqueID); // 이름 + index
 			GI->CampID = 1;           // 임시 캠프 ID
-			GI->PlayerType = (GI->PlayerUniqueID == 100) ? TEXT("운영진") : TEXT("학생");
+			GI->PlayerType = (GI->PlayerUniqueID == 10) ? TEXT("운영진") : TEXT("학생");
 			GI->PlayerTendency = 0;
 			GI->bHasSurveyCompleted = true;
 		}
@@ -274,6 +274,38 @@ void ACuteAlienController::Tick(float DeltaSeconds)
 		{
 			OnClick(HitRes.ImpactPoint,
 			        HitRes.ImpactNormal.Rotation() + FRotator(-90.f, 0.f, 0.f));
+		}
+	}
+}
+
+void ACuteAlienController::OnHostRecordingStopped()
+{
+	// 1. 델리게이트 즉시 해제 (중복 방지 1단계)
+	if (APawn* MyPawn = GetPawn())
+	{
+		if (UVoiceChatComponent* VoiceComp = MyPawn->FindComponentByClass<UVoiceChatComponent>())
+		{
+			VoiceComp->OnRecordingStopped.RemoveDynamic(this, &ACuteAlienController::OnHostRecordingStopped);
+		}
+	}
+
+	// 2. [추가] 미팅 ID가 비어있으면 이미 종료된 것으로 간주 (중복 방지 2단계)
+	if (CurrentMeetingSessionID.IsEmpty()) 
+	{
+		return;
+	}
+
+	// 3. 종료 API 호출
+	UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
+	if (GI)
+	{
+		if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[Meeting] Requesting End Meeting API... (After Last Chunk)"));
+			HttpSystem->EndMeetingRequest(CurrentMeetingSessionID);
+            
+			// 4. ID 초기화 (다음에 또 호출되지 않도록)
+			CurrentMeetingSessionID = TEXT(""); 
 		}
 	}
 }
@@ -451,18 +483,7 @@ void ACuteAlienController::RequestStopMeetingRecording()
 
 	if (MyPS && GI)
 	{
-		// 1. 모든 클라이언트에게 녹음 중지 명령 (RPC) -> 각자 마지막 청크 전송
 		Server_StopChannelRecording(MyPS->VoiceChannelID);
-
-		// 2. [추가] 서버에 회의 종료 알림 (API 호출)
-		if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
-		{
-			// 저장해둔 CurrentMeetingSessionID 사용
-			if (!CurrentMeetingSessionID.IsEmpty())
-			{
-				HttpSystem->EndMeetingRequest(CurrentMeetingSessionID);
-			}
-		}
 	}
 }
 
@@ -516,6 +537,18 @@ void ACuteAlienController::Server_StopChannelRecording_Implementation(int32 Targ
 {
 	UE_LOG(LogTemp, Warning, TEXT("[Server] Request Stop for Ch: %d"), TargetChannelID);
 
+	UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
+	if (GI)
+	{
+		if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
+		{
+			if (!CurrentMeetingSessionID.IsEmpty())
+			{
+				HttpSystem->EndMeetingRequest(CurrentMeetingSessionID);
+			}
+		}
+	}
+
 	if (UWorld* World = GetWorld())
 	{
 		if (AGameStateBase* GameState = World->GetGameState())
@@ -529,7 +562,6 @@ void ACuteAlienController::Server_StopChannelRecording_Implementation(int32 Targ
 				{
 					if (ACuteAlienController* TargetPC = Cast<ACuteAlienController>(PS->GetOwner()))
 					{
-						// 그 컨트롤러에게 "녹음 꺼"라고 명령 (Client RPC)
 						TargetPC->Client_StopChannelRecording();
 					}
 				}
@@ -545,6 +577,11 @@ void ACuteAlienController::Client_StopChannelRecording_Implementation()
 	{
 		if (UVoiceChatComponent* VoiceComp = MyPawn->FindComponentByClass<UVoiceChatComponent>())
 		{
+			if (HasAuthority())
+			{
+				VoiceComp->OnRecordingStopped.AddDynamic(this, &ACuteAlienController::OnHostRecordingStopped);
+			}
+			
 			VoiceComp->StopRecording(); // 녹음 종료
 
 			UE_LOG(LogTemp, Warning, TEXT(">>> [RECORD STOP]"));
@@ -574,12 +611,20 @@ void ACuteAlienController::Server_BroadcastJoinMeeting_Implementation(int32 Targ
 		{
 			for (APlayerState* PS : GameState->PlayerArray)
 			{
+				// 1. 나 자신(방장)인지 확인
+				// Server RPC 내부에서 'this'는 이 함수를 호출한 컨트롤러(방장)입니다.
+				if (PS->GetOwner() == this)
+				{
+					continue; // 나는 이미 시작했으므로 패스
+				}
+
 				AMumulPlayerState* MumulPS = Cast<AMumulPlayerState>(PS);
+                
+				// 2. 같은 채널에 있는 다른 사람들에게만 전송
 				if (MumulPS && MumulPS->VoiceChannelID == TargetChannelID)
 				{
 					if (ACuteAlienController* TargetPC = Cast<ACuteAlienController>(PS->GetOwner()))
 					{
-						// [Client RPC] "야, 이 미팅 ID로 API 쏴서 참가해"
 						TargetPC->Client_RequestJoinMeeting(MeetingID);
 					}
 				}
@@ -609,13 +654,25 @@ void ACuteAlienController::OnStartMeetingResponse(bool bSuccess, FString Meeting
 	{
 		UE_LOG(LogTemp, Log, TEXT("[Meeting] Created Successfully: %s"), *MeetingID);
         
-		// 방장이니까 자기 자신은 Join 절차 생략하고 바로 ID 저장
+		// 1. 미팅 ID 저장
 		CurrentMeetingSessionID = MeetingID;
         
+		// 2. [수정] 방장은 Join API 호출 없이 "즉시 녹음 시작"
+		if (APawn* MyPawn = GetPawn())
+		{
+			if (UVoiceChatComponent* VoiceComp = MyPawn->FindComponentByClass<UVoiceChatComponent>())
+			{
+				VoiceComp->SetCurrentMeetingID(CurrentMeetingSessionID);
+				VoiceComp->StartRecording();
+                
+				UE_LOG(LogTemp, Warning, TEXT(">>> [HOST] Start Recording Immediately (Skip Join)"));
+			}
+		}
+
+		// 3. 다른 팀원들에게만 Join 명령 내리기 위해 RPC 호출
 		AMumulPlayerState* MyPS = GetPlayerState<AMumulPlayerState>();
 		if (MyPS)
 		{
-			// [Server RPC] 같은 채널 사람들에게 Join 명령 내림
 			Server_BroadcastJoinMeeting(MyPS->VoiceChannelID, MeetingID);
 		}
 	}

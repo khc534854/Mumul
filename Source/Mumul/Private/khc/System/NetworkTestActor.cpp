@@ -64,7 +64,7 @@ void ANetworkTestActor::TestSendLogin()
         LoginData.password = TestPassword;
 
         // 디테일 패널에 적은 Endpoint 사용
-        HttpSystem->SendJsonRequest(LoginData, Endpoint_Login);
+        //HttpSystem->SendJsonRequest(LoginData, Endpoint_Login);
         
         UE_LOG(LogTemp, Log, TEXT("[Test] Login Request Sent: ID=%s"), *TestUserID);
     }
@@ -79,7 +79,7 @@ void ANetworkTestActor::TestSendLog()
         LogData.PlayerID = TestUserID;
         LogData.Timestamp = FDateTime::Now().ToString();
 
-        HttpSystem->SendJsonRequest(LogData, Endpoint_Log);
+        //HttpSystem->SendJsonRequest(LogData, Endpoint_Log);
         
         UE_LOG(LogTemp, Log, TEXT("[Test] Log Request Sent"));
     }

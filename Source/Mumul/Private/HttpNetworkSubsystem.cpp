@@ -114,7 +114,11 @@ void UHttpNetworkSubsystem::StartMeetingRequest(FString MeetingTitle, int32 Orga
     MeetingStartData.agenda = Agenda;
     MeetingStartData.description = Desc;
     
-    SendJsonRequest(MeetingStartData, TEXT("meeting/start"));
+    SendJsonRequest(
+        MeetingStartData, 
+        TEXT("meeting/start"), 
+        &UHttpNetworkSubsystem::OnStartMeetingComplete
+    );
 }
 
 void UHttpNetworkSubsystem::JoinMeetingRequest(int32 UserID, FString MeetingID)
@@ -124,7 +128,12 @@ void UHttpNetworkSubsystem::JoinMeetingRequest(int32 UserID, FString MeetingID)
     MeetingJoinData.client_timestamp = GetCurrentEpochMs();
     
     FString Endpoint = FString::Printf(TEXT("meeting/%s/join"), *MeetingID);
-    SendJsonRequest(MeetingJoinData, Endpoint);
+
+    SendJsonRequest(
+        MeetingJoinData, 
+        Endpoint, 
+        &UHttpNetworkSubsystem::OnJoinMeetingComplete
+    );
 }
 
 void UHttpNetworkSubsystem::EndMeetingRequest(FString MeetingID)
@@ -296,6 +305,8 @@ void UHttpNetworkSubsystem::OnSendVoiceComplete(FHttpRequestPtr Request, FHttpRe
                 // 3. 성공! 데이터 사용
                 UE_LOG(LogTemp, Log, TEXT("[HTTP] Upload Success! Meeting: %s, Chunk: %d"), 
                     *ResponseData.meeting_id, ResponseData.chunk_index);
+
+                OnSendVoiceCompleteDelegate_LowLevel.Broadcast(Request, Response, bWasSuccessful);
                 
                 // (선택 사항) 여기서 델리게이트를 호출해 UI나 다른 곳에 알릴 수도 있습니다.
                 // OnUploadSuccess.Broadcast(ResponseData); 

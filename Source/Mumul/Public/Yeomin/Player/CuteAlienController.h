@@ -34,7 +34,9 @@ public:
 	// 저장 후 로비로 가거나 게임 종료
 	UFUNCTION(Server, Reliable)
 	void Server_SaveAndExit();
-	
+	UFUNCTION()
+	void OnHostRecordingStopped();
+
 protected:
 	UPROPERTY()
 	TObjectPtr<class UInputAction> IA_Radial;

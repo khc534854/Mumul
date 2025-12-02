@@ -79,7 +79,7 @@ void ULobbyWidget::OnClickLogin()
             if (GI)
             {
                 // 100번대 ID 부여 (admin=100, user1=101)
-                GI->PlayerUniqueID = (InputId == TEXT("admin")) ? 100 : 101;
+                GI->PlayerUniqueID = (InputId == TEXT("admin")) ? 10 : 11;
                 GI->PlayerName = GI->PlayerName + FString::FromInt(GI->PlayerUniqueID); // 이름 + index
                 GI->CampID = 1;           // 임시 캠프 ID
                 GI->PlayerType = (InputId == TEXT("admin")) ? TEXT("운영진") : TEXT("학생");

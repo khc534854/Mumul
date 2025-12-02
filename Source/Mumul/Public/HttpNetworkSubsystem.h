@@ -16,6 +16,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnLoginResponseReceived, bool, bSu
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStartMeetingResponse, bool, bSuccess, FString, MeetingID);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnJoinMeetingResponse, bool, bSuccess);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEndMeetingResponse, bool, bSuccess);
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnHttpCompleteLowLevel, FHttpRequestPtr, FHttpResponsePtr, bool);
 
 UCLASS()
 class MUMUL_API UHttpNetworkSubsystem : public UGameInstanceSubsystem
@@ -28,7 +29,7 @@ public:
 	virtual void Deinitialize() override;
 
 	template <typename RequestType>
-	void SendJsonRequest(const RequestType& StructData, const FString& UrlEndpoint);
+	void SendJsonRequest(const RequestType& StructData, const FString& UrlEndpoint, void (UHttpNetworkSubsystem::*CallbackFunc)(FHttpRequestPtr, FHttpResponsePtr, bool));	
 
 	UFUNCTION(BlueprintCallable, Category = "Network")
 	void SendAudioChunk(const TArray<uint8>& WavData, FString MeetingID, FString UserID, int32 ChunkIndex);
@@ -53,6 +54,8 @@ public:
 	FOnJoinMeetingResponse OnJoinMeeting;
 	UPROPERTY(BlueprintAssignable)
 	FOnEndMeetingResponse OnEndMeeting;
+
+	FOnHttpCompleteLowLevel OnSendVoiceCompleteDelegate_LowLevel;
 	
 	
 private:
@@ -72,7 +75,11 @@ public:
 };
 
 template <typename RequestType>
-void UHttpNetworkSubsystem::SendJsonRequest(const RequestType& StructData, const FString& UrlEndpoint)
+void UHttpNetworkSubsystem::SendJsonRequest(
+	const RequestType& StructData, 
+	const FString& UrlEndpoint, 
+	void (UHttpNetworkSubsystem::*CallbackFunc)(FHttpRequestPtr, FHttpResponsePtr, bool)
+)
 {
 	FString JsonString;
 	bool bSuccess = FJsonObjectConverter::UStructToJsonObjectString(RequestType::StaticStruct(), &StructData, JsonString, 0, 0);
@@ -83,19 +90,17 @@ void UHttpNetworkSubsystem::SendJsonRequest(const RequestType& StructData, const
 		return;
 	}
 
-	// 2. HTTP 요청 생성
 	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
     
-	// URL 결합 (기본 주소 + 엔드포인트)
 	FString FullURL = FString::Printf(TEXT("%s/%s"), *BaseURL, *UrlEndpoint);
     
 	Request->SetURL(FullURL);
 	Request->SetVerb("POST");
 	Request->SetHeader("Content-Type", "application/json");
-	Request->SetContentAsString(JsonString); // 변환된 JSON 문자열 탑재
+	Request->SetContentAsString(JsonString);
 
-	// 3. 콜백 연결 및 전송
-	Request->OnProcessRequestComplete().BindUObject(this, &UHttpNetworkSubsystem::OnSendVoiceComplete);
+	// [핵심 수정] 전달받은 함수(CallbackFunc)를 바인딩합니다.
+	Request->OnProcessRequestComplete().BindUObject(this, CallbackFunc);
 
 	UE_LOG(LogTemp, Log, TEXT("[HTTP] Sending Request to: %s"), *FullURL);
 	Request->ProcessRequest();
