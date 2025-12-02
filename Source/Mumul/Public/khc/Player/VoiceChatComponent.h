@@ -59,6 +59,8 @@ public:
 	void SetCurrentMeetingID(FString NewMeetingId) { CurrentMeetingID = NewMeetingId; }
 
 private:
+	FString CurrentMeetingID = TEXT("Lobby"); // 기본값
+private:
 	// 오디오 캡처 객체
 	Audio::FAudioCapture AudioCapture;
     
@@ -77,7 +79,6 @@ private:
 
 	// 현재 청크 인덱스
 	int32 CurrentChunkIndex = 0;
-	FString CurrentMeetingID = TEXT("Test");
 
 	void SendCurrentChunk(bool bIsLast);
 	

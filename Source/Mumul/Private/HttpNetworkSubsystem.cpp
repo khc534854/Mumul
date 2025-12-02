@@ -4,6 +4,7 @@
 #include "Interfaces/IHttpResponse.h"
 #include "Misc/Base64.h" // [필수] Base64 인코딩용
 #include "khc/System/NetworkStructs.h"
+#include "Misc/DateTime.h"
 
 void UHttpNetworkSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -104,6 +105,48 @@ void UHttpNetworkSubsystem::SendLoginRequest(FString ID, FString PW)
     Request->ProcessRequest();
 }
 
+void UHttpNetworkSubsystem::StartMeetingRequest(FString MeetingTitle, int32 OrganizerID, FString Agenda, FString Desc)
+{
+    FVoiceMeetingStartRequest MeetingStartData;
+    MeetingStartData.title = MeetingTitle;
+    MeetingStartData.organizer_id = OrganizerID; // int32 그대로 대입
+    MeetingStartData.client_timestamp = GetCurrentEpochMs(); // int64 그대로 대입
+    MeetingStartData.agenda = Agenda;
+    MeetingStartData.description = Desc;
+    
+    SendJsonRequest(MeetingStartData, TEXT("meeting/start"));
+}
+
+void UHttpNetworkSubsystem::JoinMeetingRequest(int32 UserID, FString MeetingID)
+{
+    FVoiceMeetingJoinRequest MeetingJoinData;
+    MeetingJoinData.user_id = UserID;
+    MeetingJoinData.client_timestamp = GetCurrentEpochMs();
+    
+    FString Endpoint = FString::Printf(TEXT("meeting/%s/join"), *MeetingID);
+    SendJsonRequest(MeetingJoinData, Endpoint);
+}
+
+void UHttpNetworkSubsystem::EndMeetingRequest(FString MeetingID)
+{
+    TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
+
+    // URL 설정: /meeting/{meeting_id}/end
+    FString FullURL = FString::Printf(TEXT("%s/meeting/%s/end"), *BaseURL, *MeetingID);
+    
+    Request->SetURL(FullURL);
+    Request->SetVerb("POST");
+    Request->SetHeader("Content-Type", "application/json");
+    
+    // Body는 필요 없음 
+    Request->SetContentAsString(TEXT("{}")); 
+
+    Request->OnProcessRequestComplete().BindUObject(this, &UHttpNetworkSubsystem::OnEndMeetingComplete);
+    
+    UE_LOG(LogTemp, Log, TEXT("[HTTP] Request End Meeting: %s"), *MeetingID);
+    Request->ProcessRequest();
+}
+
 void UHttpNetworkSubsystem::OnLoginComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
     if (!bWasSuccessful || !Response.IsValid())
@@ -117,8 +160,6 @@ void UHttpNetworkSubsystem::OnLoginComplete(FHttpRequestPtr Request, FHttpRespon
 
     if (Code == 200) // 성공
     {
-        // [수정] 성공 시에는 가공하지 말고 JSON 원본(Content)을 그대로 보냅니다.
-        // 그래야 위젯에서 데이터를 뽑아 쓸 수 있습니다.
         OnLoginResponse.Broadcast(true, Content);
     }
     else if (Code == 401) // 실패
@@ -137,6 +178,105 @@ void UHttpNetworkSubsystem::OnLoginComplete(FHttpRequestPtr Request, FHttpRespon
     {
         OnLoginResponse.Broadcast(false, FString::Printf(TEXT("서버 오류: %d"), Code));
     }
+}
+
+void UHttpNetworkSubsystem::OnStartMeetingComplete(FHttpRequestPtr Request, FHttpResponsePtr Response,
+    bool bWasSuccessful)
+{
+    if (bWasSuccessful && Response.IsValid())
+    {
+        int32 Code = Response->GetResponseCode();
+        FString Content = Response->GetContentAsString();
+
+        if (Code == 200)
+        {
+            FVoiceMeetingStartSuccessResponse SuccessData;
+            if (FJsonObjectConverter::JsonObjectStringToUStruct(Content, &SuccessData, 0, 0))
+            {
+                UE_LOG(LogTemp, Log, TEXT("[HTTP] Meeting Started: %s (Status: %s)"), *SuccessData.meeting_id, *SuccessData.status);
+                OnStartMeeting.Broadcast(true, SuccessData.meeting_id);
+                return;
+            }
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("[HTTP] Start Meeting Failed: %d / %s"), Code, *Content);
+        }
+    }
+    
+    OnStartMeeting.Broadcast(false, TEXT(""));
+}
+
+void UHttpNetworkSubsystem::OnJoinMeetingComplete(FHttpRequestPtr Request, FHttpResponsePtr Response,
+    bool bWasSuccessful)
+{
+    if (bWasSuccessful && Response.IsValid())
+    {
+        int32 Code = Response->GetResponseCode();
+        FString Content = Response->GetContentAsString();
+
+        if (Code == 200)
+        {
+            FVoiceMeetingJoinSuccessResponse SuccessData;
+            if (FJsonObjectConverter::JsonObjectStringToUStruct(Content, &SuccessData, 0, 0))
+            {
+                UE_LOG(LogTemp, Log, TEXT("[HTTP] Joined Meeting: %s (User: %d)"), *SuccessData.meeting_id, SuccessData.user_id);
+                OnJoinMeeting.Broadcast(true);
+                return;
+            }
+        }
+        else // 404, 409, 500 등
+        {
+            // 에러 메시지 파싱 (공통 에러 구조체 사용)
+            // {"detail": "..."} 형태라면 FLoginFailResponse와 같은 구조체 재사용 가능
+            UE_LOG(LogTemp, Error, TEXT("[HTTP] Join Meeting Failed: %d / %s"), Code, *Content);
+        }
+    }
+
+    OnJoinMeeting.Broadcast(false);
+}
+
+void UHttpNetworkSubsystem::OnEndMeetingComplete(FHttpRequestPtr Request, FHttpResponsePtr Response,
+    bool bWasSuccessful)
+{
+    if (bWasSuccessful && Response.IsValid())
+    {
+        int32 Code = Response->GetResponseCode();
+        FString Content = Response->GetContentAsString();
+
+        if (Code == 200)
+        {
+            FVoiceMeetingEndResponse EndData;
+            if (FJsonObjectConverter::JsonObjectStringToUStruct(Content, &EndData, 0, 0))
+            {
+                UE_LOG(LogTemp, Log, TEXT("[HTTP] Meeting Ended! ID: %s, Duration: %lld ms"), *EndData.meeting_id, EndData.duration_ms);
+                OnEndMeeting.Broadcast(true);
+                return;
+            }
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("[HTTP] End Meeting Failed: %d / %s"), Code, *Content);
+        }
+    }
+    
+    OnEndMeeting.Broadcast(false);
+}
+
+int64 UHttpNetworkSubsystem::GetCurrentEpochMs()
+{
+    const FDateTime EpochOrigin(1970, 1, 1);
+
+    // 2. 현재 UTC 시간 가져오기
+    FDateTime CurrentTime = FDateTime::UtcNow();
+
+    // 3. 차이(TimeSpan) 계산
+    FTimespan Timespan = CurrentTime - EpochOrigin;
+
+    // 4. 전체 밀리초로 변환 (double -> int64 캐스팅)
+    int64 EpochMs = static_cast<int64>(Timespan.GetTotalMilliseconds());
+
+    return EpochMs;
 }
 
 void UHttpNetworkSubsystem::OnSendVoiceComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)

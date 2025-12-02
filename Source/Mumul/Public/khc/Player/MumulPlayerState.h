@@ -6,9 +6,26 @@
 #include "GameFramework/PlayerState.h"
 #include "MumulPlayerState.generated.h"
 
-/**
- * 
- */
+
+
+USTRUCT(Blueprintable)
+struct FTeamData
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	int32 UniqueTeamID;
+
+	UPROPERTY()
+	FString TeamName;
+
+	UPROPERTY()
+	int32 TeamLeaderID;
+
+	UPROPERTY()
+	TSet<int32> TeamMateList;
+};
+
 UCLASS()
 class MUMUL_API AMumulPlayerState : public APlayerState
 {
@@ -29,7 +46,7 @@ public:
 	int32 PS_TendencyID = 0;
 
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "User Info")
-	TArray<FString> PS_PlayerTeamList;
+	TArray<FTeamData> PS_PlayerTeamList;
 	
 	// 현재 보이스 채널 ID (Replicated)
 	UPROPERTY(ReplicatedUsing = OnRep_VoiceChannelID, BlueprintReadOnly, Category = "Voice")

@@ -59,6 +59,65 @@ struct FVoiceUploadRequest
 	int32 SampleRate = 0;
 };
 
+USTRUCT()
+struct FVoiceMeetingStartRequest
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FString title;
+
+	UPROPERTY()
+	int32 organizer_id = 0; // integer
+
+	UPROPERTY()
+	int64 client_timestamp = 0; // integer
+
+	UPROPERTY()
+	FString agenda; 
+
+	UPROPERTY()
+	FString description;
+};
+
+USTRUCT()
+struct FVoiceMeetingStartSuccessResponse
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FString meeting_id;
+
+	UPROPERTY()
+	FString status;
+};
+
+USTRUCT()
+struct FVoiceMeetingJoinRequest
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	int32 user_id = 0; // integer
+
+	UPROPERTY()
+	int64 client_timestamp = 0; // integer
+};
+
+USTRUCT()
+struct FVoiceMeetingJoinSuccessResponse
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	int32 participant_id = 0;
+
+	UPROPERTY()
+	FString meeting_id; 
+    
+	UPROPERTY()
+	int32 user_id = 0;
+};
 
 USTRUCT()
 struct FVoiceChunkResponse
@@ -73,6 +132,27 @@ struct FVoiceChunkResponse
 
 	UPROPERTY()
 	int32 chunk_index = 0;
+};
+
+USTRUCT()
+struct FVoiceMeetingEndResponse
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FString meeting_id;
+
+	UPROPERTY()
+	FString status;
+
+	UPROPERTY()
+	int64 duration_ms = 0;
+
+	UPROPERTY()
+	int32 participant_count = 0;
+
+	UPROPERTY()
+	int32 total_segments = 0;
 };
 
 USTRUCT()

@@ -13,6 +13,9 @@
  */
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnLoginResponseReceived, bool, bSuccess, FString, Message);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStartMeetingResponse, bool, bSuccess, FString, MeetingID);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnJoinMeetingResponse, bool, bSuccess);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEndMeetingResponse, bool, bSuccess);
 
 UCLASS()
 class MUMUL_API UHttpNetworkSubsystem : public UGameInstanceSubsystem
@@ -33,22 +36,39 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Network")
 	void SendLoginRequest(FString ID, FString PW);
 
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void StartMeetingRequest(FString MeetingTitle, int32 OrganizerID, FString Agenda, FString Desc);
+
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void JoinMeetingRequest(int32 UserID, FString MeetingID);
+
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void EndMeetingRequest(FString MeetingID);
+	
 	UPROPERTY(BlueprintAssignable)
 	FOnLoginResponseReceived OnLoginResponse;
+	UPROPERTY(BlueprintAssignable)
+	FOnStartMeetingResponse OnStartMeeting;
+	UPROPERTY(BlueprintAssignable)
+	FOnJoinMeetingResponse OnJoinMeeting;
+	UPROPERTY(BlueprintAssignable)
+	FOnEndMeetingResponse OnEndMeeting;
 	
 	
 private:
 	// 통신이 끝났을 때(응답 왔을 때) 호출될 콜백 함수
 	void OnSendVoiceComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnLoginComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnStartMeetingComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnJoinMeetingComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnEndMeetingComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	void AddString(TArray<uint8>& OutPayload, const FString& InString);
-
-	void OnLoginComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-
 public:
 	UPROPERTY(EditAnywhere, Category="Network")
 	FString BaseURL = TEXT("http://127.0.0.1:8000");
 
+	int64 GetCurrentEpochMs();
 };
 
 template <typename RequestType>

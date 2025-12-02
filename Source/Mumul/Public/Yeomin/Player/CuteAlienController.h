@@ -101,6 +101,23 @@ public:
 
 	UFUNCTION(Client, Reliable)
 	void Client_StopChannelRecording();
+
+	UFUNCTION(Server, Reliable)
+	void Server_BroadcastJoinMeeting(int32 TargetChannelID, const FString& MeetingID);
+
+	UFUNCTION(Client, Reliable)
+	void Client_RequestJoinMeeting(const FString& MeetingID);
+	
+protected:
+	// [변수] 현재 진행 중인 회의 ID (서버에서 받아서 저장)
+	FString CurrentMeetingSessionID; 
+
+	// [함수] HTTP 응답 핸들러 (바인딩용)
+	UFUNCTION()
+	void OnStartMeetingResponse(bool bSuccess, FString MeetingID);
+
+	UFUNCTION()
+	void OnJoinMeetingResponse(bool bSuccess);
 	
 public:
 	UFUNCTION(BlueprintCallable, Category = "Voice")

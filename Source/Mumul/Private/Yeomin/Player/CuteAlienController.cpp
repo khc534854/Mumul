@@ -18,6 +18,7 @@
 #include "Net/VoiceConfig.h"
 #include <khc/Player/VoiceChatComponent.h>
 
+#include "HttpNetworkSubsystem.h"
 #include "Base/MumulGameState.h"
 #include "khc/Save/MapDataSaveGame.h"
 #include "Kismet/GameplayStatics.h"
@@ -173,6 +174,13 @@ void ACuteAlienController::BeginPlay()
 			GI->PlayerType,
 			GI->PlayerTendency
 		);
+
+		if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
+		{
+			// [추가] HTTP 응답 바인딩
+			HttpSystem->OnStartMeeting.AddDynamic(this, &ACuteAlienController::OnStartMeetingResponse);
+			HttpSystem->OnJoinMeeting.AddDynamic(this, &ACuteAlienController::OnJoinMeetingResponse);
+		}
         
 		UE_LOG(LogTemp, Log, TEXT("[Client] Sent Init Info: %s (ID: %d)"), *GI->PlayerName, GI->PlayerUniqueID);
 	}
@@ -413,20 +421,48 @@ void ACuteAlienController::ShowPreviewTent()
 void ACuteAlienController::RequestStartMeetingRecording()
 {
 	AMumulPlayerState* MyPS = GetPlayerState<AMumulPlayerState>();
-	if (MyPS)
+	UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
+    
+	if (MyPS && GI)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[Req] Start Recording Requested by: %d (Ch: %d)"), MyPS->PS_UserIndex, MyPS->VoiceChannelID);
-
-		Server_StartChannelRecording(MyPS->VoiceChannelID);
+		int32 ChannelID = MyPS->VoiceChannelID;
+        
+		// [HTTP] 방장(Organizer)이 Start Meeting API 호출
+		// (서버 응답이 오면 OnStartMeetingResponse가 실행됨)
+		if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
+		{
+			// TODO: 제목, 안건 등은 UI에서 입력받거나 기본값 사용
+			HttpSystem->StartMeetingRequest(
+				TEXT("Team Meeting Test"), 
+				GI->PlayerUniqueID, // Organizer ID
+				TEXT("Agenda Test"), 
+				TEXT("Description Test")
+			);
+            
+			UE_LOG(LogTemp, Log, TEXT("[Meeting] Requesting Start Meeting API..."));
+		}
 	}
 }
 
 void ACuteAlienController::RequestStopMeetingRecording()
 {
 	AMumulPlayerState* MyPS = GetPlayerState<AMumulPlayerState>();
-	if (MyPS)
+	UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
+
+	if (MyPS && GI)
 	{
+		// 1. 모든 클라이언트에게 녹음 중지 명령 (RPC) -> 각자 마지막 청크 전송
 		Server_StopChannelRecording(MyPS->VoiceChannelID);
+
+		// 2. [추가] 서버에 회의 종료 알림 (API 호출)
+		if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
+		{
+			// 저장해둔 CurrentMeetingSessionID 사용
+			if (!CurrentMeetingSessionID.IsEmpty())
+			{
+				HttpSystem->EndMeetingRequest(CurrentMeetingSessionID);
+			}
+		}
 	}
 }
 
@@ -527,6 +563,88 @@ void ACuteAlienController::Server_SpawnTent_Implementation(const FTransform& Ten
 			// [수정] UserIndex도 같이 넘기고, bSaveToDisk = true로 설정
 			GM->SpawnTent(TentTransform, PS->PS_UserIndex, true);
 		}
+	}
+}
+
+void ACuteAlienController::Server_BroadcastJoinMeeting_Implementation(int32 TargetChannelID, const FString& MeetingID)
+{
+	if (UWorld* World = GetWorld())
+	{
+		if (AGameStateBase* GameState = World->GetGameState())
+		{
+			for (APlayerState* PS : GameState->PlayerArray)
+			{
+				AMumulPlayerState* MumulPS = Cast<AMumulPlayerState>(PS);
+				if (MumulPS && MumulPS->VoiceChannelID == TargetChannelID)
+				{
+					if (ACuteAlienController* TargetPC = Cast<ACuteAlienController>(PS->GetOwner()))
+					{
+						// [Client RPC] "야, 이 미팅 ID로 API 쏴서 참가해"
+						TargetPC->Client_RequestJoinMeeting(MeetingID);
+					}
+				}
+			}
+		}
+	}
+}
+
+void ACuteAlienController::Client_RequestJoinMeeting_Implementation(const FString& MeetingID)
+{
+	CurrentMeetingSessionID = MeetingID;
+
+	UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
+	if (GI)
+	{
+		if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
+		{
+			// [HTTP] Join Meeting API 호출
+			HttpSystem->JoinMeetingRequest(GI->PlayerUniqueID, MeetingID);
+		}
+	}
+}
+
+void ACuteAlienController::OnStartMeetingResponse(bool bSuccess, FString MeetingID)
+{
+	if (bSuccess)
+	{
+		UE_LOG(LogTemp, Log, TEXT("[Meeting] Created Successfully: %s"), *MeetingID);
+        
+		// 방장이니까 자기 자신은 Join 절차 생략하고 바로 ID 저장
+		CurrentMeetingSessionID = MeetingID;
+        
+		AMumulPlayerState* MyPS = GetPlayerState<AMumulPlayerState>();
+		if (MyPS)
+		{
+			// [Server RPC] 같은 채널 사람들에게 Join 명령 내림
+			Server_BroadcastJoinMeeting(MyPS->VoiceChannelID, MeetingID);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Meeting] Failed to Create Meeting."));
+	}
+}
+
+void ACuteAlienController::OnJoinMeetingResponse(bool bSuccess)
+{
+	if (bSuccess)
+	{
+		UE_LOG(LogTemp, Log, TEXT("[Meeting] Joined Successfully! Starting Recording..."));
+
+		// [최종] 녹음 컴포넌트 실행
+		if (APawn* MyPawn = GetPawn())
+		{
+			if (UVoiceChatComponent* VoiceComp = MyPawn->FindComponentByClass<UVoiceChatComponent>())
+			{
+				// 녹음 시작 시 MeetingID를 전달해줘야 함 (VoiceComponent 수정 필요)
+				VoiceComp->SetCurrentMeetingID(CurrentMeetingSessionID);
+				VoiceComp->StartRecording();
+			}
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Meeting] Failed to Join Meeting."));
 	}
 }
 
