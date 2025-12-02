@@ -3,6 +3,7 @@
 
 #include "Yeomin/UI/CreateGroupChatUI.h"
 
+#include "HttpNetworkSubsystem.h"
 #include "Base/MumulGameState.h"
 #include "Components/Button.h"
 #include "Components/EditableTextBox.h"
@@ -25,6 +26,8 @@ void UCreateGroupChatUI::NativeConstruct()
 	CreateGroupBtn->OnPressed.AddDynamic(this, &UCreateGroupChatUI::CreateGroupChat);
 	SearchBox->OnTextChanged.AddDynamic(this, &UCreateGroupChatUI::OnSearchTextChanged);
 	RefreshJoinedPlayerList();
+
+	HttpSystem = GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>();
 }
 
 void UCreateGroupChatUI::RefreshJoinedPlayerList()
@@ -89,29 +92,34 @@ void UCreateGroupChatUI::CreateGroupChat()
 {
 	// Check Players
 	TArray<UWidget*> Children = PlayerScrollBox->GetAllChildren();
-	TArray<int32> CheckedPlayers;
+	TArray<int32> CheckedUserIDs;
 
 	for (UWidget* Child : Children)
 	{
 		UGroupProfileUI* ProfileUI = Cast<UGroupProfileUI>(Child);
 		if (ProfileUI->GetCheckBoxState())
 		{
-			CheckedPlayers.Add(ProfileUI->GetUserIndex());
+			CheckedUserIDs.Add(ProfileUI->GetUserIndex());
 		}
 	}
 
-
-	if (CheckedPlayers.Num() == 0)
+	if (CheckedUserIDs.Num() == 0)
 		return;
 
 	FString GroupName = GroupNameText->GetText().ToString();
 	GroupName = MakeUniqueGroupName(GroupName);
+	
+	// Send CreateTeamChat Request
+	HttpSystem->SendCreateTeamChatRequest(GroupName, CheckedUserIDs);
+	
+	/*
 	ACuteAlienController* PC = GetWorld()->GetFirstPlayerController<ACuteAlienController>();
 	// RequestServer to add Group Chat History
 	PC->Server_RequestGroupChatHistory(GroupName);
 
 	// Request Server to add GroupChatUI
-	PC->Server_RequestGroupChatUI(GroupName, CheckedPlayers);
+	PC->Server_RequestGroupChatUI(GroupName, CheckedUserIDs);
+	*/
 
 	ParentUI->ToggleCreateGroupChatUI();
 }
@@ -123,10 +131,10 @@ FString UCreateGroupChatUI::MakeUniqueGroupName(const FString& BaseName) const
 	int32 MaxIndex = 0;
 	bool bIsNameExisting = false;
 
-	// Search FGroupChatData
-	for (const FGroupChatData& GroupData : GS->GetGroupChatHistory())
+	// Search TeamChatList
+	for (const FString& TeamName : GS->GetTeamChatList())
 	{
-		const FString& OtherName = GroupData.GroupName;
+		const FString& OtherName = TeamName;
 
 		// if Same Name?
 		if (OtherName == NewBaseName)

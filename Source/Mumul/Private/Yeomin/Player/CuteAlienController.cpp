@@ -18,8 +18,10 @@
 #include "Net/VoiceConfig.h"
 #include <khc/Player/VoiceChatComponent.h>
 
+#include "HttpNetworkSubsystem.h"
 #include "Base/MumulGameState.h"
 #include "khc/Save/MapDataSaveGame.h"
+#include "khc/System/NetworkStructs.h"
 #include "Kismet/GameplayStatics.h"
 #include "Yeomin/UI/ChatBlockUI.h"
 #include "Yeomin/UI/GroupChatUI.h"
@@ -130,12 +132,21 @@ ACuteAlienController::ACuteAlienController()
 void ACuteAlienController::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	GS = Cast<AMumulGameState>(GetWorld()->GetGameState());
+
+	if (HasAuthority())
+	{
+		if (UHttpNetworkSubsystem* HttpSystem = GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>())
+		{
+			HttpSystem->OnCreateTeamChatResponse.
+			            AddDynamic(this, &ACuteAlienController::OnServerCreateTeamChatResponse);
+		}
+	}
 
 	if (!IsLocalController())
 		return;
-	
+
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
 		ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 	{
@@ -604,77 +615,98 @@ void ACuteAlienController::UpdateVoiceChannelMuting()
 	}
 }
 
-
-void ACuteAlienController::Server_RequestGroupChatUI_Implementation(const FString& GroupName,
-                                                                    const TArray<int32>& Players)
+void ACuteAlienController::OnServerCreateTeamChatResponse(bool bSuccess, FString Message)
 {
-	// Add GroupChatUI for each Client
-	for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
+	if (bSuccess)
 	{
-		if (Players.Contains(Cast<AMumulPlayerState>(PS)->PS_UserIndex))
+		// 1. JSON 파싱 (Message에는 JSON 원본이 들어있음)
+		FCreateTeamChatResponse CreateTeamChat;
+
+		if (FJsonObjectConverter::JsonObjectStringToUStruct(Message, &CreateTeamChat, 0, 0))
 		{
-			if (ACuteAlienController* PC = Cast<ACuteAlienController>(PS->GetOwningController()))
+			// JSON Parsing LOG
+			UE_LOG(LogTemp, Warning, TEXT("===== CreateTeamChat Response ====="));
+			UE_LOG(LogTemp, Warning, TEXT("groupId: %s"), *CreateTeamChat.groupId);
+			UE_LOG(LogTemp, Warning, TEXT("groupName: %s"), *CreateTeamChat.groupName);
+
+			UE_LOG(LogTemp, Warning, TEXT("userIdList (%d명):"), CreateTeamChat.userIdList.Num());
+			for (int32 UserID : CreateTeamChat.userIdList)
 			{
-				PC->Client_CreateGroupChatUI(GroupName, Players);
+				UE_LOG(LogTemp, Warning, TEXT(" - userId: %d"), UserID);
+			}
+
+			TArray<FTeamUser> TeamUserIDs;
+			for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
+			{
+				if (AMumulPlayerState* MPS = Cast<AMumulPlayerState>(PS))
+				{
+					if (CreateTeamChat.userIdList.Contains(MPS->PS_UserIndex))
+					{
+						FTeamUser NewUser;
+						NewUser.UserId = MPS->PS_UserIndex;
+						NewUser.UserName = MPS->PS_RealName;
+						TeamUserIDs.Add(NewUser);
+					}
+				}
+			}
+			// Add GroupChatUI for each Client
+			for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
+			{
+				if (CreateTeamChat.userIdList.Contains(Cast<AMumulPlayerState>(PS)->PS_UserIndex))
+				{
+					if (ACuteAlienController* PC = Cast<ACuteAlienController>(PS->GetOwningController()))
+					{
+						PC->Client_CreateGroupChatUI(CreateTeamChat.groupId, CreateTeamChat.groupName, TeamUserIDs);
+					}
+				}
 			}
 		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("CreateTeamChat 파싱 실패"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("CreateTeamChat Response 실패 : %s"), *Message);
 	}
 }
 
-void ACuteAlienController::Client_CreateGroupChatUI_Implementation(const FString& GroupName,
-                                                                   const TArray<int32>& Players)
+void ACuteAlienController::Client_CreateGroupChatUI_Implementation(const FString& TeamID, const FString& TeamName,
+                                                                   const TArray<FTeamUser>& TeamUserIDs)
 {
 	// Set Players in Group Icon
 	UGroupIconUI* GroupIconUI = CreateWidget<UGroupIconUI>(GetWorld(), GroupIconUIClass);
 	GroupIconUI->InitParentUI(GroupChatUI);
 	GroupChatUI->AddGroupIcon(GroupIconUI);
-	GroupIconUI->ChatBlockUI->SetPlayersInGroup(Players);
-	GroupIconUI->ChatBlockUI->SetGroupName(GroupName);
+	GroupIconUI->ChatBlockUI->SetTeamID(TeamID);
+	GroupIconUI->ChatBlockUI->SetTeamName(TeamName);
+	for (const FTeamUser& User : TeamUserIDs)
+	{
+		GroupIconUI->ChatBlockUI->AddTeamUser(User.UserId, User.UserName);
+	}
 }
 
 
-void ACuteAlienController::Server_RequestChat_Implementation(const FString& Group, const TArray<int32>& Players,
+void ACuteAlienController::Server_RequestChat_Implementation(const FString& TeamID, const TArray<int32>& UserIDs,
                                                              const FString& CurrentTime, const FString& Name,
                                                              const FString& Text)
 {
 	// Add GroupChatUI for each Client
 	for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
 	{
-		if (Players.Contains(Cast<AMumulPlayerState>(PS)->PS_UserIndex))
+		if (UserIDs.Contains(Cast<AMumulPlayerState>(PS)->PS_UserIndex))
 		{
 			if (ACuteAlienController* PC = Cast<ACuteAlienController>(PS->GetOwningController()))
 			{
-				PC->Client_SendChat(Group, CurrentTime, Name, Text);
+				PC->Client_SendChat(TeamID, CurrentTime, Name, Text);
 			}
 		}
 	}
 }
 
-void ACuteAlienController::Client_SendChat_Implementation(const FString& Group, const FString& CurrentTime,
+void ACuteAlienController::Client_SendChat_Implementation(const FString& TeamID, const FString& CurrentTime,
                                                           const FString& Name, const FString& Text)
 {
-	GroupChatUI->AddChat(Group, CurrentTime, Name, Text);
-}
-
-void ACuteAlienController::Server_RequestGroupChatHistory_Implementation(const FString& GroupName)
-{
-	FGroupChatData NewGroup;
-	NewGroup.GroupName = GroupName;
-	GS->GetGroupChatHistory().Add(NewGroup);
-}
-
-void ACuteAlienController::Server_RequestChatHistory_Implementation(const FString& GroupName, const FString& Time,
-                                                                    const FString& PlayerName, const FString& Text)
-{
-	for (FGroupChatData& Group : GS->GetGroupChatHistory())
-	{
-		if (Group.GroupName == GroupName)
-		{
-			FChatBlock NewBlock;
-			NewBlock.TimeStamp = Time;
-			NewBlock.PlayerName = PlayerName;
-			NewBlock.Content = Text;
-			Group.ChatBlocks.Add(NewBlock);
-		}
-	}
+	GroupChatUI->AddChat(TeamID, CurrentTime, Name, Text);
 }

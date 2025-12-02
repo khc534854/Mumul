@@ -10,6 +10,20 @@
 /**
  * 
  */
+
+USTRUCT()
+struct FTeamUser
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	int32 UserId;
+
+	UPROPERTY()
+	FString UserName;
+};
+
+
 UCLASS()
 class MUMUL_API ACuteAlienController : public APlayerController
 {
@@ -19,7 +33,7 @@ class MUMUL_API ACuteAlienController : public APlayerController
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
-	
+
 	UPROPERTY()
 	TObjectPtr<class AMumulGameState> GS;
 
@@ -37,7 +51,7 @@ public:
 	// 저장 후 로비로 가거나 게임 종료
 	UFUNCTION(Server, Reliable)
 	void Server_SaveAndExit();
-	
+
 protected:
 	UPROPERTY()
 	TObjectPtr<class UInputAction> IA_Radial;
@@ -53,7 +67,7 @@ protected:
 	UPROPERTY()
 	TObjectPtr<class UInputAction> IA_QuitGame;
 	void OnPressEsc();
-	
+
 	UPROPERTY()
 	TSubclassOf<class URadialUI> RadialUIClass;
 	UPROPERTY()
@@ -64,7 +78,7 @@ protected:
 	void ShowRadialUI();
 	void HideRadialUI();
 	void CancelRadialUI();
-	
+
 	UPROPERTY()
 	TSubclassOf<class UPlayerUI> PlayerUIClass;
 	UPROPERTY()
@@ -74,7 +88,7 @@ protected:
 	TSubclassOf<class UGroupChatUI> GroupChatUIClass;
 	UPROPERTY()
 	TObjectPtr<UGroupChatUI> GroupChatUI;
-	
+
 	UPROPERTY()
 	TSubclassOf<class APreviewTentActor> PreviewTentClass;
 	UPROPERTY()
@@ -104,7 +118,7 @@ public:
 
 	UFUNCTION(Client, Reliable)
 	void Client_StopChannelRecording();
-	
+
 public:
 	UFUNCTION(BlueprintCallable, Category = "Voice")
 	void UpdateVoiceChannelMuting();
@@ -119,19 +133,17 @@ protected:
 
 	UPROPERTY()
 	TSubclassOf<class UGroupIconUI> GroupIconUIClass;
+	UFUNCTION()
+	void OnServerCreateTeamChatResponse(bool bSuccess, FString Message);
+
 public:
-	UFUNCTION(Server, Reliable)
-	void Server_RequestGroupChatUI(const FString& GroupName, const TArray<int32>& Players);
 	UFUNCTION(Client, Reliable)
-	void Client_CreateGroupChatUI(const FString& GroupName, const TArray<int32>& Players);
+	void Client_CreateGroupChatUI(const FString& TeamID, const FString& TeamName,
+	                              const TArray<FTeamUser>& TeamUserIDs);
 
 	UFUNCTION(Server, Reliable)
-	void Server_RequestChat(const FString& Group, const TArray<int32>& Players, const FString& CurrentTime, const FString& Name, const FString& Text);
+	void Server_RequestChat(const FString& TeamID, const TArray<int32>& UserIDs, const FString& CurrentTime,
+	                        const FString& Name, const FString& Text);
 	UFUNCTION(Client, Reliable)
-	void Client_SendChat(const FString& Group, const FString& CurrentTime, const FString& Name, const FString& Text);
-
-	UFUNCTION(Server, Reliable)
-	void Server_RequestGroupChatHistory(const FString& GroupName);
-	UFUNCTION(Server, Reliable)
-	void Server_RequestChatHistory(const FString& GroupName, const FString& Time, const FString& PlayerName, const FString& Text);
+	void Client_SendChat(const FString& TeamID, const FString& CurrentTime, const FString& Name, const FString& Text);
 };

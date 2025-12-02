@@ -8,33 +8,6 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPlayerArrayUpdated);
 
-USTRUCT(BlueprintType)
-struct FChatBlock
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	FString TimeStamp;
-
-	UPROPERTY()
-	FString PlayerName;
-
-	UPROPERTY()
-	FString Content;
-};
-
-USTRUCT(BlueprintType)
-struct FGroupChatData
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	FString GroupName;
-
-	UPROPERTY()
-	TArray<FChatBlock> ChatBlocks;
-};
-
 
 UCLASS()
 class MUMUL_API AMumulGameState : public AGameState
@@ -60,8 +33,11 @@ public:
 	void Multicast_SavePlayerLocation(int32 UserIndex, FTransform Location);
 
 protected:
-	UPROPERTY(Replicated)
-	TArray<FGroupChatData> GroupChatHistory;
+	TSet<FString> TeamChatList;
 public:
-	TArray<FGroupChatData> GetGroupChatHistory() { return GroupChatHistory; }
+	UFUNCTION(Server, Reliable)
+	void Server_AddTeamChatList(const FString& TeamName);
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_AddTeamChatList(const FString& TeamName);
+	TSet<FString> GetTeamChatList() { return TeamChatList; }
 };

@@ -12,7 +12,7 @@ void AMumulGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	
-	DOREPLIFETIME(AMumulGameState, GroupChatHistory)
+	DOREPLIFETIME(AMumulGameState, TeamChatList)
 }
 
 void AMumulGameState::AddPlayerState(APlayerState* PlayerState)
@@ -30,7 +30,6 @@ void AMumulGameState::RemovePlayerState(APlayerState* PlayerState)
 	UE_LOG(LogTemp, Warning, TEXT("Player Left: %s"), *PlayerState->GetPlayerName());
 	OnPlayerArrayUpdated.Broadcast();
 }
-
 
 void AMumulGameState::Multicast_SavePlayerLocation_Implementation(int32 UserIndex, FTransform Location)
 {
@@ -88,4 +87,14 @@ void AMumulGameState::Multicast_SaveTentData_Implementation(int32 UserIndex, FTr
 	{
 		UE_LOG(LogTemp, Log, TEXT("[SaveGame] Tent Saved for User %d"), UserIndex);
 	}
+}
+
+void AMumulGameState::Server_AddTeamChatList_Implementation(const FString& TeamName)
+{
+	Multicast_AddTeamChatList(TeamName);
+}
+
+void AMumulGameState::Multicast_AddTeamChatList_Implementation(const FString& TeamName)
+{
+	TeamChatList.Add(TeamName);
 }

@@ -3,6 +3,7 @@
 
 #include "Yeomin/UI/GroupChatUI.h"
 
+#include "HttpNetworkSubsystem.h"
 #include "Base/MumulGameState.h"
 #include "Components/Button.h"
 #include "Components/EditableTextBox.h"
@@ -10,6 +11,7 @@
 #include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
 #include "khc/Player/MumulPlayerState.h"
+#include "khc/System/NetworkStructs.h"
 #include "Yeomin/Player/CuteAlienController.h"
 #include "Yeomin/UI/ChatBlockUI.h"
 #include "Yeomin/UI/ChatMessageBlockUI.h"
@@ -21,7 +23,6 @@ void UGroupChatUI::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	// Register Text Commit callback function
 	EditBox->OnTextCommitted.AddDynamic(this, &UGroupChatUI::OnTextBoxCommitted);
 
 	AddGroupBtn->OnPressed.AddDynamic(this, &UGroupChatUI::ToggleCreateGroupChatUI);
@@ -37,6 +38,14 @@ void UGroupChatUI::NativeConstruct()
 
 	InviteBtn->OnPressed.AddDynamic(this, &UGroupChatUI::ToggleInvitationUI);
 	ToggleVisibilityBtn->OnPressed.AddDynamic(this, &UGroupChatUI::OnToggleVisibilityBtn);
+
+	// Register HTTP Response callback function
+	HttpSystem = GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>();
+	if (HttpSystem)
+	{
+		HttpSystem->OnTeamChatListResponse.AddDynamic(this, &UGroupChatUI::OnServerTeamChatListResponse);
+		HttpSystem->OnChatMessageResponse.AddDynamic(this, &UGroupChatUI::OnServerChatMessageResponse);
+	}
 }
 
 void UGroupChatUI::ToggleVisibility(UWidget* Widget)
@@ -64,12 +73,18 @@ void UGroupChatUI::OnTextBoxCommitted(const FText& Text, ETextCommit::Type Commi
 		AMumulPlayerState* PS = PC->GetPlayerState<AMumulPlayerState>();
 
 		UChatBlockUI* ChatChunk = Cast<UChatBlockUI>(ChatSizeBox->GetChildAt(0));
-		FString TimeStamp = FDateTime::Now().ToString(TEXT("%H:%M"));
-		FString Player = PS->PS_RealName;
+		FString TeamID = ChatChunk->GetTeamID();
+		TArray<int32> UserIDs;
+		ChatChunk->GetTeamUsers().GetKeys(UserIDs);
 		FString Content = Text.ToString();
-		FString GroupName = ChatChunk->GetGroupName();
-		PC->Server_RequestChatHistory(GroupName, Player, TimeStamp, Content);
-		PC->Server_RequestChat(GroupName, ChatChunk->GetPlayersInGroup(), TimeStamp, Player, Content);
+		FString TimeStamp = FDateTime::Now().ToString(TEXT("%H:%M"));
+
+		// Send Chat Message to DB
+		HttpSystem->SendChatMessageRequest(TeamID, PS->PS_UserIndex, Content, TimeStamp);
+
+		// Request Chat for Client RPC
+		FString Player = PS->PS_RealName;
+		PC->Server_RequestChat(TeamID, UserIDs, TimeStamp, Player, Content);
 
 		// Init EditBox
 		EditBox->SetText(FText());
@@ -82,13 +97,25 @@ void UGroupChatUI::OnTextBoxCommitted(const FText& Text, ETextCommit::Type Commi
 	}
 }
 
-void UGroupChatUI::AddChat(const FString& Group, const FString& CurrentTime, const FString& Name,
+void UGroupChatUI::OnServerChatMessageResponse(bool bSuccess, FString Message)
+{
+	if (bSuccess)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *Message);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s"), *Message);
+	}
+}
+
+void UGroupChatUI::AddChat(const FString& TeamID, const FString& CurrentTime, const FString& Name,
                            const FString& Text) const
 {
 	if (UChatBlockUI* ChatChunk = Cast<UChatBlockUI>(ChatSizeBox->GetChildAt(0)))
 	{
 		// Does Group Name Match?
-		if (ChatChunk->GetGroupName() != Group)
+		if (ChatChunk->GetTeamID() != TeamID)
 			return;
 
 		// Scroll Current Location
@@ -114,6 +141,58 @@ void UGroupChatUI::AddChat(const FString& Group, const FString& CurrentTime, con
 		}
 	}
 }
+
+void UGroupChatUI::OnServerTeamChatListResponse(bool bSuccess, FString Message)
+{
+	if (bSuccess)
+	{
+		// 1. JSON 파싱 (Message에는 JSON 원본이 들어있음)
+		TArray<FTeamChatListResponse> TeamChatList;
+
+		if (FJsonObjectConverter::JsonArrayStringToUStruct(Message, &TeamChatList, 0, 0))
+		{
+			// JSON Parsing LOG
+			for (const FTeamChatListResponse& TeamChat : TeamChatList)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("===== 팀 정보 ====="));
+				UE_LOG(LogTemp, Warning, TEXT("팀 ID: %s"), *TeamChat.teamChatId);
+				UE_LOG(LogTemp, Warning, TEXT("팀 이름: %s"), *TeamChat.teamName);
+
+				UE_LOG(LogTemp, Warning, TEXT("팀원 수: %d"), TeamChat.users.Num());
+				for (const FUserDetail& User : TeamChat.users)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("   - 유저ID: %d, 유저명: %s"),
+					       User.userId,
+					       *User.userName
+					);
+				}
+			}
+
+			for (const FTeamChatListResponse& TeamChat : TeamChatList)
+			{
+				// Create Group Icon
+				UGroupIconUI* GroupIconUI = CreateWidget<UGroupIconUI>(GetWorld(), GroupIconUIClass);
+				AddGroupIcon(GroupIconUI);
+				GroupIconUI->InitParentUI(this);
+				for (const FUserDetail& User : TeamChat.users)
+				{
+					GroupIconUI->ChatBlockUI->AddTeamUser(User.userId, *User.userName);
+				}
+				GroupIconUI->ChatBlockUI->SetTeamID(TeamChat.teamChatId);
+				GroupIconUI->ChatBlockUI->SetTeamName(TeamChat.teamName);
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("TeamChatList 파싱 실패"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("TeamChatList Response 실패 : %s"), *Message);
+	}
+}
+
 
 void UGroupChatUI::SetGroupNameTitle(const FString& GroupName)
 {
@@ -147,27 +226,7 @@ void UGroupChatUI::OnToggleVisibilityBtn()
 {
 	CreateGroupChatUI->RefreshJoinedPlayerList();
 	AMumulGameState* GS = Cast<AMumulGameState>(GetWorld()->GetGameState());
-	
-	UE_LOG(LogTemp, Warning, TEXT("===== GroupChatList Dump ====="));
 
-	for (const FGroupChatData& GroupData : GS->GetGroupChatHistory())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Group: %s (Count = %d)"),
-			*GroupData.GroupName, GroupData.ChatBlocks.Num());
-
-		for (int32 i = 0; i < GroupData.ChatBlocks.Num(); i++)
-		{
-			const FChatBlock& Block = GroupData.ChatBlocks[i];
-
-			UE_LOG(LogTemp, Warning,
-				TEXT("   [%d] Time: %s | Player: %s | Content: %s"),
-				i,
-				*Block.TimeStamp,
-				*Block.PlayerName,
-				*Block.Content
-			);
-		}
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("===== End Dump ====="));
+	AMumulPlayerState* PS = Cast<AMumulPlayerState>(GetOwningPlayerState());
+	HttpSystem->SendTeamChatListRequest(PS->PS_UserIndex);
 }

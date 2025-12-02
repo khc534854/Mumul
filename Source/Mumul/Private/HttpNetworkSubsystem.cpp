@@ -123,7 +123,7 @@ void UHttpNetworkSubsystem::OnLoginComplete(FHttpRequestPtr Request, FHttpRespon
     }
     else if (Code == 401) // 실패
     {
-        FLoginFailResponse FailData;
+        FFailResponse FailData;
         if (FJsonObjectConverter::JsonObjectStringToUStruct(Content, &FailData, 0, 0))
         {
             OnLoginResponse.Broadcast(false, FailData.detail.message);
@@ -181,4 +181,243 @@ void UHttpNetworkSubsystem::AddString(TArray<uint8>& OutPayload, const FString& 
 {
     FTCHARToUTF8 Converter(*InString);
     OutPayload.Append((uint8*)Converter.Get(), Converter.Length());
+}
+
+
+
+void UHttpNetworkSubsystem::SendTeamChatListRequest(int32 UserID)
+{
+    // 3. HTTP 요청 생성
+    TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
+    FString FullURL = FString::Printf(TEXT("%s/chat/rooms?userId=%d"), *BaseURL, UserID);
+    
+    Request->SetURL(FullURL);
+    Request->SetVerb("GET");
+    Request->SetHeader("Content-Type", "application/json");
+
+    // 4. 콜백 연결
+
+    Request->OnProcessRequestComplete().BindUObject(this, &UHttpNetworkSubsystem::OnTeamChatListComplete);
+    Request->ProcessRequest();
+}
+
+void UHttpNetworkSubsystem::OnTeamChatListComplete(FHttpRequestPtr Request, FHttpResponsePtr Response,
+                                                   bool bWasSuccessful)
+{
+    if (!bWasSuccessful || !Response.IsValid())
+    {
+        OnTeamChatListResponse.Broadcast(false, TEXT("네트워크 연결 실패"));
+        return;
+    }
+
+    int32 Code = Response->GetResponseCode();
+    FString Content = Response->GetContentAsString();
+
+    if (Code == 200) // 성공
+    {
+        // [수정] 성공 시에는 가공하지 말고 JSON 원본(Content)을 그대로 보냅니다.
+        // 그래야 위젯에서 데이터를 뽑아 쓸 수 있습니다.
+        OnTeamChatListResponse.Broadcast(true, Content);
+    }
+    else if (Code == 404) // 실패
+    {
+        FFailResponse FailData;
+        if (FJsonObjectConverter::JsonObjectStringToUStruct(Content, &FailData, 0, 0))
+        {
+            OnTeamChatListResponse.Broadcast(false, FailData.detail.message);
+        }
+        else
+        {
+            OnTeamChatListResponse.Broadcast(false, TEXT("팀채팅 불러오기 실패 (알 수 없는 오류)"));
+        }
+    }
+    else
+    {
+        OnTeamChatListResponse.Broadcast(false, FString::Printf(TEXT("서버 오류: %d"), Code));
+    }
+}
+
+
+void UHttpNetworkSubsystem::SendTeamChatMessageRequest(const FString& TeamChatID)
+{
+    // 1. 요청 데이터 생성 없음
+    
+    // 2. JSON 변환 없음
+    
+    // 3. HTTP 요청 생성
+    TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
+    FString FullURL = FString::Printf(TEXT("%s/chat/rooms/%s/messages"), *BaseURL, *TeamChatID);
+    
+    Request->SetURL(FullURL);
+    Request->SetVerb("GET");
+    Request->SetHeader("Content-Type", "application/json");
+
+    // 4. 콜백 연결
+    
+    Request->OnProcessRequestComplete().BindUObject(this, &UHttpNetworkSubsystem::OnTeamChatMessageComplete);
+    Request->ProcessRequest();
+}
+
+void UHttpNetworkSubsystem::OnTeamChatMessageComplete(TSharedPtr<IHttpRequest> HttpRequest,
+    TSharedPtr<IHttpResponse> HttpResponse, bool bArg)
+{
+    if (!bArg || !HttpResponse.IsValid())
+    {
+        OnTeamChatMessageResponse.Broadcast(false, TEXT("네트워크 연결 실패"));
+        return;
+    }
+
+    int32 Code = HttpResponse->GetResponseCode();
+    FString Content = HttpResponse->GetContentAsString();
+
+    if (Code == 200) // 성공
+    {
+        // [수정] 성공 시에는 가공하지 말고 JSON 원본(Content)을 그대로 보냅니다.
+        // 그래야 위젯에서 데이터를 뽑아 쓸 수 있습니다.
+        OnTeamChatMessageResponse.Broadcast(true, Content);
+    }
+    else if (Code == 404) // 실패
+    {
+        FFailResponse FailData;
+        if (FJsonObjectConverter::JsonObjectStringToUStruct(Content, &FailData, 0, 0))
+        {
+            OnTeamChatMessageResponse.Broadcast(false, FailData.detail.message);
+        }
+        else
+        {
+            OnTeamChatMessageResponse.Broadcast(false, TEXT("채팅 저장 실패 (알 수 없는 오류)"));
+        }
+    }
+    else
+    {
+        OnTeamChatMessageResponse.Broadcast(false, FString::Printf(TEXT("서버 오류: %d"), Code));
+    }
+}
+
+
+void UHttpNetworkSubsystem::SendChatMessageRequest(const FString& TeamChatID, const int32& UserID, const FString& Message, const FString& Time)
+{
+    // 1. 요청 데이터 생성
+    FChatMessageRequest ChatMessage;
+    ChatMessage.userId = UserID;
+    ChatMessage.message = Message;
+    ChatMessage.createdAt = Time;
+    
+    // 2. JSON 변환
+    FString JsonString;
+    FJsonObjectConverter::UStructToJsonObjectString(FChatMessageRequest::StaticStruct(), &ChatMessage, JsonString, 0, 0);
+
+    // 3. HTTP 요청 생성
+    TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
+    FString FullURL = FString::Printf(TEXT("%s/chat/rooms/%s/messages"), *BaseURL, *TeamChatID);
+    
+    Request->SetURL(FullURL);
+    Request->SetVerb("POST");
+    Request->SetHeader("Content-Type", "application/json");
+    Request->SetContentAsString(JsonString);
+
+    // 4. 콜백 연결
+
+    Request->OnProcessRequestComplete().BindUObject(this, &UHttpNetworkSubsystem::OnChatMessageComplete);
+    Request->ProcessRequest();
+}
+
+
+void UHttpNetworkSubsystem::OnChatMessageComplete(TSharedPtr<IHttpRequest> HttpRequest,
+                                                  TSharedPtr<IHttpResponse> HttpResponse, bool bArg) const
+{
+    if (!bArg || !HttpResponse.IsValid())
+    {
+        OnChatMessageResponse.Broadcast(false, TEXT("네트워크 연결 실패"));
+        return;
+    }
+
+    int32 Code = HttpResponse->GetResponseCode();
+    FString Content = HttpResponse->GetContentAsString();
+
+    if (Code == 200) // 성공
+    {
+        // [수정] 성공 시에는 가공하지 말고 JSON 원본(Content)을 그대로 보냅니다.
+        // 그래야 위젯에서 데이터를 뽑아 쓸 수 있습니다.
+        OnChatMessageResponse.Broadcast(true, TEXT("채팅 저장 성공"));
+    }
+    else if (Code == 404) // 실패
+    {
+        FFailResponse FailData;
+        if (FJsonObjectConverter::JsonObjectStringToUStruct(Content, &FailData, 0, 0))
+        {
+            OnChatMessageResponse.Broadcast(false, FailData.detail.message);
+        }
+        else
+        {
+            OnChatMessageResponse.Broadcast(false, TEXT("채팅 저장 실패 (알 수 없는 오류)"));
+        }
+    }
+    else
+    {
+        OnChatMessageResponse.Broadcast(false, FString::Printf(TEXT("서버 오류: %d"), Code));
+    }
+}
+
+
+void UHttpNetworkSubsystem::SendCreateTeamChatRequest(const FString& TeamName, const TArray<int32>& UserIDs)
+{
+    // 1. 요청 데이터 생성
+    FCreateTeamChatRequest CreateTeamChat;
+    CreateTeamChat.groupName = TeamName;
+    CreateTeamChat.userIdList = UserIDs;
+    
+    // 2. JSON 변환
+    FString JsonString;
+    FJsonObjectConverter::UStructToJsonObjectString(FCreateTeamChatRequest::StaticStruct(), &CreateTeamChat, JsonString, 0, 0);
+
+    // 3. HTTP 요청 생성
+    TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
+    FString FullURL = FString::Printf(TEXT("%s/chat/rooms"), *BaseURL);
+    
+    Request->SetURL(FullURL);
+    Request->SetVerb("POST");
+    Request->SetHeader("Content-Type", "application/json");
+    Request->SetContentAsString(JsonString);
+
+    // 4. 콜백 연결
+
+    Request->OnProcessRequestComplete().BindUObject(this, &UHttpNetworkSubsystem::OnCreateTeamChatComplete);
+    Request->ProcessRequest();
+}
+
+void UHttpNetworkSubsystem::OnCreateTeamChatComplete(TSharedPtr<IHttpRequest> HttpRequest,
+    TSharedPtr<IHttpResponse> HttpResponse, bool bArg) const
+{
+    if (!bArg || !HttpResponse.IsValid())
+    {
+        OnCreateTeamChatResponse.Broadcast(false, TEXT("네트워크 연결 실패"));
+        return;
+    }
+
+    int32 Code = HttpResponse->GetResponseCode();
+    FString Content = HttpResponse->GetContentAsString();
+
+    if (Code == 200) // 성공
+    {
+        // [수정] 성공 시에는 가공하지 말고 JSON 원본(Content)을 그대로 보냅니다.
+        // 그래야 위젯에서 데이터를 뽑아 쓸 수 있습니다.
+        OnCreateTeamChatResponse.Broadcast(true, Content);
+    }
+    else if (Code == 404) // 실패
+    {
+        FFailResponse FailData;
+        if (FJsonObjectConverter::JsonObjectStringToUStruct(Content, &FailData, 0, 0))
+        {
+            OnCreateTeamChatResponse.Broadcast(false, FailData.detail.message);
+        }
+        else
+        {
+            OnCreateTeamChatResponse.Broadcast(false, TEXT("팀채팅 생성 실패 (알 수 없는 오류)"));
+        }
+    }
+    else
+    {
+        OnCreateTeamChatResponse.Broadcast(false, FString::Printf(TEXT("서버 오류: %d"), Code));
+    }
 }
