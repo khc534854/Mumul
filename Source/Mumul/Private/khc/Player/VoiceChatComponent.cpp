@@ -184,7 +184,18 @@ void UVoiceChatComponent::StopRecording()
 
 void UVoiceChatComponent::SendCurrentChunk(bool bIsLast)
 {
-	if (PCMBuffer.Num() <= 0) return; // 데이터 없으면 스킵
+	if (PCMBuffer.Num() <= 0)
+	{
+		if (bIsLast && bWaitingForLastChunk)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[Voice] No Data Left. Skipping Upload & Finishing Immediately."));
+             
+			// 가짜 응답 처리 (바로 종료 알림)
+			// HttpRequestPtr, HttpResponsePtr는 nullptr로 넘겨도 무방함
+			OnLastChunkUploadComplete(nullptr, nullptr, true);
+		}
+		return; 
+	}
 
 	// 1. WAV 변환
 	TArray<uint8> WavData = UMumulVoiceFunctionLibrary::ConvertPCMToWAV(PCMBuffer, RecordingSampleRate, RecordingNumChannels);

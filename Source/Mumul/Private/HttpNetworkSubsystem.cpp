@@ -75,7 +75,9 @@ void UHttpNetworkSubsystem::SendAudioChunk(const TArray<uint8>& WavData, FString
     Request->SetContent(Payload);
     Request->OnProcessRequestComplete().BindUObject(this, &UHttpNetworkSubsystem::OnSendVoiceComplete);
 
-    UE_LOG(LogTemp, Log, TEXT("[HTTP] Sending Audio Chunk to: %s (Size: %d bytes)"), *FullURL, Payload.Num());
+    UE_LOG(LogTemp, Warning, TEXT("[HTTP] >> Start Uploading Audio Chunk. Meeting: %s, Chunk: %d, Size: %d"), 
+        *MeetingID, ChunkIndex, WavData.Num());
+    
     Request->ProcessRequest();
 }
 
@@ -152,7 +154,7 @@ void UHttpNetworkSubsystem::EndMeetingRequest(FString MeetingID)
 
     Request->OnProcessRequestComplete().BindUObject(this, &UHttpNetworkSubsystem::OnEndMeetingComplete);
     
-    UE_LOG(LogTemp, Log, TEXT("[HTTP] Request End Meeting: %s"), *MeetingID);
+    UE_LOG(LogTemp, Warning, TEXT("[HTTP] >> Requesting End Meeting API... ID: %s"), *MeetingID);
     Request->ProcessRequest();
 }
 
@@ -258,15 +260,20 @@ void UHttpNetworkSubsystem::OnEndMeetingComplete(FHttpRequestPtr Request, FHttpR
             FVoiceMeetingEndResponse EndData;
             if (FJsonObjectConverter::JsonObjectStringToUStruct(Content, &EndData, 0, 0))
             {
-                UE_LOG(LogTemp, Log, TEXT("[HTTP] Meeting Ended! ID: %s, Duration: %lld ms"), *EndData.meeting_id, EndData.duration_ms);
+                UE_LOG(LogTemp, Warning, TEXT("[HTTP] << End Meeting SUCCESS! ID: %s, Duration: %lld ms, Participants: %d"), 
+                    *EndData.meeting_id, EndData.duration_ms, EndData.participant_count);
                 OnEndMeeting.Broadcast(true);
                 return;
             }
         }
         else
         {
-            UE_LOG(LogTemp, Error, TEXT("[HTTP] End Meeting Failed: %d / %s"), Code, *Content);
+            UE_LOG(LogTemp, Error, TEXT("[HTTP] << End Meeting FAILED! Code: %d, Error: %s"), Code, *Content);
         }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("[HTTP] << End Meeting CONNECTION FAILED!"));
     }
     
     OnEndMeeting.Broadcast(false);
@@ -303,23 +310,23 @@ void UHttpNetworkSubsystem::OnSendVoiceComplete(FHttpRequestPtr Request, FHttpRe
             if (FJsonObjectConverter::JsonObjectStringToUStruct(Content, &ResponseData, 0, 0))
             {
                 // 3. 성공! 데이터 사용
-                UE_LOG(LogTemp, Log, TEXT("[HTTP] Upload Success! Meeting: %s, Chunk: %d"), 
+                UE_LOG(LogTemp, Warning, TEXT("[HTTP] << Audio Chunk Upload SUCCESS! Meeting: %s, Chunk: %d"), 
                     *ResponseData.meeting_id, ResponseData.chunk_index);
             }
             else
             {
-                UE_LOG(LogTemp, Error, TEXT("[HTTP] JSON Parsing Failed! Content: %s"), *Content);
+                UE_LOG(LogTemp, Error, TEXT("[HTTP] << Audio Chunk Upload FAILED! Code: %d, Error: %s"), ResponseCode, *Content);
             }
         }
         else
         {
-            UE_LOG(LogTemp, Warning, TEXT("[HTTP] Server Error. Code: %d, Content: %s"), ResponseCode, *Content);
+            UE_LOG(LogTemp, Error, TEXT("[HTTP] << Audio Chunk Upload FAILED! Code: %d, Error: %s"), ResponseCode, *Content);
         }
     }
     else
     {
         // 네트워크 연결 실패 등
-        UE_LOG(LogTemp, Error, TEXT("[HTTP] Connection Failed!"));
+        UE_LOG(LogTemp, Error, TEXT("[HTTP] << Audio Chunk Upload CONNECTION FAILED!"));
     }
 
     OnSendVoiceCompleteDelegate_LowLevel.Broadcast(Request, Response, bWasSuccessful);

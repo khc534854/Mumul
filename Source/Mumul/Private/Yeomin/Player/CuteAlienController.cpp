@@ -352,11 +352,11 @@ void ACuteAlienController::OnHostRecordingStopped()
 		{
 			if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
 			{
-				UE_LOG(LogTemp, Warning, TEXT("[Meeting] Requesting End Meeting API... (After %f sec Delay)"), 3.0f);
-                
+				// [수정] 타이머 없이 즉시 호출!
+				// (VoiceComponent가 이미 업로드 완료를 보장하고 호출했기 때문)
+				UE_LOG(LogTemp, Warning, TEXT("[HTTP] Requesting End Meeting API... (Upload Confirmed)"));
 				HttpSystem->EndMeetingRequest(CurrentMeetingSessionID);
-                
-				// ID 초기화 (중복 방지)
+            
 				CurrentMeetingSessionID = TEXT(""); 
 			}
 		}
@@ -587,19 +587,19 @@ void ACuteAlienController::Client_StartChannelRecording_Implementation(int32 Tar
 
 void ACuteAlienController::Server_StopChannelRecording_Implementation(int32 TargetChannelID)
 {
-	UE_LOG(LogTemp, Warning, TEXT("[Server] Request Stop for Ch: %d"), TargetChannelID);
+	//UE_LOG(LogTemp, Warning, TEXT("[Server] Request Stop for Ch: %d"), TargetChannelID);
 
-	UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
-	if (GI)
-	{
-		if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
-		{
-			if (!CurrentMeetingSessionID.IsEmpty())
-			{
-				HttpSystem->EndMeetingRequest(CurrentMeetingSessionID);
-			}
-		}
-	}
+	// UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
+	// if (GI)
+	// {
+	// 	if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
+	// 	{
+	// 		if (!CurrentMeetingSessionID.IsEmpty())
+	// 		{
+	// 			HttpSystem->EndMeetingRequest(CurrentMeetingSessionID);
+	// 		}
+	// 	}
+	// }
 
 	if (UWorld* World = GetWorld())
 	{
@@ -630,12 +630,18 @@ void ACuteAlienController::Client_StopChannelRecording_Implementation()
 	{
 		if (UVoiceChatComponent* VoiceComp = MyPawn->FindComponentByClass<UVoiceChatComponent>())
 		{
+			// [핵심] 방장(Authority)이라면 종료 처리를 위해 바인딩 필수!
 			if (HasAuthority())
 			{
+				// 기존 바인딩이 있을 수 있으니 안전하게 제거 후 추가 (중복 방지)
+				VoiceComp->OnRecordingStopped.RemoveDynamic(this, &ACuteAlienController::OnHostRecordingStopped);
 				VoiceComp->OnRecordingStopped.AddDynamic(this, &ACuteAlienController::OnHostRecordingStopped);
+             
+				UE_LOG(LogTemp, Warning, TEXT("[Host] Binded OnHostRecordingStopped delegate."));
 			}
-			
-			VoiceComp->StopRecording(); // 녹음 종료
+          
+			// 녹음 종료 및 마지막 파일 전송 시작
+			VoiceComp->StopRecording(); 
 
 			UE_LOG(LogTemp, Warning, TEXT(">>> [RECORD STOP]"));
 		}
