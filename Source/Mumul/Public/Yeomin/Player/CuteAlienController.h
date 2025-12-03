@@ -151,13 +151,19 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Voice")
 	TObjectPtr<USoundAttenuation> NormalAttenuation;
-
+	
 	UPROPERTY()
 	TSubclassOf<class UGroupIconUI> GroupIconUIClass;
 	UFUNCTION()
 	void OnServerCreateTeamChatResponse(bool bSuccess, FString Message);
 
 public:
+	UFUNCTION(Server, Reliable)
+	void Server_AddTeamChatList(const FString& TeamID);
+	
+	UFUNCTION(Server, Reliable)
+	void Server_CreateGroupChatUI(const TArray<int32>& UserIDs, const FString& TeamID, const FString& TeamName,
+								  const TArray<FTeamUser>& TeamUserIDs);
 	UFUNCTION(Client, Reliable)
 	void Client_CreateGroupChatUI(const FString& TeamID, const FString& TeamName,
 	                              const TArray<FTeamUser>& TeamUserIDs);

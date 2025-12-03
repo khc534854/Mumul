@@ -89,12 +89,7 @@ void AMumulGameState::Multicast_SaveTentData_Implementation(int32 UserIndex, FTr
 	}
 }
 
-void AMumulGameState::Server_AddTeamChatList_Implementation(const FString& TeamName)
+void AMumulGameState::AddTeamChatList(const FString& TeamID)
 {
-	Multicast_AddTeamChatList(TeamName);
-}
-
-void AMumulGameState::Multicast_AddTeamChatList_Implementation(const FString& TeamName)
-{
-	TeamChatList.Add(TeamName);
+	TeamChatList.Add(TeamID);
 }

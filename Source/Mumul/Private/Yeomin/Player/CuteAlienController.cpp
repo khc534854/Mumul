@@ -135,13 +135,10 @@ void ACuteAlienController::BeginPlay()
 
 	GS = Cast<AMumulGameState>(GetWorld()->GetGameState());
 
-	if (HasAuthority())
+	if (UHttpNetworkSubsystem* HttpSystem = GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>())
 	{
-		if (UHttpNetworkSubsystem* HttpSystem = GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>())
-		{
-			HttpSystem->OnCreateTeamChatResponse.
-			            AddDynamic(this, &ACuteAlienController::OnServerCreateTeamChatResponse);
-		}
+		HttpSystem->OnCreateTeamChatResponse.
+		            AddDynamic(this, &ACuteAlienController::OnServerCreateTeamChatResponse);
 	}
 
 	if (!IsLocalController())
@@ -167,13 +164,13 @@ void ACuteAlienController::BeginPlay()
 	if (GI)
 	{
 		// [체크] 로비 스킵 여부 확인 (데이터가 비어있으면 더미 데이터 주입)
-		if (GI->PlayerUniqueID == 10) 
+		if (GI->PlayerUniqueID == 10)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("[Test] Detected Direct Level Start! Injecting Dummy Data..."));
 
-			GI->PlayerUniqueID = 9 + GetWorld()->GetGameState()->PlayerArray.Num();       // 테스트 ID
+			GI->PlayerUniqueID = 9 + GetWorld()->GetGameState()->PlayerArray.Num(); // 테스트 ID
 			GI->PlayerName = GI->PlayerName + FString::FromInt(GI->PlayerUniqueID); // 이름 + index
-			GI->CampID = 1;           // 임시 캠프 ID
+			GI->CampID = 1; // 임시 캠프 ID
 			GI->PlayerType = (GI->PlayerUniqueID == 10) ? TEXT("운영진") : TEXT("학생");
 			GI->PlayerTendency = 0;
 			GI->bHasSurveyCompleted = true;
@@ -193,7 +190,7 @@ void ACuteAlienController::BeginPlay()
 			HttpSystem->OnStartMeeting.AddDynamic(this, &ACuteAlienController::OnStartMeetingResponse);
 			HttpSystem->OnJoinMeeting.AddDynamic(this, &ACuteAlienController::OnJoinMeetingResponse);
 		}
-		
+
 		UE_LOG(LogTemp, Log, TEXT("[Client] Sent Init Info: %s (ID: %d)"), *GI->PlayerName, GI->PlayerUniqueID);
 	}
 }
@@ -210,7 +207,8 @@ void ACuteAlienController::SetupInputComponent()
 	Input->BindAction(IA_QuitGame, ETriggerEvent::Started, this, &ACuteAlienController::OnPressEsc);
 }
 
-void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const FString& Name, const FString& Type, int32 Tendency)
+void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const FString& Name, const FString& Type,
+                                                                int32 Tendency)
 {
 	AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>();
 	if (PS)
@@ -303,7 +301,7 @@ void ACuteAlienController::OnHostRecordingStopped()
 	}
 
 	// [안전장치] 이미 처리되었으면 무시
-	if (CurrentMeetingSessionID.IsEmpty()) 
+	if (CurrentMeetingSessionID.IsEmpty())
 	{
 		return;
 	}
@@ -317,7 +315,7 @@ void ACuteAlienController::OnHostRecordingStopped()
 	{
 		// 람다 실행 시점에 컨트롤러가 살아있는지 확인
 		if (!IsValid(this)) return;
-        
+
 		// ID가 그새 비워졌는지 다시 확인
 		if (CurrentMeetingSessionID.IsEmpty()) return;
 
@@ -327,11 +325,11 @@ void ACuteAlienController::OnHostRecordingStopped()
 			if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
 			{
 				UE_LOG(LogTemp, Warning, TEXT("[Meeting] Requesting End Meeting API... (After %f sec Delay)"), 3.0f);
-                
+
 				HttpSystem->EndMeetingRequest(CurrentMeetingSessionID);
-                
+
 				// ID 초기화 (중복 방지)
-				CurrentMeetingSessionID = TEXT(""); 
+				CurrentMeetingSessionID = TEXT("");
 			}
 		}
 	}, UploadWaitTime, false);
@@ -481,23 +479,23 @@ void ACuteAlienController::RequestStartMeetingRecording()
 {
 	AMumulPlayerState* MyPS = GetPlayerState<AMumulPlayerState>();
 	UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
-    
+
 	if (MyPS && GI)
 	{
 		int32 ChannelID = MyPS->VoiceChannelID;
-        
+
 		// [HTTP] 방장(Organizer)이 Start Meeting API 호출
 		// (서버 응답이 오면 OnStartMeetingResponse가 실행됨)
 		if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
 		{
 			// TODO: 제목, 안건 등은 UI에서 입력받거나 기본값 사용
 			HttpSystem->StartMeetingRequest(
-				TEXT("Team Meeting Test"), 
+				TEXT("Team Meeting Test"),
 				GI->PlayerUniqueID, // Organizer ID
-				TEXT("Agenda Test"), 
+				TEXT("Agenda Test"),
 				TEXT("Description Test")
 			);
-            
+
 			UE_LOG(LogTemp, Log, TEXT("[Meeting] Requesting Start Meeting API..."));
 		}
 	}
@@ -609,7 +607,7 @@ void ACuteAlienController::Client_StopChannelRecording_Implementation()
 			{
 				VoiceComp->OnRecordingStopped.AddDynamic(this, &ACuteAlienController::OnHostRecordingStopped);
 			}
-			
+
 			VoiceComp->StopRecording(); // 녹음 종료
 
 			UE_LOG(LogTemp, Warning, TEXT(">>> [RECORD STOP]"));
@@ -647,7 +645,7 @@ void ACuteAlienController::Server_BroadcastJoinMeeting_Implementation(int32 Targ
 				}
 
 				AMumulPlayerState* MumulPS = Cast<AMumulPlayerState>(PS);
-                
+
 				// 2. 같은 채널에 있는 다른 사람들에게만 전송
 				if (MumulPS && MumulPS->VoiceChannelID == TargetChannelID)
 				{
@@ -681,10 +679,10 @@ void ACuteAlienController::OnStartMeetingResponse(bool bSuccess, FString Meeting
 	if (bSuccess)
 	{
 		UE_LOG(LogTemp, Log, TEXT("[Meeting] Created Successfully: %s"), *MeetingID);
-        
+
 		// 1. 미팅 ID 저장
 		CurrentMeetingSessionID = MeetingID;
-        
+
 		// 2. [수정] 방장은 Join API 호출 없이 "즉시 녹음 시작"
 		if (APawn* MyPawn = GetPawn())
 		{
@@ -692,7 +690,7 @@ void ACuteAlienController::OnStartMeetingResponse(bool bSuccess, FString Meeting
 			{
 				VoiceComp->SetCurrentMeetingID(CurrentMeetingSessionID);
 				VoiceComp->StartRecording();
-                
+
 				UE_LOG(LogTemp, Warning, TEXT(">>> [HOST] Start Recording Immediately (Skip Join)"));
 			}
 		}
@@ -802,6 +800,15 @@ void ACuteAlienController::UpdateVoiceChannelMuting()
 	}
 }
 
+
+void ACuteAlienController::Server_AddTeamChatList_Implementation(const FString& TeamID)
+{
+	if (GS)
+	{
+		GS->AddTeamChatList(TeamID);
+	}
+}
+
 void ACuteAlienController::OnServerCreateTeamChatResponse(bool bSuccess, FString Message)
 {
 	if (bSuccess)
@@ -836,16 +843,11 @@ void ACuteAlienController::OnServerCreateTeamChatResponse(bool bSuccess, FString
 					}
 				}
 			}
-			// Add GroupChatUI for each Client
-			for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
+
+			if (IsLocalController())
 			{
-				if (CreateTeamChat.userIdList.Contains(Cast<AMumulPlayerState>(PS)->PS_UserIndex))
-				{
-					if (ACuteAlienController* PC = Cast<ACuteAlienController>(PS->GetOwningController()))
-					{
-						PC->Client_CreateGroupChatUI(CreateTeamChat.groupId, CreateTeamChat.groupName, TeamUserIDs);
-					}
-				}
+				Server_CreateGroupChatUI(CreateTeamChat.userIdList, CreateTeamChat.groupId, CreateTeamChat.groupName,
+				                         TeamUserIDs);
 			}
 		}
 		else
@@ -859,19 +861,36 @@ void ACuteAlienController::OnServerCreateTeamChatResponse(bool bSuccess, FString
 	}
 }
 
+void ACuteAlienController::Server_CreateGroupChatUI_Implementation(const TArray<int32>& UserIDs, const FString& TeamID,
+                                                                   const FString& TeamName,
+                                                                   const TArray<FTeamUser>& TeamUserIDs)
+{
+	// Add GroupChatUI for each Client
+	for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
+	{
+		if (UserIDs.Contains(Cast<AMumulPlayerState>(PS)->PS_UserIndex))
+		{
+			if (ACuteAlienController* PC = Cast<ACuteAlienController>(PS->GetOwningController()))
+			{
+				PC->Client_CreateGroupChatUI(TeamID, TeamName, TeamUserIDs);
+			}
+		}
+	}
+}
+
 void ACuteAlienController::Client_CreateGroupChatUI_Implementation(const FString& TeamID, const FString& TeamName,
                                                                    const TArray<FTeamUser>& TeamUserIDs)
 {
-	// Set Players in Group Icon
-	UGroupIconUI* GroupIconUI = CreateWidget<UGroupIconUI>(GetWorld(), GroupIconUIClass);
-	GroupIconUI->InitParentUI(GroupChatUI);
-	GroupChatUI->AddGroupIcon(GroupIconUI);
-	GroupIconUI->ChatBlockUI->SetTeamID(TeamID);
-	GroupIconUI->ChatBlockUI->SetTeamName(TeamName);
-	for (const FTeamUser& User : TeamUserIDs)
-	{
-		GroupIconUI->ChatBlockUI->AddTeamUser(User.UserId, User.UserName);
-	}
+		// Set Players in Group Icon
+		UGroupIconUI* GroupIconUI = CreateWidget<UGroupIconUI>(GetWorld(), GroupIconUIClass);
+		GroupChatUI->AddGroupIcon(GroupIconUI);
+		GroupIconUI->InitParentUI(GroupChatUI);
+		GroupIconUI->ChatBlockUI->SetTeamID(TeamID);
+		GroupIconUI->ChatBlockUI->SetTeamName(TeamName);
+		for (const FTeamUser& User : TeamUserIDs)
+		{
+			GroupIconUI->ChatBlockUI->AddTeamUser(User.UserId, User.UserName);
+		}
 }
 
 

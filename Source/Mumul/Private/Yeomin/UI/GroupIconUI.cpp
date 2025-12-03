@@ -35,7 +35,7 @@ void UGroupIconUI::DisplayGroupChat()
 	ParentUI->SetGroupNameTitle(ChatBlockUI->GetTeamName());
 	
 	// Send TeamChatMessage Request
-	HttpSystem->SendTeamChatMessageRequest(ChatBlockUI->GetTeamName());
+	HttpSystem->SendTeamChatMessageRequest(ChatBlockUI->GetTeamID());
 }
 
 void UGroupIconUI::InitParentUI(UGroupChatUI* Parent)

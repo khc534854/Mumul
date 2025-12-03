@@ -4,7 +4,6 @@
 #include "Yeomin/UI/GroupChatUI.h"
 
 #include "HttpNetworkSubsystem.h"
-#include "Base/MumulGameState.h"
 #include "Components/Button.h"
 #include "Components/EditableTextBox.h"
 #include "Components/ScrollBox.h"
@@ -72,22 +71,28 @@ void UGroupChatUI::OnTextBoxCommitted(const FText& Text, ETextCommit::Type Commi
 		ACuteAlienController* PC = Cast<ACuteAlienController>(GetWorld()->GetFirstPlayerController());
 		AMumulPlayerState* PS = PC->GetPlayerState<AMumulPlayerState>();
 
-		UChatBlockUI* ChatChunk = Cast<UChatBlockUI>(ChatSizeBox->GetChildAt(0));
-		FString TeamID = ChatChunk->GetTeamID();
-		TArray<int32> UserIDs;
-		ChatChunk->GetTeamUsers().GetKeys(UserIDs);
-		FString Content = Text.ToString();
-		FString TimeStamp = FDateTime::Now().ToString(TEXT("%H:%M"));
+		if (UChatBlockUI* ChatChunk = Cast<UChatBlockUI>(ChatSizeBox->GetChildAt(0)))
+		{
+			FString TeamID = ChatChunk->GetTeamID();
+			TArray<int32> UserIDs;
+			ChatChunk->GetTeamUsers().GetKeys(UserIDs);
+			FString Content = Text.ToString();
+			FString TimeStamp = FDateTime::Now().ToString(TEXT("%H:%M"));
 
-		// Send Chat Message to DB
-		HttpSystem->SendChatMessageRequest(TeamID, PS->PS_UserIndex, Content, TimeStamp);
+			// Send Chat Message to DB
+			HttpSystem->SendChatMessageRequest(TeamID, PS->PS_UserIndex, Content, TimeStamp);
 
-		// Request Chat for Client RPC
-		FString Player = PS->PS_RealName;
-		PC->Server_RequestChat(TeamID, UserIDs, TimeStamp, Player, Content);
+			// Request Chat for Client RPC
+			FString Player = PS->PS_RealName;
+			PC->Server_RequestChat(TeamID, UserIDs, TimeStamp, Player, Content);
 
-		// Init EditBox
-		EditBox->SetText(FText());
+			// Init EditBox
+			EditBox->SetText(FText());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("GroupChatUI->ChatSizeBox has no Child (UChatBlockUI)"))
+		}
 	}
 	// 
 	else if (CommitMethod == ETextCommit::OnCleared)
@@ -167,19 +172,24 @@ void UGroupChatUI::OnServerTeamChatListResponse(bool bSuccess, FString Message)
 					);
 				}
 			}
-
+			GroupScrollBox->ClearChildren();
 			for (const FTeamChatListResponse& TeamChat : TeamChatList)
 			{
 				// Create Group Icon
 				UGroupIconUI* GroupIconUI = CreateWidget<UGroupIconUI>(GetWorld(), GroupIconUIClass);
 				AddGroupIcon(GroupIconUI);
 				GroupIconUI->InitParentUI(this);
+				GroupIconUI->ChatBlockUI->SetTeamID(TeamChat.teamChatId);
+				GroupIconUI->ChatBlockUI->SetTeamName(TeamChat.teamName);
 				for (const FUserDetail& User : TeamChat.users)
 				{
 					GroupIconUI->ChatBlockUI->AddTeamUser(User.userId, *User.userName);
 				}
-				GroupIconUI->ChatBlockUI->SetTeamID(TeamChat.teamChatId);
-				GroupIconUI->ChatBlockUI->SetTeamName(TeamChat.teamName);
+				
+				if (ACuteAlienController* PS = Cast<ACuteAlienController>(GetOwningPlayer()))
+				{
+					PS->Server_AddTeamChatList(TeamChat.teamChatId);
+				}
 			}
 		}
 		else
@@ -225,7 +235,6 @@ void UGroupChatUI::ToggleInvitationUI()
 void UGroupChatUI::OnToggleVisibilityBtn()
 {
 	CreateGroupChatUI->RefreshJoinedPlayerList();
-	AMumulGameState* GS = Cast<AMumulGameState>(GetWorld()->GetGameState());
 
 	AMumulPlayerState* PS = Cast<AMumulPlayerState>(GetOwningPlayerState());
 	HttpSystem->SendTeamChatListRequest(PS->PS_UserIndex);
