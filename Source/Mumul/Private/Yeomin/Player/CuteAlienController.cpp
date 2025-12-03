@@ -508,7 +508,7 @@ void ACuteAlienController::RequestStartMeetingRecording(FString InMeetingTitle, 
 
 	if (MyPS && GI)
 	{
-		int32 ChannelID = MyPS->VoiceChannelID;
+		FString ChannelID = MyPS->VoiceChannelID;
 
 		// [HTTP] 방장(Organizer)이 Start Meeting API 호출
 		// (서버 응답이 오면 OnStartMeetingResponse가 실행됨)
@@ -537,9 +537,9 @@ void ACuteAlienController::RequestStopMeetingRecording()
 	}
 }
 
-void ACuteAlienController::Server_StartChannelRecording_Implementation(int32 TargetChannelID)
+void ACuteAlienController::Server_StartChannelRecording_Implementation(const FString& TargetChannelID)
 {
-	UE_LOG(LogTemp, Warning, TEXT("[Server] Request Start for Ch: %d"), TargetChannelID);
+	UE_LOG(LogTemp, Warning, TEXT("[Server] Request Start for Ch: %s"), *TargetChannelID);
 
 
 	// [핵심 변경] GameState를 통해 접속한 모든 플레이어(Controller)를 찾음
@@ -569,7 +569,7 @@ void ACuteAlienController::Server_StartChannelRecording_Implementation(int32 Tar
 	}
 }
 
-void ACuteAlienController::Client_StartChannelRecording_Implementation(int32 TargetChannelID)
+void ACuteAlienController::Client_StartChannelRecording_Implementation(const FString& TargetChannelID)
 {
 	APawn* MyPawn = GetPawn();
 	if (MyPawn)
@@ -578,12 +578,12 @@ void ACuteAlienController::Client_StartChannelRecording_Implementation(int32 Tar
 		{
 			VoiceComp->StartRecording(); // 실제 녹음 시작
 
-			UE_LOG(LogTemp, Warning, TEXT(">>> [RECORD START] MeetingID: %d"), TargetChannelID);
+			UE_LOG(LogTemp, Warning, TEXT(">>> [RECORD START] MeetingID: %s"), *TargetChannelID);
 		}
 	}
 }
 
-void ACuteAlienController::Server_StopChannelRecording_Implementation(int32 TargetChannelID)
+void ACuteAlienController::Server_StopChannelRecording_Implementation(const FString& TargetChannelID)
 {
 	//UE_LOG(LogTemp, Warning, TEXT("[Server] Request Stop for Ch: %d"), TargetChannelID);
 
@@ -660,7 +660,7 @@ void ACuteAlienController::Server_SpawnTent_Implementation(const FTransform& Ten
 	}
 }
 
-void ACuteAlienController::Server_BroadcastJoinMeeting_Implementation(int32 TargetChannelID, const FString& MeetingID)
+void ACuteAlienController::Server_BroadcastJoinMeeting_Implementation(const FString& TargetChannelID, const FString& MeetingID)
 {
 	if (UWorld* World = GetWorld())
 	{
@@ -813,7 +813,7 @@ void ACuteAlienController::OnJoinMeetingResponse(bool bSuccess)
 	}
 }
 
-void ACuteAlienController::Server_RegisterMeetingState_Implementation(int32 ChannelID, const FString& MeetingID)
+void ACuteAlienController::Server_RegisterMeetingState_Implementation(const FString& ChannelID, const FString& MeetingID)
 {
 	if (GS)
 	{
@@ -821,7 +821,7 @@ void ACuteAlienController::Server_RegisterMeetingState_Implementation(int32 Chan
 	}
 }
 
-void ACuteAlienController::Server_UnregisterMeetingState_Implementation(int32 ChannelID)
+void ACuteAlienController::Server_UnregisterMeetingState_Implementation(const FString& ChannelID)
 {
 	if (GS)
 	{
@@ -834,7 +834,7 @@ void ACuteAlienController::UpdateVoiceChannelMuting()
 	AMumulPlayerState* MyPS = GetPlayerState<AMumulPlayerState>();
 	if (!MyPS) return;
 
-	int32 MyChannelID = MyPS->VoiceChannelID;
+	FString MyChannelID = MyPS->VoiceChannelID;
 
 	if (UWorld* World = GetWorld())
 	{
@@ -861,7 +861,7 @@ void ACuteAlienController::UpdateVoiceChannelMuting()
 					if (AlienOtherPS->VoiceChannelID == MyChannelID)
 					{
 						// [0번 채널] 3D 거리 기반
-						if (MyChannelID == 0)
+						if (MyChannelID == TEXT("Lobby"))
 						{
 							Talker->Settings.AttenuationSettings = NormalAttenuation;
 
@@ -928,10 +928,17 @@ void ACuteAlienController::OnServerCreateTeamChatResponse(bool bSuccess, FString
 			}
 
 			TArray<FTeamUser> TeamUserIDs;
+
+			FTeamData NewTeamData;
+			NewTeamData.UniqueTeamID = CreateTeamChat.groupId;
+			NewTeamData.TeamName = CreateTeamChat.groupName;
+			NewTeamData.TeamMateList = CreateTeamChat.userIdList;
+			
 			for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
 			{
 				if (AMumulPlayerState* MPS = Cast<AMumulPlayerState>(PS))
 				{
+					MPS->PS_PlayerTeamList.Add(NewTeamData);
 					if (CreateTeamChat.userIdList.Contains(MPS->PS_UserIndex))
 					{
 						FTeamUser NewUser;

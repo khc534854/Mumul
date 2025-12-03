@@ -111,20 +111,20 @@ public:
 	void RequestStopMeetingRecording();
 
 	UFUNCTION(Server, Reliable)
-	void Server_StartChannelRecording(int32 TargetChannelID);
+	void Server_StartChannelRecording(const FString& TargetChannelID);
 
 	UFUNCTION(Client, Reliable)
-	void Client_StartChannelRecording(int32 TargetChannelID);
+	void Client_StartChannelRecording(const FString& TargetChannelID);
 
 	UFUNCTION(Server, Reliable)
-	void Server_StopChannelRecording(int32 TargetChannelID);
+	void Server_StopChannelRecording(const FString& TargetChannelID);
 
 	UFUNCTION(Client, Reliable)
 	void Client_StopChannelRecording();
 
 
 	UFUNCTION(Server, Reliable)
-	void Server_BroadcastJoinMeeting(int32 TargetChannelID, const FString& MeetingID);
+	void Server_BroadcastJoinMeeting(const FString& TargetChannelID, const FString& MeetingID);
 
 	UFUNCTION(Client, Reliable)
 	void Client_RequestJoinMeeting(const FString& MeetingID);
@@ -150,11 +150,11 @@ protected:
 	void OnJoinMeetingResponse(bool bSuccess);
 
 	UFUNCTION(Server, Reliable)
-	void Server_RegisterMeetingState(int32 ChannelID, const FString& MeetingID);
+	void Server_RegisterMeetingState(const FString& ChannelID, const FString& MeetingID);
 
 	// [신규] 서버의 GameState에서 회의 정보 삭제 요청
 	UFUNCTION(Server, Reliable)
-	void Server_UnregisterMeetingState(int32 ChannelID);
+	void Server_UnregisterMeetingState(const FString& ChannelID);
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<class UVoiceMeetingUI> VoiceMeetingUIClass;

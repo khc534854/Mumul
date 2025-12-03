@@ -28,9 +28,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class USphereComponent* VoiceRangeSphere;
 
-	// 이 모닥불의 고유 채널 ID (에디터에서 설정 가능)
-	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Voice")
-	int32 CampfireChannelID = 1;
+	// // 이 모닥불의 고유 채널 ID (에디터에서 설정 가능)
+	// UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Voice")
+	// int32 CampfireChannelID = 1;
 
 	// 오버랩 시작 처리
 	UFUNCTION()

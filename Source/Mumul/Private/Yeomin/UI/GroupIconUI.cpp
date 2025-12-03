@@ -26,12 +26,24 @@ void UGroupIconUI::NativeConstruct()
 	GroupIconBtn->OnPressed.AddDynamic(this, &UGroupIconUI::DisplayGroupChat);
 }
 
-
-
 void UGroupIconUI::DisplayGroupChat()
 {
 	ParentUI->RemoveChatBlock();
 	ParentUI->AddChatBlock(ChatBlockUI);
+
+	if (AMumulPlayerState* PS = GetOwningPlayer()->GetPlayerState<AMumulPlayerState>())
+	{
+		if (PS->bIsNearByCampFire)
+		{
+			PS->Server_SetVoiceChannelID(ChatBlockUI->GetTeamID());
+		}
+		else
+		{
+			PS->WaitingChannelID = ChatBlockUI->GetTeamID();
+		}
+	}
+	
+	
 	ParentUI->SetGroupNameTitle(ChatBlockUI->GetTeamName());
 	
 	// Send TeamChatMessage Request

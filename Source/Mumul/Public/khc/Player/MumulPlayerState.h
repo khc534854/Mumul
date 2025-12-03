@@ -19,11 +19,11 @@ struct FTeamData
 	UPROPERTY()
 	FString TeamName;
 
-	UPROPERTY()
-	int32 TeamLeaderID;
+	//UPROPERTY()
+	//int32 TeamLeaderID;
 
 	UPROPERTY()
-	TSet<int32> TeamMateList;
+	TArray<int32> TeamMateList;
 };
 
 UCLASS()
@@ -50,14 +50,18 @@ public:
 	
 	// 현재 보이스 채널 ID (Replicated)
 	UPROPERTY(ReplicatedUsing = OnRep_VoiceChannelID, BlueprintReadOnly, Category = "Voice")
-	int32 VoiceChannelID = 0; // 0: 로비, 1~N: 특정 채널
+	FString VoiceChannelID = TEXT("Lobby"); // 0: 로비, 1~N: 특정 채널
 
+	FString WaitingChannelID = TEXT("Lobby");
+	
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Game State")
 	bool bIsTentInstalled;
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Game State")
+	bool bIsNearByCampFire = false;
 
 	// 채널 변경 요청 (서버에서 실행)
 	UFUNCTION(BlueprintCallable, Server, Reliable)
-	void Server_SetVoiceChannelID(int32 NewChannelID);
+	void Server_SetVoiceChannelID(const FString& NewChannelID);
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
