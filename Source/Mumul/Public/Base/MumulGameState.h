@@ -33,13 +33,9 @@ public:
 	void Multicast_SavePlayerLocation(int32 UserIndex, FTransform Location);
 
 protected:
-	UPROPERTY(Replicated, BlueprintReadWrite)
+	UPROPERTY(Replicated)
 	TArray<FString> TeamChatList;
 public:
-	UFUNCTION(Server, Reliable)
-	void Server_AddTeamChatList(const FString& TeamName);
-	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_AddTeamChatList(const FString& TeamName);
 	TArray<FString> GetTeamChatList() { return TeamChatList; }
 
 public:
@@ -50,4 +46,5 @@ public:
 	void RegisterMeeting(int32 ChannelID, FString MeetingID);
 	void UnregisterMeeting(int32 ChannelID);
 	FString GetActiveMeetingID(int32 ChannelID);
+	void AddTeamChatList(const FString& TeamID);
 };

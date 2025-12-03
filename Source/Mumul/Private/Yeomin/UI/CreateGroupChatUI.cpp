@@ -111,15 +111,6 @@ void UCreateGroupChatUI::CreateGroupChat()
 	
 	// Send CreateTeamChat Request
 	HttpSystem->SendCreateTeamChatRequest(GroupName, CheckedUserIDs);
-	
-	/*
-	ACuteAlienController* PC = GetWorld()->GetFirstPlayerController<ACuteAlienController>();
-	// RequestServer to add Group Chat History
-	PC->Server_RequestGroupChatHistory(GroupName);
-
-	// Request Server to add GroupChatUI
-	PC->Server_RequestGroupChatUI(GroupName, CheckedUserIDs);
-	*/
 
 	ParentUI->ToggleCreateGroupChatUI();
 }
