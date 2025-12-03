@@ -107,7 +107,7 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Server_SpawnTent(const FTransform& TentTransform);
 
-	void RequestStartMeetingRecording();
+	void RequestStartMeetingRecording(FString InMeetingTitle, FString InAgenda, FString InDesc);
 	void RequestStopMeetingRecording();
 
 	UFUNCTION(Server, Reliable)
@@ -128,6 +128,15 @@ public:
 
 	UFUNCTION(Client, Reliable)
 	void Client_RequestJoinMeeting(const FString& MeetingID);
+
+public:
+	// 녹음 버튼 클릭 시 호출 (UI 열기)
+	UFUNCTION(BlueprintCallable, Category = "Meeting")
+	void OpenMeetingSetupUI();
+
+	// 종료 버튼 클릭 시 호출 (팝업 열기)
+	UFUNCTION(BlueprintCallable, Category = "Meeting")
+	void OpenEndMeetingPopup();
 	
 protected:
 	// [변수] 현재 진행 중인 회의 ID (서버에서 받아서 저장)
@@ -139,6 +148,19 @@ protected:
 
 	UFUNCTION()
 	void OnJoinMeetingResponse(bool bSuccess);
+
+	UFUNCTION(Server, Reliable)
+	void Server_RegisterMeetingState(int32 ChannelID, const FString& MeetingID);
+
+	// [신규] 서버의 GameState에서 회의 정보 삭제 요청
+	UFUNCTION(Server, Reliable)
+	void Server_UnregisterMeetingState(int32 ChannelID);
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<class UVoiceMeetingUI> VoiceMeetingUIClass;
+
+	UPROPERTY()
+	TObjectPtr<class UVoiceMeetingUI> VoiceMeetingUI;
 	
 public:
 	UFUNCTION(BlueprintCallable, Category = "Voice")

@@ -2,6 +2,8 @@
 
 
 #include "khc/Player/MumulPlayerState.h"
+
+#include "Base/MumulGameState.h"
 #include "Net/UnrealNetwork.h"
 #include "Yeomin/Player/CuteAlienController.h"
 
@@ -12,6 +14,23 @@ void AMumulPlayerState::Server_SetVoiceChannelID_Implementation(int32 NewChannel
 	if (GetNetMode() != NM_Client) 
 	{
 		OnRep_VoiceChannelID();
+	}
+
+	if (AMumulGameState* GS = GetWorld()->GetGameState<AMumulGameState>())
+	{
+		FString ActiveMeetingID = GS->GetActiveMeetingID(NewChannelID);
+        
+		// 회의 중인 방에 들어왔다면?
+		if (!ActiveMeetingID.IsEmpty())
+		{
+			if (ACuteAlienController* PC = Cast<ACuteAlienController>(GetOwner()))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("[Server] User %s joined active meeting channel %d. Auto-joining..."), *GetPlayerName(), NewChannelID);
+                
+				// 컨트롤러에게 "너도 빨리 참가해!" 명령 (기존 함수 재활용)
+				PC->Client_RequestJoinMeeting(ActiveMeetingID);
+			}
+		}
 	}
 }
 

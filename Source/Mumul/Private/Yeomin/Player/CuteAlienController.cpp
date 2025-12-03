@@ -20,6 +20,7 @@
 
 #include "HttpNetworkSubsystem.h"
 #include "Base/MumulGameState.h"
+#include "Components/WidgetSwitcher.h"
 #include "khc/Save/MapDataSaveGame.h"
 #include "khc/System/NetworkStructs.h"
 #include "Kismet/GameplayStatics.h"
@@ -27,6 +28,7 @@
 #include "Yeomin/UI/GroupChatUI.h"
 #include "Yeomin/UI/GroupIconUI.h"
 #include "Yeomin/UI/PlayerUI.h"
+#include "Yeomin/UI/VoiceMeetingUI.h"
 
 ACuteAlienController::ACuteAlienController()
 {
@@ -127,6 +129,13 @@ ACuteAlienController::ACuteAlienController()
 	{
 		NormalAttenuation = NormalAttFinder.Object;
 	}
+
+	static ConstructorHelpers::FClassFinder<UVoiceMeetingUI> WidgetFinder(
+	TEXT("/Game/Khc/Blueprint/UI/WBP_CreateMeeting.WBP_CreateMeeting_C")); // 경로 확인 필수!
+	if (WidgetFinder.Succeeded())
+	{
+		VoiceMeetingUIClass = WidgetFinder.Class;
+	}
 }
 
 void ACuteAlienController::BeginPlay()
@@ -195,6 +204,16 @@ void ACuteAlienController::BeginPlay()
 		}
 		
 		UE_LOG(LogTemp, Log, TEXT("[Client] Sent Init Info: %s (ID: %d)"), *GI->PlayerName, GI->PlayerUniqueID);
+	}
+
+	if (VoiceMeetingUIClass)
+	{
+		VoiceMeetingUI = CreateWidget<UVoiceMeetingUI>(this, VoiceMeetingUIClass);
+		if (VoiceMeetingUI)
+		{
+			VoiceMeetingUI->AddToViewport();
+			VoiceMeetingUI->SetVisibility(ESlateVisibility::Hidden);
+		}
 	}
 }
 
@@ -313,6 +332,13 @@ void ACuteAlienController::OnHostRecordingStopped()
 	float UploadWaitTime = 5.0f;
 
 	FTimerHandle WaitTimerHandle;
+
+	AMumulPlayerState* MyPS = GetPlayerState<AMumulPlayerState>();
+	if (MyPS)
+	{
+		Server_UnregisterMeetingState(MyPS->VoiceChannelID);
+	}
+	
 	GetWorldTimerManager().SetTimer(WaitTimerHandle, [this]()
 	{
 		// 람다 실행 시점에 컨트롤러가 살아있는지 확인
@@ -477,7 +503,7 @@ void ACuteAlienController::ShowPreviewTent()
 	);
 }
 
-void ACuteAlienController::RequestStartMeetingRecording()
+void ACuteAlienController::RequestStartMeetingRecording(FString InMeetingTitle, FString InAgenda, FString InDesc)
 {
 	AMumulPlayerState* MyPS = GetPlayerState<AMumulPlayerState>();
 	UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
@@ -490,12 +516,11 @@ void ACuteAlienController::RequestStartMeetingRecording()
 		// (서버 응답이 오면 OnStartMeetingResponse가 실행됨)
 		if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
 		{
-			// TODO: 제목, 안건 등은 UI에서 입력받거나 기본값 사용
 			HttpSystem->StartMeetingRequest(
-				TEXT("Team Meeting Test"), 
+				InMeetingTitle, 
 				GI->PlayerUniqueID, // Organizer ID
-				TEXT("Agenda Test"), 
-				TEXT("Description Test")
+				InAgenda, 
+				InDesc
 			);
             
 			UE_LOG(LogTemp, Log, TEXT("[Meeting] Requesting Start Meeting API..."));
@@ -676,12 +701,62 @@ void ACuteAlienController::Client_RequestJoinMeeting_Implementation(const FStrin
 	}
 }
 
+void ACuteAlienController::OpenMeetingSetupUI()
+{
+	if (VoiceMeetingUIClass)
+	{
+		if (!VoiceMeetingUI)
+		{
+			VoiceMeetingUI = CreateWidget<UVoiceMeetingUI>(this, VoiceMeetingUIClass);
+			VoiceMeetingUI->AddToViewport();
+		}
+
+		VoiceMeetingUI->InitMeetingUI(true); // 방장 모드
+		VoiceMeetingUI->SetVisibility(ESlateVisibility::Visible);
+        
+		SetShowMouseCursor(true);
+		FInputModeUIOnly InputMode;
+		InputMode.SetWidgetToFocus(VoiceMeetingUI->TakeWidget());
+		SetInputMode(InputMode);
+	}
+}
+
+void ACuteAlienController::OpenEndMeetingPopup()
+{
+	if (VoiceMeetingUIClass)
+	{
+		if (!VoiceMeetingUI)
+		{
+			VoiceMeetingUI = CreateWidget<UVoiceMeetingUI>(this, VoiceMeetingUIClass);
+			VoiceMeetingUI->AddToViewport();
+		}
+
+		// 종료 확인 화면(Index 1)으로 전환
+		if (VoiceMeetingUI->MeetingWidgetSwitcher)
+		{
+			VoiceMeetingUI->MeetingWidgetSwitcher->SetActiveWidgetIndex(1);
+		}
+        
+		VoiceMeetingUI->SetVisibility(ESlateVisibility::Visible);
+        
+		SetShowMouseCursor(true);
+		FInputModeUIOnly InputMode;
+		InputMode.SetWidgetToFocus(VoiceMeetingUI->TakeWidget());
+		SetInputMode(InputMode);
+	}
+}
+
 void ACuteAlienController::OnStartMeetingResponse(bool bSuccess, FString MeetingID)
 {
 	if (bSuccess)
 	{
 		UE_LOG(LogTemp, Log, TEXT("[Meeting] Created Successfully: %s"), *MeetingID);
-        
+
+		if (VoiceMeetingUI)
+		{
+			VoiceMeetingUI->SetMeetingState(true);
+		}
+		
 		// 1. 미팅 ID 저장
 		CurrentMeetingSessionID = MeetingID;
         
@@ -701,6 +776,7 @@ void ACuteAlienController::OnStartMeetingResponse(bool bSuccess, FString Meeting
 		AMumulPlayerState* MyPS = GetPlayerState<AMumulPlayerState>();
 		if (MyPS)
 		{
+			Server_RegisterMeetingState(MyPS->VoiceChannelID, MeetingID);
 			Server_BroadcastJoinMeeting(MyPS->VoiceChannelID, MeetingID);
 		}
 	}
@@ -730,6 +806,22 @@ void ACuteAlienController::OnJoinMeetingResponse(bool bSuccess)
 	else
 	{
 		UE_LOG(LogTemp, Error, TEXT("[Meeting] Failed to Join Meeting."));
+	}
+}
+
+void ACuteAlienController::Server_RegisterMeetingState_Implementation(int32 ChannelID, const FString& MeetingID)
+{
+	if (GS)
+	{
+		GS->RegisterMeeting(ChannelID, MeetingID);
+	}
+}
+
+void ACuteAlienController::Server_UnregisterMeetingState_Implementation(int32 ChannelID)
+{
+	if (GS)
+	{
+		GS->UnregisterMeeting(ChannelID);
 	}
 }
 

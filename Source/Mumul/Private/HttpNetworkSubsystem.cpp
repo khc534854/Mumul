@@ -305,31 +305,24 @@ void UHttpNetworkSubsystem::OnSendVoiceComplete(FHttpRequestPtr Request, FHttpRe
                 // 3. 성공! 데이터 사용
                 UE_LOG(LogTemp, Log, TEXT("[HTTP] Upload Success! Meeting: %s, Chunk: %d"), 
                     *ResponseData.meeting_id, ResponseData.chunk_index);
-
-                OnSendVoiceCompleteDelegate_LowLevel.Broadcast(Request, Response, bWasSuccessful);
-                
-                // (선택 사항) 여기서 델리게이트를 호출해 UI나 다른 곳에 알릴 수도 있습니다.
-                // OnUploadSuccess.Broadcast(ResponseData); 
             }
             else
             {
                 UE_LOG(LogTemp, Error, TEXT("[HTTP] JSON Parsing Failed! Content: %s"), *Content);
-                OnSendVoiceCompleteDelegate_LowLevel.Broadcast(Request, Response, bWasSuccessful);
             }
         }
         else
         {
             UE_LOG(LogTemp, Warning, TEXT("[HTTP] Server Error. Code: %d, Content: %s"), ResponseCode, *Content);
-            OnSendVoiceCompleteDelegate_LowLevel.Broadcast(Request, Response, bWasSuccessful);
         }
     }
     else
     {
         // 네트워크 연결 실패 등
         UE_LOG(LogTemp, Error, TEXT("[HTTP] Connection Failed!"));
-        OnSendVoiceCompleteDelegate_LowLevel.Broadcast(Request, Response, bWasSuccessful);
     }
 
+    OnSendVoiceCompleteDelegate_LowLevel.Broadcast(Request, Response, bWasSuccessful);
 }
 
 void UHttpNetworkSubsystem::AddString(TArray<uint8>& OutPayload, const FString& InString)

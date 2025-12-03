@@ -40,4 +40,13 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_AddTeamChatList(const FString& TeamName);
 	TSet<FString> GetTeamChatList() { return TeamChatList; }
+
+public:
+	// 진행 중인 회의 목록 (Key: 채널ID, Value: 미팅ID)
+	TMap<int32, FString> ActiveMeetings;
+
+	// 회의 등록/해제 함수
+	void RegisterMeeting(int32 ChannelID, FString MeetingID);
+	void UnregisterMeeting(int32 ChannelID);
+	FString GetActiveMeetingID(int32 ChannelID);
 };
