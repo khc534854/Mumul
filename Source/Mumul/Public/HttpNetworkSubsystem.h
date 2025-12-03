@@ -98,14 +98,12 @@ private:
 	void OnEndMeetingComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	
 	void OnTeamChatListComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-	
 	void OnTeamChatMessageComplete(TSharedPtr<IHttpRequest> HttpRequest, TSharedPtr<IHttpResponse> HttpResponse, bool bArg);
-
-	void AddString(TArray<uint8>& OutPayload, const FString& InString);
 	void OnChatMessageComplete(TSharedPtr<IHttpRequest> HttpRequest, TSharedPtr<IHttpResponse> HttpResponse, bool bArg) const;
-
 	void OnCreateTeamChatComplete(TSharedPtr<IHttpRequest> HttpRequest, TSharedPtr<IHttpResponse> HttpResponse, bool bArg) const;
+
 	
+	void AddString(TArray<uint8>& OutPayload, const FString& InString);
 public:
 	UPROPERTY(EditAnywhere, Category="Network")
 	FString BaseURL = TEXT("http://127.0.0.1:8000");

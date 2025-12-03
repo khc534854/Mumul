@@ -314,20 +314,22 @@ void UHttpNetworkSubsystem::OnSendVoiceComplete(FHttpRequestPtr Request, FHttpRe
             else
             {
                 UE_LOG(LogTemp, Error, TEXT("[HTTP] JSON Parsing Failed! Content: %s"), *Content);
+                OnSendVoiceCompleteDelegate_LowLevel.Broadcast(Request, Response, bWasSuccessful);
             }
         }
         else
         {
             UE_LOG(LogTemp, Warning, TEXT("[HTTP] Server Error. Code: %d, Content: %s"), ResponseCode, *Content);
+            OnSendVoiceCompleteDelegate_LowLevel.Broadcast(Request, Response, bWasSuccessful);
         }
     }
     else
     {
         // 네트워크 연결 실패 등
         UE_LOG(LogTemp, Error, TEXT("[HTTP] Connection Failed!"));
+        OnSendVoiceCompleteDelegate_LowLevel.Broadcast(Request, Response, bWasSuccessful);
     }
 
-    OnSendVoiceCompleteDelegate_LowLevel.Broadcast(Request, Response, bWasSuccessful);
 }
 
 void UHttpNetworkSubsystem::AddString(TArray<uint8>& OutPayload, const FString& InString)
