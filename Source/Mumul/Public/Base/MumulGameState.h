@@ -33,13 +33,14 @@ public:
 	void Multicast_SavePlayerLocation(int32 UserIndex, FTransform Location);
 
 protected:
-	TSet<FString> TeamChatList;
+	UPROPERTY(Replicated, BlueprintReadWrite)
+	TArray<FString> TeamChatList;
 public:
 	UFUNCTION(Server, Reliable)
 	void Server_AddTeamChatList(const FString& TeamName);
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_AddTeamChatList(const FString& TeamName);
-	TSet<FString> GetTeamChatList() { return TeamChatList; }
+	TArray<FString> GetTeamChatList() { return TeamChatList; }
 
 public:
 	// 진행 중인 회의 목록 (Key: 채널ID, Value: 미팅ID)
