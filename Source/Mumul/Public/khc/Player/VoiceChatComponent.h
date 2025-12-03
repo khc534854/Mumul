@@ -83,6 +83,8 @@ private:
 	// 현재 청크 인덱스
 	int32 CurrentChunkIndex = 0;
 
+	int32 ChunkLength = 60;
+
 	void SendCurrentChunk(bool bIsLast);
 	
 	// 오디오 데이터가 들어올 때 호출되는 콜백

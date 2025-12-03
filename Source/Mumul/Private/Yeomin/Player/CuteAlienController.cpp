@@ -280,7 +280,7 @@ void ACuteAlienController::Tick(float DeltaSeconds)
 
 void ACuteAlienController::OnHostRecordingStopped()
 {
-	// 1. 델리게이트 즉시 해제 (중복 방지 1단계)
+	// 1. 델리게이트 해제 (중복 호출 방지)
 	if (APawn* MyPawn = GetPawn())
 	{
 		if (UVoiceChatComponent* VoiceComp = MyPawn->FindComponentByClass<UVoiceChatComponent>())
@@ -289,25 +289,39 @@ void ACuteAlienController::OnHostRecordingStopped()
 		}
 	}
 
-	// 2. [추가] 미팅 ID가 비어있으면 이미 종료된 것으로 간주 (중복 방지 2단계)
+	// [안전장치] 이미 처리되었으면 무시
 	if (CurrentMeetingSessionID.IsEmpty()) 
 	{
 		return;
 	}
 
-	// 3. 종료 API 호출
-	UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
-	if (GI)
+	// 2. [수정] 3초 딜레이 후 회의 종료 요청 (오디오 업로드 대기)
+	// 네트워크 속도에 따라 시간을 조절하세요 (2.0f ~ 5.0f)
+	float UploadWaitTime = 5.0f;
+
+	FTimerHandle WaitTimerHandle;
+	GetWorldTimerManager().SetTimer(WaitTimerHandle, [this]()
 	{
-		if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
+		// 람다 실행 시점에 컨트롤러가 살아있는지 확인
+		if (!IsValid(this)) return;
+        
+		// ID가 그새 비워졌는지 다시 확인
+		if (CurrentMeetingSessionID.IsEmpty()) return;
+
+		UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
+		if (GI)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("[Meeting] Requesting End Meeting API... (After Last Chunk)"));
-			HttpSystem->EndMeetingRequest(CurrentMeetingSessionID);
-            
-			// 4. ID 초기화 (다음에 또 호출되지 않도록)
-			CurrentMeetingSessionID = TEXT(""); 
+			if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
+			{
+				UE_LOG(LogTemp, Warning, TEXT("[Meeting] Requesting End Meeting API... (After %f sec Delay)"), 3.0f);
+                
+				HttpSystem->EndMeetingRequest(CurrentMeetingSessionID);
+                
+				// ID 초기화 (중복 방지)
+				CurrentMeetingSessionID = TEXT(""); 
+			}
 		}
-	}
+	}, UploadWaitTime, false);
 }
 
 void ACuteAlienController::OnPressEsc()

@@ -3,6 +3,7 @@
 #include "khc/Player/MumulPlayerState.h"
 #include "HttpNetworkSubsystem.h"
 #include "MumulGameInstance.h"
+#include "MumulGameSettings.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerState.h"
@@ -17,6 +18,12 @@ UVoiceChatComponent::UVoiceChatComponent()
 void UVoiceChatComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	const UMumulGameSettings* Settings = GetDefault<UMumulGameSettings>();
+	if (Settings)
+	{
+		ChunkLength = Settings->VoiceChunkLength;
+	}
 }
 
 void UVoiceChatComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -129,7 +136,7 @@ void UVoiceChatComponent::StartRecording()
 			{
 				// 타이머가 울리면 현재까지 쌓인 데이터를 보냄 (마지막 아님)
 				SendCurrentChunk(false);
-			}, 60.0f, true); // true: 반복 실행
+			}, ChunkLength, true); // true: 반복 실행
 		}
 	}
 	else
@@ -201,7 +208,7 @@ void UVoiceChatComponent::SendCurrentChunk(bool bIsLast)
 			// 전송 (ChunkIndex 사용 후 증가)
 			// HttpSystem->SendAudioChunk 함수에 bIsLast 인자 추가 필요 (아래 참고)
 			//HttpSystem->SendAudioChunk(WavData, CurrentMeetingID, UserID, CurrentChunkIndex++);
-			HttpSystem->SendAudioChunk(WavData, "meeting_20251125_d5c9b047", FString::FromInt(UserID), CurrentChunkIndex++);
+			HttpSystem->SendAudioChunk(WavData, GetCurrentMeetingID(), FString::FromInt(UserID), CurrentChunkIndex++);
 		}
 	}
 

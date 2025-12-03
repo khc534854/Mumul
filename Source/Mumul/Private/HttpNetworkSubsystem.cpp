@@ -326,6 +326,8 @@ void UHttpNetworkSubsystem::OnSendVoiceComplete(FHttpRequestPtr Request, FHttpRe
         // 네트워크 연결 실패 등
         UE_LOG(LogTemp, Error, TEXT("[HTTP] Connection Failed!"));
     }
+
+    OnSendVoiceCompleteDelegate_LowLevel.Broadcast(Request, Response, bWasSuccessful);
 }
 
 void UHttpNetworkSubsystem::AddString(TArray<uint8>& OutPayload, const FString& InString)
