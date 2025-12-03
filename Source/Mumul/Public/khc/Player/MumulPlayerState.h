@@ -14,7 +14,7 @@ struct FTeamData
 	GENERATED_BODY()
 
 	UPROPERTY()
-	int32 UniqueTeamID;
+	FString UniqueTeamID;
 
 	UPROPERTY()
 	FString TeamName;
