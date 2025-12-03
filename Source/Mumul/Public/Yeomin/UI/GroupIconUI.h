@@ -17,6 +17,10 @@ class MUMUL_API UGroupIconUI : public UUserWidget
 	virtual void NativeConstruct() override;
 	
 protected:
+	UPROPERTY()
+	TObjectPtr<class UHttpNetworkSubsystem> HttpSystem;
+	UFUNCTION()
+	void OnServerTeamChatMessageResponse(bool bSuccess, FString Message);
 	UFUNCTION()
 	void DisplayGroupChat();
 	UPROPERTY()
@@ -28,6 +32,8 @@ protected:
 	TObjectPtr<class UButton> GroupIconBtn;
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
 	TSubclassOf<class UChatBlockUI> ChatBlockUIClass;
+	UPROPERTY(EditDefaultsOnly, Category="UI Class")
+	TSubclassOf<class UChatMessageBlockUI> ChatMessageBlockUIClass;
 public:
 	UPROPERTY()
 	TObjectPtr<class UChatBlockUI> ChatBlockUI;

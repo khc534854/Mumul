@@ -5,12 +5,20 @@
 #include "GameFramework/PlayerState.h"
 #include "khc/Save/MapDataSaveGame.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 
+
+void AMumulGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	
+	DOREPLIFETIME(AMumulGameState, TeamChatList)
+}
 
 void AMumulGameState::AddPlayerState(APlayerState* PlayerState)
 {
 	Super::AddPlayerState(PlayerState);
-	
+
 	UE_LOG(LogTemp, Warning, TEXT("Player Joined: %s"), *PlayerState->GetPlayerName());
 	OnPlayerArrayUpdated.Broadcast();
 }
@@ -18,19 +26,19 @@ void AMumulGameState::AddPlayerState(APlayerState* PlayerState)
 void AMumulGameState::RemovePlayerState(APlayerState* PlayerState)
 {
 	Super::RemovePlayerState(PlayerState);
-	
+
 	UE_LOG(LogTemp, Warning, TEXT("Player Left: %s"), *PlayerState->GetPlayerName());
 	OnPlayerArrayUpdated.Broadcast();
 }
 
-
 void AMumulGameState::Multicast_SavePlayerLocation_Implementation(int32 UserIndex, FTransform Location)
 {
 	FString SlotName = TEXT("IslandMapSave");
-    
+
 	// 1. 로드 (없으면 생성)
 	UMapDataSaveGame* SaveInst = Cast<UMapDataSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, 0));
-	if (!SaveInst) SaveInst = Cast<UMapDataSaveGame>(UGameplayStatics::CreateSaveGameObject(UMapDataSaveGame::StaticClass()));
+	if (!SaveInst) SaveInst = Cast<UMapDataSaveGame>(
+		UGameplayStatics::CreateSaveGameObject(UMapDataSaveGame::StaticClass()));
 
 	// 2. 맵에 데이터 추가/갱신 (Key가 같으면 덮어씌워짐)
 	SaveInst->PlayerLocations.Add(UserIndex, Location);
@@ -38,7 +46,8 @@ void AMumulGameState::Multicast_SavePlayerLocation_Implementation(int32 UserInde
 	// 3. 저장
 	if (UGameplayStatics::SaveGameToSlot(SaveInst, SlotName, 0))
 	{
-		UE_LOG(LogTemp, Log, TEXT("[SaveGame] Location Saved for User %d: %s"), UserIndex, *Location.GetLocation().ToString());
+		UE_LOG(LogTemp, Log, TEXT("[SaveGame] Location Saved for User %d: %s"), UserIndex,
+		       *Location.GetLocation().ToString());
 	}
 }
 
@@ -80,31 +89,12 @@ void AMumulGameState::Multicast_SaveTentData_Implementation(int32 UserIndex, FTr
 	}
 }
 
-
-
-void AMumulGameState::Server_RequestGroupChatHistory_Implementation(const FString& GroupName)
+void AMumulGameState::Server_AddTeamChatList_Implementation(const FString& TeamName)
 {
-	Multicast_AddGroupChatHistory(GroupName);
+	Multicast_AddTeamChatList(TeamName);
 }
 
-void AMumulGameState::Multicast_AddGroupChatHistory_Implementation(const FString& GroupName)
+void AMumulGameState::Multicast_AddTeamChatList_Implementation(const FString& TeamName)
 {
-	GroupChatHistory.Add(GroupName, TArray<FChatBlock>());
-}
-
-void AMumulGameState::Server_RequestChatHistory_Implementation(const FString& GroupName, const FString& Time,
-	const FString& Player, const FString& Text)
-{
-	Multicast_InsertChatHistory(GroupName, Time, Player, Text);
-}
-
-void AMumulGameState::Multicast_InsertChatHistory_Implementation(const FString& GroupName, const FString& Time,
-	const FString& Player, const FString& Text)
-{
-	if (TArray<FChatBlock>* ChatBlockIndex = GroupChatHistory.Find(GroupName))
-	{
-		FChatBlock ChatBlock;
-		ChatBlock.SetContent(Time, Player, Text);
-		ChatBlockIndex->Add(ChatBlock);
-	}
+	TeamChatList.Add(TeamName);
 }

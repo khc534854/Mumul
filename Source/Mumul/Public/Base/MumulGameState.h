@@ -8,33 +8,6 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPlayerArrayUpdated);
 
-USTRUCT(BlueprintType)
-struct FChatBlock
-{
-	GENERATED_BODY()
-
-private:
-	FString TimeStamp;
-
-	FString PlayerName;
-
-	FString Content;
-
-public:
-	void SetContent(FString Time, FString Player, FString Text)
-	{
-		TimeStamp = Time;
-		PlayerName = Player;
-		Content = Text;
-	}
-
-	void GetContent(FString& Time, FString& Player, FString& Text)
-	{
-		Time = TimeStamp;
-		Player = PlayerName;
-		Text = Content;
-	}
-};
 
 UCLASS()
 class MUMUL_API AMumulGameState : public AGameState
@@ -42,6 +15,8 @@ class MUMUL_API AMumulGameState : public AGameState
 	GENERATED_BODY()
 
 protected:
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	
 	virtual void AddPlayerState(APlayerState* PlayerState) override;
 	virtual void RemovePlayerState(APlayerState* PlayerState) override;
 
@@ -58,16 +33,11 @@ public:
 	void Multicast_SavePlayerLocation(int32 UserIndex, FTransform Location);
 
 protected:
-	TMap<FString, TArray<FChatBlock>> GroupChatHistory;
-
+	TSet<FString> TeamChatList;
 public:
-	TMap<FString, TArray<FChatBlock>> GetGroupChatHistory() { return GroupChatHistory; }
 	UFUNCTION(Server, Reliable)
-	void Server_RequestGroupChatHistory(const FString& GroupName);
+	void Server_AddTeamChatList(const FString& TeamName);
 	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_AddGroupChatHistory(const FString& GroupName);
-	UFUNCTION(Server, Reliable)
-	void Server_RequestChatHistory(const FString& GroupName, const FString& Time, const FString& Player, const FString& Text);
-	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_InsertChatHistory(const FString& GroupName, const FString& Time, const FString& Player, const FString& Text);
+	void Multicast_AddTeamChatList(const FString& TeamName);
+	TSet<FString> GetTeamChatList() { return TeamChatList; }
 };

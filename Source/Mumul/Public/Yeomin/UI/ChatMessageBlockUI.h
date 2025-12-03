@@ -21,6 +21,11 @@ protected:
 	TObjectPtr<class UTextBlock> PlayerName;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UTextBlock> Time;
+	FString ChatID;
+	int32 UserID;
+	
 public:
 	void SetContent(const FString& CurrentTime, const FString& Name, const FString& Content) const;
+	void SetChatID(const FString& ID) { ChatID = ID; }
+	void SetUserID(const int32& ID) { UserID = ID; }
 };

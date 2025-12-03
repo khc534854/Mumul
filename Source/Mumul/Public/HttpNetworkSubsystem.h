@@ -13,6 +13,10 @@
  */
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnLoginResponseReceived, bool, bSuccess, FString, Message);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTeamChatListResponseReceived, bool, bSuccess, FString, Message);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnChatMessageResponseReceived, bool, bSuccess, FString, Message);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTeamChatMessageResponseReceived, bool, bSuccess, FString, Message);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCreateTeamChatResponseReceived, bool, bSuccess, FString, Message);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStartMeetingResponse, bool, bSuccess, FString, MeetingID);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnJoinMeetingResponse, bool, bSuccess);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEndMeetingResponse, bool, bSuccess);
@@ -57,6 +61,33 @@ public:
 
 	FOnHttpCompleteLowLevel OnSendVoiceCompleteDelegate_LowLevel;
 	
+	// GET TeamChatList
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void SendTeamChatListRequest(int32 UserID);
+	
+	UPROPERTY(BlueprintAssignable)
+	FOnTeamChatListResponseReceived OnTeamChatListResponse;
+	
+	// GET TeamChatMessage
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void SendTeamChatMessageRequest(const FString& TeamChatID);
+	
+	UPROPERTY(BlueprintAssignable)
+	FOnTeamChatMessageResponseReceived OnTeamChatMessageResponse;
+	
+	// POST ChatMessage
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void SendChatMessageRequest(const FString& TeamChatID, const int32& UserID, const FString& Message, const FString& Time);
+	
+	UPROPERTY(BlueprintAssignable)
+	FOnChatMessageResponseReceived OnChatMessageResponse;
+	
+	// POST CreateTeamChat
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void SendCreateTeamChatRequest(const FString& TeamName, const TArray<int32>& UserIDs);
+	
+	UPROPERTY(BlueprintAssignable)
+	FOnCreateTeamChatResponseReceived OnCreateTeamChatResponse;
 	
 private:
 	// 통신이 끝났을 때(응답 왔을 때) 호출될 콜백 함수
@@ -65,8 +96,16 @@ private:
 	void OnStartMeetingComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void OnJoinMeetingComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void OnEndMeetingComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	
+	void OnTeamChatListComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	
+	void OnTeamChatMessageComplete(TSharedPtr<IHttpRequest> HttpRequest, TSharedPtr<IHttpResponse> HttpResponse, bool bArg);
 
 	void AddString(TArray<uint8>& OutPayload, const FString& InString);
+	void OnChatMessageComplete(TSharedPtr<IHttpRequest> HttpRequest, TSharedPtr<IHttpResponse> HttpResponse, bool bArg) const;
+
+	void OnCreateTeamChatComplete(TSharedPtr<IHttpRequest> HttpRequest, TSharedPtr<IHttpResponse> HttpResponse, bool bArg) const;
+	
 public:
 	UPROPERTY(EditAnywhere, Category="Network")
 	FString BaseURL = TEXT("http://127.0.0.1:8000");

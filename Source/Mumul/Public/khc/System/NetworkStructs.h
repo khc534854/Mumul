@@ -215,7 +215,7 @@ struct FErrorDetail
 };
 
 USTRUCT()
-struct FLoginFailResponse
+struct FFailResponse
 {
 	GENERATED_BODY()
 
@@ -303,4 +303,99 @@ struct FWSResponse_Answer
 
 	UPROPERTY()
 	FString answer;
+};
+
+USTRUCT()
+struct FUserDetail
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	int32 userId;
+
+	UPROPERTY()
+	FString userName;
+};
+
+// [응답] 팀채팅리스트 성공 (200 OK)
+USTRUCT()
+struct FTeamChatListResponse
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FString teamChatId;
+
+	UPROPERTY()
+	FString teamName;
+
+	UPROPERTY()
+	TArray<FUserDetail> users;
+};
+
+// TeamChatMessage Structure
+USTRUCT()
+struct FTeamChatMessageResponse
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FString chatId;
+	
+	UPROPERTY()
+	int32 userId;
+	
+	UPROPERTY()
+	FString userName;
+	
+	UPROPERTY()
+	FString message;
+	
+	UPROPERTY()
+	FString createdAt;
+};
+
+
+// ChatMessage Structure
+USTRUCT()
+struct FChatMessageRequest
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	int32 userId;
+	
+	UPROPERTY()
+	FString message;
+	
+	UPROPERTY()
+	FString createdAt;
+};
+
+// CreatTeamChat Structure
+USTRUCT()
+struct FCreateTeamChatRequest
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FString groupName;
+	
+	UPROPERTY()
+	TArray<int32> userIdList;
+};
+
+USTRUCT()
+struct FCreateTeamChatResponse
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FString groupId;
+	
+	UPROPERTY()
+	FString groupName;
+	
+	UPROPERTY()
+	TArray<int32> userIdList;
 };

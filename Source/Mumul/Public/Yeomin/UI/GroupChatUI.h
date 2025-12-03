@@ -17,6 +17,9 @@ class MUMUL_API UGroupChatUI : public UUserWidget
 protected:
 	virtual void NativeConstruct() override;
 	
+	UPROPERTY()
+	TObjectPtr<class UHttpNetworkSubsystem> HttpSystem;
+	
 	void ToggleVisibility(UWidget* Widget);
 	
 	UPROPERTY(meta=(BindWidget))
@@ -30,10 +33,12 @@ protected:
 	TObjectPtr<class UEditableTextBox> EditBox;
 	UFUNCTION()
 	void OnTextBoxCommitted(const FText& Text, ETextCommit::Type CommitMethod);
+	UFUNCTION()
+	void OnServerChatMessageResponse(bool bSuccess, FString Message);
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
 	TSubclassOf<class UChatMessageBlockUI> ChatMessageBlockUIClass;
 public:
-	void AddChat(const FString& CurrentTime, const FString& Name, const FString& Text) const;
+	void AddChat(const FString& TeamID, const FString& CurrentTime, const FString& Name, const FString& Text) const;
 	
 protected:
 	UPROPERTY(meta=(BindWidget))
@@ -47,6 +52,10 @@ protected:
 	TObjectPtr<class UCreateGroupChatUI> CreateGroupChatUI;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class USizeBox> CreateGroupChatBox;
+	UPROPERTY(EditDefaultsOnly, Category="UI Class")
+	TSubclassOf<class UGroupIconUI> GroupIconUIClass;
+	UFUNCTION()
+	void OnServerTeamChatListResponse(bool bSuccess, FString Message);
 public:
 	void SetGroupNameTitle(const FString& GroupName);
 	UFUNCTION()
@@ -67,9 +76,9 @@ protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> InviteBtn;
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UButton> DeleteBtn;
+	TObjectPtr<class UButton> ToggleVisibilityBtn;
 	UFUNCTION()
 	void ToggleInvitationUI();
 	UFUNCTION()
-	void ShowDeleteUI();
+	void OnToggleVisibilityBtn();
 };

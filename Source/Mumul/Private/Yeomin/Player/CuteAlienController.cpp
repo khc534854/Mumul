@@ -21,6 +21,7 @@
 #include "HttpNetworkSubsystem.h"
 #include "Base/MumulGameState.h"
 #include "khc/Save/MapDataSaveGame.h"
+#include "khc/System/NetworkStructs.h"
 #include "Kismet/GameplayStatics.h"
 #include "Yeomin/UI/ChatBlockUI.h"
 #include "Yeomin/UI/GroupChatUI.h"
@@ -93,7 +94,7 @@ ACuteAlienController::ACuteAlienController()
 	}
 
 	static ConstructorHelpers::FObjectFinder<UInputAction> IA_QuitGameFinder(
-	TEXT("/Game/Yeomin/Characters/Inputs/Actions/IA_QuitGame.IA_QuitGame"));
+		TEXT("/Game/Yeomin/Characters/Inputs/Actions/IA_QuitGame.IA_QuitGame"));
 	if (IA_QuitGameFinder.Succeeded())
 	{
 		IA_QuitGame = IA_QuitGameFinder.Object;
@@ -114,14 +115,14 @@ ACuteAlienController::ACuteAlienController()
 	}
 
 	static ConstructorHelpers::FObjectFinder<USoundAttenuation> SilentAttFinder(
-	   TEXT("/Game/Khc/Audio/SA_Silent.SA_Silent")); // 예시 경로
+		TEXT("/Game/Khc/Audio/SA_Silent.SA_Silent")); // 예시 경로
 	if (SilentAttFinder.Succeeded())
 	{
 		SilentAttenuation = SilentAttFinder.Object;
 	}
 
 	static ConstructorHelpers::FObjectFinder<USoundAttenuation> NormalAttFinder(
-	   TEXT("/Game/Khc/Audio/SA_Proximity.SA_Proximity")); // 경로 확인 필수!
+		TEXT("/Game/Khc/Audio/SA_Proximity.SA_Proximity")); // 경로 확인 필수!
 	if (NormalAttFinder.Succeeded())
 	{
 		NormalAttenuation = NormalAttFinder.Object;
@@ -132,9 +133,20 @@ void ACuteAlienController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	GS = Cast<AMumulGameState>(GetWorld()->GetGameState());
+
+	if (HasAuthority())
+	{
+		if (UHttpNetworkSubsystem* HttpSystem = GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>())
+		{
+			HttpSystem->OnCreateTeamChatResponse.
+			            AddDynamic(this, &ACuteAlienController::OnServerCreateTeamChatResponse);
+		}
+	}
+
 	if (!IsLocalController())
 		return;
-	
+
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
 		ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 	{
@@ -147,7 +159,7 @@ void ACuteAlienController::BeginPlay()
 	PlayerUI->AddToViewport();
 	GroupChatUI = CreateWidget<UGroupChatUI>(this, GroupChatUIClass);
 	GroupChatUI->AddToViewport();
-	
+
 	RadialUI->SetVisibility(ESlateVisibility::Hidden);
 
 	// 4. 데이터 초기화 및 서버 전송
@@ -181,7 +193,7 @@ void ACuteAlienController::BeginPlay()
 			HttpSystem->OnStartMeeting.AddDynamic(this, &ACuteAlienController::OnStartMeetingResponse);
 			HttpSystem->OnJoinMeeting.AddDynamic(this, &ACuteAlienController::OnJoinMeetingResponse);
 		}
-        
+		
 		UE_LOG(LogTemp, Log, TEXT("[Client] Sent Init Info: %s (ID: %d)"), *GI->PlayerName, GI->PlayerUniqueID);
 	}
 }
@@ -209,7 +221,7 @@ void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const
 		PS->PS_UserType = Type;
 		PS->PS_TendencyID = Tendency;
 		// PS->CampID = CampID; (인자 추가 시)
-        
+
 		// 강제 동기화 (선택)
 		PS->ForceNetUpdate();
 
@@ -217,12 +229,12 @@ void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const
 		if (UGameplayStatics::DoesSaveGameExist(SlotName, 0))
 		{
 			UMapDataSaveGame* LoadInst = Cast<UMapDataSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, 0));
-           
+
 			// 해당 유저의 저장된 위치가 있는지 확인
 			if (LoadInst && LoadInst->PlayerLocations.Contains(UID))
 			{
 				FTransform SavedTr = LoadInst->PlayerLocations[UID];
-               
+
 				// 폰 이동 (텔레포트)
 				if (APawn* MyPawn = GetPawn())
 				{
@@ -231,12 +243,13 @@ void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const
 					SavedTr.SetLocation(SafeLoc);
 
 					MyPawn->SetActorTransform(SavedTr, false, nullptr, ETeleportType::TeleportPhysics);
-                   
-					UE_LOG(LogTemp, Warning, TEXT("[Server] Restored User %d Location to %s"), UID, *SafeLoc.ToString());
+
+					UE_LOG(LogTemp, Warning, TEXT("[Server] Restored User %d Location to %s"), UID,
+					       *SafeLoc.ToString());
 				}
 			}
 		}
-       
+
 		UE_LOG(LogTemp, Log, TEXT("[Server] PlayerState Initialized: %s (ID: %d)"), *Name, UID);
 	}
 }
@@ -257,7 +270,7 @@ void ACuteAlienController::Tick(float DeltaSeconds)
 		float Dist = 1500.f;
 		GetPlayerViewPoint(Start, CamRot);
 		End = Start + CamRot.Vector() * Dist;
-		
+
 		bool bIsHit = GetWorld()->LineTraceSingleByChannel(
 			HitRes,
 			Start,
@@ -336,7 +349,7 @@ void ACuteAlienController::Server_SaveAndExit_Implementation()
 	{
 		if (APawn* MyPawn = GetPawn())
 		{
-			if (AMumulGameState* GS = GetWorld()->GetGameState<AMumulGameState>())
+			if (GS)
 			{
 				GS->Multicast_SavePlayerLocation(PS->PS_UserIndex, MyPawn->GetActorTransform());
 				UE_LOG(LogTemp, Warning, TEXT("[Exit] Saved Location for User %d"), PS->PS_UserIndex);
@@ -346,10 +359,10 @@ void ACuteAlienController::Server_SaveAndExit_Implementation()
 
 	// 2. 저장 후 종료 처리 (방장은 맵 이동, 클라이언트는 접속 종료)
 	// 상황에 맞게 선택하세요.
-    
+
 	// Case A: 아예 게임 끄기 (Quit)
-	UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, false); 
-    
+	UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, false);
+
 	// Case B: 로비(메인 메뉴)로 돌아가기
 	// if (HasAuthority()) // 방장이라면
 	// {
@@ -576,6 +589,7 @@ void ACuteAlienController::Server_StopChannelRecording_Implementation(int32 Targ
 				{
 					if (ACuteAlienController* TargetPC = Cast<ACuteAlienController>(PS->GetOwner()))
 					{
+						// 그 컨트롤러에게 "녹음 꺼"라고 명령 (Client RPC)
 						TargetPC->Client_StopChannelRecording();
 					}
 				}
@@ -721,119 +735,165 @@ void ACuteAlienController::OnJoinMeetingResponse(bool bSuccess)
 
 void ACuteAlienController::UpdateVoiceChannelMuting()
 {
-    AMumulPlayerState* MyPS = GetPlayerState<AMumulPlayerState>();
-    if (!MyPS) return;
+	AMumulPlayerState* MyPS = GetPlayerState<AMumulPlayerState>();
+	if (!MyPS) return;
 
-    int32 MyChannelID = MyPS->VoiceChannelID;
+	int32 MyChannelID = MyPS->VoiceChannelID;
 
-    if (UWorld* World = GetWorld())
-    {
-        if (AGameStateBase* GameState = World->GetGameState())
-        {
-            for (APlayerState* OtherPS : GameState->PlayerArray)
-            {
-                if (OtherPS == MyPS) continue;
-
-                AMumulPlayerState* AlienOtherPS = Cast<AMumulPlayerState>(OtherPS);
-                if (!AlienOtherPS) continue;
-
-                // [핵심 수정] 무조건 Create 하지 말고, Get으로 먼저 찾습니다.
-                UVOIPTalker* Talker = UVOIPStatics::GetVOIPTalkerForPlayer(OtherPS->GetUniqueId());
-                
-                // 없으면 그때 생성
-                if (!Talker)
-                {
-                    Talker = UVOIPTalker::CreateTalkerForPlayer(OtherPS);
-                }
-                
-                if (Talker)
-                {
-                   if (AlienOtherPS->VoiceChannelID == MyChannelID)
-                   {
-                      // [0번 채널] 3D 거리 기반
-                      if (MyChannelID == 0)
-                      {
-                         Talker->Settings.AttenuationSettings = NormalAttenuation;
-                            
-                         if (APawn* OtherPawn = OtherPS->GetPawn())
-                         {
-                            Talker->Settings.ComponentToAttachTo = OtherPawn->GetRootComponent();
-                         }
-                         else
-                         {
-                            // 폰이 안 보이면(멀리 있으면) 소리 위치를 잡을 수 없음 -> 2D로 들리거나 안 들릴 수 있음
-                            // 확실히 하기 위해 폰이 없으면 소리를 끄는 것도 방법
-                             Talker->Settings.ComponentToAttachTo = nullptr;
-                         }
-                      }
-                      // [그 외] 2D 전체
-                      else
-                      {
-                         Talker->Settings.AttenuationSettings = nullptr;
-                         Talker->Settings.ComponentToAttachTo = nullptr;
-                      }
-                   }
-                   else
-                   {
-                      // [다른 채널] 무음
-                      if (SilentAttenuation)
-                      {
-                         Talker->Settings.AttenuationSettings = SilentAttenuation;
-                         Talker->Settings.ComponentToAttachTo = nullptr;
-                      }
-                   }
-                }
-            }
-        }
-    }
-}
-
-
-void ACuteAlienController::Server_RequestGroupChatUI_Implementation(const FString& GroupName, const TArray<int32>& Players)
-{
-	// Add GroupChatUI for each Client
-	for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
+	if (UWorld* World = GetWorld())
 	{
-		if (Players.Contains(Cast<AMumulPlayerState>(PS)->PS_UserIndex))
+		if (AGameStateBase* GameState = World->GetGameState())
 		{
-			ACuteAlienController* PC = Cast<ACuteAlienController>(PS->GetOwningController());
-			if (PC)
+			for (APlayerState* OtherPS : GameState->PlayerArray)
 			{
-				PC->Client_CreateGroupChatUI(GroupName, Players);
+				if (OtherPS == MyPS) continue;
+
+				AMumulPlayerState* AlienOtherPS = Cast<AMumulPlayerState>(OtherPS);
+				if (!AlienOtherPS) continue;
+
+				// [핵심 수정] 무조건 Create 하지 말고, Get으로 먼저 찾습니다.
+				UVOIPTalker* Talker = UVOIPStatics::GetVOIPTalkerForPlayer(OtherPS->GetUniqueId());
+
+				// 없으면 그때 생성
+				if (!Talker)
+				{
+					Talker = UVOIPTalker::CreateTalkerForPlayer(OtherPS);
+				}
+
+				if (Talker)
+				{
+					if (AlienOtherPS->VoiceChannelID == MyChannelID)
+					{
+						// [0번 채널] 3D 거리 기반
+						if (MyChannelID == 0)
+						{
+							Talker->Settings.AttenuationSettings = NormalAttenuation;
+
+							if (APawn* OtherPawn = OtherPS->GetPawn())
+							{
+								Talker->Settings.ComponentToAttachTo = OtherPawn->GetRootComponent();
+							}
+							else
+							{
+								// 폰이 안 보이면(멀리 있으면) 소리 위치를 잡을 수 없음 -> 2D로 들리거나 안 들릴 수 있음
+								// 확실히 하기 위해 폰이 없으면 소리를 끄는 것도 방법
+								Talker->Settings.ComponentToAttachTo = nullptr;
+							}
+						}
+						// [그 외] 2D 전체
+						else
+						{
+							Talker->Settings.AttenuationSettings = nullptr;
+							Talker->Settings.ComponentToAttachTo = nullptr;
+						}
+					}
+					else
+					{
+						// [다른 채널] 무음
+						if (SilentAttenuation)
+						{
+							Talker->Settings.AttenuationSettings = SilentAttenuation;
+							Talker->Settings.ComponentToAttachTo = nullptr;
+						}
+					}
+				}
 			}
 		}
 	}
 }
 
-void ACuteAlienController::Client_CreateGroupChatUI_Implementation(const FString& GroupName, const TArray<int32>& Players)
+void ACuteAlienController::OnServerCreateTeamChatResponse(bool bSuccess, FString Message)
 {
-	
+	if (bSuccess)
+	{
+		// 1. JSON 파싱 (Message에는 JSON 원본이 들어있음)
+		FCreateTeamChatResponse CreateTeamChat;
+
+		if (FJsonObjectConverter::JsonObjectStringToUStruct(Message, &CreateTeamChat, 0, 0))
+		{
+			// JSON Parsing LOG
+			UE_LOG(LogTemp, Warning, TEXT("===== CreateTeamChat Response ====="));
+			UE_LOG(LogTemp, Warning, TEXT("groupId: %s"), *CreateTeamChat.groupId);
+			UE_LOG(LogTemp, Warning, TEXT("groupName: %s"), *CreateTeamChat.groupName);
+
+			UE_LOG(LogTemp, Warning, TEXT("userIdList (%d명):"), CreateTeamChat.userIdList.Num());
+			for (int32 UserID : CreateTeamChat.userIdList)
+			{
+				UE_LOG(LogTemp, Warning, TEXT(" - userId: %d"), UserID);
+			}
+
+			TArray<FTeamUser> TeamUserIDs;
+			for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
+			{
+				if (AMumulPlayerState* MPS = Cast<AMumulPlayerState>(PS))
+				{
+					if (CreateTeamChat.userIdList.Contains(MPS->PS_UserIndex))
+					{
+						FTeamUser NewUser;
+						NewUser.UserId = MPS->PS_UserIndex;
+						NewUser.UserName = MPS->PS_RealName;
+						TeamUserIDs.Add(NewUser);
+					}
+				}
+			}
+			// Add GroupChatUI for each Client
+			for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
+			{
+				if (CreateTeamChat.userIdList.Contains(Cast<AMumulPlayerState>(PS)->PS_UserIndex))
+				{
+					if (ACuteAlienController* PC = Cast<ACuteAlienController>(PS->GetOwningController()))
+					{
+						PC->Client_CreateGroupChatUI(CreateTeamChat.groupId, CreateTeamChat.groupName, TeamUserIDs);
+					}
+				}
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("CreateTeamChat 파싱 실패"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("CreateTeamChat Response 실패 : %s"), *Message);
+	}
+}
+
+void ACuteAlienController::Client_CreateGroupChatUI_Implementation(const FString& TeamID, const FString& TeamName,
+                                                                   const TArray<FTeamUser>& TeamUserIDs)
+{
 	// Set Players in Group Icon
 	UGroupIconUI* GroupIconUI = CreateWidget<UGroupIconUI>(GetWorld(), GroupIconUIClass);
 	GroupIconUI->InitParentUI(GroupChatUI);
 	GroupChatUI->AddGroupIcon(GroupIconUI);
-	GroupIconUI->ChatBlockUI->SetPlayersInGroup(Players);
-	GroupIconUI->ChatBlockUI->SetGroupName(GroupName);
+	GroupIconUI->ChatBlockUI->SetTeamID(TeamID);
+	GroupIconUI->ChatBlockUI->SetTeamName(TeamName);
+	for (const FTeamUser& User : TeamUserIDs)
+	{
+		GroupIconUI->ChatBlockUI->AddTeamUser(User.UserId, User.UserName);
+	}
 }
 
 
-void ACuteAlienController::Server_RequestChat_Implementation(const TArray<int32>& Players, const FString& CurrentTime, const FString& Name, const FString& Text)
+void ACuteAlienController::Server_RequestChat_Implementation(const FString& TeamID, const TArray<int32>& UserIDs,
+                                                             const FString& CurrentTime, const FString& Name,
+                                                             const FString& Text)
 {
 	// Add GroupChatUI for each Client
 	for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
 	{
-		if (Players.Contains(Cast<AMumulPlayerState>(PS)->PS_UserIndex))
+		if (UserIDs.Contains(Cast<AMumulPlayerState>(PS)->PS_UserIndex))
 		{
-			ACuteAlienController* PC = Cast<ACuteAlienController>(PS->GetOwningController());
-			if (PC)
+			if (ACuteAlienController* PC = Cast<ACuteAlienController>(PS->GetOwningController()))
 			{
-				PC->Client_SendChat(CurrentTime, Name, Text);
+				PC->Client_SendChat(TeamID, CurrentTime, Name, Text);
 			}
 		}
 	}
 }
 
-void ACuteAlienController::Client_SendChat_Implementation(const FString& CurrentTime, const FString& Name, const FString& Text)
+void ACuteAlienController::Client_SendChat_Implementation(const FString& TeamID, const FString& CurrentTime,
+                                                          const FString& Name, const FString& Text)
 {
-	GroupChatUI->AddChat(CurrentTime, Name, Text);
+	GroupChatUI->AddChat(TeamID, CurrentTime, Name, Text);
 }
