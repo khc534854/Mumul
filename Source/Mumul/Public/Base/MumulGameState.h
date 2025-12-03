@@ -36,6 +36,15 @@ protected:
 	UPROPERTY(Replicated)
 	TArray<FString> TeamChatList;
 public:
-	void AddTeamChatList(const FString& TeamID);
 	TArray<FString> GetTeamChatList() { return TeamChatList; }
+
+public:
+	// 진행 중인 회의 목록 (Key: 채널ID, Value: 미팅ID)
+	TMap<FString, FString> ActiveMeetings;
+
+	// 회의 등록/해제 함수
+	void RegisterMeeting(FString ChannelID, FString MeetingID);
+	void UnregisterMeeting(FString ChannelID);
+	FString GetActiveMeetingID(FString ChannelID);
+	void AddTeamChatList(const FString& TeamID);
 };

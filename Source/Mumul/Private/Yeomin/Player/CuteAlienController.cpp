@@ -20,6 +20,7 @@
 
 #include "HttpNetworkSubsystem.h"
 #include "Base/MumulGameState.h"
+#include "Components/WidgetSwitcher.h"
 #include "khc/Save/MapDataSaveGame.h"
 #include "khc/System/NetworkStructs.h"
 #include "Kismet/GameplayStatics.h"
@@ -27,6 +28,7 @@
 #include "Yeomin/UI/GroupChatUI.h"
 #include "Yeomin/UI/GroupIconUI.h"
 #include "Yeomin/UI/PlayerUI.h"
+#include "Yeomin/UI/VoiceMeetingUI.h"
 
 ACuteAlienController::ACuteAlienController()
 {
@@ -127,6 +129,13 @@ ACuteAlienController::ACuteAlienController()
 	{
 		NormalAttenuation = NormalAttFinder.Object;
 	}
+
+	static ConstructorHelpers::FClassFinder<UVoiceMeetingUI> WidgetFinder(
+	TEXT("/Game/Khc/Blueprint/UI/WBP_CreateMeeting.WBP_CreateMeeting_C")); // 경로 확인 필수!
+	if (WidgetFinder.Succeeded())
+	{
+		VoiceMeetingUIClass = WidgetFinder.Class;
+	}
 }
 
 void ACuteAlienController::BeginPlay()
@@ -192,6 +201,16 @@ void ACuteAlienController::BeginPlay()
 		}
 
 		UE_LOG(LogTemp, Log, TEXT("[Client] Sent Init Info: %s (ID: %d)"), *GI->PlayerName, GI->PlayerUniqueID);
+	}
+
+	if (VoiceMeetingUIClass)
+	{
+		VoiceMeetingUI = CreateWidget<UVoiceMeetingUI>(this, VoiceMeetingUIClass);
+		if (VoiceMeetingUI)
+		{
+			VoiceMeetingUI->AddToViewport();
+			VoiceMeetingUI->SetVisibility(ESlateVisibility::Hidden);
+		}
 	}
 }
 
@@ -311,6 +330,13 @@ void ACuteAlienController::OnHostRecordingStopped()
 	float UploadWaitTime = 5.0f;
 
 	FTimerHandle WaitTimerHandle;
+
+	AMumulPlayerState* MyPS = GetPlayerState<AMumulPlayerState>();
+	if (MyPS)
+	{
+		Server_UnregisterMeetingState(MyPS->VoiceChannelID);
+	}
+	
 	GetWorldTimerManager().SetTimer(WaitTimerHandle, [this]()
 	{
 		// 람다 실행 시점에 컨트롤러가 살아있는지 확인
@@ -324,12 +350,12 @@ void ACuteAlienController::OnHostRecordingStopped()
 		{
 			if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
 			{
-				UE_LOG(LogTemp, Warning, TEXT("[Meeting] Requesting End Meeting API... (After %f sec Delay)"), 3.0f);
-
+				// [수정] 타이머 없이 즉시 호출!
+				// (VoiceComponent가 이미 업로드 완료를 보장하고 호출했기 때문)
+				UE_LOG(LogTemp, Warning, TEXT("[HTTP] Requesting End Meeting API... (Upload Confirmed)"));
 				HttpSystem->EndMeetingRequest(CurrentMeetingSessionID);
-
-				// ID 초기화 (중복 방지)
-				CurrentMeetingSessionID = TEXT("");
+            
+				CurrentMeetingSessionID = TEXT(""); 
 			}
 		}
 	}, UploadWaitTime, false);
@@ -475,25 +501,24 @@ void ACuteAlienController::ShowPreviewTent()
 	);
 }
 
-void ACuteAlienController::RequestStartMeetingRecording()
+void ACuteAlienController::RequestStartMeetingRecording(FString InMeetingTitle, FString InAgenda, FString InDesc)
 {
 	AMumulPlayerState* MyPS = GetPlayerState<AMumulPlayerState>();
 	UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
 
 	if (MyPS && GI)
 	{
-		int32 ChannelID = MyPS->VoiceChannelID;
+		FString ChannelID = MyPS->VoiceChannelID;
 
 		// [HTTP] 방장(Organizer)이 Start Meeting API 호출
 		// (서버 응답이 오면 OnStartMeetingResponse가 실행됨)
 		if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
 		{
-			// TODO: 제목, 안건 등은 UI에서 입력받거나 기본값 사용
 			HttpSystem->StartMeetingRequest(
-				TEXT("Team Meeting Test"),
+				InMeetingTitle, 
 				GI->PlayerUniqueID, // Organizer ID
-				TEXT("Agenda Test"),
-				TEXT("Description Test")
+				InAgenda, 
+				InDesc
 			);
 
 			UE_LOG(LogTemp, Log, TEXT("[Meeting] Requesting Start Meeting API..."));
@@ -512,9 +537,9 @@ void ACuteAlienController::RequestStopMeetingRecording()
 	}
 }
 
-void ACuteAlienController::Server_StartChannelRecording_Implementation(int32 TargetChannelID)
+void ACuteAlienController::Server_StartChannelRecording_Implementation(const FString& TargetChannelID)
 {
-	UE_LOG(LogTemp, Warning, TEXT("[Server] Request Start for Ch: %d"), TargetChannelID);
+	UE_LOG(LogTemp, Warning, TEXT("[Server] Request Start for Ch: %s"), *TargetChannelID);
 
 
 	// [핵심 변경] GameState를 통해 접속한 모든 플레이어(Controller)를 찾음
@@ -544,7 +569,7 @@ void ACuteAlienController::Server_StartChannelRecording_Implementation(int32 Tar
 	}
 }
 
-void ACuteAlienController::Client_StartChannelRecording_Implementation(int32 TargetChannelID)
+void ACuteAlienController::Client_StartChannelRecording_Implementation(const FString& TargetChannelID)
 {
 	APawn* MyPawn = GetPawn();
 	if (MyPawn)
@@ -553,26 +578,26 @@ void ACuteAlienController::Client_StartChannelRecording_Implementation(int32 Tar
 		{
 			VoiceComp->StartRecording(); // 실제 녹음 시작
 
-			UE_LOG(LogTemp, Warning, TEXT(">>> [RECORD START] MeetingID: %d"), TargetChannelID);
+			UE_LOG(LogTemp, Warning, TEXT(">>> [RECORD START] MeetingID: %s"), *TargetChannelID);
 		}
 	}
 }
 
-void ACuteAlienController::Server_StopChannelRecording_Implementation(int32 TargetChannelID)
+void ACuteAlienController::Server_StopChannelRecording_Implementation(const FString& TargetChannelID)
 {
-	UE_LOG(LogTemp, Warning, TEXT("[Server] Request Stop for Ch: %d"), TargetChannelID);
+	//UE_LOG(LogTemp, Warning, TEXT("[Server] Request Stop for Ch: %d"), TargetChannelID);
 
-	UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
-	if (GI)
-	{
-		if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
-		{
-			if (!CurrentMeetingSessionID.IsEmpty())
-			{
-				HttpSystem->EndMeetingRequest(CurrentMeetingSessionID);
-			}
-		}
-	}
+	// UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
+	// if (GI)
+	// {
+	// 	if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
+	// 	{
+	// 		if (!CurrentMeetingSessionID.IsEmpty())
+	// 		{
+	// 			HttpSystem->EndMeetingRequest(CurrentMeetingSessionID);
+	// 		}
+	// 	}
+	// }
 
 	if (UWorld* World = GetWorld())
 	{
@@ -603,12 +628,18 @@ void ACuteAlienController::Client_StopChannelRecording_Implementation()
 	{
 		if (UVoiceChatComponent* VoiceComp = MyPawn->FindComponentByClass<UVoiceChatComponent>())
 		{
+			// [핵심] 방장(Authority)이라면 종료 처리를 위해 바인딩 필수!
 			if (HasAuthority())
 			{
+				// 기존 바인딩이 있을 수 있으니 안전하게 제거 후 추가 (중복 방지)
+				VoiceComp->OnRecordingStopped.RemoveDynamic(this, &ACuteAlienController::OnHostRecordingStopped);
 				VoiceComp->OnRecordingStopped.AddDynamic(this, &ACuteAlienController::OnHostRecordingStopped);
+             
+				UE_LOG(LogTemp, Warning, TEXT("[Host] Binded OnHostRecordingStopped delegate."));
 			}
-
-			VoiceComp->StopRecording(); // 녹음 종료
+          
+			// 녹음 종료 및 마지막 파일 전송 시작
+			VoiceComp->StopRecording(); 
 
 			UE_LOG(LogTemp, Warning, TEXT(">>> [RECORD STOP]"));
 		}
@@ -629,7 +660,7 @@ void ACuteAlienController::Server_SpawnTent_Implementation(const FTransform& Ten
 	}
 }
 
-void ACuteAlienController::Server_BroadcastJoinMeeting_Implementation(int32 TargetChannelID, const FString& MeetingID)
+void ACuteAlienController::Server_BroadcastJoinMeeting_Implementation(const FString& TargetChannelID, const FString& MeetingID)
 {
 	if (UWorld* World = GetWorld())
 	{
@@ -674,12 +705,62 @@ void ACuteAlienController::Client_RequestJoinMeeting_Implementation(const FStrin
 	}
 }
 
+void ACuteAlienController::OpenMeetingSetupUI()
+{
+	if (VoiceMeetingUIClass)
+	{
+		if (!VoiceMeetingUI)
+		{
+			VoiceMeetingUI = CreateWidget<UVoiceMeetingUI>(this, VoiceMeetingUIClass);
+			VoiceMeetingUI->AddToViewport();
+		}
+
+		VoiceMeetingUI->InitMeetingUI(true); // 방장 모드
+		VoiceMeetingUI->SetVisibility(ESlateVisibility::Visible);
+        
+		SetShowMouseCursor(true);
+		FInputModeUIOnly InputMode;
+		InputMode.SetWidgetToFocus(VoiceMeetingUI->TakeWidget());
+		SetInputMode(InputMode);
+	}
+}
+
+void ACuteAlienController::OpenEndMeetingPopup()
+{
+	if (VoiceMeetingUIClass)
+	{
+		if (!VoiceMeetingUI)
+		{
+			VoiceMeetingUI = CreateWidget<UVoiceMeetingUI>(this, VoiceMeetingUIClass);
+			VoiceMeetingUI->AddToViewport();
+		}
+
+		// 종료 확인 화면(Index 1)으로 전환
+		if (VoiceMeetingUI->MeetingWidgetSwitcher)
+		{
+			VoiceMeetingUI->MeetingWidgetSwitcher->SetActiveWidgetIndex(1);
+		}
+        
+		VoiceMeetingUI->SetVisibility(ESlateVisibility::Visible);
+        
+		SetShowMouseCursor(true);
+		FInputModeUIOnly InputMode;
+		InputMode.SetWidgetToFocus(VoiceMeetingUI->TakeWidget());
+		SetInputMode(InputMode);
+	}
+}
+
 void ACuteAlienController::OnStartMeetingResponse(bool bSuccess, FString MeetingID)
 {
 	if (bSuccess)
 	{
 		UE_LOG(LogTemp, Log, TEXT("[Meeting] Created Successfully: %s"), *MeetingID);
 
+		if (VoiceMeetingUI)
+		{
+			VoiceMeetingUI->SetMeetingState(true);
+		}
+		
 		// 1. 미팅 ID 저장
 		CurrentMeetingSessionID = MeetingID;
 
@@ -699,6 +780,7 @@ void ACuteAlienController::OnStartMeetingResponse(bool bSuccess, FString Meeting
 		AMumulPlayerState* MyPS = GetPlayerState<AMumulPlayerState>();
 		if (MyPS)
 		{
+			Server_RegisterMeetingState(MyPS->VoiceChannelID, MeetingID);
 			Server_BroadcastJoinMeeting(MyPS->VoiceChannelID, MeetingID);
 		}
 	}
@@ -731,12 +813,28 @@ void ACuteAlienController::OnJoinMeetingResponse(bool bSuccess)
 	}
 }
 
+void ACuteAlienController::Server_RegisterMeetingState_Implementation(const FString& ChannelID, const FString& MeetingID)
+{
+	if (GS)
+	{
+		GS->RegisterMeeting(ChannelID, MeetingID);
+	}
+}
+
+void ACuteAlienController::Server_UnregisterMeetingState_Implementation(const FString& ChannelID)
+{
+	if (GS)
+	{
+		GS->UnregisterMeeting(ChannelID);
+	}
+}
+
 void ACuteAlienController::UpdateVoiceChannelMuting()
 {
 	AMumulPlayerState* MyPS = GetPlayerState<AMumulPlayerState>();
 	if (!MyPS) return;
 
-	int32 MyChannelID = MyPS->VoiceChannelID;
+	FString MyChannelID = MyPS->VoiceChannelID;
 
 	if (UWorld* World = GetWorld())
 	{
@@ -763,7 +861,7 @@ void ACuteAlienController::UpdateVoiceChannelMuting()
 					if (AlienOtherPS->VoiceChannelID == MyChannelID)
 					{
 						// [0번 채널] 3D 거리 기반
-						if (MyChannelID == 0)
+						if (MyChannelID == TEXT("Lobby"))
 						{
 							Talker->Settings.AttenuationSettings = NormalAttenuation;
 
@@ -830,10 +928,17 @@ void ACuteAlienController::OnServerCreateTeamChatResponse(bool bSuccess, FString
 			}
 
 			TArray<FTeamUser> TeamUserIDs;
+
+			FTeamData NewTeamData;
+			NewTeamData.UniqueTeamID = CreateTeamChat.groupId;
+			NewTeamData.TeamName = CreateTeamChat.groupName;
+			NewTeamData.TeamMateList = CreateTeamChat.userIdList;
+			
 			for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
 			{
 				if (AMumulPlayerState* MPS = Cast<AMumulPlayerState>(PS))
 				{
+					MPS->PS_PlayerTeamList.Add(NewTeamData);
 					if (CreateTeamChat.userIdList.Contains(MPS->PS_UserIndex))
 					{
 						FTeamUser NewUser;

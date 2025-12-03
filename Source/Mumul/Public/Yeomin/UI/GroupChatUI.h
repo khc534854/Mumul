@@ -21,9 +21,7 @@ protected:
 	TObjectPtr<class UHttpNetworkSubsystem> HttpSystem;
 	
 	void ToggleVisibility(UWidget* Widget);
-	
-	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class USizeBox> ChatSizeBox;
+
 public:
 	void AddChatBlock(class UChatBlockUI* UI) const;
 	void RemoveChatBlock() const;
@@ -39,7 +37,9 @@ protected:
 	TSubclassOf<class UChatMessageBlockUI> ChatMessageBlockUIClass;
 public:
 	void AddChat(const FString& TeamID, const FString& CurrentTime, const FString& Name, const FString& Text) const;
-	
+		
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class USizeBox> ChatSizeBox;
 protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> AddGroupBtn; 

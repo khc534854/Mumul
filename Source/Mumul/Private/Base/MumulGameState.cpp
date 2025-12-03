@@ -31,6 +31,29 @@ void AMumulGameState::RemovePlayerState(APlayerState* PlayerState)
 	OnPlayerArrayUpdated.Broadcast();
 }
 
+void AMumulGameState::RegisterMeeting(FString ChannelID, FString MeetingID)
+{
+	ActiveMeetings.Add(ChannelID, MeetingID);
+	UE_LOG(LogTemp, Warning, TEXT("[GameState] Meeting Registered: Ch %s -> ID %s"), *ChannelID, *MeetingID);
+}
+
+void AMumulGameState::UnregisterMeeting(FString ChannelID)
+{
+	if (ActiveMeetings.Remove(ChannelID) > 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[GameState] Meeting Ended for Ch %s"), *ChannelID);
+	}
+}
+
+FString AMumulGameState::GetActiveMeetingID(FString ChannelID)
+{
+	if (ActiveMeetings.Contains(ChannelID))
+	{
+		return ActiveMeetings[ChannelID];
+	}
+	return TEXT("");
+}
+
 void AMumulGameState::Multicast_SavePlayerLocation_Implementation(int32 UserIndex, FTransform Location)
 {
 	FString SlotName = TEXT("IslandMapSave");

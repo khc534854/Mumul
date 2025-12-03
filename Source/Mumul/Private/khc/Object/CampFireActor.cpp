@@ -5,7 +5,6 @@
 
 #include "Components/SphereComponent.h"
 #include "khc/Player/MumulPlayerState.h"
-#include "Net/UnrealNetwork.h"
 
 
 // Sets default values
@@ -39,7 +38,7 @@ void ACampFireActor::BeginPlay()
 void ACampFireActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(ACampFireActor, CampfireChannelID);
+	//DOREPLIFETIME(ACampFireActor, CampfireChannelID);
 }
 
 void ACampFireActor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
@@ -49,16 +48,17 @@ void ACampFireActor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor*
 	APawn* EnteringPawn = Cast<APawn>(OtherActor);
 	if (!EnteringPawn) return;
 
-	// 2. [핵심] 들어온 캐릭터가 "나 자신(Local Player)"인지 확인
-	// 서버나 다른 클라이언트에서도 이 이벤트가 발생하지만, 
-	// 채널 변경 요청(RPC)은 오직 로컬 클라이언트가 자기 PlayerState에게 해야 합니다.
 	if (!EnteringPawn->IsLocallyControlled()) return;
 
 	// 3. PlayerState를 가져와서 채널 변경 요청
 	if (AMumulPlayerState* PS = EnteringPawn->GetPlayerState<AMumulPlayerState>())
 	{
-		UE_LOG(LogTemp, Log, TEXT("Enter Campfire Zone! Change Channel to %d"), CampfireChannelID);
-		PS->Server_SetVoiceChannelID(CampfireChannelID); // 모닥불 채널로 변경
+		PS->bIsNearByCampFire = true;
+		
+		if (PS->WaitingChannelID != TEXT("Lobby"))
+		{
+			PS->Server_SetVoiceChannelID(PS->WaitingChannelID); // 모닥불 채널로 변경
+		}
 	}
 }
 
@@ -73,8 +73,9 @@ void ACampFireActor::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* O
 	if (AMumulPlayerState* PS = ExitingPawn->GetPlayerState<AMumulPlayerState>())
 	{
 		// [디버깅 로그] 현재 채널과 변경할 채널 확인
-		UE_LOG(LogTemp, Error, TEXT("Exit Campfire! Current Ch: %d -> Change to 0"), PS->VoiceChannelID);
-       
-		PS->Server_SetVoiceChannelID(0); 
+		UE_LOG(LogTemp, Error, TEXT("Exit Campfire! Current Ch: %s -> Change to Lobby"), *PS->VoiceChannelID);
+
+		PS->bIsNearByCampFire = false;
+		PS->Server_SetVoiceChannelID(TEXT("Lobby")); 
 	}
 }

@@ -138,8 +138,8 @@ void ATentActor::SetOwnerUserIndex(int32 NewUserIndex)
 {
 	OwnerUserIndex = NewUserIndex;
 
-	if (ChildCampFire)
-	{
-		ChildCampFire->CampfireChannelID = NewUserIndex;
-	}
+	// if (ChildCampFire)
+	// {
+	// 	ChildCampFire->CampfireChannelID = NewUserIndex;
+	// }
 }

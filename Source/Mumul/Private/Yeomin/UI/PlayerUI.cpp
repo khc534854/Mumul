@@ -87,13 +87,15 @@ void UPlayerUI::OnRecordClicked()
 	{
 		if (PC)
 		{
+			// 녹음 중이면 -> 종료 팝업 띄우기
 			if (VoiceComp->IsRecording())
 			{
-				PC->RequestStopMeetingRecording();
+				PC->OpenEndMeetingPopup();
 			}
+			// 녹음 중 아니면 -> 시작 설정 UI 띄우기
 			else
 			{
-				PC->RequestStartMeetingRecording();
+				PC->OpenMeetingSetupUI();
 			}
 		}
 	}
