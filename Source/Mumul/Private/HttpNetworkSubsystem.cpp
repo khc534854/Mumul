@@ -24,60 +24,67 @@ void UHttpNetworkSubsystem::Deinitialize()
 }
 
 void UHttpNetworkSubsystem::SendAudioChunk(const TArray<uint8>& WavData, FString MeetingID, FString UserID,
-                                           int32 ChunkIndex)
+    int32 ChunkIndex)
 {
-	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
+    TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
 
-	// 1. URL 설정 (파이썬 요구사항: meetings/{meeting_id}/audio_chunk)
-	// BaseURL 뒤에 슬래시가 없다고 가정하고 포맷팅
-	FString FullURL = FString::Printf(TEXT("%s/meeting/%s/audio_chunk"), *BaseURL, *MeetingID);
-	Request->SetURL(FullURL);
-
-	Request->SetVerb(TEXT("POST"));
-
-	// 2. Boundary 생성
-	FString Boundary = TEXT("---------------------------UnrealBoundary12345");
-	Request->SetHeader(TEXT("Content-Type"), FString::Printf(TEXT("multipart/form-data; boundary=%s"), *Boundary));
-
-	// 3. Body 조립 (순서대로 샌드위치 만들기)
-	TArray<uint8> Payload;
-
-	// --- [필드 1] user_id ---
-	AddString(Payload, FString::Printf(TEXT("--%s\r\n"), *Boundary));
-	AddString(Payload, TEXT("Content-Disposition: form-data; name=\"user_id\"\r\n\r\n"));
-	AddString(Payload, UserID);
-	AddString(Payload, TEXT("\r\n"));
-
-	// --- [필드 2] chunk_index ---
-	AddString(Payload, FString::Printf(TEXT("--%s\r\n"), *Boundary));
-	AddString(Payload, TEXT("Content-Disposition: form-data; name=\"chunk_index\"\r\n\r\n"));
-	AddString(Payload, FString::FromInt(ChunkIndex)); // 숫자를 문자열로 변환해서 전송
-	AddString(Payload, TEXT("\r\n"));
-
-	// Is Last
-	//AddString(Payload, FString::Printf(TEXT("--%s\r\n"), *Boundary));
-	//AddString(Payload, TEXT("Content-Disposition: form-data; name=\"is_last\"\r\n\r\n"));
-	//AddString(Payload, bIsLast ? TEXT("true") : TEXT("false")); // 파이썬이 문자열 "true"/"false"로 받음
-	//AddString(Payload, TEXT("\r\n"));
-
-	// --- [필드 3] audio_file (WAV 데이터) ---
-	AddString(Payload, FString::Printf(TEXT("--%s\r\n"), *Boundary));
-	// 서버가 요구한 이름: name="audio_file"
-	AddString(Payload, TEXT("Content-Disposition: form-data; name=\"audio_file\"; filename=\"voice.wav\"\r\n"));
-	AddString(Payload, TEXT("Content-Type: audio/wav\r\n\r\n"));
-	Payload.Append(WavData); // 바이너리 데이터 추가
-	AddString(Payload, TEXT("\r\n"));
-
-	// --- [종료] ---
-	AddString(Payload, FString::Printf(TEXT("--%s--\r\n"), *Boundary));
-
-	// 4. 전송
-	Request->SetContent(Payload);
-	Request->OnProcessRequestComplete().BindUObject(this, &UHttpNetworkSubsystem::OnSendVoiceComplete);
-
-    UE_LOG(LogTemp, Warning, TEXT("[HTTP] >> Start Uploading Audio Chunk. Meeting: %s, Chunk: %d, Size: %d"), 
-        *MeetingID, ChunkIndex, WavData.Num());
+    // 1. URL 설정
+    FString FullURL = FString::Printf(TEXT("%s/meeting/%s/audio_chunk"), *BaseURL, *MeetingID);
+    Request->SetURL(FullURL);
     
+    Request->SetVerb(TEXT("POST"));
+
+    // 2. Boundary 생성
+    FString Boundary = TEXT("---------------------------UnrealBoundary12345");
+    Request->SetHeader(TEXT("Content-Type"), FString::Printf(TEXT("multipart/form-data; boundary=%s"), *Boundary));
+
+    // 3. Body 조립
+    TArray<uint8> Payload;
+
+    // --- [필드 1] user_id ---
+    AddString(Payload, FString::Printf(TEXT("--%s\r\n"), *Boundary));
+    AddString(Payload, TEXT("Content-Disposition: form-data; name=\"user_id\"\r\n\r\n"));
+    AddString(Payload, UserID);
+    AddString(Payload, TEXT("\r\n"));
+
+    // --- [필드 2] chunk_index ---
+    AddString(Payload, FString::Printf(TEXT("--%s\r\n"), *Boundary));
+    AddString(Payload, TEXT("Content-Disposition: form-data; name=\"chunk_index\"\r\n\r\n"));
+    AddString(Payload, FString::FromInt(ChunkIndex));
+    AddString(Payload, TEXT("\r\n"));
+
+    // --- [필드 3] upload_timestamp (신규 추가) ---
+    int64 CurrentTimestamp = GetCurrentEpochMs(); // 현재 시간(ms) 가져오기
+    
+    AddString(Payload, FString::Printf(TEXT("--%s\r\n"), *Boundary));
+    AddString(Payload, TEXT("Content-Disposition: form-data; name=\"upload_timestamp\"\r\n\r\n"));
+    AddString(Payload, FString::Printf(TEXT("%lld"), CurrentTimestamp)); // int64를 문자열로 변환
+    AddString(Payload, TEXT("\r\n"));
+
+    // Is Last (주석 유지)
+    //AddString(Payload, FString::Printf(TEXT("--%s\r\n"), *Boundary));
+    //AddString(Payload, TEXT("Content-Disposition: form-data; name=\"is_last\"\r\n\r\n"));
+    //AddString(Payload, bIsLast ? TEXT("true") : TEXT("false")); 
+    //AddString(Payload, TEXT("\r\n"));
+
+    // --- [필드 4] audio_file (WAV 데이터) ---
+    AddString(Payload, FString::Printf(TEXT("--%s\r\n"), *Boundary));
+    AddString(Payload, TEXT("Content-Disposition: form-data; name=\"audio_file\"; filename=\"voice.wav\"\r\n"));
+    AddString(Payload, TEXT("Content-Type: audio/wav\r\n\r\n"));
+    Payload.Append(WavData); 
+    AddString(Payload, TEXT("\r\n"));
+
+    // --- [종료] ---
+    AddString(Payload, FString::Printf(TEXT("--%s--\r\n"), *Boundary));
+
+    // 4. 전송
+    Request->SetContent(Payload);
+    Request->OnProcessRequestComplete().BindUObject(this, &UHttpNetworkSubsystem::OnSendVoiceComplete);
+
+    // 로그에도 타임스탬프 표시 (확인용)
+    UE_LOG(LogTemp, Log, TEXT("[HTTP] Sending Audio Chunk. ID: %s, Idx: %d, Time: %lld, Size: %d"), 
+        *MeetingID, ChunkIndex, CurrentTimestamp, Payload.Num());
+        
     Request->ProcessRequest();
 }
 
