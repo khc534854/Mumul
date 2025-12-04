@@ -13,6 +13,8 @@
 #include "Yeomin/Player/CuteAlienController.h"
 #include "Yeomin/UI/GroupChatUI.h"
 #include "Yeomin/UI/GroupProfileUI.h"
+#include "Yeomin/UI/BaseUI/BaseButton.h"
+#include "Yeomin/UI/BaseUI/BaseTextBox.h"
 
 void UCreateGroupChatUI::NativeConstruct()
 {
@@ -23,8 +25,8 @@ void UCreateGroupChatUI::NativeConstruct()
 	{
 		GS->OnPlayerArrayUpdated.AddDynamic(this, &UCreateGroupChatUI::RefreshJoinedPlayerList);
 	}
-	CreateGroupBtn->OnPressed.AddDynamic(this, &UCreateGroupChatUI::CreateGroupChat);
-	SearchBox->OnTextChanged.AddDynamic(this, &UCreateGroupChatUI::OnSearchTextChanged);
+	CreateGroupBtn->BaseButton->OnPressed.AddDynamic(this, &UCreateGroupChatUI::CreateGroupChat);
+	SearchBox->BaseTextBox->OnTextChanged.AddDynamic(this, &UCreateGroupChatUI::OnSearchTextChanged);
 	RefreshJoinedPlayerList();
 
 	HttpSystem = GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>();
@@ -106,7 +108,7 @@ void UCreateGroupChatUI::CreateGroupChat()
 	if (CheckedUserIDs.Num() == 0)
 		return;
 
-	FString GroupName = GroupNameText->GetText().ToString();
+	FString GroupName = GroupNameText->BaseTextBox->GetText().ToString();
 	GroupName = MakeUniqueGroupName(GroupName);
 	
 	// Send CreateTeamChat Request

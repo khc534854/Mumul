@@ -17,7 +17,7 @@ public:
 	class UWidgetSwitcher* MeetingWidgetSwitcher;
 	
 	UPROPERTY(meta=(BindWidget))
-	class UTextBlock* TeamNameText;
+	class UBaseText* TeamNameText;
 	
 	// [시작 화면]
 	UPROPERTY(meta=(BindWidget))
@@ -29,7 +29,7 @@ public:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> MeetingStartBtn;
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UButton> MeetingCancelBtn;
+	TObjectPtr<class UBaseExitButton> MeetingCancelBtn;
     
 	// [종료 화면]
 	UPROPERTY(meta=(BindWidget))

@@ -4,13 +4,14 @@
 #include "Components/EditableTextBox.h"
 #include "Components/MultiLineEditableText.h"
 #include "Components/WidgetSwitcher.h"
+#include "Yeomin/UI/BaseUI/BaseExitButton.h"
 
 void UVoiceMeetingUI::NativeConstruct()
 {
     Super::NativeConstruct();
     
     if(MeetingStartBtn) MeetingStartBtn->OnClicked.AddDynamic(this, &UVoiceMeetingUI::OnClickStartMeeting);
-    if(MeetingCancelBtn) MeetingCancelBtn->OnClicked.AddDynamic(this, &UVoiceMeetingUI::OnClickMeetingCancel);
+    if(MeetingCancelBtn) MeetingCancelBtn->BaseExitButton->OnClicked.AddDynamic(this, &UVoiceMeetingUI::OnClickMeetingCancel);
     if(ConfirmEndBtn) ConfirmEndBtn->OnClicked.AddDynamic(this, &UVoiceMeetingUI::OnClickConfirmEnd);
     if(CancelEndBtn) CancelEndBtn->OnClicked.AddDynamic(this, &UVoiceMeetingUI::OnClickReturnMeeting);
 
