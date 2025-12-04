@@ -27,7 +27,7 @@ public:
 	virtual void Deinitialize() override;
 
 	UFUNCTION(BlueprintCallable, Category = "Network|WebSocket")
-	void Connect(const FString& Url);
+	void Connect(FString EndPoint);
 
 	UFUNCTION(BlueprintCallable, Category = "Network|WebSocket")
 	void Close();
@@ -41,6 +41,10 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Network|WebSocket")
 	bool IsConnected() const;
+
+public:
+	UPROPERTY(EditAnywhere, Category="Network")
+	FString BaseURL = TEXT("ws://127.0.0.1:8000/ws");
 
 public:
 	UPROPERTY(BlueprintAssignable)

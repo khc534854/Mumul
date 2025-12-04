@@ -159,12 +159,35 @@ void ACuteAlienController::BeginPlay()
 		Subsystem->AddMappingContext(IMC_Player, 0);
 	}
 
-	RadialUI = CreateWidget<URadialUI>(this, RadialUIClass);
-	RadialUI->AddToViewport();
-	PlayerUI = CreateWidget<UPlayerUI>(this, PlayerUIClass);
-	PlayerUI->AddToViewport();
-	GroupChatUI = CreateWidget<UGroupChatUI>(this, GroupChatUIClass);
-	GroupChatUI->AddToViewport();
+	if (RadialUIClass)
+	{
+		RadialUI = CreateWidget<URadialUI>(this, RadialUIClass);
+		if (RadialUI)
+		{
+			RadialUI->AddToViewport();
+			RadialUI->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
+
+	// [수정] Player UI 안전 생성
+	if (PlayerUIClass)
+	{
+		PlayerUI = CreateWidget<UPlayerUI>(this, PlayerUIClass);
+		if (PlayerUI)
+		{
+			PlayerUI->AddToViewport();
+		}
+	}
+
+	// [수정] Group Chat UI 안전 생성 (여기가 원인일 확률 높음)
+	if (GroupChatUIClass)
+	{
+		GroupChatUI = CreateWidget<UGroupChatUI>(this, GroupChatUIClass);
+		if (GroupChatUI)
+		{
+			GroupChatUI->AddToViewport();
+		}
+	}
 
 	RadialUI->SetVisibility(ESlateVisibility::Hidden);
 

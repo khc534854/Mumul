@@ -22,6 +22,38 @@ protected:
 	
 	void ToggleVisibility(UWidget* Widget);
 
+	// [신규] 웹소켓 서브시스템
+	UPROPERTY()
+	TObjectPtr<class UWebSocketSubsystem> WebSocketSystem;
+
+	// [신규] 현재 보고 있는 채팅방 (이전 방과 비교하기 위해 저장)
+	UPROPERTY()
+	TObjectPtr<class UGroupIconUI> CurrentSelectedGroup;
+
+public:
+	// [신규] 그룹 아이콘이 클릭되었을 때 호출되는 함수 (방 전환 메인 로직)
+	void SelectGroupChat(class UGroupIconUI* SelectedIcon);
+
+protected:
+	// [신규] 챗봇 응답 핸들러
+	UFUNCTION()
+	void OnAIChatStarted(FString Message);
+    
+	UFUNCTION()
+	void OnAIChatAnswer(FString Answer);
+    
+	// [신규] 챗봇 방 초기화 함수
+	void InitChatbotRoom();
+
+	UPROPERTY(EditDefaultsOnly, Category="UI Class")
+	TSubclassOf<class UChatBlockUI> ChatBlockUIClass;
+	
+	UPROPERTY(EditDefaultsOnly, Category="UI Class")
+	TSubclassOf<class UChatMessageBlockUI> BotChatMessageBlockUIClass;
+
+public:
+	// [신규] 챗봇 메시지(또는 경고문)를 화면에 추가하는 함수
+	void AddBotChat(const FString& Message);
 public:
 	void AddChatBlock(class UChatBlockUI* UI) const;
 	void RemoveChatBlock() const;

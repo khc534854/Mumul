@@ -1,11 +1,21 @@
 ﻿#include "WebSocketSubsystem.h"
+
+#include "MumulGameSettings.h"
 #include "WebSocketsModule.h" // 모듈 헤더
 #include "Async/Async.h"
+
+class UMumulGameSettings;
 
 void UWebSocketSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
     Super::Initialize(Collection);
     UE_LOG(LogTemp, Log, TEXT("[WebSocket] Subsystem Initialized"));
+
+    const UMumulGameSettings* Settings = GetDefault<UMumulGameSettings>();
+    if (Settings)
+    {
+        BaseURL = Settings->WebSocketURL;
+    }
 }
 
 void UWebSocketSubsystem::Deinitialize()
@@ -15,7 +25,7 @@ void UWebSocketSubsystem::Deinitialize()
     Super::Deinitialize();
 }
 
-void UWebSocketSubsystem::Connect(const FString& Url)
+void UWebSocketSubsystem::Connect(FString EndPoint)
 {
     if (!FModuleManager::Get().IsModuleLoaded("WebSockets"))
     {
@@ -27,11 +37,13 @@ void UWebSocketSubsystem::Connect(const FString& Url)
     {
         Close();
     }
-
-    UE_LOG(LogTemp, Log, TEXT("[WebSocket] Connecting to: %s"), *Url);
+    
+    FString FullURL = FString::Printf(TEXT("%s/%s/"), *BaseURL, *EndPoint);
+    
+    UE_LOG(LogTemp, Log, TEXT("[WebSocket] Connecting to: %s"), *FullURL);
 
     // 1. 소켓 생성
-    WebSocket = FWebSocketsModule::Get().CreateWebSocket(Url);
+    WebSocket = FWebSocketsModule::Get().CreateWebSocket(FullURL);
 
     // 2. 이벤트 바인딩 (AsyncTask 적용)
 
@@ -125,26 +137,43 @@ void UWebSocketSubsystem::HandleWebSocketMessage(const FString& Message)
 
     if (FJsonSerializer::Deserialize(Reader, JsonObject) && JsonObject.IsValid())
     {
-        // 2. "event" 필드 확인
         FString EventType = JsonObject->GetStringField(TEXT("event"));
 
+        // 1. 채팅 시작됨 (chat_started)
         if (EventType == TEXT("chat_started"))
         {
             FString Msg = JsonObject->GetStringField(TEXT("message"));
-            OnAIChatStarted.Broadcast(Msg);
+            // 필요시 sessionId, userId도 파싱 가능
+            
             UE_LOG(LogTemp, Log, TEXT("[WS] Chat Started: %s"), *Msg);
+            OnAIChatStarted.Broadcast(Msg);
         }
+        // 2. 답변 수신 (answer)
         else if (EventType == TEXT("answer"))
         {
-            FString Answer = JsonObject->GetStringField(TEXT("answer"));
-            OnAIChatAnswer.Broadcast(Answer);
-            UE_LOG(LogTemp, Log, TEXT("[WS] AI Answer: %s"), *Answer);
+            FString AnswerText = JsonObject->GetStringField(TEXT("answer"));
+            // 명세서에 추가된 userId 등도 필요하면 파싱
+            // FString UserID = JsonObject->GetStringField(TEXT("userId"));
+
+            UE_LOG(LogTemp, Log, TEXT("[WS] AI Answer: %s"), *AnswerText);
+            OnAIChatAnswer.Broadcast(AnswerText);
         }
+        // 3. 채팅 종료됨 (chat_ended)
         else if (EventType == TEXT("chat_ended"))
         {
             FString Msg = JsonObject->GetStringField(TEXT("message"));
-            OnAIChatEnded.Broadcast(Msg);
+            
             UE_LOG(LogTemp, Log, TEXT("[WS] Chat Ended: %s"), *Msg);
+            OnAIChatEnded.Broadcast(Msg);
         }
+        // 예외: 에러 메시지나 알 수 없는 이벤트
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("[WS] Unknown Event: %s"), *EventType);
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("[WS] JSON Parsing Failed: %s"), *Message);
     }
 }

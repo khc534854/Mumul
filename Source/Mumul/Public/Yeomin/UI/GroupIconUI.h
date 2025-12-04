@@ -37,4 +37,8 @@ protected:
 public:
 	UPROPERTY()
 	TObjectPtr<class UChatBlockUI> ChatBlockUI;
+
+public:
+	// [신규] 이 아이콘이 챗봇 방인지 여부
+	bool bIsChatbotRoom = false;
 };

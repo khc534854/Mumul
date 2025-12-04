@@ -21,33 +21,45 @@ void UGroupIconUI::NativeConstruct()
 	{
 		HttpSystem->OnTeamChatMessageResponse.AddDynamic(this, &UGroupIconUI::OnServerTeamChatMessageResponse);
 	}
+
+	if (!ChatBlockUI)
+	{
+		if (ChatBlockUIClass)
+		{
+			ChatBlockUI = CreateWidget<UChatBlockUI>(GetWorld(), ChatBlockUIClass);
+		}
+	}
 	
-	ChatBlockUI = CreateWidget<UChatBlockUI>(GetWorld(), ChatBlockUIClass);
 	GroupIconBtn->OnPressed.AddDynamic(this, &UGroupIconUI::DisplayGroupChat);
 }
 
 void UGroupIconUI::DisplayGroupChat()
 {
-	ParentUI->RemoveChatBlock();
-	ParentUI->AddChatBlock(ChatBlockUI);
+	// ParentUI->RemoveChatBlock();
+	// ParentUI->AddChatBlock(ChatBlockUI);
+	//
+	// if (AMumulPlayerState* PS = GetOwningPlayer()->GetPlayerState<AMumulPlayerState>())
+	// {
+	// 	if (PS->bIsNearByCampFire)
+	// 	{
+	// 		PS->Server_SetVoiceChannelID(ChatBlockUI->GetTeamID());
+	// 	}
+	// 	else
+	// 	{
+	// 		PS->WaitingChannelID = ChatBlockUI->GetTeamID();
+	// 	}
+	// }
+	//
+	//
+	// ParentUI->SetGroupNameTitle(ChatBlockUI->GetTeamName());
+	//
+	// // Send TeamChatMessage Request
+	// HttpSystem->SendTeamChatMessageRequest(ChatBlockUI->GetTeamID());
 
-	if (AMumulPlayerState* PS = GetOwningPlayer()->GetPlayerState<AMumulPlayerState>())
+	if (ParentUI)
 	{
-		if (PS->bIsNearByCampFire)
-		{
-			PS->Server_SetVoiceChannelID(ChatBlockUI->GetTeamID());
-		}
-		else
-		{
-			PS->WaitingChannelID = ChatBlockUI->GetTeamID();
-		}
+		ParentUI->SelectGroupChat(this);
 	}
-	
-	
-	ParentUI->SetGroupNameTitle(ChatBlockUI->GetTeamName());
-	
-	// Send TeamChatMessage Request
-	HttpSystem->SendTeamChatMessageRequest(ChatBlockUI->GetTeamID());
 }
 
 void UGroupIconUI::InitParentUI(UGroupChatUI* Parent)

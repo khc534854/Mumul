@@ -252,7 +252,7 @@ struct FWSRequest_StartChat
 	FString event = TEXT("start_chat");
 
 	UPROPERTY()
-	FString sessionId;
+	FString sessionId; // 명세서: 유저아이디와 동일
 
 	UPROPERTY()
 	FString userId;
@@ -268,7 +268,7 @@ struct FWSRequest_Query
 	FString event = TEXT("query");
 
 	UPROPERTY()
-	FString sessionId;
+	FString sessionId; // 유저아이디와 동일
 
 	UPROPERTY()
 	FString query;
@@ -284,8 +284,9 @@ struct FWSRequest_EndChat
 	FString event = TEXT("end_chat");
 
 	UPROPERTY()
-	FString sessionId;
+	FString sessionId; // 유저아이디와 동일
 };
+
 
 // --- [WebSocket 응답 데이터용 구조체] ---
 
@@ -300,6 +301,9 @@ struct FWSResponse_Answer
 
 	UPROPERTY()
 	FString sessionId;
+    
+	UPROPERTY()
+	FString userId; // [추가됨] 명세서 반영
 
 	UPROPERTY()
 	FString answer;
