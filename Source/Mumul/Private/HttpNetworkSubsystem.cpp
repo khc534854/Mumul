@@ -24,7 +24,7 @@ void UHttpNetworkSubsystem::Deinitialize()
 }
 
 void UHttpNetworkSubsystem::SendAudioChunk(const TArray<uint8>& WavData, FString MeetingID, FString UserID,
-    int32 ChunkIndex)
+    int32 ChunkIndex, bool bIsLast)
 {
     TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
 
@@ -62,10 +62,10 @@ void UHttpNetworkSubsystem::SendAudioChunk(const TArray<uint8>& WavData, FString
     AddString(Payload, TEXT("\r\n"));
 
     // Is Last (주석 유지)
-    //AddString(Payload, FString::Printf(TEXT("--%s\r\n"), *Boundary));
-    //AddString(Payload, TEXT("Content-Disposition: form-data; name=\"is_last\"\r\n\r\n"));
-    //AddString(Payload, bIsLast ? TEXT("true") : TEXT("false")); 
-    //AddString(Payload, TEXT("\r\n"));
+    AddString(Payload, FString::Printf(TEXT("--%s\r\n"), *Boundary));
+    AddString(Payload, TEXT("Content-Disposition: form-data; name=\"is_last\"\r\n\r\n"));
+    AddString(Payload, bIsLast ? TEXT("true") : TEXT("false")); 
+    AddString(Payload, TEXT("\r\n"));
 
     // --- [필드 4] audio_file (WAV 데이터) ---
     AddString(Payload, FString::Printf(TEXT("--%s\r\n"), *Boundary));

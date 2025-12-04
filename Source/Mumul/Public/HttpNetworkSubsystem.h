@@ -36,7 +36,7 @@ public:
 	void SendJsonRequest(const RequestType& StructData, const FString& UrlEndpoint, void (UHttpNetworkSubsystem::*CallbackFunc)(FHttpRequestPtr, FHttpResponsePtr, bool));	
 
 	UFUNCTION(BlueprintCallable, Category = "Network")
-	void SendAudioChunk(const TArray<uint8>& WavData, FString MeetingID, FString UserID, int32 ChunkIndex);
+	void SendAudioChunk(const TArray<uint8>& WavData, FString MeetingID, FString UserID, int32 ChunkIndex, bool bIsLast);
 
 	UFUNCTION(BlueprintCallable, Category = "Network")
 	void SendLoginRequest(FString ID, FString PW);

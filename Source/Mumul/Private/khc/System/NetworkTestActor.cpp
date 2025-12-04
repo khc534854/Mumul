@@ -94,7 +94,7 @@ void ANetworkTestActor::TestSendMultipartVoice()
         
         if (UMumulVoiceFunctionLibrary::LoadWavFile(TestFileName, LoadedWavData))
         {
-            HttpSystem->SendAudioChunk(LoadedWavData, TestRoomID, TestUserID, 1);
+            HttpSystem->SendAudioChunk(LoadedWavData, TestRoomID, TestUserID, 1, true);
             
             UE_LOG(LogTemp, Log, TEXT("[Test] Real Audio File Sent: %s (Size: %d bytes)"), *TestFileName, LoadedWavData.Num());
         }

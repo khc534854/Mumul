@@ -219,7 +219,7 @@ void UVoiceChatComponent::SendCurrentChunk(bool bIsLast)
 			// 전송 (ChunkIndex 사용 후 증가)
 			// HttpSystem->SendAudioChunk 함수에 bIsLast 인자 추가 필요 (아래 참고)
 			//HttpSystem->SendAudioChunk(WavData, CurrentMeetingID, UserID, CurrentChunkIndex++);
-			HttpSystem->SendAudioChunk(WavData, GetCurrentMeetingID(), FString::FromInt(UserID), CurrentChunkIndex++);
+			HttpSystem->SendAudioChunk(WavData, GetCurrentMeetingID(), FString::FromInt(UserID), CurrentChunkIndex++, bIsLast);
 		}
 	}
 
