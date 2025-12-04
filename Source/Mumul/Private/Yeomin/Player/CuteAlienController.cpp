@@ -363,10 +363,10 @@ void ACuteAlienController::OnHostRecordingStopped()
 
 void ACuteAlienController::OnPressEsc()
 {
-	Server_SaveAndExit();
+	SaveAndExit();
 }
 
-void ACuteAlienController::Server_SaveAndExit_Implementation()
+void ACuteAlienController::SaveAndExit()
 {
 	// 1. 저장 (아직 폰과 연결되어 있으므로 안전함)
 	if (AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>())

@@ -49,8 +49,7 @@ public:
 	// ESC 키에 바인딩할 함수
 
 	// 저장 후 로비로 가거나 게임 종료
-	UFUNCTION(Server, Reliable)
-	void Server_SaveAndExit();
+	void SaveAndExit();
 
 	UFUNCTION()
 	void OnHostRecordingStopped();
