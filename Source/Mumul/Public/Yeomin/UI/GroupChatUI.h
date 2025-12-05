@@ -17,7 +17,7 @@ class MUMUL_API UGroupChatUI : public UUserWidget
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
-	
+
 	UPROPERTY()
 	TObjectPtr<class UHttpNetworkSubsystem> HttpSystem;
 	
@@ -68,8 +68,10 @@ public:
 protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UMultiLineEditableTextBox> EditBox;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UButton> ChatEnter;
 	UFUNCTION()
-	void OnTextBoxCommitted(const FText& Text, ETextCommit::Type CommitMethod);
+	void OnTextBoxCommitted();
 	UFUNCTION()
 	void OnServerChatMessageResponse(bool bSuccess, FString Message);
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
