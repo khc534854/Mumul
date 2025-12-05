@@ -55,6 +55,20 @@ void UGroupIconUI::InitParentUI(UGroupChatUI* Parent)
 	ParentUI = Parent;
 }
 
+void UGroupIconUI::SetIconIMG(UTexture2D* IMG)
+{
+	FSlateBrush Brush;
+	Brush.SetResourceObject(IMG);
+	Brush.ImageSize = FVector2D(120.f);
+
+	FButtonStyle Style;
+	Style.Normal = Brush;
+	Style.Hovered = Brush;
+	Style.Pressed = Brush;
+	
+	GroupIconBtn->SetStyle(Style);
+}
+
 void UGroupIconUI::OnServerTeamChatMessageResponse(bool bSuccess, FString Message)
 {
 	if (bSuccess)

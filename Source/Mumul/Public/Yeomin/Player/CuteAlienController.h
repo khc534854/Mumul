@@ -183,12 +183,15 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Server_AddTeamChatList(const FString& TeamID);
 	
+	UPROPERTY()
+	TObjectPtr<class UIMGManager> IMGManager;
+	
 	UFUNCTION(Server, Reliable)
 	void Server_CreateGroupChatUI(const TArray<int32>& UserIDs, const FString& TeamID, const FString& TeamName,
 								  const TArray<FTeamUser>& TeamUserIDs);
 	UFUNCTION(Client, Reliable)
 	void Client_CreateGroupChatUI(const FString& TeamID, const FString& TeamName,
-	                              const TArray<FTeamUser>& TeamUserIDs);
+	                              const TArray<FTeamUser>& TeamUserIDs, UTexture2D* IMG);
 
 	UFUNCTION(Server, Reliable)
 	void Server_RequestChat(const FString& TeamID, const TArray<int32>& UserIDs, const FString& CurrentTime,

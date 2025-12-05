@@ -2,18 +2,20 @@
 #include "Yeomin/Player/CuteAlienController.h"
 #include "Components/Button.h"
 #include "Components/EditableTextBox.h"
-#include "Components/MultiLineEditableText.h"
+#include "Components/MultiLineEditableTextBox.h"
 #include "Components/WidgetSwitcher.h"
+#include "Yeomin/UI/BaseUI/BaseButton.h"
 #include "Yeomin/UI/BaseUI/BaseExitButton.h"
+#include "Yeomin/UI/BaseUI/BaseTextBox.h"
 
 void UVoiceMeetingUI::NativeConstruct()
 {
     Super::NativeConstruct();
     
-    if(MeetingStartBtn) MeetingStartBtn->OnClicked.AddDynamic(this, &UVoiceMeetingUI::OnClickStartMeeting);
+    if(MeetingStartBtn) MeetingStartBtn->BaseButton->OnClicked.AddDynamic(this, &UVoiceMeetingUI::OnClickStartMeeting);
     if(MeetingCancelBtn) MeetingCancelBtn->BaseExitButton->OnClicked.AddDynamic(this, &UVoiceMeetingUI::OnClickMeetingCancel);
     if(ConfirmEndBtn) ConfirmEndBtn->OnClicked.AddDynamic(this, &UVoiceMeetingUI::OnClickConfirmEnd);
-    if(CancelEndBtn) CancelEndBtn->OnClicked.AddDynamic(this, &UVoiceMeetingUI::OnClickReturnMeeting);
+    if(CancelEndBtn) CancelEndBtn->BaseButton->OnClicked.AddDynamic(this, &UVoiceMeetingUI::OnClickReturnMeeting);
 
     // 초기화
     if(MeetingWidgetSwitcher) MeetingWidgetSwitcher->SetActiveWidgetIndex(0);
@@ -53,11 +55,11 @@ void UVoiceMeetingUI::OnClickStartMeeting()
     ACuteAlienController* PC = GetMyController();
     if (PC)
     {
-        FString Title = MeetingTitleText->GetText().ToString();
+        FString Title = MeetingTitleText->BaseTextBox->GetText().ToString();
         if (Title.IsEmpty()) return; // 제목 필수
 
         // 컨트롤러에게 시작 요청 (API 전송)
-        PC->RequestStartMeetingRecording(Title, MeetingAgendaText->GetText().ToString(), MeetingDescText->GetText().ToString());
+        PC->RequestStartMeetingRecording(Title, MeetingAgendaText->BaseTextBox->GetText().ToString(), MeetingDescText->BaseTextBox->GetText().ToString());
     }
 }
 

@@ -4,8 +4,11 @@
 #include "Yeomin/UI/GroupChatUI.h"
 
 #include "HttpNetworkSubsystem.h"
+#include "Components/Border.h"
 #include "Components/Button.h"
+#include "Components/CanvasPanelSlot.h"
 #include "Components/EditableTextBox.h"
+#include "Components/MultiLineEditableTextBox.h"
 #include "Components/ScrollBox.h"
 #include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
@@ -17,6 +20,7 @@
 #include "Yeomin/UI/CreateGroupChatUI.h"
 #include "Yeomin/UI/GroupIconUI.h"
 #include "Yeomin/UI/InvitationUI.h"
+#include "Yeomin/UI/BaseUI/BaseText.h"
 
 void UGroupChatUI::NativeConstruct()
 {
@@ -44,6 +48,21 @@ void UGroupChatUI::NativeConstruct()
 	{
 		HttpSystem->OnTeamChatListResponse.AddDynamic(this, &UGroupChatUI::OnServerTeamChatListResponse);
 		HttpSystem->OnChatMessageResponse.AddDynamic(this, &UGroupChatUI::OnServerChatMessageResponse);
+	}
+}
+
+void UGroupChatUI::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+	
+	const float MoveSpeed = 5.f;
+
+	float Target = bIsToggled ? 1.0f : 0.178f;
+	AlignmentVal = FMath::FInterpTo(AlignmentVal, Target, InDeltaTime, MoveSpeed);
+
+	if (auto* CanvasPanelSlot = Cast<UCanvasPanelSlot>(GroupChatBorder->Slot))
+	{
+		CanvasPanelSlot->SetAlignment(FVector2D(AlignmentVal, 0.5f));   // 오른쪽 상단
 	}
 }
 
@@ -185,7 +204,7 @@ void UGroupChatUI::OnServerTeamChatListResponse(bool bSuccess, FString Message)
 				{
 					GroupIconUI->ChatBlockUI->AddTeamUser(User.userId, *User.userName);
 				}
-				
+
 				if (ACuteAlienController* PS = Cast<ACuteAlienController>(GetOwningPlayer()))
 				{
 					PS->Server_AddTeamChatList(TeamChat.teamChatId);
@@ -206,7 +225,7 @@ void UGroupChatUI::OnServerTeamChatListResponse(bool bSuccess, FString Message)
 
 void UGroupChatUI::SetGroupNameTitle(const FString& GroupName)
 {
-	GroupNameTitle->SetText(FText::FromString(GroupName));
+	GroupNameTitle->BaseText->SetText(FText::FromString(GroupName));
 }
 
 void UGroupChatUI::ToggleCreateGroupChatUI()
@@ -238,4 +257,35 @@ void UGroupChatUI::OnToggleVisibilityBtn()
 
 	AMumulPlayerState* PS = Cast<AMumulPlayerState>(GetOwningPlayerState());
 	HttpSystem->SendTeamChatListRequest(PS->PS_UserIndex);
+
+	// Toggle GroupChatUI
+	FSlateBrush Brush;
+	Brush.ImageSize = FVector2D(55.f, 90.f);
+	
+	if (bIsToggled == false)
+	{
+		bIsToggled = true;
+		
+		Brush.SetResourceObject(RightIMG);
+		
+		FButtonStyle Style;
+		Style.Normal = Brush;
+		Style.Hovered = Brush;
+		Style.Pressed = Brush;
+	
+		ToggleVisibilityBtn->SetStyle(Style);
+	}
+	else if (bIsToggled == true)
+	{
+		bIsToggled = false;
+		
+		Brush.SetResourceObject(LeftIMG);
+		
+		FButtonStyle Style;
+		Style.Normal = Brush;
+		Style.Hovered = Brush;
+		Style.Pressed = Brush;
+	
+		ToggleVisibilityBtn->SetStyle(Style);
+	}
 }

@@ -4,10 +4,9 @@
 #include "Yeomin/UI/PlayerUI.h"
 
 #include "Components/Button.h"
-#include "Components/TextBlock.h"
 #include "khc/Player/VoiceChatComponent.h"
 #include "Yeomin/Player/CuteAlienController.h"
-#include "Yeomin/Player/CuteAlienPlayer.h"
+#include "Yeomin/UI/GroupChatUI.h"
 
 void UPlayerUI::NativeConstruct()
 {
@@ -15,7 +14,14 @@ void UPlayerUI::NativeConstruct()
 
 	TentBtn->OnClicked.AddDynamic(this, &UPlayerUI::OnTentClicked);
 	MicrophoneBtn->OnClicked.AddDynamic(this, &UPlayerUI::OnMicClicked);
-	RecordBtn->OnClicked.AddDynamic(this, &UPlayerUI::OnRecordClicked);
+
+	GetWorld()->GetTimerManager().SetTimer(
+		GroupChatCheckTimer,
+		this,
+		&UPlayerUI::CheckGroupChatUI,
+		0.7f,
+		true
+	);
 
 	PC = Cast<ACuteAlienController>(GetOwningPlayer());
 	if (!PC)
@@ -43,6 +49,21 @@ UVoiceChatComponent* UPlayerUI::GetVoiceComponent() const
 	return Pawn->FindComponentByClass<UVoiceChatComponent>();
 }
 
+void UPlayerUI::CheckGroupChatUI()
+{
+	if (GroupChatUI && GroupChatUI->RecordBtn)
+	{
+		GroupChatUI->RecordBtn->OnClicked.AddDynamic(this, &UPlayerUI::OnRecordClicked);
+		
+		GetWorld()->GetTimerManager().ClearTimer(GroupChatCheckTimer);
+	}
+}
+
+void UPlayerUI::InitGroupChatUI(UGroupChatUI* UI)
+{
+	GroupChatUI = UI;
+}
+
 void UPlayerUI::UpdateMicButtonState(bool bActive)
 {
 	if (bActive)
@@ -58,14 +79,6 @@ void UPlayerUI::UpdateMicButtonState(bool bActive)
 
 void UPlayerUI::UpdateRecordButtonState(bool bActive)
 {
-	if (bActive)
-	{
-		RecOnTxt->SetVisibility(ESlateVisibility::Visible);
-	}
-	else
-	{
-		RecOnTxt->SetVisibility(ESlateVisibility::Hidden);
-	}
 }
 
 void UPlayerUI::OnTentClicked()

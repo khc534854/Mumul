@@ -7,13 +7,14 @@
 #include "Base/MumulGameState.h"
 #include "Components/Button.h"
 #include "Components/EditableTextBox.h"
+#include "Components/MultiLineEditableTextBox.h"
 #include "Components/ScrollBox.h"
 #include "GameFramework/PlayerState.h"
 #include "khc/Player/MumulPlayerState.h"
-#include "Yeomin/Player/CuteAlienController.h"
 #include "Yeomin/UI/GroupChatUI.h"
 #include "Yeomin/UI/GroupProfileUI.h"
 #include "Yeomin/UI/BaseUI/BaseButton.h"
+#include "Yeomin/UI/BaseUI/BaseExitButton.h"
 #include "Yeomin/UI/BaseUI/BaseTextBox.h"
 
 void UCreateGroupChatUI::NativeConstruct()
@@ -27,6 +28,7 @@ void UCreateGroupChatUI::NativeConstruct()
 	}
 	CreateGroupBtn->BaseButton->OnPressed.AddDynamic(this, &UCreateGroupChatUI::CreateGroupChat);
 	SearchBox->BaseTextBox->OnTextChanged.AddDynamic(this, &UCreateGroupChatUI::OnSearchTextChanged);
+	ExitBtn->BaseExitButton->OnPressed.AddDynamic(this, &UCreateGroupChatUI::OnExitUI);
 	RefreshJoinedPlayerList();
 
 	HttpSystem = GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>();
@@ -158,4 +160,9 @@ FString UCreateGroupChatUI::MakeUniqueGroupName(const FString& BaseName) const
 
 	// BaseName + (MaxIndex + 1)
 	return FString::Printf(TEXT("%s%d"), *NewBaseName, MaxIndex + 1);
+}
+
+void UCreateGroupChatUI::OnExitUI()
+{
+	ParentUI->ToggleCreateGroupChatUI();
 }

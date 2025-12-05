@@ -13,12 +13,12 @@ UCLASS()
 class MUMUL_API UBaseTextBox : public UUserWidget
 {
 	GENERATED_BODY()
-	
+
 public:
 	virtual void NativePreConstruct() override;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<class UEditableTextBox> BaseTextBox;
+	TObjectPtr<class UMultiLineEditableTextBox> BaseTextBox;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Content")
 	FText Text;

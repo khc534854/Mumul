@@ -52,4 +52,9 @@ protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UBaseTextBox> GroupNameText;
 	FString MakeUniqueGroupName(const FString& BaseName) const;
+	
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UBaseExitButton> ExitBtn;
+	UFUNCTION()
+	void OnExitUI();
 };

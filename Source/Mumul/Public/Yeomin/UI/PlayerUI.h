@@ -25,6 +25,12 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<class ACuteAlienController> PC;
+	UPROPERTY()
+	TObjectPtr<class UGroupChatUI> GroupChatUI;
+	FTimerHandle GroupChatCheckTimer;
+	void CheckGroupChatUI();
+public:
+	void InitGroupChatUI(UGroupChatUI* UI);
 	
 protected:
 	UPROPERTY(meta=(BindWidget))
@@ -33,9 +39,6 @@ protected:
 	TObjectPtr<class UButton> MicrophoneBtn;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> RecordBtn;
-
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<class UTextBlock> RecOnTxt;
 	
 	UPROPERTY(Transient, meta = (BindWidgetAnim))
 	TObjectPtr<class UWidgetAnimation > MicOn;

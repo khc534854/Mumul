@@ -14,7 +14,7 @@ class MUMUL_API UBaseText : public UUserWidget
 {
 	GENERATED_BODY()
 	
-protected:
+public:
 	virtual void NativePreConstruct() override;
 	
 	UPROPERTY(meta=(BindWidget))

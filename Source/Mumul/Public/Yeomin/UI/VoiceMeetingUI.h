@@ -21,13 +21,13 @@ public:
 	
 	// [시작 화면]
 	UPROPERTY(meta=(BindWidget))
-	class UEditableTextBox* MeetingTitleText; // EditableText -> EditableTextBox 권장
+	class UBaseTextBox* MeetingTitleText; // EditableText -> EditableTextBox 권장
 	UPROPERTY(meta=(BindWidget))
-	class UEditableTextBox* MeetingAgendaText;
+	class UBaseTextBox* MeetingAgendaText;
 	UPROPERTY(meta=(BindWidget))
-	class UMultiLineEditableText* MeetingDescText;
+	class UBaseTextBox* MeetingDescText;
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UButton> MeetingStartBtn;
+	TObjectPtr<class UBaseButton> MeetingStartBtn;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UBaseExitButton> MeetingCancelBtn;
     
@@ -35,7 +35,7 @@ public:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> ConfirmEndBtn; // "예"
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UButton> CancelEndBtn;  // "아니오"
+	TObjectPtr<class UBaseButton> CancelEndBtn;  // "아니오"
 
 	// 함수들
 	void InitMeetingUI(bool bIsHost); // UI 초기화

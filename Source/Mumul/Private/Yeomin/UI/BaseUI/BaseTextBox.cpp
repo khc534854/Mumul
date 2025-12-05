@@ -3,7 +3,7 @@
 
 #include "Yeomin/UI/BaseUI/BaseTextBox.h"
 
-#include "Components/EditableTextBox.h"
+#include "Components/MultiLineEditableTextBox.h"
 
 void UBaseTextBox::NativePreConstruct()
 {
