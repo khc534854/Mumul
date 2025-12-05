@@ -139,7 +139,7 @@ void UGroupChatUI::SelectGroupChat(class UGroupIconUI* SelectedIcon)
     // 3. 새 방 진입 처리
     if (SelectedIcon->bIsChatbotRoom)
     {
-    	if (AICheckBox) AICheckBox->SetVisibility(ESlateVisibility::Collapsed);
+    	if (AICheckBox) AICheckBox->SetVisibility(ESlateVisibility::Visible);
     	
     	if (SelectedIcon->ChatBlockUI)
     	{
@@ -654,6 +654,7 @@ void UGroupChatUI::OnAICheckStateChanged(bool bIsChecked)
 {
 	// 일반 방이 아니면 무시
 	if (!CurrentSelectedGroup || CurrentSelectedGroup->bIsChatbotRoom) return;
+	UE_LOG(LogTemp, Log, TEXT("[AI Chat Mode : %s"), bIsChecked ? TEXT("On") : TEXT("Off"));
 
 	UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
 	if (!GI) return;
