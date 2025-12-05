@@ -19,6 +19,7 @@
 #include "Yeomin/UI/GroupIconUI.h"
 #include "Yeomin/UI/InvitationUI.h"
 #include "MumulGameInstance.h" // 필수
+#include "Yeomin/UI/BotChatMessageBlockUI.h"
 
 void UGroupChatUI::NativeConstruct()
 {
@@ -46,8 +47,10 @@ void UGroupChatUI::NativeConstruct()
 	{
 		HttpSystem->OnTeamChatListResponse.AddDynamic(this, &UGroupChatUI::OnServerTeamChatListResponse);
 		HttpSystem->OnChatMessageResponse.AddDynamic(this, &UGroupChatUI::OnServerChatMessageResponse);
+		HttpSystem->OnChatHistoryResponse.AddDynamic(this, &UGroupChatUI::OnServerChatHistoryResponse);
 	}
-
+	
+	WebSocketSystem = GetGameInstance()->GetSubsystem<UWebSocketSubsystem>();
 	if (WebSocketSystem)
 	{
 		WebSocketSystem->OnAIChatStarted.AddDynamic(this, &UGroupChatUI::OnAIChatStarted);
@@ -70,7 +73,7 @@ void UGroupChatUI::SelectGroupChat(class UGroupIconUI* SelectedIcon)
     if (CurrentSelectedGroup == SelectedIcon) return; 
 
     UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
-    FString UserID = GI ? FString::FromInt(GI->PlayerUniqueID) : TEXT("Unknown");
+    int32 UserID = GI ? GI->PlayerUniqueID : 0;
 
     // 1. 이전 방 정리 (챗봇 방에서 나가는 경우)
     if (CurrentSelectedGroup && CurrentSelectedGroup->bIsChatbotRoom)
@@ -97,6 +100,16 @@ void UGroupChatUI::SelectGroupChat(class UGroupIconUI* SelectedIcon)
     // 3. 새 방 진입 처리
     if (SelectedIcon->bIsChatbotRoom)
     {
+    	if (SelectedIcon->ChatBlockUI)
+    	{
+    		SelectedIcon->ChatBlockUI->ChatScrollBox->ClearChildren();
+    	}
+
+    	if (GI && HttpSystem)
+    	{
+    		HttpSystem->SendChatHistoryRequest(GI->PlayerUniqueID);
+    	}
+    	
         // [챗봇 방] 웹소켓 연결 시도
         if (SelectedIcon->ChatBlockUI && SelectedIcon->ChatBlockUI->ChatScrollBox->GetChildrenCount() == 0)
         {
@@ -109,8 +122,7 @@ void UGroupChatUI::SelectGroupChat(class UGroupIconUI* SelectedIcon)
 
         if (WebSocketSystem)
         {
-            FString WSUrl = TEXT("ws://127.0.0.1:8000/learning_chatbot/"); 
-            WebSocketSystem->Connect(WSUrl);
+            WebSocketSystem->Connect(TEXT("learning_chatbot"));
 
             FTimerHandle ConnectTimerHandle;
             GetWorld()->GetTimerManager().SetTimer(ConnectTimerHandle, [this, UserID]()
@@ -202,6 +214,76 @@ void UGroupChatUI::InitChatbotRoom()
 	}
 }
 
+void UGroupChatUI::OnServerChatHistoryResponse(bool bSuccess, FString Message)
+{
+	// 현재 챗봇 방을 보고 있지 않다면 무시
+    if (!CurrentSelectedGroup || !CurrentSelectedGroup->bIsChatbotRoom) return;
+
+    if (bSuccess)
+    {
+        FChatHistoryResponse HistoryData;
+        if (FJsonObjectConverter::JsonObjectStringToUStruct(Message, &HistoryData, 0, 0))
+        {
+             UE_LOG(LogTemp, Log, TEXT("[ChatHistory] Loaded %d messages"), HistoryData.messages.Num());
+
+             UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
+             FString MyName = GI ? GI->PlayerName : TEXT("Me");
+
+             // 메시지 순회하며 UI 추가
+             for (const FChatHistoryMessage& Msg : HistoryData.messages)
+             {
+                 FString ParsedTime = ParseTimeFromISO8601(Msg.created_at);
+
+                 if (Msg.role == TEXT("user"))
+                 {
+                     // 내 질문 -> 일반 말풍선 (AddChat)
+                     // (TeamID는 현재 챗봇방 ID 사용)
+                     AddChat(CurrentSelectedGroup->ChatBlockUI->GetTeamID(), ParsedTime, MyName, Msg.content);
+                 }
+                 else if (Msg.role == TEXT("assistant"))
+                 {
+                     // 챗봇 답변 -> 봇 말풍선 (AddBotChat 사용은 주의: AddBotChat은 현재 시간 쓰므로 수정 필요)
+                     // 기존 AddBotChat은 현재 시간을 찍으므로, 시간을 인자로 받는 버전으로 오버로딩하거나 직접 구현
+                     
+                     // 여기서는 직접 구현 예시 (AddBotChat 로직 활용)
+                     if (BotChatMessageBlockUIClass && CurrentSelectedGroup->ChatBlockUI)
+                     {
+                         UBotChatMessageBlockUI* BotChat = CreateWidget<UBotChatMessageBlockUI>(GetWorld(), BotChatMessageBlockUIClass);
+                         if (BotChat)
+                         {
+                             CurrentSelectedGroup->ChatBlockUI->ChatScrollBox->AddChild(BotChat);
+                             BotChat->SetContent(ParsedTime, TEXT("무물이"), Msg.content);
+                         }
+                     }
+                 }
+             }
+             
+             // 스크롤 맨 아래로
+             if (CurrentSelectedGroup->ChatBlockUI)
+             {
+                 CurrentSelectedGroup->ChatBlockUI->ChatScrollBox->ScrollToEnd();
+             }
+        }
+    }
+    else
+    {
+        // 실패 시 (404 등) -> 대화 내용이 없으면 환영 메시지 띄우기
+        // (기존 SelectGroupChat에 있던 환영 메시지 타이머 로직이 여기서 자연스럽게 대체될 수 있음)
+        UE_LOG(LogTemp, Warning, TEXT("[ChatHistory] Failed or Empty: %s"), *Message);
+    }
+}
+
+FString UGroupChatUI::ParseTimeFromISO8601(const FString& IsoString)
+{
+	// 예: "2025-12-05T10:25:53.093000" -> "10:25"
+	FDateTime DateTime;
+	if (FDateTime::ParseIso8601(*IsoString, DateTime))
+	{
+		return DateTime.ToString(TEXT("%H:%M"));
+	}
+	return TEXT(""); // 파싱 실패 시 공란
+}
+
 void UGroupChatUI::AddBotChat(const FString& Message)
 {
 	UChatBlockUI* ChatChunk = Cast<UChatBlockUI>(ChatSizeBox->GetChildAt(0));
@@ -271,7 +353,8 @@ void UGroupChatUI::OnTextBoxCommitted(const FText& Text, ETextCommit::Type Commi
 		if (WebSocketSystem && WebSocketSystem->IsConnected())
 		{
 			FWSRequest_Query QueryReq;
-			QueryReq.sessionId = FString::FromInt(MyID);
+			QueryReq.sessionId = MyID;
+			QueryReq.userId = MyID;
 			QueryReq.query = Content;
 			WebSocketSystem->SendStructMessage(QueryReq);
 		}

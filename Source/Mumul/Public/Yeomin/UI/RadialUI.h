@@ -47,4 +47,8 @@ protected:
 	bool bOnHovered = false;
 	
 	void UpdateSelectedSlot(int32 NewIndex);
+
+public:
+	// 현재 선택된 슬롯 번호 반환 (없으면 -1)
+	int32 GetCurrentSelectedIndex() const { return CurrentIdx; }
 };

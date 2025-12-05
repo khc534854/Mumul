@@ -1,10 +1,8 @@
 ﻿#include "WebSocketSubsystem.h"
-
 #include "MumulGameSettings.h"
-#include "WebSocketsModule.h" // 모듈 헤더
+#include "WebSocketsModule.h"
 #include "Async/Async.h"
-
-class UMumulGameSettings;
+#include "Serialization/JsonSerializer.h" // [필수] JSON 처리용
 
 void UWebSocketSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -20,7 +18,6 @@ void UWebSocketSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void UWebSocketSubsystem::Deinitialize()
 {
-    // 게임 꺼지거나 서브시스템 내려갈 때 연결 정리
     Close();
     Super::Deinitialize();
 }
@@ -32,35 +29,29 @@ void UWebSocketSubsystem::Connect(FString EndPoint)
         FModuleManager::Get().LoadModule("WebSockets");
     }
 
-    // 이미 연결되어 있다면 정리 후 재연결
     if (WebSocket.IsValid() && WebSocket->IsConnected())
     {
         Close();
     }
     
+    // BaseURL 뒤에 슬래시가 있는지 확인 후 결합
     FString FullURL = FString::Printf(TEXT("%s/%s/"), *BaseURL, *EndPoint);
     
     UE_LOG(LogTemp, Log, TEXT("[WebSocket] Connecting to: %s"), *FullURL);
 
-    // 1. 소켓 생성
     WebSocket = FWebSocketsModule::Get().CreateWebSocket(FullURL);
 
-    // 2. 이벤트 바인딩 (AsyncTask 적용)
-
-    // [연결 성공]
     WebSocket->OnConnected().AddLambda([this]()
     {
-        // 게임 스레드로 작업을 넘김
         AsyncTask(ENamedThreads::GameThread, [this]()
         {
-            if (!IsValid(this)) return; // 안전장치
+            if (!IsValid(this)) return;
             
             UE_LOG(LogTemp, Log, TEXT("[WebSocket] Connected!"));
             OnConnected.Broadcast();
         });
     });
 
-    // [연결 실패]
     WebSocket->OnConnectionError().AddLambda([this](const FString& Error)
     {
         AsyncTask(ENamedThreads::GameThread, [this, Error]()
@@ -72,19 +63,26 @@ void UWebSocketSubsystem::Connect(FString EndPoint)
         });
     });
 
-    // [연결 종료]
     WebSocket->OnClosed().AddLambda([this](int32 StatusCode, const FString& Reason, bool bWasClean)
     {
         AsyncTask(ENamedThreads::GameThread, [this, StatusCode, Reason]()
         {
             if (!IsValid(this)) return;
 
-            UE_LOG(LogTemp, Warning, TEXT("[WebSocket] Closed. Code: %d, Reason: %s"), StatusCode, *Reason);
+            // 1000번대(정상 종료)가 아니면 경고 로그
+            if (StatusCode != 1000)
+            {
+                UE_LOG(LogTemp, Warning, TEXT("[WebSocket] Closed Abnormally. Code: %d, Reason: %s"), StatusCode, *Reason);
+            }
+            else
+            {
+                UE_LOG(LogTemp, Log, TEXT("[WebSocket] Closed Normally."));
+            }
+            
             OnClosed.Broadcast(StatusCode);
         });
     });
 
-    // [메시지 수신]
     WebSocket->OnMessage().AddLambda([this](const FString& Message)
     {
         AsyncTask(ENamedThreads::GameThread, [this, Message]()
@@ -93,14 +91,11 @@ void UWebSocketSubsystem::Connect(FString EndPoint)
 
             UE_LOG(LogTemp, Log, TEXT("[WebSocket] Received: %s"), *Message);
             
-            // 델리게이트 전파
             OnMessageReceived.Broadcast(Message);
-            // 내부 파싱 로직
             HandleWebSocketMessage(Message); 
         });
     });
 
-    // 3. 실제 연결 시작
     WebSocket->Connect();
 }
 
@@ -135,45 +130,53 @@ void UWebSocketSubsystem::HandleWebSocketMessage(const FString& Message)
     TSharedPtr<FJsonObject> JsonObject;
     TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Message);
 
+    // 1. JSON 파싱 시도
     if (FJsonSerializer::Deserialize(Reader, JsonObject) && JsonObject.IsValid())
     {
         FString EventType = JsonObject->GetStringField(TEXT("event"));
 
-        // 1. 채팅 시작됨 (chat_started)
+        // [이벤트 분기 처리]
+
         if (EventType == TEXT("chat_started"))
         {
             FString Msg = JsonObject->GetStringField(TEXT("message"));
-            // 필요시 sessionId, userId도 파싱 가능
-            
             UE_LOG(LogTemp, Log, TEXT("[WS] Chat Started: %s"), *Msg);
             OnAIChatStarted.Broadcast(Msg);
         }
-        // 2. 답변 수신 (answer)
         else if (EventType == TEXT("answer"))
         {
+            // 답변 필드 가져오기
             FString AnswerText = JsonObject->GetStringField(TEXT("answer"));
-            // 명세서에 추가된 userId 등도 필요하면 파싱
-            // FString UserID = JsonObject->GetStringField(TEXT("userId"));
+            
+            // (선택) userId나 sessionId 확인이 필요하다면 여기서 추가 파싱
+            // int32 UserId = JsonObject->GetIntegerField(TEXT("userId"));
 
             UE_LOG(LogTemp, Log, TEXT("[WS] AI Answer: %s"), *AnswerText);
             OnAIChatAnswer.Broadcast(AnswerText);
         }
-        // 3. 채팅 종료됨 (chat_ended)
         else if (EventType == TEXT("chat_ended"))
         {
             FString Msg = JsonObject->GetStringField(TEXT("message"));
-            
             UE_LOG(LogTemp, Log, TEXT("[WS] Chat Ended: %s"), *Msg);
             OnAIChatEnded.Broadcast(Msg);
         }
-        // 예외: 에러 메시지나 알 수 없는 이벤트
         else
         {
-            UE_LOG(LogTemp, Warning, TEXT("[WS] Unknown Event: %s"), *EventType);
+            UE_LOG(LogTemp, Warning, TEXT("[WS] Unknown Event Type: %s"), *EventType);
         }
     }
     else
     {
-        UE_LOG(LogTemp, Error, TEXT("[WS] JSON Parsing Failed: %s"), *Message);
+        // 2. JSON이 아닐 경우 (단순 텍스트 메시지 처리)
+        if (Message.Contains(TEXT("Welcome client")))
+        {
+            // 서버의 연결 환영 메시지는 에러가 아님
+            UE_LOG(LogTemp, Log, TEXT("[WS] Server Handshake Message: %s"), *Message);
+        }
+        else
+        {
+            // 그 외의 파싱 실패는 에러로 출력
+            UE_LOG(LogTemp, Error, TEXT("[WS] JSON Parsing Failed. Raw Message: %s"), *Message);
+        }
     }
 }

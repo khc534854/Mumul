@@ -14,11 +14,23 @@ ACuteAlienPlayer::ACuteAlienPlayer()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	static ConstructorHelpers::FObjectFinder<UAnimMontage> DanceMontageFinder(
-		TEXT("/Game/Yeomin/Characters/CuteAlien/Animations/Montage_Dance.Montage_Dance"));
-	if (DanceMontageFinder.Succeeded())
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> Dance1MontageFinder(
+		TEXT("/Game/Yeomin/Characters/CuteAlien/Animations/Animation2/No_Montage.No_Montage"));
+	if (Dance1MontageFinder.Succeeded())
 	{
-		DanceMontage = DanceMontageFinder.Object;
+		DanceMontage1 = Dance1MontageFinder.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> Dance2MontageFinder(
+	TEXT("/Game/Yeomin/Characters/CuteAlien/Animations/Animation2/PopPinDance_Montage.PopPinDance_Montage"));
+	if (Dance2MontageFinder.Succeeded())
+	{
+		DanceMontage2 = Dance2MontageFinder.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> Dance3MontageFinder(
+	TEXT("/Game/Yeomin/Characters/CuteAlien/Animations/Animation2/StepDance_Montage.StepDance_Montage"));
+	if (Dance3MontageFinder.Succeeded())
+	{
+		DanceMontage3 = Dance3MontageFinder.Object;
 	}
 
 	VoiceComponent = CreateDefaultSubobject<UVoiceChatComponent>(TEXT("VoiceComponent"));
@@ -62,15 +74,43 @@ void ACuteAlienPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
 
-void ACuteAlienPlayer::Server_PlayAlienDance_Implementation()
+void ACuteAlienPlayer::Server_PlayAlienDance_Implementation(int32 SelectIdx)
 {
-	Multicast_PlayAlienDance();
+	Multicast_PlayAlienDance(SelectIdx);
 }
 
-void ACuteAlienPlayer::Multicast_PlayAlienDance_Implementation()
+void ACuteAlienPlayer::Multicast_PlayAlienDance_Implementation(int32 SelectIdx)
 {
-		if (PlayerAnim->Montage_IsPlaying(DanceMontage))
-			return;
+	// [추가] 인덱스에 따른 행동 분기
+	switch (SelectIdx)
+	{
+	case 0: // 슬롯 0번 (예: 춤추기)
+		{
+			if (PlayerAnim->Montage_IsPlaying(DanceMontage1))
+				return;
+
+			PlayerAnim->Montage_Play(DanceMontage1);
+			break;
+		}
+	case 1: // 슬롯 1번 (예: 인사하기)
+		{
+			if (PlayerAnim->Montage_IsPlaying(DanceMontage2))
+				return;
+
+			PlayerAnim->Montage_Play(DanceMontage2);
+			break;
+		}
+	case 2: // 슬롯 2번 (예: 앉기)
+		{
+			if (PlayerAnim->Montage_IsPlaying(DanceMontage3))
+				return;
+
+			PlayerAnim->Montage_Play(DanceMontage3);
+			break;
+		}
+	default:
+		break;
+	}
 	
-		PlayerAnim->Montage_Play(DanceMontage);
+
 }

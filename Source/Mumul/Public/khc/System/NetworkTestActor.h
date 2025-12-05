@@ -67,7 +67,7 @@ public:
     FString WebSocketURL = TEXT("ws://127.0.0.1:8000/ws"); // 서버 주소
 
     UPROPERTY(EditAnywhere, Category = "WebSocket | Data")
-    FString WS_SessionID = TEXT("sess_001");
+    FString WS_SessionID = TEXT("10");
 
     UPROPERTY(EditAnywhere, Category = "WebSocket | Data")
     FString WS_UserID = TEXT("user123");

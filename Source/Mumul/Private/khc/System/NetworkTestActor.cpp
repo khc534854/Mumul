@@ -125,16 +125,16 @@ void ANetworkTestActor::TestWS_Connect()
 
 void ANetworkTestActor::TestWS_StartChat()
 {
-    if (UWebSocketSubsystem* WS = GetWSSubsystem())
-    {
-        FWSRequest_StartChat Req;
-        Req.sessionId = WS_SessionID;
-        Req.userId = WS_UserID;
-
-        // 구조체를 JSON으로 변환하여 전송
-        WS->SendStructMessage(Req);
-        UE_LOG(LogTemp, Log, TEXT("[Test] WS Start Chat Sent"));
-    }
+    // if (UWebSocketSubsystem* WS = GetWSSubsystem())
+    // {
+    //     FWSRequest_StartChat Req;
+    //     Req.sessionId = WS_SessionID;
+    //     Req.userId = WS_UserID;
+    //
+    //     // 구조체를 JSON으로 변환하여 전송
+    //     WS->SendStructMessage(Req);
+    //     UE_LOG(LogTemp, Log, TEXT("[Test] WS Start Chat Sent"));
+    // }
 }
 
 void ANetworkTestActor::TestWS_SendQuery()
@@ -142,7 +142,7 @@ void ANetworkTestActor::TestWS_SendQuery()
     if (UWebSocketSubsystem* WS = GetWSSubsystem())
     {
         FWSRequest_Query Req;
-        Req.sessionId = WS_SessionID;
+        //Req.sessionId = WS_SessionID;
         Req.query = WS_QueryText;
 
         WS->SendStructMessage(Req);
@@ -152,14 +152,14 @@ void ANetworkTestActor::TestWS_SendQuery()
 
 void ANetworkTestActor::TestWS_EndChat()
 {
-    if (UWebSocketSubsystem* WS = GetWSSubsystem())
-    {
-        FWSRequest_EndChat Req;
-        Req.sessionId = WS_SessionID;
-
-        WS->SendStructMessage(Req);
-        UE_LOG(LogTemp, Log, TEXT("[Test] WS End Chat Sent"));
-    }
+    // if (UWebSocketSubsystem* WS = GetWSSubsystem())
+    // {
+    //     FWSRequest_EndChat Req;
+    //     Req.sessionId = WS_SessionID;
+    //
+    //     WS->SendStructMessage(Req);
+    //     UE_LOG(LogTemp, Log, TEXT("[Test] WS End Chat Sent"));
+    // }
 }
 
 void ANetworkTestActor::TestWS_Close()

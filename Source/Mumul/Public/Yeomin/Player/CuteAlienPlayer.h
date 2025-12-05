@@ -28,13 +28,17 @@ public:
 
 protected:
 	UPROPERTY()
-	TObjectPtr<class UAnimMontage> DanceMontage;
+	TObjectPtr<class UAnimMontage> DanceMontage1;
+	UPROPERTY()
+	TObjectPtr<class UAnimMontage> DanceMontage2;
+	UPROPERTY()
+	TObjectPtr<class UAnimMontage> DanceMontage3;
 
 public:
 	UFUNCTION(Server, Reliable)
-	void Server_PlayAlienDance();
+	void Server_PlayAlienDance(int32 SelectIdx);
 	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_PlayAlienDance();
+	void Multicast_PlayAlienDance(int32 SelectIdx);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class UVoiceChatComponent* VoiceComponent;

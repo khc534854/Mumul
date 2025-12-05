@@ -56,7 +56,7 @@ AMumulCharacter::AMumulCharacter()
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> JumpMontageFinder(
-		TEXT("/Game/Yeomin/Characters/CuteAlien/Animations/Montage_Jump.Montage_Jump"));
+		TEXT("/Game/Yeomin/Characters/CuteAlien/Animations/Animation2/Jump_Montage.Jump_Montage"));
 	if (JumpMontageFinder.Succeeded())
 	{
 		JumpMontage = JumpMontageFinder.Object;

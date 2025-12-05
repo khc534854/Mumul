@@ -20,6 +20,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCreateTeamChatResponseReceived, 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStartMeetingResponse, bool, bSuccess, FString, MeetingID);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnJoinMeetingResponse, bool, bSuccess);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEndMeetingResponse, bool, bSuccess);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnChatHistoryResponseReceived, bool, bSuccess, FString, Message);
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnHttpCompleteLowLevel, FHttpRequestPtr, FHttpResponsePtr, bool);
 
 UCLASS()
@@ -109,6 +110,18 @@ public:
 	FString BaseURL = TEXT("http://127.0.0.1:8000");
 
 	int64 GetCurrentEpochMs();
+
+public:
+	// [신규] 히스토리 요청 함수
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void SendChatHistoryRequest(int32 UserID);
+
+	UPROPERTY(BlueprintAssignable)
+	FOnChatHistoryResponseReceived OnChatHistoryResponse;
+
+private:
+	// [신규] 콜백 함수
+	void OnChatHistoryComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 };
 
 template <typename RequestType>

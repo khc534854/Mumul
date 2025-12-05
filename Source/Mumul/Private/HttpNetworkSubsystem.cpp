@@ -304,6 +304,48 @@ int64 UHttpNetworkSubsystem::GetCurrentEpochMs()
 	return EpochMs;
 }
 
+void UHttpNetworkSubsystem::SendChatHistoryRequest(int32 UserID)
+{
+	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
+
+	// URL: /learning_chatbot/history/{userId}/{sessionId}
+	// 명세서 요청: sessionId를 userId와 동일하게 전송
+	FString FullURL = FString::Printf(TEXT("%s/learning_chatbot/history/%d/%d"), *BaseURL, UserID, UserID);
+    
+	Request->SetURL(FullURL);
+	Request->SetVerb("GET");
+	Request->SetHeader("Content-Type", "application/json");
+
+	Request->OnProcessRequestComplete().BindUObject(this, &UHttpNetworkSubsystem::OnChatHistoryComplete);
+	Request->ProcessRequest();
+    
+	UE_LOG(LogTemp, Log, TEXT("[HTTP] Request Chat History: %s"), *FullURL);
+}
+
+void UHttpNetworkSubsystem::OnChatHistoryComplete(FHttpRequestPtr Request, FHttpResponsePtr Response,
+	bool bWasSuccessful)
+{
+	if (!bWasSuccessful || !Response.IsValid())
+	{
+		OnChatHistoryResponse.Broadcast(false, TEXT("네트워크 연결 실패"));
+		return;
+	}
+
+	int32 Code = Response->GetResponseCode();
+	FString Content = Response->GetContentAsString();
+
+	if (Code == 200)
+	{
+		// 성공 시 JSON 원본 전달
+		OnChatHistoryResponse.Broadcast(true, Content);
+	}
+	else
+	{
+		// 실패 시 에러 메시지 전달 (404 등)
+		OnChatHistoryResponse.Broadcast(false, Content);
+	}
+}
+
 void UHttpNetworkSubsystem::OnSendVoiceComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	if (bWasSuccessful && Response.IsValid())

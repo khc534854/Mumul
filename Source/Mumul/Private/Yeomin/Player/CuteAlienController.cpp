@@ -485,20 +485,25 @@ void ACuteAlienController::ShowRadialUI()
 
 void ACuteAlienController::HideRadialUI()
 {
-	if (RadialUI->GetVisibility() == ESlateVisibility::Hidden)
+	if (!RadialUI || RadialUI->GetVisibility() == ESlateVisibility::Hidden)
 		return;
 
 	SetIgnoreLookInput(false);
 	SetShowMouseCursor(false);
 	SetInputMode(FInputModeGameOnly());
 
-	/* TODO: 임시 확인용 */
-	ACuteAlienPlayer* CurPlayer = Cast<ACuteAlienPlayer>(GetPawn());
-	CurPlayer->Server_PlayAlienDance();
-
-
 	RadialUI->SetVisibility(ESlateVisibility::Hidden);
 	bIsRadialVisible = false;
+
+	// [추가] 선택된 슬롯 확인
+	int32 SelectedIdx = RadialUI->GetCurrentSelectedIndex();
+	UE_LOG(LogTemp, Log, TEXT("Selected Radial Slot: %d"), SelectedIdx);
+
+	// 플레이어 가져오기
+	ACuteAlienPlayer* CurPlayer = Cast<ACuteAlienPlayer>(GetPawn());
+	if (!CurPlayer) return;
+
+	CurPlayer->Server_PlayAlienDance(SelectedIdx); 
 }
 
 void ACuteAlienController::CancelRadialUI()

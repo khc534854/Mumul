@@ -49,7 +49,16 @@ protected:
 	TSubclassOf<class UChatBlockUI> ChatBlockUIClass;
 	
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
-	TSubclassOf<class UChatMessageBlockUI> BotChatMessageBlockUIClass;
+	TSubclassOf<class UBotChatMessageBlockUI> BotChatMessageBlockUIClass;
+
+	UPROPERTY(EditDefaultsOnly, Category="UI Class")
+	TSubclassOf<class UBotChatMessageBlockUI> NanumBotChatMessageBlockUIClass;
+
+	UFUNCTION()
+	void OnServerChatHistoryResponse(bool bSuccess, FString Message);
+    
+	// 시간 파싱 헬퍼 (2025-12-05T... -> 10:25)
+	FString ParseTimeFromISO8601(const FString& IsoString);
 
 public:
 	// [신규] 챗봇 메시지(또는 경고문)를 화면에 추가하는 함수
