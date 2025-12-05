@@ -24,6 +24,14 @@ protected:
 	TObjectPtr<class UBorder> Slot_1;
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UBorder> Slot_2;
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UBorder> Slot_3;
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UBorder> Slot_4;
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UBorder> Slot_5;
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UBorder> Slot_6;
 
 	UPROPERTY()
 	TArray<TObjectPtr<class UBorder>> Slots;

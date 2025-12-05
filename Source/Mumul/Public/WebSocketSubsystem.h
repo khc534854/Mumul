@@ -8,7 +8,7 @@
 #include "JsonObjectConverter.h"
 #include "WebSocketSubsystem.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAIChatAnswer, FString, Answer); // 답변 왔을 때
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAIChatAnswer, FString, Answer, FString, GroupId); // 답변 왔을 때
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAIChatStarted, FString, Message); // 시작됨
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAIChatEnded, FString, Message);   // 종료됨
 

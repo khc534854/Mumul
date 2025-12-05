@@ -64,6 +64,7 @@ struct FVoiceMeetingStartRequest
 {
 	GENERATED_BODY()
 
+	
 	UPROPERTY()
 	FString title;
 
@@ -435,4 +436,55 @@ struct FChatHistoryResponse
 
 	UPROPERTY()
 	TArray<FChatHistoryMessage> messages;
+};
+
+// --- [Meeting Chatbot 요청] ---
+
+// 1. 회의 도우미 시작
+USTRUCT()
+struct FWSRequest_MeetingStart
+{
+	GENERATED_BODY()
+
+	UPROPERTY() FString event = TEXT("start_chat");
+	UPROPERTY() FString groupId;
+	UPROPERTY() int32 userId = 0;
+	UPROPERTY() FString userName;
+};
+
+// 2. 질문 전송
+USTRUCT()
+struct FWSRequest_MeetingQuery
+{
+	GENERATED_BODY()
+
+	UPROPERTY() FString event = TEXT("query");
+	UPROPERTY() FString groupId;
+	UPROPERTY() int32 userId = 0;
+	UPROPERTY() FString userName;
+	UPROPERTY() FString query;
+};
+
+// 3. 종료
+USTRUCT()
+struct FWSRequest_MeetingEnd
+{
+	GENERATED_BODY()
+
+	UPROPERTY() FString event = TEXT("end_chat");
+	UPROPERTY() FString groupId;
+	UPROPERTY() int32 userId = 0;
+};
+
+// --- [Meeting Chatbot 응답] ---
+
+// 응답 (answer) - groupId 포함
+USTRUCT()
+struct FWSResponse_MeetingAnswer
+{
+	GENERATED_BODY()
+
+	UPROPERTY() FString event;
+	UPROPERTY() FString groupId;
+	UPROPERTY() FString answer;
 };

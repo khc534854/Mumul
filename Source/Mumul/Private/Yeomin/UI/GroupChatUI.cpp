@@ -19,6 +19,7 @@
 #include "Yeomin/UI/GroupIconUI.h"
 #include "Yeomin/UI/InvitationUI.h"
 #include "MumulGameInstance.h" // 필수
+#include "Components/CheckBox.h"
 #include "Yeomin/UI/BotChatMessageBlockUI.h"
 
 void UGroupChatUI::NativeConstruct()
@@ -57,6 +58,12 @@ void UGroupChatUI::NativeConstruct()
 		WebSocketSystem->OnAIChatAnswer.AddDynamic(this, &UGroupChatUI::OnAIChatAnswer);
 	}
 
+	if (AICheckBox)
+	{
+		AICheckBox->OnCheckStateChanged.AddDynamic(this, &UGroupChatUI::OnAICheckStateChanged);
+		AICheckBox->SetVisibility(ESlateVisibility::Collapsed); // 기본은 숨김 (채팅방 들어가면 보임)
+	}
+
 	// [신규] 챗봇 방 생성 및 상단 배치
 	InitChatbotRoom();
 }
@@ -87,6 +94,19 @@ void UGroupChatUI::SelectGroupChat(class UGroupIconUI* SelectedIcon)
         }
     }
 
+	if (bIsMeetingChatbotActive)
+	{
+		if (WebSocketSystem && WebSocketSystem->IsConnected())
+		{
+			FWSRequest_EndChat EndReq;
+			EndReq.sessionId = UserID;
+			WebSocketSystem->SendStructMessage(EndReq);
+			WebSocketSystem->Close();
+		}
+		bIsMeetingChatbotActive = false;
+		if (AICheckBox) AICheckBox->SetIsChecked(false);
+	}
+
     // 2. UI 교체
     RemoveChatBlock();
     if (SelectedIcon->ChatBlockUI)
@@ -100,6 +120,8 @@ void UGroupChatUI::SelectGroupChat(class UGroupIconUI* SelectedIcon)
     // 3. 새 방 진입 처리
     if (SelectedIcon->bIsChatbotRoom)
     {
+    	if (AICheckBox) AICheckBox->SetVisibility(ESlateVisibility::Collapsed);
+    	
     	if (SelectedIcon->ChatBlockUI)
     	{
     		SelectedIcon->ChatBlockUI->ChatScrollBox->ClearChildren();
@@ -145,6 +167,12 @@ void UGroupChatUI::SelectGroupChat(class UGroupIconUI* SelectedIcon)
     }
     else
     {
+    	if (AICheckBox) 
+    	{
+    		AICheckBox->SetVisibility(ESlateVisibility::Visible);
+    		AICheckBox->SetIsChecked(false); // 초기화
+    	}
+    	
         // [일반 방] 로직 복원
         
         // 1) HTTP로 지난 대화 내역 불러오기
@@ -181,11 +209,32 @@ void UGroupChatUI::OnAIChatStarted(FString Message)
 	}
 }
 
-void UGroupChatUI::OnAIChatAnswer(FString Answer)
+void UGroupChatUI::OnAIChatAnswer(FString Answer, FString GroupId)
 {
-	if (CurrentSelectedGroup && CurrentSelectedGroup->bIsChatbotRoom)
+	// 1. 학습 챗봇 (GroupId가 없거나 특정 ID)
+	if (GroupId.IsEmpty() || GroupId == TEXT("Chatbot_Room"))
 	{
-		AddBotChat(Answer); // [수정] AddChat -> AddBotChat
+		// 현재 보고 있는 방이 챗봇 방이면 바로 추가
+		if (CurrentSelectedGroup && CurrentSelectedGroup->bIsChatbotRoom)
+		{
+			AddBotChat(Answer);
+		}
+		// 안 보고 있다면? (나중에 볼 수 있게 데이터에만 추가하거나 알림)
+	}
+	// 2. 회의 도우미 (GroupId가 있음)
+	else
+	{
+		// 현재 보고 있는 방이 그 방인가?
+		if (CurrentSelectedGroup && CurrentSelectedGroup->ChatBlockUI)
+		{
+			if (CurrentSelectedGroup->ChatBlockUI->GetTeamID() == GroupId)
+			{
+				AddBotChat(Answer); // 현재 화면에 추가
+			}
+		}
+        
+		// (선택) 안 보고 있더라도 그 방의 ChatBlockUI를 찾아서 추가해줘야 함.
+		// GroupScrollBox를 순회하며 GroupId가 일치하는 아이콘 찾기 -> 그 아이콘의 ChatBlockUI에 추가
 	}
 }
 
@@ -322,73 +371,95 @@ void UGroupChatUI::RemoveChatBlock() const
 
 void UGroupChatUI::OnTextBoxCommitted(const FText& Text, ETextCommit::Type CommitMethod)
 {
-	if (CommitMethod != ETextCommit::OnEnter) 
-	{
-		if (CommitMethod == ETextCommit::OnCleared) EditBox->SetFocus();
-		return;
-	}
+    if (CommitMethod != ETextCommit::OnEnter) 
+    {
+       if (CommitMethod == ETextCommit::OnCleared) EditBox->SetFocus();
+       return;
+    }
 
-	if (Text.IsEmpty()) return;
-	if (!CurrentSelectedGroup) return;
+    if (Text.IsEmpty()) return;
+    if (!CurrentSelectedGroup) return;
 
-	// [수정] 변수들을 여기서 미리 선언
-	FString Content = Text.ToString();
-	FString TimeStamp = FDateTime::Now().ToString(TEXT("%H:%M"));
+    // 기본 변수 선언
+    FString Content = Text.ToString();
+    FString TimeStamp = FDateTime::Now().ToString(TEXT("%H:%M"));
     
-	UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
-	FString MyName = GI ? GI->PlayerName : TEXT("Me");
-	int32 MyID = GI ? GI->PlayerUniqueID : 0;
+    UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
+    FString MyName = GI ? GI->PlayerName : TEXT("Me");
+    int32 MyID = GI ? GI->PlayerUniqueID : 0;
 
-	// [내 메시지 UI에 즉시 추가]
-	if (CurrentSelectedGroup->ChatBlockUI) // Null 체크 추가
-	{
-		AddChat(CurrentSelectedGroup->ChatBlockUI->GetTeamID(), TimeStamp, MyName, Content);
-	}
-	EditBox->SetText(FText::GetEmpty());
+    // [공통] 내 화면에 메시지 즉시 추가
+    if (CurrentSelectedGroup->ChatBlockUI)
+    {
+       AddChat(CurrentSelectedGroup->ChatBlockUI->GetTeamID(), TimeStamp, MyName, Content);
+    }
+    EditBox->SetText(FText::GetEmpty());
 
-	// [전송 로직 분기]
-	if (CurrentSelectedGroup->bIsChatbotRoom)
-	{
-		// [챗봇] 웹소켓 Query 전송
-		if (WebSocketSystem && WebSocketSystem->IsConnected())
-		{
-			FWSRequest_Query QueryReq;
-			QueryReq.sessionId = MyID;
-			QueryReq.userId = MyID;
-			QueryReq.query = Content;
-			WebSocketSystem->SendStructMessage(QueryReq);
-		}
-		else
-		{
-			// [예외처리] 연결 끊김 -> 챗봇 말풍선으로 경고 출력
-			AddBotChat(TEXT("무물이와 연결되어 있지 않습니다. 잠시 후 다시 시도해주세요."));
-		}
-	}
-	else
-	{
-		// [일반] HTTP 전송 및 RPC
-		// ChatBlockUI 유효성 재확인
-		if (CurrentSelectedGroup->ChatBlockUI)
-		{
-			FString TeamID = CurrentSelectedGroup->ChatBlockUI->GetTeamID();
+    // [전송 로직 분기]
+    if (CurrentSelectedGroup->bIsChatbotRoom)
+    {
+       // === Case A: 학습 챗봇 방 (개인용) ===
+       if (WebSocketSystem && WebSocketSystem->IsConnected())
+       {
+          FWSRequest_Query QueryReq;
+          QueryReq.sessionId = MyID; // 학습 챗봇은 sessionId = userId
+          QueryReq.userId = MyID;
+          QueryReq.query = Content;
+          WebSocketSystem->SendStructMessage(QueryReq);
+       }
+       else
+       {
+          AddBotChat(TEXT("무물이와 연결되어 있지 않습니다. 잠시 후 다시 시도해주세요."));
+       }
+    }
+    else
+    {
+       // === Case B: 일반 그룹 채팅방 (공용) ===
+       if (CurrentSelectedGroup->ChatBlockUI)
+       {
+          FString TeamID = CurrentSelectedGroup->ChatBlockUI->GetTeamID();
             
-			// TeamUserIDs 가져오기
-			TArray<int32> UserIDs;
-			CurrentSelectedGroup->ChatBlockUI->GetTeamUsers().GetKeys(UserIDs);
-
-			if (HttpSystem)
-			{
-				HttpSystem->SendChatMessageRequest(TeamID, MyID, Content, TimeStamp);
-			}
+          // 1. [DB 저장] HTTP 전송
+          if (HttpSystem)
+          {
+             HttpSystem->SendChatMessageRequest(TeamID, MyID, Content, TimeStamp);
+          }
             
-			if (ACuteAlienController* PC = Cast<ACuteAlienController>(GetOwningPlayer()))
-			{
-				PC->Server_RequestChat(TeamID, UserIDs, TimeStamp, MyName, Content);
-			}
-		}
-	}
+          // 2. [채팅 공유] RPC 전송 (팀원들에게 내 질문이 보이게 함)
+          TArray<int32> UserIDs;
+          CurrentSelectedGroup->ChatBlockUI->GetTeamUsers().GetKeys(UserIDs);
+           
+          if (ACuteAlienController* PC = Cast<ACuteAlienController>(GetOwningPlayer()))
+          {
+             PC->Server_RequestChat(TeamID, UserIDs, TimeStamp, MyName, Content);
+          }
+
+          // 3. [AI 질문] 도우미가 켜져 있다면 웹소켓으로도 전송
+          if (bIsMeetingChatbotActive)
+          {
+              if (WebSocketSystem && WebSocketSystem->IsConnected())
+              {
+                  FWSRequest_MeetingQuery QueryReq;
+                  QueryReq.groupId = TeamID;  // 회의 도우미는 groupId 기준
+                  QueryReq.userId = MyID;
+                  QueryReq.userName = MyName;
+                  QueryReq.query = Content;
+                  
+                  WebSocketSystem->SendStructMessage(QueryReq);
+                  UE_LOG(LogTemp, Log, TEXT("[MeetingBot] Query Sent: %s"), *Content);
+              }
+              else
+              {
+                  // 연결 끊김 안내 및 토글 해제
+                  AddBotChat(TEXT("회의 도우미와 연결이 끊겼습니다."));
+                  if (AICheckBox) AICheckBox->SetIsChecked(false);
+                  bIsMeetingChatbotActive = false;
+              }
+          }
+       }
+    }
     
-	EditBox->SetFocus();
+    EditBox->SetFocus();
 }
 
 void UGroupChatUI::OnServerChatMessageResponse(bool bSuccess, FString Message)
@@ -527,4 +598,77 @@ void UGroupChatUI::OnToggleVisibilityBtn()
 
 	AMumulPlayerState* PS = Cast<AMumulPlayerState>(GetOwningPlayerState());
 	HttpSystem->SendTeamChatListRequest(PS->PS_UserIndex);
+}
+
+void UGroupChatUI::OnAICheckStateChanged(bool bIsChecked)
+{
+	// 일반 방이 아니면 무시
+	if (!CurrentSelectedGroup || CurrentSelectedGroup->bIsChatbotRoom) return;
+
+	UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
+	if (!GI) return;
+
+	int32 MyID = GI->PlayerUniqueID;
+	FString MyName = GI->PlayerName;
+	FString GroupID = GetCurrentTeamID();
+
+	bIsMeetingChatbotActive = bIsChecked;
+
+	if (bIsChecked)
+	{
+		// [ON] 웹소켓 연결 및 Start
+		if (WebSocketSystem)
+		{
+			// 엔드포인트: meeting_chatbot
+			WebSocketSystem->Connect(TEXT("meeting_chatbot"));
+
+			FTimerHandle Handle;
+			GetWorld()->GetTimerManager().SetTimer(Handle, [this, MyID, MyName, GroupID]()
+			{
+				if (WebSocketSystem && WebSocketSystem->IsConnected())
+				{
+					FWSRequest_MeetingStart StartReq;
+					StartReq.groupId = GroupID;
+					StartReq.userId = MyID;
+					StartReq.userName = MyName;
+                    
+					WebSocketSystem->SendStructMessage(StartReq);
+					UE_LOG(LogTemp, Log, TEXT("[MeetingBot] Connected & Started for Group: %s"), *GroupID);
+				}
+			}, 0.5f, false);
+		}
+	}
+	else
+	{
+		// [OFF] 종료 및 연결 해제
+		if (WebSocketSystem && WebSocketSystem->IsConnected())
+		{
+			FWSRequest_MeetingEnd EndReq;
+			EndReq.groupId = GroupID;
+			EndReq.userId = MyID;
+            
+			WebSocketSystem->SendStructMessage(EndReq);
+			WebSocketSystem->Close();
+            
+			UE_LOG(LogTemp, Log, TEXT("[MeetingBot] Disconnected"));
+		}
+	}
+}
+
+FString UGroupChatUI::GetCurrentTeamID() const
+{
+	if (CurrentSelectedGroup && CurrentSelectedGroup->ChatBlockUI)
+	{
+		return CurrentSelectedGroup->ChatBlockUI->GetTeamID();
+	}
+	return TEXT("");
+}
+
+FString UGroupChatUI::GetCurrentTeamName() const
+{
+	if (CurrentSelectedGroup && CurrentSelectedGroup->ChatBlockUI)
+	{
+		return CurrentSelectedGroup->ChatBlockUI->GetTeamName();
+	}
+	return TEXT("");
 }

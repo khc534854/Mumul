@@ -17,6 +17,10 @@ void URadialUI::NativeConstruct()
 	Slots.Add(Slot_0);
 	Slots.Add(Slot_1);
 	Slots.Add(Slot_2);
+	Slots.Add(Slot_3);
+	Slots.Add(Slot_4);
+	Slots.Add(Slot_5);
+	Slots.Add(Slot_6);
 
 	SpacingAngle = 360.f / Slots.Num();
 

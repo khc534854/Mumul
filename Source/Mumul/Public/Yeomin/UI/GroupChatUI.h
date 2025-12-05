@@ -40,7 +40,7 @@ protected:
 	void OnAIChatStarted(FString Message);
     
 	UFUNCTION()
-	void OnAIChatAnswer(FString Answer);
+	void OnAIChatAnswer(FString Answer, FString GroupId);
     
 	// [신규] 챗봇 방 초기화 함수
 	void InitChatbotRoom();
@@ -50,9 +50,6 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
 	TSubclassOf<class UBotChatMessageBlockUI> BotChatMessageBlockUIClass;
-
-	UPROPERTY(EditDefaultsOnly, Category="UI Class")
-	TSubclassOf<class UBotChatMessageBlockUI> NanumBotChatMessageBlockUIClass;
 
 	UFUNCTION()
 	void OnServerChatHistoryResponse(bool bSuccess, FString Message);
@@ -122,4 +119,20 @@ protected:
 	void ToggleInvitationUI();
 	UFUNCTION()
 	void OnToggleVisibilityBtn();
+
+public:
+	// [신규] AI 도우미 토글 버튼
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UCheckBox> AICheckBox; // 체크박스로 구현 (On/Off)
+
+	UFUNCTION()
+	void OnAICheckStateChanged(bool bIsChecked);
+
+private:
+	// 현재 AI 도우미가 켜져 있는지 확인하는 플래그
+	bool bIsMeetingChatbotActive = false;
+
+	// 헬퍼: 현재 방 정보 가져오기
+	FString GetCurrentTeamID() const;
+	FString GetCurrentTeamName() const;
 };

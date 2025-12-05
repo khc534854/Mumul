@@ -33,7 +33,16 @@ protected:
 	TObjectPtr<class UAnimMontage> DanceMontage2;
 	UPROPERTY()
 	TObjectPtr<class UAnimMontage> DanceMontage3;
-
+	UPROPERTY()
+	TObjectPtr<class UAnimMontage> DanceMontage4;
+	UPROPERTY()
+	TObjectPtr<class UAnimMontage> DanceMontage5;
+	UPROPERTY()
+	TObjectPtr<class UAnimMontage> DanceMontage6;
+	UPROPERTY()
+	TObjectPtr<class UAnimMontage> DanceMontage7;
+	
+	
 public:
 	UFUNCTION(Server, Reliable)
 	void Server_PlayAlienDance(int32 SelectIdx);

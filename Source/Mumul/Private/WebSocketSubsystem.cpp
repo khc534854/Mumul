@@ -36,63 +36,75 @@ void UWebSocketSubsystem::Connect(FString EndPoint)
     
     // BaseURL 뒤에 슬래시가 있는지 확인 후 결합
     FString FullURL = FString::Printf(TEXT("%s/%s/"), *BaseURL, *EndPoint);
+
+    WebSocket = FWebSocketsModule::Get().CreateWebSocket(FullURL);
+    TWeakObjectPtr<UWebSocketSubsystem> WeakThis(this);
     
     UE_LOG(LogTemp, Log, TEXT("[WebSocket] Connecting to: %s"), *FullURL);
 
-    WebSocket = FWebSocketsModule::Get().CreateWebSocket(FullURL);
 
-    WebSocket->OnConnected().AddLambda([this]()
+    // 1. 연결 성공
+    WebSocket->OnConnected().AddLambda([WeakThis]()
     {
-        AsyncTask(ENamedThreads::GameThread, [this]()
+        AsyncTask(ENamedThreads::GameThread, [WeakThis]()
         {
-            if (!IsValid(this)) return;
-            
-            UE_LOG(LogTemp, Log, TEXT("[WebSocket] Connected!"));
-            OnConnected.Broadcast();
-        });
-    });
-
-    WebSocket->OnConnectionError().AddLambda([this](const FString& Error)
-    {
-        AsyncTask(ENamedThreads::GameThread, [this, Error]()
-        {
-            if (!IsValid(this)) return;
-
-            UE_LOG(LogTemp, Error, TEXT("[WebSocket] Connection Error: %s"), *Error);
-            OnError.Broadcast(Error);
-        });
-    });
-
-    WebSocket->OnClosed().AddLambda([this](int32 StatusCode, const FString& Reason, bool bWasClean)
-    {
-        AsyncTask(ENamedThreads::GameThread, [this, StatusCode, Reason]()
-        {
-            if (!IsValid(this)) return;
-
-            // 1000번대(정상 종료)가 아니면 경고 로그
-            if (StatusCode != 1000)
+            // 살아있는지 확인 (IsValid 대신 Get() 유무 확인)
+            if (UWebSocketSubsystem* StrongThis = WeakThis.Get())
             {
-                UE_LOG(LogTemp, Warning, TEXT("[WebSocket] Closed Abnormally. Code: %d, Reason: %s"), StatusCode, *Reason);
+                UE_LOG(LogTemp, Log, TEXT("[WebSocket] Connected!"));
+                StrongThis->OnConnected.Broadcast();
             }
-            else
-            {
-                UE_LOG(LogTemp, Log, TEXT("[WebSocket] Closed Normally."));
-            }
-            
-            OnClosed.Broadcast(StatusCode);
         });
     });
 
-    WebSocket->OnMessage().AddLambda([this](const FString& Message)
+    // 2. 연결 실패
+    WebSocket->OnConnectionError().AddLambda([WeakThis](const FString& Error)
     {
-        AsyncTask(ENamedThreads::GameThread, [this, Message]()
+        AsyncTask(ENamedThreads::GameThread, [WeakThis, Error]()
         {
-            if (!IsValid(this)) return;
+            if (UWebSocketSubsystem* StrongThis = WeakThis.Get())
+            {
+                UE_LOG(LogTemp, Error, TEXT("[WebSocket] Connection Error: %s"), *Error);
+                StrongThis->OnError.Broadcast(Error);
+            }
+        });
+    });
 
-            UE_LOG(LogTemp, Log, TEXT("[WebSocket] Received: %s"), *Message);
-            
-            OnMessageReceived.Broadcast(Message);
-            HandleWebSocketMessage(Message); 
+    // 3. 연결 종료 (여기가 크래시 지점)
+    WebSocket->OnClosed().AddLambda([WeakThis](int32 StatusCode, const FString& Reason, bool bWasClean)
+    {
+        AsyncTask(ENamedThreads::GameThread, [WeakThis, StatusCode, Reason]()
+        {
+            // 서브시스템이 살아있을 때만 방송
+            if (UWebSocketSubsystem* StrongThis = WeakThis.Get())
+            {
+                // 1000번대(정상)가 아니면 로그
+                if (StatusCode != 1000)
+                {
+                    UE_LOG(LogTemp, Warning, TEXT("[WebSocket] Closed Abnormally. Code: %d, Reason: %s"), StatusCode, *Reason);
+                }
+                else
+                {
+                    UE_LOG(LogTemp, Log, TEXT("[WebSocket] Closed Normally."));
+                }
+                
+                StrongThis->OnClosed.Broadcast(StatusCode);
+            }
+        });
+    });
+
+    // 4. 메시지 수신
+    WebSocket->OnMessage().AddLambda([WeakThis](const FString& Message)
+    {
+        AsyncTask(ENamedThreads::GameThread, [WeakThis, Message]()
+        {
+            if (UWebSocketSubsystem* StrongThis = WeakThis.Get())
+            {
+                UE_LOG(LogTemp, Log, TEXT("[WebSocket] Received: %s"), *Message);
+                
+                StrongThis->OnMessageReceived.Broadcast(Message);
+                StrongThis->HandleWebSocketMessage(Message); 
+            }
         });
     });
 
@@ -145,14 +157,13 @@ void UWebSocketSubsystem::HandleWebSocketMessage(const FString& Message)
         }
         else if (EventType == TEXT("answer"))
         {
-            // 답변 필드 가져오기
             FString AnswerText = JsonObject->GetStringField(TEXT("answer"));
-            
-            // (선택) userId나 sessionId 확인이 필요하다면 여기서 추가 파싱
-            // int32 UserId = JsonObject->GetIntegerField(TEXT("userId"));
+            FString GroupID = JsonObject->GetStringField(TEXT("groupId")); // [추가]
 
+            // groupId가 없으면 빈 문자열로 보냄
             UE_LOG(LogTemp, Log, TEXT("[WS] AI Answer: %s"), *AnswerText);
-            OnAIChatAnswer.Broadcast(AnswerText);
+            OnAIChatAnswer.Broadcast(AnswerText, GroupID);
+
         }
         else if (EventType == TEXT("chat_ended"))
         {
