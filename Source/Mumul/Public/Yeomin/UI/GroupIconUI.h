@@ -35,6 +35,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
 	TSubclassOf<class UChatMessageBlockUI> ChatMessageBlockUIClass;
 public:
+	void SetIconIMG(UTexture2D* IMG);
 	UPROPERTY()
 	TObjectPtr<class UChatBlockUI> ChatBlockUI;
 

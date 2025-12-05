@@ -32,7 +32,7 @@ protected:
 	
 	FTimerHandle SearchDelayTimer;
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UEditableTextBox> SearchBox;
+	TObjectPtr<class UBaseTextBox> SearchBox;
 	UFUNCTION()
 	void OnSearchTextChanged(const FText& Text);
 	void RefreshFilteredPlayerList(const FText& Text);
@@ -45,11 +45,16 @@ public:
 	void InitParentUI(UGroupChatUI* Parent);
 protected:
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UButton> CreateGroupBtn;
+	TObjectPtr<class UBaseButton> CreateGroupBtn;
 	UFUNCTION()
 	void CreateGroupChat();
 
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UEditableTextBox> GroupNameText;
+	TObjectPtr<class UBaseTextBox> GroupNameText;
 	FString MakeUniqueGroupName(const FString& BaseName) const;
+	
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UBaseExitButton> ExitBtn;
+	UFUNCTION()
+	void OnExitUI();
 };

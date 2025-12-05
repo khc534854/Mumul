@@ -24,6 +24,7 @@
 #include "khc/Save/MapDataSaveGame.h"
 #include "khc/System/NetworkStructs.h"
 #include "Kismet/GameplayStatics.h"
+#include "Yeomin/Data/IMGManager.h"
 #include "Yeomin/UI/ChatBlockUI.h"
 #include "Yeomin/UI/GroupChatUI.h"
 #include "Yeomin/UI/GroupIconUI.h"
@@ -131,7 +132,7 @@ ACuteAlienController::ACuteAlienController()
 	}
 
 	static ConstructorHelpers::FClassFinder<UVoiceMeetingUI> WidgetFinder(
-	TEXT("/Game/Khc/Blueprint/UI/WBP_CreateMeeting.WBP_CreateMeeting_C")); // 경로 확인 필수!
+		TEXT("/Game/Khc/Blueprint/UI/WBP_CreateMeeting.WBP_CreateMeeting_C")); // 경로 확인 필수!
 	if (WidgetFinder.Succeeded())
 	{
 		VoiceMeetingUIClass = WidgetFinder.Class;
@@ -152,6 +153,8 @@ void ACuteAlienController::BeginPlay()
 
 	if (!IsLocalController())
 		return;
+
+	IMGManager = NewObject<UIMGManager>(this, UIMGManager::StaticClass());
 
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
 		ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
@@ -189,6 +192,7 @@ void ACuteAlienController::BeginPlay()
 		}
 	}
 
+	PlayerUI->InitGroupChatUI(GroupChatUI);
 	RadialUI->SetVisibility(ESlateVisibility::Hidden);
 
 	// 4. 데이터 초기화 및 서버 전송
@@ -359,7 +363,7 @@ void ACuteAlienController::OnHostRecordingStopped()
 	{
 		Server_UnregisterMeetingState(MyPS->VoiceChannelID);
 	}
-	
+
 	GetWorldTimerManager().SetTimer(WaitTimerHandle, [this]()
 	{
 		// 람다 실행 시점에 컨트롤러가 살아있는지 확인
@@ -377,8 +381,8 @@ void ACuteAlienController::OnHostRecordingStopped()
 				// (VoiceComponent가 이미 업로드 완료를 보장하고 호출했기 때문)
 				UE_LOG(LogTemp, Warning, TEXT("[HTTP] Requesting End Meeting API... (Upload Confirmed)"));
 				HttpSystem->EndMeetingRequest(CurrentMeetingSessionID);
-            
-				CurrentMeetingSessionID = TEXT(""); 
+
+				CurrentMeetingSessionID = TEXT("");
 			}
 		}
 	}, UploadWaitTime, false);
@@ -543,9 +547,9 @@ void ACuteAlienController::RequestStartMeetingRecording(FString InMeetingTitle, 
 		if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
 		{
 			HttpSystem->StartMeetingRequest(
-				InMeetingTitle, 
+				InMeetingTitle,
 				GI->PlayerUniqueID, // Organizer ID
-				InAgenda, 
+				InAgenda,
 				InDesc
 			);
 
@@ -662,12 +666,12 @@ void ACuteAlienController::Client_StopChannelRecording_Implementation()
 				// 기존 바인딩이 있을 수 있으니 안전하게 제거 후 추가 (중복 방지)
 				VoiceComp->OnRecordingStopped.RemoveDynamic(this, &ACuteAlienController::OnHostRecordingStopped);
 				VoiceComp->OnRecordingStopped.AddDynamic(this, &ACuteAlienController::OnHostRecordingStopped);
-             
+
 				UE_LOG(LogTemp, Warning, TEXT("[Host] Binded OnHostRecordingStopped delegate."));
 			}
-          
+
 			// 녹음 종료 및 마지막 파일 전송 시작
-			VoiceComp->StopRecording(); 
+			VoiceComp->StopRecording();
 
 			UE_LOG(LogTemp, Warning, TEXT(">>> [RECORD STOP]"));
 		}
@@ -688,7 +692,8 @@ void ACuteAlienController::Server_SpawnTent_Implementation(const FTransform& Ten
 	}
 }
 
-void ACuteAlienController::Server_BroadcastJoinMeeting_Implementation(const FString& TargetChannelID, const FString& MeetingID)
+void ACuteAlienController::Server_BroadcastJoinMeeting_Implementation(const FString& TargetChannelID,
+                                                                      const FString& MeetingID)
 {
 	if (UWorld* World = GetWorld())
 	{
@@ -745,7 +750,7 @@ void ACuteAlienController::OpenMeetingSetupUI()
 
 		VoiceMeetingUI->InitMeetingUI(true); // 방장 모드
 		VoiceMeetingUI->SetVisibility(ESlateVisibility::Visible);
-        
+
 		SetShowMouseCursor(true);
 		FInputModeUIOnly InputMode;
 		InputMode.SetWidgetToFocus(VoiceMeetingUI->TakeWidget());
@@ -768,9 +773,9 @@ void ACuteAlienController::OpenEndMeetingPopup()
 		{
 			VoiceMeetingUI->MeetingWidgetSwitcher->SetActiveWidgetIndex(1);
 		}
-        
+
 		VoiceMeetingUI->SetVisibility(ESlateVisibility::Visible);
-        
+
 		SetShowMouseCursor(true);
 		FInputModeUIOnly InputMode;
 		InputMode.SetWidgetToFocus(VoiceMeetingUI->TakeWidget());
@@ -788,7 +793,7 @@ void ACuteAlienController::OnStartMeetingResponse(bool bSuccess, FString Meeting
 		{
 			VoiceMeetingUI->SetMeetingState(true);
 		}
-		
+
 		// 1. 미팅 ID 저장
 		CurrentMeetingSessionID = MeetingID;
 
@@ -841,7 +846,8 @@ void ACuteAlienController::OnJoinMeetingResponse(bool bSuccess)
 	}
 }
 
-void ACuteAlienController::Server_RegisterMeetingState_Implementation(const FString& ChannelID, const FString& MeetingID)
+void ACuteAlienController::Server_RegisterMeetingState_Implementation(const FString& ChannelID,
+                                                                      const FString& MeetingID)
 {
 	if (GS)
 	{
@@ -961,7 +967,7 @@ void ACuteAlienController::OnServerCreateTeamChatResponse(bool bSuccess, FString
 			NewTeamData.UniqueTeamID = CreateTeamChat.groupId;
 			NewTeamData.TeamName = CreateTeamChat.groupName;
 			NewTeamData.TeamMateList = CreateTeamChat.userIdList;
-			
+
 			for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
 			{
 				if (AMumulPlayerState* MPS = Cast<AMumulPlayerState>(PS))
@@ -998,6 +1004,7 @@ void ACuteAlienController::Server_CreateGroupChatUI_Implementation(const TArray<
                                                                    const FString& TeamName,
                                                                    const TArray<FTeamUser>& TeamUserIDs)
 {
+	UTexture2D* TeamIconIMG = IMGManager->GetNextImage();
 	// Add GroupChatUI for each Client
 	for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
 	{
@@ -1005,25 +1012,27 @@ void ACuteAlienController::Server_CreateGroupChatUI_Implementation(const TArray<
 		{
 			if (ACuteAlienController* PC = Cast<ACuteAlienController>(PS->GetOwningController()))
 			{
-				PC->Client_CreateGroupChatUI(TeamID, TeamName, TeamUserIDs);
+				PC->Client_CreateGroupChatUI(TeamID, TeamName, TeamUserIDs, TeamIconIMG);
 			}
 		}
 	}
 }
 
 void ACuteAlienController::Client_CreateGroupChatUI_Implementation(const FString& TeamID, const FString& TeamName,
-                                                                   const TArray<FTeamUser>& TeamUserIDs)
+                                                                   const TArray<FTeamUser>& TeamUserIDs,
+                                                                   UTexture2D* IMG)
 {
-		// Set Players in Group Icon
-		UGroupIconUI* GroupIconUI = CreateWidget<UGroupIconUI>(GetWorld(), GroupIconUIClass);
-		GroupChatUI->AddGroupIcon(GroupIconUI);
-		GroupIconUI->InitParentUI(GroupChatUI);
-		GroupIconUI->ChatBlockUI->SetTeamID(TeamID);
-		GroupIconUI->ChatBlockUI->SetTeamName(TeamName);
-		for (const FTeamUser& User : TeamUserIDs)
-		{
-			GroupIconUI->ChatBlockUI->AddTeamUser(User.UserId, User.UserName);
-		}
+	// Set Players in Group Icon
+	UGroupIconUI* GroupIconUI = CreateWidget<UGroupIconUI>(GetWorld(), GroupIconUIClass);
+	GroupChatUI->AddGroupIcon(GroupIconUI);
+	GroupIconUI->InitParentUI(GroupChatUI);
+	GroupIconUI->ChatBlockUI->SetTeamID(TeamID);
+	GroupIconUI->ChatBlockUI->SetTeamName(TeamName);
+	for (const FTeamUser& User : TeamUserIDs)
+	{
+		GroupIconUI->ChatBlockUI->AddTeamUser(User.UserId, User.UserName);
+	}
+	GroupIconUI->SetIconIMG(IMG);
 }
 
 

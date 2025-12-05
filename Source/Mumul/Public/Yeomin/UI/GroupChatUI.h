@@ -16,6 +16,7 @@ class MUMUL_API UGroupChatUI : public UUserWidget
 	
 protected:
 	virtual void NativeConstruct() override;
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 	
 	UPROPERTY()
 	TObjectPtr<class UHttpNetworkSubsystem> HttpSystem;
@@ -66,7 +67,7 @@ public:
 	
 protected:
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UEditableTextBox> EditBox;
+	TObjectPtr<class UMultiLineEditableTextBox> EditBox;
 	UFUNCTION()
 	void OnTextBoxCommitted(const FText& Text, ETextCommit::Type CommitMethod);
 	UFUNCTION()
@@ -82,7 +83,7 @@ protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> AddGroupBtn; 
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UTextBlock> GroupNameTitle; 
+	TObjectPtr<class UBaseText> GroupNameTitle; 
 	
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
 	TSubclassOf<class UCreateGroupChatUI> CreateGroupChatUIClass;
@@ -113,8 +114,17 @@ protected:
 	TObjectPtr<class USizeBox> InvitationBox;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> InviteBtn;
+	
+	UPROPERTY(editDefaultsOnly, Category="UI Image")
+	TObjectPtr<class UTexture2D> LeftIMG;
+	UPROPERTY(editDefaultsOnly, Category="UI Image")
+	TObjectPtr<class UTexture2D> RightIMG;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UBorder> GroupChatBorder;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> ToggleVisibilityBtn;
+	float AlignmentVal = 0.178f;
+	bool bIsToggled = false;
 	UFUNCTION()
 	void ToggleInvitationUI();
 	UFUNCTION()
@@ -135,4 +145,8 @@ private:
 	// 헬퍼: 현재 방 정보 가져오기
 	FString GetCurrentTeamID() const;
 	FString GetCurrentTeamName() const;
+	
+public:
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UButton> RecordBtn;
 };
