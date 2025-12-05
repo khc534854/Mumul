@@ -25,11 +25,10 @@
 void UGroupChatUI::NativeConstruct()
 {
 	Super::NativeConstruct();
-
-	EditBox->OnTextCommitted.AddDynamic(this, &UGroupChatUI::OnTextBoxCommitted);
-
+	
 	AddGroupBtn->OnPressed.AddDynamic(this, &UGroupChatUI::ToggleCreateGroupChatUI);
-
+	ChatEnter->OnPressed.AddDynamic(this, &UGroupChatUI::OnTextBoxCommitted);
+	
 	CreateGroupChatUI = CreateWidget<UCreateGroupChatUI>(this, CreateGroupChatUIClass);
 	CreateGroupChatUI->InitParentUI(this);
 	CreateGroupChatBox->AddChild(CreateGroupChatUI);
@@ -54,7 +53,7 @@ void UGroupChatUI::NativeConstruct()
 void UGroupChatUI::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
-	
+
 	const float MoveSpeed = 5.f;
 
 	float Target = bIsToggled ? 1.0f : 0.178f;
@@ -62,7 +61,7 @@ void UGroupChatUI::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 
 	if (auto* CanvasPanelSlot = Cast<UCanvasPanelSlot>(GroupChatBorder->Slot))
 	{
-		CanvasPanelSlot->SetAlignment(FVector2D(AlignmentVal, 0.5f));   // 오른쪽 상단
+		CanvasPanelSlot->SetAlignment(FVector2D(AlignmentVal, 0.5f)); // 오른쪽 상단
 	}
 }
 
@@ -82,43 +81,38 @@ void UGroupChatUI::RemoveChatBlock() const
 	ChatSizeBox->ClearChildren();
 }
 
-void UGroupChatUI::OnTextBoxCommitted(const FText& Text, ETextCommit::Type CommitMethod)
+void UGroupChatUI::OnTextBoxCommitted()
 {
-	// If On Enter
-	if (CommitMethod == ETextCommit::OnEnter)
+	const FText& Text = EditBox->GetText();
+	
+	ACuteAlienController* PC = Cast<ACuteAlienController>(GetWorld()->GetFirstPlayerController());
+	AMumulPlayerState* PS = PC->GetPlayerState<AMumulPlayerState>();
+
+	if (UChatBlockUI* ChatChunk = Cast<UChatBlockUI>(ChatSizeBox->GetChildAt(0)))
 	{
-		ACuteAlienController* PC = Cast<ACuteAlienController>(GetWorld()->GetFirstPlayerController());
-		AMumulPlayerState* PS = PC->GetPlayerState<AMumulPlayerState>();
+		FString TeamID = ChatChunk->GetTeamID();
+		TArray<int32> UserIDs;
+		ChatChunk->GetTeamUsers().GetKeys(UserIDs);
+		FString Content = Text.ToString();
+		FString TimeStamp = FDateTime::Now().ToString(TEXT("%H:%M"));
 
-		if (UChatBlockUI* ChatChunk = Cast<UChatBlockUI>(ChatSizeBox->GetChildAt(0)))
-		{
-			FString TeamID = ChatChunk->GetTeamID();
-			TArray<int32> UserIDs;
-			ChatChunk->GetTeamUsers().GetKeys(UserIDs);
-			FString Content = Text.ToString();
-			FString TimeStamp = FDateTime::Now().ToString(TEXT("%H:%M"));
+		// Send Chat Message to DB
+		HttpSystem->SendChatMessageRequest(TeamID, PS->PS_UserIndex, Content, TimeStamp);
 
-			// Send Chat Message to DB
-			HttpSystem->SendChatMessageRequest(TeamID, PS->PS_UserIndex, Content, TimeStamp);
+		// Request Chat for Client RPC
+		FString Player = PS->PS_RealName;
+		PC->Server_RequestChat(TeamID, UserIDs, TimeStamp, Player, Content);
 
-			// Request Chat for Client RPC
-			FString Player = PS->PS_RealName;
-			PC->Server_RequestChat(TeamID, UserIDs, TimeStamp, Player, Content);
-
-			// Init EditBox
-			EditBox->SetText(FText());
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("GroupChatUI->ChatSizeBox has no Child (UChatBlockUI)"))
-		}
+		// Init EditBox
+		EditBox->SetText(FText());
 	}
-	// 
-	else if (CommitMethod == ETextCommit::OnCleared)
+	else
 	{
-		// Focus EditBox
-		EditBox->SetFocus();
+		EditBox->SetText(FText());
+		EditBox->SetText(FText::FromString(TEXT("팀 채팅을 선택해주세요!")));
+		UE_LOG(LogTemp, Warning, TEXT("GroupChatUI->ChatSizeBox has no Child (UChatBlockUI)"))
 	}
+	
 }
 
 void UGroupChatUI::OnServerChatMessageResponse(bool bSuccess, FString Message)
@@ -261,31 +255,31 @@ void UGroupChatUI::OnToggleVisibilityBtn()
 	// Toggle GroupChatUI
 	FSlateBrush Brush;
 	Brush.ImageSize = FVector2D(55.f, 90.f);
-	
+
 	if (bIsToggled == false)
 	{
 		bIsToggled = true;
-		
+
 		Brush.SetResourceObject(RightIMG);
-		
+
 		FButtonStyle Style;
 		Style.Normal = Brush;
 		Style.Hovered = Brush;
 		Style.Pressed = Brush;
-	
+
 		ToggleVisibilityBtn->SetStyle(Style);
 	}
 	else if (bIsToggled == true)
 	{
 		bIsToggled = false;
-		
+
 		Brush.SetResourceObject(LeftIMG);
-		
+
 		FButtonStyle Style;
 		Style.Normal = Brush;
 		Style.Hovered = Brush;
 		Style.Pressed = Brush;
-	
+
 		ToggleVisibilityBtn->SetStyle(Style);
 	}
 }
