@@ -71,7 +71,7 @@ protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> ChatEnter;
 	UFUNCTION()
-	void OnTextBoxCommitted();
+	void OnTextBoxCommitted(const FText& Text, ETextCommit::Type CommitMethod);
 	UFUNCTION()
 	void OnServerChatMessageResponse(bool bSuccess, FString Message);
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
@@ -135,12 +135,16 @@ protected:
 public:
 	// [신규] AI 도우미 토글 버튼
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UCheckBox> AICheckBox; // 체크박스로 구현 (On/Off)
+	TObjectPtr<class UButton> QuestionBtn; // 체크박스로 구현 (On/Off)
 
 	UFUNCTION()
 	void OnAICheckStateChanged(bool bIsChecked);
 
+	UFUNCTION()
+	void OnClickQuestionBtn();
+
 private:
+	void UpdateQuestionButtonState();
 	// 현재 AI 도우미가 켜져 있는지 확인하는 플래그
 	bool bIsMeetingChatbotActive = false;
 
