@@ -7,7 +7,7 @@
 #include "Yeomin/UI/ChatBlockUI.h"
 #include "Components/Button.h"
 #include "Components/ScrollBox.h"
-#include "khc/Player/MumulPlayerState.h"
+#include "Components/SizeBox.h"
 #include "khc/System/NetworkStructs.h"
 #include "Yeomin/UI/ChatMessageBlockUI.h"
 #include "Yeomin/UI/GroupChatUI.h"
@@ -15,7 +15,7 @@
 void UGroupIconUI::NativeConstruct()
 {
 	Super::NativeConstruct();
-	
+
 	HttpSystem = GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>();
 	if (HttpSystem)
 	{
@@ -29,7 +29,7 @@ void UGroupIconUI::NativeConstruct()
 			ChatBlockUI = CreateWidget<UChatBlockUI>(GetWorld(), ChatBlockUIClass);
 		}
 	}
-	
+
 	GroupIconBtn->OnPressed.AddDynamic(this, &UGroupIconUI::DisplayGroupChat);
 }
 
@@ -59,6 +59,15 @@ void UGroupIconUI::DisplayGroupChat()
 	if (ParentUI)
 	{
 		ParentUI->SelectGroupChat(this);
+
+		if (ParentUI->IsGroupChatToggled() == false)
+		{
+			ParentUI->OnToggleVisibilityBtn();
+		}
+		else if (ChatBlockUI->GetTeamID() == Cast<UChatBlockUI>(ParentUI->ChatSizeBox->GetChildAt(0))->GetTeamID())
+		{
+			ParentUI->OnToggleVisibilityBtn();
+		}
 	}
 }
 
@@ -77,7 +86,7 @@ void UGroupIconUI::SetIconIMG(UTexture2D* IMG)
 	Style.Normal = Brush;
 	Style.Hovered = Brush;
 	Style.Pressed = Brush;
-	
+
 	GroupIconBtn->SetStyle(Style);
 }
 
@@ -87,7 +96,7 @@ void UGroupIconUI::OnServerTeamChatMessageResponse(bool bSuccess, FString Messag
 	{
 		// Init ChatBlockUI
 		ChatBlockUI->ChatScrollBox->ClearChildren();
-		
+
 		// 1. JSON 파싱 (Message에는 JSON 원본이 들어있음)
 		TArray<FTeamChatMessageResponse> TeamChatMessage;
 
@@ -103,7 +112,7 @@ void UGroupIconUI::OnServerTeamChatMessageResponse(bool bSuccess, FString Messag
 				UE_LOG(LogTemp, Warning, TEXT("message    : %s"), *Msg.message);
 				UE_LOG(LogTemp, Warning, TEXT("createdAt  : %s"), *Msg.createdAt);
 			}
-			
+
 			for (const FTeamChatMessageResponse& Msg : TeamChatMessage)
 			{
 				// Add Chat Chunk to ScrollBox

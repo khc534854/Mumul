@@ -32,12 +32,28 @@ protected:
 	TObjectPtr<class UBorder> Slot_5;
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UBorder> Slot_6;
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	TObjectPtr<class UWidgetAnimation> SlotAnim_0;
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	TObjectPtr<class UWidgetAnimation> SlotAnim_1;
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	TObjectPtr<class UWidgetAnimation> SlotAnim_2;
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	TObjectPtr<class UWidgetAnimation> SlotAnim_3;
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	TObjectPtr<class UWidgetAnimation> SlotAnim_4;
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	TObjectPtr<class UWidgetAnimation> SlotAnim_5;
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	TObjectPtr<class UWidgetAnimation> SlotAnim_6;
 
 	UPROPERTY()
 	TArray<TObjectPtr<class UBorder>> Slots;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Radial")
-	float RadiusOffset = 200.f;
+	UPROPERTY()
+	TArray<UWidgetAnimation*> SlotAnims;
+	
+	UPROPERTY()
+	float RadiusOffset = 294.f;
 	float SpacingAngle;
 	int32 CurrentIdx = -1;
 
@@ -55,8 +71,11 @@ protected:
 	bool bOnHovered = false;
 	
 	void UpdateSelectedSlot(int32 NewIndex);
+	float HighlightTime;
+	void ApplyHighlightEffect(int32 Idx, float DeltaTime);
 
 public:
+	void PlaySlotSequence();
 	// 현재 선택된 슬롯 번호 반환 (없으면 -1)
 	int32 GetCurrentSelectedIndex() const { return CurrentIdx; }
 };

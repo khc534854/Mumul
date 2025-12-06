@@ -10,9 +10,8 @@
 void URadialUI::NativeConstruct()
 {
 	Super::NativeConstruct();
-	
-	Slots.Empty();
 
+	Slots.Empty();
 	// Adding Widget to Slots
 	Slots.Add(Slot_0);
 	Slots.Add(Slot_1);
@@ -25,6 +24,16 @@ void URadialUI::NativeConstruct()
 	SpacingAngle = 360.f / Slots.Num();
 
 	ArrangeSlots();
+
+	SlotAnims = {
+		SlotAnim_0,
+		SlotAnim_1,
+		SlotAnim_2,
+		SlotAnim_3,
+		SlotAnim_4,
+		SlotAnim_5,
+		SlotAnim_6
+	};
 
 	PC = GetOwningPlayer();
 	if (!PC)
@@ -39,7 +48,7 @@ void URadialUI::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 
 	if (!PC)
 		return;
-	
+
 	FVector2D CurPos;
 	PC->GetMousePosition(CurPos.X, CurPos.Y);
 
@@ -73,9 +82,14 @@ void URadialUI::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	AngleDeg = FMath::Fmod(AngleDeg + 360.f - 90.f, 360.f);
 
 	int32 BestIdx = FMath::RoundToInt(AngleDeg / SpacingAngle) % Slots.Num();
-	if (BestIdx == CurrentIdx)
-		return;
 
+	if (BestIdx == CurrentIdx)
+	{
+		// 같은 슬롯을 유지할 때만 애니메이션 진행
+		ApplyHighlightEffect(CurrentIdx, InDeltaTime);
+		return;
+	}
+	
 	UpdateSelectedSlot(BestIdx);
 	CurrentIdx = BestIdx;
 }
@@ -109,11 +123,55 @@ void URadialUI::ArrangeSlots()
 
 void URadialUI::UpdateSelectedSlot(int32 NewIndex)
 {
-	// Debugging Highlight
+	HighlightTime = 0.f;
+
 	for (int32 Idx = 0; Idx < Slots.Num(); Idx++)
 	{
-		Slots[Idx]->SetBrushColor(
-			Idx == NewIndex ? FLinearColor(1, 1, 0, 1) : FLinearColor(1, 1, 1, 1)
-		);
+		if (UBorder* Border = Slots[Idx])
+		{
+			// 기본 색
+			Border->SetBrushColor(
+				Idx == NewIndex ? FLinearColor(1, 1, 0, 1)
+								: FLinearColor(1, 1, 1, 1)
+			);
+
+			// 선택된 슬롯만 Scale/Rotation 효과
+			if (Idx == NewIndex)
+			{
+				// RenderTransform 초기화
+				Border->SetRenderTransform(FWidgetTransform());
+			}
+			else
+			{
+				Border->SetRenderTransform(FWidgetTransform());
+			}
+		}
+	}
+}
+
+void URadialUI::ApplyHighlightEffect(int32 Idx, float DeltaTime)
+{
+	HighlightTime += DeltaTime;
+
+	// Scale: 1.0 ~ 1.1 사이 펄스
+	const float Scale = 1.07f + 0.04f * FMath::Sin(HighlightTime * 1.74f);
+
+	// Rotation: 작은 offset으로 흔들기
+	const float Shake = FMath::PerlinNoise1D(HighlightTime * 4.6f) * 3.9f;
+
+	FWidgetTransform Transform;
+	Transform.Scale = FVector2D(Scale, Scale);
+	Transform.Angle = Shake;
+
+	Slots[Idx]->SetRenderTransform(Transform);
+}
+
+void URadialUI::PlaySlotSequence()
+{
+	for (int32 Idx = 0; Idx < SlotAnims.Num(); Idx++)
+	{
+		constexpr float DelayTime = 0.016f;
+		const float StartDelay = Idx * DelayTime;
+		PlayAnimation(SlotAnims[Idx], StartDelay);
 	}
 }

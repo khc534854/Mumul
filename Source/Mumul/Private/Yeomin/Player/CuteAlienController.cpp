@@ -192,8 +192,15 @@ void ACuteAlienController::BeginPlay()
 		}
 	}
 
-	PlayerUI->InitGroupChatUI(GroupChatUI);
-	RadialUI->SetVisibility(ESlateVisibility::Hidden);
+	if (PlayerUI && GroupChatUI)
+	{
+		PlayerUI->InitGroupChatUI(GroupChatUI);
+	}
+	if (PlayerUI && GroupChatUI)
+	{
+		RadialUI->SetVisibility(ESlateVisibility::Hidden);
+	}
+	
 
 	// 4. 데이터 초기화 및 서버 전송
 	UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
@@ -484,6 +491,7 @@ void ACuteAlienController::ShowRadialUI()
 
 	//Show Radial UI
 	RadialUI->SetVisibility(ESlateVisibility::Visible);
+	RadialUI->PlaySlotSequence();
 	bIsRadialVisible = true;
 }
 
@@ -507,7 +515,7 @@ void ACuteAlienController::HideRadialUI()
 	ACuteAlienPlayer* CurPlayer = Cast<ACuteAlienPlayer>(GetPawn());
 	if (!CurPlayer) return;
 
-	CurPlayer->Server_PlayAlienDance(SelectedIdx); 
+	CurPlayer->Server_PlayAlienDance(SelectedIdx);
 }
 
 void ACuteAlienController::CancelRadialUI()

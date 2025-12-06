@@ -17,6 +17,15 @@ class MUMUL_API UPlayerUI : public UUserWidget
 	
 protected:
 	virtual void NativeConstruct() override;
+	
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UBaseText> CurrentTime;
+	FTimerHandle FirstMinuteTimer;
+	UFUNCTION()
+	void StartMinuteTimer();
+	FTimerHandle TimeUpdater;
+	UFUNCTION()
+	void UpdateCurrentTime();
 
 	UFUNCTION(BlueprintCallable)
 	UVoiceChatComponent* GetVoiceComponent() const;
@@ -37,8 +46,6 @@ protected:
 	TObjectPtr<class UButton> TentBtn;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> MicrophoneBtn;
-	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UButton> RecordBtn;
 	
 	UPROPERTY(Transient, meta = (BindWidgetAnim))
 	TObjectPtr<class UWidgetAnimation > MicOn;
@@ -57,4 +64,23 @@ protected:
 	void OnMicClicked();
 	UFUNCTION()
 	void OnRecordClicked();
+
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UButton > ProfileBtn;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UButton > LogOutBtn;
+	bool bIsMainHovered = false;
+	bool bIsSubHovered = false;
+	bool bIsTryingToHide = false;
+	FTimerHandle HideLogOutTimer;
+	void TryHideLogOutBtn();
+	void HideLogOutBtn();
+	UFUNCTION()
+	void OnProfileBtnHovered();
+	UFUNCTION()
+	void OnProfileBtnUnhovered();
+	UFUNCTION()
+	void OnLogOutBtnHovered();
+	UFUNCTION()
+	void OnLogOutBtnUnhovered();
 };

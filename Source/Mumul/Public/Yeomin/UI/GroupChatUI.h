@@ -71,7 +71,7 @@ protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> ChatEnter;
 	UFUNCTION()
-	void OnTextBoxCommitted(const FText& Text, ETextCommit::Type CommitMethod);
+	void OnTextBoxCommitted();
 	UFUNCTION()
 	void OnServerChatMessageResponse(bool bSuccess, FString Message);
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
@@ -123,16 +123,25 @@ protected:
 	TObjectPtr<class UTexture2D> RightIMG;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UBorder> GroupChatBorder;
-	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UButton> ToggleVisibilityBtn;
-	float AlignmentVal = 0.178f;
-	bool bIsToggled = false;
 	UFUNCTION()
 	void ToggleInvitationUI();
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UButton> ToggleVisibilityBtn;
+	bool bIsToggled = false;
+	float AlignmentVal = 0.178f;
+	float StartVal;
+	float TargetVal;
+	float Elapsed;
+	UPROPERTY()
+	float Duration = 0.963f;
+	bool bAnimating = false;
+	void ToggleGroupChatAlignment();
+	
+public:
+	bool IsGroupChatToggled() const { return bIsToggled; }
 	UFUNCTION()
 	void OnToggleVisibilityBtn();
 
-public:
 	// [신규] AI 도우미 토글 버튼
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> QuestionBtn; // 체크박스로 구현 (On/Off)
@@ -151,8 +160,21 @@ private:
 	// 헬퍼: 현재 방 정보 가져오기
 	FString GetCurrentTeamID() const;
 	FString GetCurrentTeamName() const;
-	
+
+protected:
+	UPROPERTY(EditDefaultsOnly, Category="UI Image")
+	TArray<TObjectPtr<class UTexture2D>> RecordIMGs;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UImage> RecordIMG;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UBaseText> RecordText0;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UBaseText> RecordText1;
+	FTimerHandle DotTimer;
+	int32 DotCount = 0;
+	void UpdateDot();
 public:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> RecordBtn;
+	void OnRecordBtnState(bool bIsOn);
 };
