@@ -246,6 +246,12 @@ void ACuteAlienController::BeginPlay()
 			VoiceMeetingUI->SetVisibility(ESlateVisibility::Hidden);
 		}
 	}
+
+	FTimerHandle InitVoiceHandle;
+	GetWorldTimerManager().SetTimer(InitVoiceHandle, this, &ACuteAlienController::UpdateVoiceChannelMuting, 1.0f, false);
+
+	// [기존] 주기적 업데이트 (거리 기반 및 난입 유저 대응)
+	// GetWorldTimerManager().SetTimer(VoiceUpdateTimerHandle, this, &ACuteAlienController::UpdateVoiceChannelMuting, 1.0f, true);
 }
 
 void ACuteAlienController::SetupInputComponent()
@@ -878,6 +884,9 @@ void ACuteAlienController::UpdateVoiceChannelMuting()
 
 	FString MyChannelID = MyPS->VoiceChannelID;
 
+	// [디버그 로그] 내 상태 확인
+	//UE_LOG(LogTemp, Log, TEXT("[Voice] UpdateMuting Start. My Name: %s, My Channel: %s"), *MyPS->GetPlayerName(), *MyChannelID);
+
 	if (UWorld* World = GetWorld())
 	{
 		if (AGameStateBase* GameState = World->GetGameState())
@@ -889,51 +898,69 @@ void ACuteAlienController::UpdateVoiceChannelMuting()
 				AMumulPlayerState* AlienOtherPS = Cast<AMumulPlayerState>(OtherPS);
 				if (!AlienOtherPS) continue;
 
-				// [핵심 수정] 무조건 Create 하지 말고, Get으로 먼저 찾습니다.
 				UVOIPTalker* Talker = UVOIPStatics::GetVOIPTalkerForPlayer(OtherPS->GetUniqueId());
 
-				// 없으면 그때 생성
 				if (!Talker)
 				{
 					Talker = UVOIPTalker::CreateTalkerForPlayer(OtherPS);
+					UE_LOG(LogTemp, Warning, TEXT("[Voice] Created Talker for User: %s (ID: %d)"), *OtherPS->GetPlayerName(), AlienOtherPS->PS_UserIndex);
 				}
 
 				if (Talker)
 				{
+					// 채널이 같은지 확인
 					if (AlienOtherPS->VoiceChannelID == MyChannelID)
 					{
-						// [0번 채널] 3D 거리 기반
+						// [Case A] 로비 채널 (3D 거리 기반)
 						if (MyChannelID == TEXT("Lobby"))
 						{
-							Talker->Settings.AttenuationSettings = NormalAttenuation;
+							if (Talker->Settings.AttenuationSettings != NormalAttenuation)
+							{
+								Talker->Settings.AttenuationSettings = NormalAttenuation;
+								UE_LOG(LogTemp, Log, TEXT("[Voice] %s -> Set Attenuation (Lobby Mode)"), *OtherPS->GetPlayerName());
+							}
 
 							if (APawn* OtherPawn = OtherPS->GetPawn())
 							{
-								Talker->Settings.ComponentToAttachTo = OtherPawn->GetRootComponent();
+								if (Talker->Settings.ComponentToAttachTo != OtherPawn->GetRootComponent())
+								{
+									Talker->Settings.ComponentToAttachTo = OtherPawn->GetRootComponent();
+									UE_LOG(LogTemp, Log, TEXT("[Voice] %s -> Attached to Pawn Root"), *OtherPS->GetPlayerName());
+								}
 							}
 							else
 							{
-								// 폰이 안 보이면(멀리 있으면) 소리 위치를 잡을 수 없음 -> 2D로 들리거나 안 들릴 수 있음
-								// 확실히 하기 위해 폰이 없으면 소리를 끄는 것도 방법
-								Talker->Settings.ComponentToAttachTo = nullptr;
+								// 폰이 없으면 소리 위치를 잡을 수 없음 -> 임시로 끄거나 유지
+								// Talker->Settings.ComponentToAttachTo = nullptr;
 							}
 						}
-						// [그 외] 2D 전체
+						// [Case B] 일반 그룹/회의 채널 (2D 전체)
 						else
 						{
-							Talker->Settings.AttenuationSettings = nullptr;
-							Talker->Settings.ComponentToAttachTo = nullptr;
+							// 설정이 다를 때만 로그 찍고 변경
+							if (Talker->Settings.AttenuationSettings != nullptr)
+							{
+								Talker->Settings.AttenuationSettings = nullptr;
+								Talker->Settings.ComponentToAttachTo = nullptr;
+								UE_LOG(LogTemp, Log, TEXT("[Voice] %s -> Set 2D Mode (Same Channel: %s)"), *OtherPS->GetPlayerName(), *MyChannelID);
+							}
 						}
 					}
+					// [Case C] 다른 채널 (음소거)
 					else
 					{
-						// [다른 채널] 무음
-						if (SilentAttenuation)
+						if (SilentAttenuation && Talker->Settings.AttenuationSettings != SilentAttenuation)
 						{
 							Talker->Settings.AttenuationSettings = SilentAttenuation;
 							Talker->Settings.ComponentToAttachTo = nullptr;
+							UE_LOG(LogTemp, Log, TEXT("[Voice] %s -> Muted (Channel Mismatch. Mine:%s, Other:%s)"),
+								*OtherPS->GetPlayerName(), *MyChannelID, *AlienOtherPS->VoiceChannelID);
 						}
 					}
+				}
+				else
+				{
+					UE_LOG(LogTemp, Error, TEXT("[Voice] Failed to Create Talker for %s"), *OtherPS->GetPlayerName());
 				}
 			}
 		}
