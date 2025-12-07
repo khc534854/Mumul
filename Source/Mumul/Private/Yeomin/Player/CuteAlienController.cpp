@@ -914,11 +914,12 @@ void ACuteAlienController::UpdateVoiceChannelMuting()
 						// [Case A] 로비 채널 (3D 거리 기반)
 						if (MyChannelID == TEXT("Lobby"))
 						{
-							if (Talker->Settings.AttenuationSettings != NormalAttenuation)
-							{
-								Talker->Settings.AttenuationSettings = NormalAttenuation;
-								UE_LOG(LogTemp, Log, TEXT("[Voice] %s -> Set Attenuation (Lobby Mode)"), *OtherPS->GetPlayerName());
-							}
+							//if (Talker->Settings.AttenuationSettings != NormalAttenuation)
+							//{
+							//	Talker->Settings.AttenuationSettings = NormalAttenuation;
+							//	UE_LOG(LogTemp, Log, TEXT("[Voice] %s -> Set Attenuation (Lobby Mode)"), *OtherPS->GetPlayerName());
+							//}
+							Talker->Settings.AttenuationSettings = nullptr;
 
 							if (APawn* OtherPawn = OtherPS->GetPawn())
 							{
