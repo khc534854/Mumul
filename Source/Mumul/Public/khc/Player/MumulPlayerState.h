@@ -50,7 +50,7 @@ public:
 	
 	// 현재 보이스 채널 ID (Replicated)
 	UPROPERTY(ReplicatedUsing = OnRep_VoiceChannelID, BlueprintReadOnly, Category = "Voice")
-	FString VoiceChannelID = TEXT("Lobby"); // 0: 로비, 1~N: 특정 채널
+	FString VoiceChannelID = TEXT("None"); // 0: 로비, 1~N: 특정 채널
 
 	FString WaitingChannelID = TEXT("Lobby");
 	

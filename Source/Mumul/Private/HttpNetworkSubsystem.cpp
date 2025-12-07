@@ -114,10 +114,11 @@ void UHttpNetworkSubsystem::SendLoginRequest(FString ID, FString PW)
 	Request->ProcessRequest();
 }
 
-void UHttpNetworkSubsystem::StartMeetingRequest(FString MeetingTitle, int32 OrganizerID, FString Agenda, FString Desc)
+void UHttpNetworkSubsystem::StartMeetingRequest(FString MeetingTitle, FString TeamId, int32 OrganizerID, FString Agenda, FString Desc)
 {
 	FVoiceMeetingStartRequest MeetingStartData;
 	MeetingStartData.title = MeetingTitle;
+	MeetingStartData.chat_room_id = TeamId;
 	MeetingStartData.organizer_id = OrganizerID; // int32 그대로 대입
 	MeetingStartData.client_timestamp = GetCurrentEpochMs(); // int64 그대로 대입
 	MeetingStartData.agenda = Agenda;
