@@ -43,7 +43,7 @@ public:
 	void SendLoginRequest(FString ID, FString PW);
 
 	UFUNCTION(BlueprintCallable, Category = "Network")
-	void StartMeetingRequest(FString MeetingTitle, int32 OrganizerID, FString Agenda, FString Desc);
+	void StartMeetingRequest(FString MeetingTitle, FString TeamId, int32 OrganizerID, FString Agenda, FString Desc);
 
 	UFUNCTION(BlueprintCallable, Category = "Network")
 	void JoinMeetingRequest(int32 UserID, FString MeetingID);

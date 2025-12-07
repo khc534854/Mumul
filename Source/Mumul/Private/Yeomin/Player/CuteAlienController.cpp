@@ -556,6 +556,7 @@ void ACuteAlienController::RequestStartMeetingRecording(FString InMeetingTitle, 
 		{
 			HttpSystem->StartMeetingRequest(
 				InMeetingTitle,
+				MyPS->VoiceChannelID,
 				GI->PlayerUniqueID, // Organizer ID
 				InAgenda,
 				InDesc
@@ -905,7 +906,17 @@ void ACuteAlienController::UpdateVoiceChannelMuting()
 						// [0번 채널] 3D 거리 기반
 						if (MyChannelID == TEXT("Lobby"))
 						{
-							Talker->Settings.AttenuationSettings = NormalAttenuation;
+							//if (Talker->Settings.AttenuationSettings != NormalAttenuation)
+							//{
+							//	Talker->Settings.AttenuationSettings = NormalAttenuation;
+							//	UE_LOG(LogTemp, Log, TEXT("[Voice] %s -> Set Attenuation (Lobby Mode)"), *OtherPS->GetPlayerName());
+							//}
+							if (Talker->Settings.AttenuationSettings != nullptr || Talker->Settings.ComponentToAttachTo != nullptr)
+							{
+								Talker->Settings.AttenuationSettings = nullptr;
+								Talker->Settings.ComponentToAttachTo = nullptr;
+								UE_LOG(LogTemp, Warning, TEXT("[Voice] %s -> Set 2D Mode (Lobby)"), *OtherPS->GetPlayerName());
+							}
 
 							if (APawn* OtherPawn = OtherPS->GetPawn())
 							{

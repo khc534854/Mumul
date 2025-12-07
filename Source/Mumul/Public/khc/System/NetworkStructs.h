@@ -69,6 +69,9 @@ struct FVoiceMeetingStartRequest
 	FString title;
 
 	UPROPERTY()
+	FString chat_room_id;
+
+	UPROPERTY()
 	int32 organizer_id = 0; // integer
 
 	UPROPERTY()
