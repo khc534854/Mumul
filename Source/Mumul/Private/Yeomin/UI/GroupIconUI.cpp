@@ -62,11 +62,10 @@ void UGroupIconUI::DisplayGroupChat()
 
 		if (ParentUI->IsGroupChatToggled() == false)
 		{
-			ParentUI->OnToggleVisibilityBtn();
-		}
-		else if (ChatBlockUI->GetTeamID() == Cast<UChatBlockUI>(ParentUI->ChatSizeBox->GetChildAt(0))->GetTeamID())
-		{
-			ParentUI->OnToggleVisibilityBtn();
+			if (ChatBlockUI->GetTeamID() == Cast<UChatBlockUI>(ParentUI->ChatSizeBox->GetChildAt(0))->GetTeamID())
+			{
+				ParentUI->OnToggleVisibilityBtn();
+			}
 		}
 	}
 }

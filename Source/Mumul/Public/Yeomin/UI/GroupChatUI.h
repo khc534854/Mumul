@@ -141,6 +141,8 @@ public:
 	bool IsGroupChatToggled() const { return bIsToggled; }
 	UFUNCTION()
 	void OnToggleVisibilityBtn();
+	UPROPERTY(EditAnywhere, Category="Testing")
+	bool bITestCreateTeamChat = false;
 
 	// [신규] AI 도우미 토글 버튼
 	UPROPERTY(meta=(BindWidget))

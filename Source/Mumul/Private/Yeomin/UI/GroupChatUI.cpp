@@ -656,6 +656,19 @@ void UGroupChatUI::OnToggleVisibilityBtn()
 	HttpSystem->SendTeamChatListRequest(PS->PS_UserIndex);
 
 	ToggleGroupChatAlignment();
+
+	// test: create team
+	if (bITestCreateTeamChat)
+	{
+		ACuteAlienController* PC = Cast<ACuteAlienController>(GetOwningPlayer());
+		if (PC->IsLocalController())
+		{
+			TArray<int32> testList = {10};
+			TArray<FTeamUser> TeamUserIDs;
+			PC->Server_CreateGroupChatUI(testList, FString(TEXT("team01")), FString(TEXT("Test")),
+									 TeamUserIDs);
+		}
+	}
 }
 
 void UGroupChatUI::OnAICheckStateChanged(bool bIsChecked)
