@@ -932,20 +932,21 @@ void ACuteAlienController::UpdateVoiceChannelMuting()
 							//	UE_LOG(LogTemp, Log, TEXT("[Voice] %s -> Set Attenuation (Lobby Mode)"), *OtherPS->GetPlayerName());
 							//}
 							Talker->Settings.AttenuationSettings = nullptr;
+							Talker->Settings.ComponentToAttachTo = nullptr;
 
-							if (APawn* OtherPawn = OtherPS->GetPawn())
-							{
-								if (Talker->Settings.ComponentToAttachTo != OtherPawn->GetRootComponent())
-								{
-									Talker->Settings.ComponentToAttachTo = OtherPawn->GetRootComponent();
-									UE_LOG(LogTemp, Log, TEXT("[Voice] %s -> Attached to Pawn Root"), *OtherPS->GetPlayerName());
-								}
-							}
-							else
-							{
-								// 폰이 없으면 소리 위치를 잡을 수 없음 -> 임시로 끄거나 유지
-								// Talker->Settings.ComponentToAttachTo = nullptr;
-							}
+							//if (APawn* OtherPawn = OtherPS->GetPawn())
+							//{
+							//	if (Talker->Settings.ComponentToAttachTo != OtherPawn->GetRootComponent())
+							//	{
+							//		Talker->Settings.ComponentToAttachTo = OtherPawn->GetRootComponent();
+							//		UE_LOG(LogTemp, Log, TEXT("[Voice] %s -> Attached to Pawn Root"), *OtherPS->GetPlayerName());
+							//	}
+							//}
+							//else
+							//{
+							//	// 폰이 없으면 소리 위치를 잡을 수 없음 -> 임시로 끄거나 유지
+							//	// Talker->Settings.ComponentToAttachTo = nullptr;
+							//}
 						}
 						// [Case B] 일반 그룹/회의 채널 (2D 전체)
 						else
