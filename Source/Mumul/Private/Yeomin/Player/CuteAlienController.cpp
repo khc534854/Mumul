@@ -895,21 +895,33 @@ void ACuteAlienController::UpdateVoiceChannelMuting()
 			{
 				if (OtherPS == MyPS) continue;
 
-				AMumulPlayerState* AlienOtherPS = Cast<AMumulPlayerState>(OtherPS);
-				if (!AlienOtherPS) continue;
+				UVOIPTalker* Talker = nullptr;
+				if (CachedTalkers.Contains(Cast<AMumulPlayerState>(OtherPS)->PS_UserIndex))
+				{
+					Talker = CachedTalkers[Cast<AMumulPlayerState>(OtherPS)->PS_UserIndex];
+				}
 
-				UVOIPTalker* Talker = UVOIPStatics::GetVOIPTalkerForPlayer(OtherPS->GetUniqueId());
+				// 2. 없으면 엔진에서 찾기
+				if (!Talker)
+				{
+					Talker = UVOIPStatics::GetVOIPTalkerForPlayer(OtherPS->GetUniqueId());
+				}
 
+				// 3. 그래도 없으면 생성하고 맵에 저장(UPROPERTY로 보호)
 				if (!Talker)
 				{
 					Talker = UVOIPTalker::CreateTalkerForPlayer(OtherPS);
-					UE_LOG(LogTemp, Warning, TEXT("[Voice] Created Talker for User: %s (ID: %d)"), *OtherPS->GetPlayerName(), AlienOtherPS->PS_UserIndex);
+					if (Talker)
+					{
+						CachedTalkers.Add(Cast<AMumulPlayerState>(OtherPS)->PS_UserIndex, Talker);
+						UE_LOG(LogTemp, Warning, TEXT("[Voice] Created & Cached Talker for %s"), *OtherPS->GetPlayerName());
+					}
 				}
 
 				if (Talker)
 				{
 					// 채널이 같은지 확인
-					if (AlienOtherPS->VoiceChannelID == MyChannelID)
+					if (Cast<AMumulPlayerState>(OtherPS)->VoiceChannelID == MyChannelID)
 					{
 						// [Case A] 로비 채널 (3D 거리 기반)
 						if (MyChannelID == TEXT("Lobby"))
@@ -954,8 +966,7 @@ void ACuteAlienController::UpdateVoiceChannelMuting()
 						{
 							Talker->Settings.AttenuationSettings = SilentAttenuation;
 							Talker->Settings.ComponentToAttachTo = nullptr;
-							UE_LOG(LogTemp, Log, TEXT("[Voice] %s -> Muted (Channel Mismatch. Mine:%s, Other:%s)"),
-								*OtherPS->GetPlayerName(), *MyChannelID, *AlienOtherPS->VoiceChannelID);
+							UE_LOG(LogTemp, Log, TEXT("[Voice] %s -> Muted (Channel Mismatch. Mine:%s, Other:%s)"), *OtherPS->GetPlayerName(), *MyChannelID, *Cast<AMumulPlayerState>(OtherPS)->VoiceChannelID);
 						}
 					}
 				}

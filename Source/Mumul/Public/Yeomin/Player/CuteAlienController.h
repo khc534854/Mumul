@@ -160,6 +160,9 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<class UVoiceMeetingUI> VoiceMeetingUI;
+
+	UPROPERTY()
+	TMap<int32, class UVOIPTalker*> CachedTalkers;
 	
 public:
 	UFUNCTION(BlueprintCallable, Category = "Voice")
