@@ -172,6 +172,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Voice")
 	TObjectPtr<USoundAttenuation> NormalAttenuation;
+
+	UPROPERTY()
+	TMap<int32, class UVOIPTalker*> CachedTalkers;
 	
 	UPROPERTY()
 	TSubclassOf<class UGroupIconUI> GroupIconUIClass;
