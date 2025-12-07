@@ -271,6 +271,7 @@ void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const
 		PS->PS_RealName = Name;
 		PS->PS_UserType = Type;
 		PS->PS_TendencyID = Tendency;
+		PS->Server_SetVoiceChannelID(TEXT("Lobby"));
 		// PS->CampID = CampID; (인자 추가 시)
 
 		// 강제 동기화 (선택)
@@ -914,7 +915,7 @@ void ACuteAlienController::UpdateVoiceChannelMuting()
 
 				if (Talker)
 				{
-					// 채널 확인
+					// 채널이 같은지 확인
 					if (AlienOtherPS->VoiceChannelID == MyChannelID)
 					{
 						// [Case A] 로비 채널 (3D 거리 기반)
@@ -923,15 +924,21 @@ void ACuteAlienController::UpdateVoiceChannelMuting()
 							APawn* OtherPawn = OtherPS->GetPawn();
 							USceneComponent* TargetComponent = OtherPawn ? OtherPawn->GetRootComponent() : nullptr;
 
-							// [핵심 수정] "현재 설정"이 "목표 설정"과 다를 때만 변경!
-							// 목표: Attenuation은 NormalAttenuation, 위치는 상대방 Pawn
+							// [핵심] 현재 설정이 목표와 다를 때만 변경 (중복 설정 방지)
 							if (Talker->Settings.AttenuationSettings != NormalAttenuation ||
 								Talker->Settings.ComponentToAttachTo != TargetComponent)
 							{
 								Talker->Settings.AttenuationSettings = NormalAttenuation;
-								Talker->Settings.ComponentToAttachTo = TargetComponent;
+								Talker->Settings.ComponentToAttachTo = TargetComponent; // Pawn이 없으면 nullptr이 들어감 (안전함)
 
-								UE_LOG(LogTemp, Log, TEXT("[Voice] %s -> Set 3D Lobby Mode"), *OtherPS->GetPlayerName());
+								if (TargetComponent)
+								{
+									UE_LOG(LogTemp, Log, TEXT("[Voice] %s -> Set 3D Lobby Mode (Attached)"), *OtherPS->GetPlayerName());
+								}
+								else
+								{
+									UE_LOG(LogTemp, Warning, TEXT("[Voice] %s -> Set 3D Lobby Mode (Pending Pawn...)"), *OtherPS->GetPlayerName());
+								}
 							}
 						}
 						// [Case B] 일반 그룹/회의 채널 (2D 전체)
@@ -951,7 +958,7 @@ void ACuteAlienController::UpdateVoiceChannelMuting()
 					// [Case C] 다른 채널 (음소거)
 					else
 					{
-						// 목표: Attenuation은 SilentAttenuation (혹은 nullptr로 하고 소리를 0으로 줄이는 방법도 있음)
+						// 목표: Attenuation은 SilentAttenuation
 						if (Talker->Settings.AttenuationSettings != SilentAttenuation)
 						{
 							Talker->Settings.AttenuationSettings = SilentAttenuation;
