@@ -901,14 +901,37 @@ void UGroupChatUI::UpdateDot()
 
 void UGroupChatUI::OnRecordBtnState(bool bIsOn)
 {
-	if (bIsOn == true)
+	// ----------------------------------------------------
+	// 0) 공통 방어
+	// ----------------------------------------------------
+	if (!RecordIMG || RecordIMGs.Num() < 2 || !RecordText0 || !RecordText1)
 	{
-		if (RecordIMG && RecordIMGs[1] && RecordText0)
+		UE_LOG(LogTemp, Warning, TEXT("OnRecordBtnState: Null UI element detected."));
+		return;
+	}
+
+	if (!RecordText0->BaseText || !RecordText1->BaseText)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OnRecordBtnState: BaseText is NULL."));
+		return;
+	}
+
+
+	// ----------------------------------------------------
+	// 1) ON 상태
+	// ----------------------------------------------------
+	if (bIsOn)
+	{
+		if (RecordIMGs.IsValidIndex(1))
 		{
 			RecordIMG->SetBrushFromTexture(RecordIMGs[1]);
-			RecordText0->BaseText->SetText(FText::FromString(TEXT("나눔이가")));
 		}
-		
+
+		RecordText0->BaseText->SetText(FText::FromString(TEXT("나눔이가")));
+		// 혹시 Text1이 ON에도 쓰고 싶으면 여기 넣으면 됨
+
+		// 타이머 방어: 기존 타이머 제거 후 다시 시작
+		GetWorld()->GetTimerManager().ClearTimer(DotTimer);
 
 		GetWorld()->GetTimerManager().SetTimer(
 			DotTimer,
@@ -918,15 +941,20 @@ void UGroupChatUI::OnRecordBtnState(bool bIsOn)
 			true
 		);
 	}
-	else if (bIsOn == false)
+
+	// ----------------------------------------------------
+	// 2) OFF 상태
+	// ----------------------------------------------------
+	else
 	{
 		GetWorld()->GetTimerManager().ClearTimer(DotTimer);
-		
-		if (RecordIMG && RecordIMGs[0] && RecordText0)
+
+		if (RecordIMGs.IsValidIndex(0))
 		{
 			RecordIMG->SetBrushFromTexture(RecordIMGs[0]);
-			RecordText0->BaseText->SetText(FText::FromString(TEXT("나눔이로")));
-			RecordText1->BaseText->SetText(FText::FromString(TEXT("기록하기")));
 		}
+
+		RecordText0->BaseText->SetText(FText::FromString(TEXT("나눔이로")));
+		RecordText1->BaseText->SetText(FText::FromString(TEXT("기록하기")));
 	}
 }
