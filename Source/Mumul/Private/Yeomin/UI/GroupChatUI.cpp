@@ -887,20 +887,35 @@ FString UGroupChatUI::GetCurrentTeamName() const
 
 void UGroupChatUI::UpdateDot()
 {
-	// Repeat 1 → 2 → 3
+	if (!IsValid(this))
+		return;
+
+	if (!RecordText1 || !RecordText1->BaseText)
+		return;
+
 	DotCount = (DotCount % 3) + 1;
 
 	FString Dots = FString::ChrN(DotCount, TEXT('.'));
 	FString Text = FString::Printf(TEXT("기록중%s"), *Dots);
 
-	if (RecordText1)
-	{
-		RecordText1->BaseText->SetText(FText::FromString(Text));
-	}
+	RecordText1->BaseText->SetText(FText::FromString(Text));
 }
+
 
 void UGroupChatUI::OnRecordBtnState(bool bIsOn)
 {
+	if (!IsValid(RecordText0) || !IsValid(RecordText1))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Invalid Text"));
+		return;
+	}
+
+	if (!IsValid(RecordText0->BaseText) || !IsValid(RecordText1->BaseText))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Invalid BaseText"));
+		return;
+	}
+
 	// ----------------------------------------------------
 	// 0) 공통 방어
 	// ----------------------------------------------------
