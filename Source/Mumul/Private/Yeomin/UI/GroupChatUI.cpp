@@ -419,11 +419,11 @@ void UGroupChatUI::OnTextBoxCommitted()
 	int32 MyID = GI ? GI->PlayerUniqueID : 0;
 
 	// [공통] 내 화면에 메시지 즉시 추가
-	if (CurrentSelectedGroup->ChatBlockUI)
-	{
-		AddChat(CurrentSelectedGroup->ChatBlockUI->GetTeamID(), TimeStamp, MyName, Content);
-	}
-	EditBox->SetText(FText::GetEmpty());
+	// if (CurrentSelectedGroup->ChatBlockUI)
+	// {
+	// 	AddChat(CurrentSelectedGroup->ChatBlockUI->GetTeamID(), TimeStamp, MyName, Content);
+	// }
+	// EditBox->SetText(FText::GetEmpty());
 
 	// [전송 로직 분기]
 	if (CurrentSelectedGroup->bIsChatbotRoom)
