@@ -210,9 +210,13 @@ void ACuteAlienController::BeginPlay()
           VoiceMeetingUI->SetVisibility(ESlateVisibility::Hidden);
        }
     }
-
+	TryInitPlayerInfo();
+	
     // [수정] PlayerState가 준비될 때까지 타이머로 확인 (0.5초 간격)
-    GetWorldTimerManager().SetTimer(InitPlayerStateTimerHandle, this, &ACuteAlienController::TryInitPlayerInfo, 0.5f, true);
+    GetWorld()->GetTimerManager().SetTimer(InitPlayerStateTimerHandle, [&]()
+    {
+    	OnPlayerArrayUpdated.Broadcast();
+    }, 0.5f, true);
 }
 
 void ACuteAlienController::SetupInputComponent()

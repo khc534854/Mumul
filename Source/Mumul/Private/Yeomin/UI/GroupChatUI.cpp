@@ -321,7 +321,7 @@ void UGroupChatUI::OnMeetingChatEnded(FString Message, FString GroupId)
 		if (CurrentSelectedGroup->ChatBlockUI->GetTeamID() == GroupId)
 		{
 			AddBotChat(FString::Printf(TEXT("[알림] %s"), *Message));
-            
+
 			// 만약 내가 켠 사람이라면 버튼 상태도 꺼줌
 			bIsMeetingChatbotActive = false;
 			UpdateQuestionButtonState();
@@ -478,10 +478,10 @@ void UGroupChatUI::AddBotChat(const FString& Message)
 
 			FString TimeStamp = FDateTime::Now().ToString(TEXT("%H:%M"));
 			if (WebSocketSystem->CurrentChatbotType == EWebSocketChatbotType::Learning)
-				BotChat->SetContent(TimeStamp,  TEXT("무물이"), Message);
+				BotChat->SetContent(TimeStamp, TEXT("무물이"), Message);
 			else if (WebSocketSystem->CurrentChatbotType == EWebSocketChatbotType::Meeting)
-				BotChat->SetContent(TimeStamp,  TEXT("나눔이"), Message);
-				
+				BotChat->SetContent(TimeStamp, TEXT("나눔이"), Message);
+
 
 			// 스크롤 내리기
 			FTimerHandle Handle;
@@ -753,7 +753,7 @@ void UGroupChatUI::ToggleGroupChatAlignment()
 void UGroupChatUI::OnToggleVisibilityBtn()
 {
 	ToggleGroupChatAlignment();
-
+	CreateGroupChatUI->RefreshJoinedPlayerList();
 	// test: create team
 	if (bITestCreateTeamChat)
 	{
