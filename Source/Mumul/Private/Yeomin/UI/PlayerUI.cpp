@@ -96,6 +96,12 @@ void UPlayerUI::NativeConstruct()
 
 	LogOutBtn->OnHovered.AddDynamic(this, &UPlayerUI::OnLogOutBtnHovered);
 	LogOutBtn->OnUnhovered.AddDynamic(this, &UPlayerUI::OnLogOutBtnUnhovered);
+	LogOutBtn->OnClicked.AddDynamic(this, &UPlayerUI::OnLogOutBtnClicked);
+}
+
+void UPlayerUI::OnLogOutBtnClicked()
+{
+	PC->SaveAndExit();	
 }
 
 void UPlayerUI::TryBindMinimap()

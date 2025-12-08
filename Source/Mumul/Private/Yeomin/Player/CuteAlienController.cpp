@@ -96,12 +96,12 @@ ACuteAlienController::ACuteAlienController()
 		IA_Click = IA_ClickFinder.Object;
 	}
 
-	static ConstructorHelpers::FObjectFinder<UInputAction> IA_QuitGameFinder(
-		TEXT("/Game/Yeomin/Characters/Inputs/Actions/IA_QuitGame.IA_QuitGame"));
-	if (IA_QuitGameFinder.Succeeded())
-	{
-		IA_QuitGame = IA_QuitGameFinder.Object;
-	}
+	// static ConstructorHelpers::FObjectFinder<UInputAction> IA_QuitGameFinder(
+	// 	TEXT("/Game/Yeomin/Characters/Inputs/Actions/IA_QuitGame.IA_QuitGame"));
+	// if (IA_QuitGameFinder.Succeeded())
+	// {
+	// 	IA_QuitGame = IA_QuitGameFinder.Object;
+	// }
 
 	static ConstructorHelpers::FClassFinder<APreviewTentActor> PreviewTentFinder(
 		TEXT("/Game/Yeomin/Actors/Tent/BP_PreviewTent.BP_PreviewTent_C"));
@@ -257,7 +257,7 @@ void ACuteAlienController::SetupInputComponent()
 	Input->BindAction(IA_Radial, ETriggerEvent::Completed, this, &ACuteAlienController::HideRadialUI);
 	Input->BindAction(IA_Cancel, ETriggerEvent::Started, this, &ACuteAlienController::OnCancelUI);
 	Input->BindAction(IA_ToggleMouse, ETriggerEvent::Started, this, &ACuteAlienController::OnToggleMouse);
-	Input->BindAction(IA_QuitGame, ETriggerEvent::Started, this, &ACuteAlienController::OnPressEsc);
+	//Input->BindAction(IA_QuitGame, ETriggerEvent::Started, this, &ACuteAlienController::OnPressEsc);
 }
 
 void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const FString& Name, const FString& Type,

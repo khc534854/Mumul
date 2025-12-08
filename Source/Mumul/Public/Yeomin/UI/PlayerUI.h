@@ -17,6 +17,9 @@ class MUMUL_API UPlayerUI : public UUserWidget
 	
 protected:
 	virtual void NativeConstruct() override;
+
+	UFUNCTION()
+	void OnLogOutBtnClicked();
 	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UBaseText> CurrentTime;
