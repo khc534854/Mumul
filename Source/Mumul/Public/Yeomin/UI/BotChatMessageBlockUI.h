@@ -16,7 +16,9 @@ class MUMUL_API UBotChatMessageBlockUI : public UUserWidget
 
 protected:
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class URichTextBlock> TextContent;
+	TObjectPtr<class UTextBlock> TextContent;
+	//UPROPERTY(meta=(BindWidget))
+	//TObjectPtr<class URichTextBlock> TextContent;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UTextBlock> PlayerName;
 	UPROPERTY(meta=(BindWidget))

@@ -64,8 +64,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
 	TSubclassOf<class UChatBlockUI> ChatBlockUIClass;
 	
-	UPROPERTY(EditDefaultsOnly, Category="UI Class")
-	TSubclassOf<class UBotChatMessageBlockUI> BotChatMessageBlockUIClass;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="UI Class")
+	TSubclassOf<class UChatMessageBlockUI> BotChatMessageBlockUIClass;
 
 	UFUNCTION()
 	void OnServerChatHistoryResponse(bool bSuccess, FString Message);

@@ -50,7 +50,7 @@ void UWebSocketSubsystem::Connect(FString EndPoint)
     }
 
     // BaseURL 뒤에 슬래시 처리
-    FString FullURL = FString::Printf(TEXT("%s/%s"), *BaseURL, *EndPoint);
+    FString FullURL = FString::Printf(TEXT("%s/%s/"), *BaseURL, *EndPoint);
     // 만약 BaseURL이 슬래시로 안 끝나고 EndPoint도 슬래시로 시작 안하면 중간에 / 추가 필요
     // 여기서는 간단히 포맷팅
     

@@ -426,7 +426,7 @@ void UGroupChatUI::OnServerChatHistoryResponse(bool bSuccess, FString Message)
 					// 여기서는 직접 구현 예시 (AddBotChat 로직 활용)
 					if (BotChatMessageBlockUIClass && CurrentSelectedGroup->ChatBlockUI)
 					{
-						UBotChatMessageBlockUI* BotChat = CreateWidget<UBotChatMessageBlockUI>(
+						UChatMessageBlockUI* BotChat = CreateWidget<UChatMessageBlockUI>(
 							GetWorld(), BotChatMessageBlockUIClass);
 						if (BotChat)
 						{
@@ -471,7 +471,7 @@ void UGroupChatUI::AddBotChat(const FString& Message)
 	// 2. 챗봇용 말풍선 생성
 	if (BotChatMessageBlockUIClass)
 	{
-		UBotChatMessageBlockUI* BotChat = CreateWidget<UBotChatMessageBlockUI>(GetWorld(), BotChatMessageBlockUIClass);
+		UChatMessageBlockUI* BotChat = CreateWidget<UChatMessageBlockUI>(GetWorld(), BotChatMessageBlockUIClass);
 		if (BotChat)
 		{
 			ChatChunk->ChatScrollBox->AddChild(BotChat);
@@ -518,6 +518,9 @@ void UGroupChatUI::OnTextBoxCommitted()
 	FString MyName = GI ? GI->PlayerName : TEXT("Me");
 	int32 MyID = GI ? GI->PlayerUniqueID : 0;
 
+
+	// [핵심 수정: 2. 텍스트 박스 내용을 비웁니다.]
+
 	// [공통] 내 화면에 메시지 즉시 추가
 	// if (CurrentSelectedGroup->ChatBlockUI)
 	// {
@@ -528,6 +531,7 @@ void UGroupChatUI::OnTextBoxCommitted()
 	// [전송 로직 분기]
 	if (CurrentSelectedGroup->bIsChatbotRoom)
 	{
+		AddChat(CurrentSelectedGroup->ChatBlockUI->GetTeamID(), TimeStamp, MyName, Content);
 		// === Case A: 학습 챗봇 방 (개인용) ===
 		if (WebSocketSystem && WebSocketSystem->IsConnected())
 		{
