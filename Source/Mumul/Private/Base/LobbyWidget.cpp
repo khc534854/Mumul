@@ -149,12 +149,12 @@ void ULobbyWidget::OnServerLoginResponse(bool bSuccess, FString Message)
 
             // 5. 관리자 여부 확인 및 화면 이동
             // (UserType이나 Name으로 판단. 여기선 기존대로 입력한 ID로 판단하거나 서버 데이터 활용)
-            if (PendingID == TEXT("admin") || LoginData.name == TEXT("관리자") || PendingID == TEXT("admin1")) 
+            if (PendingID == TEXT("admin") || LoginData.name == TEXT("관리자") || PendingID == TEXT("admin1") || GI->PlayerType == TEXT("운영진")) 
             {
                 //btn_goCreate->SetVisibility(ESlateVisibility::Visible);
                 WidgetSwitcher->SetActiveWidgetIndex(2);
             }
-            else if (PendingID == TEXT("user1"))
+            else if (PendingID == TEXT("user1") || GI->PlayerType == TEXT("학생"))
             {
                 //btn_goCreate->SetVisibility(ESlateVisibility::Collapsed);
                 WidgetSwitcher->SetActiveWidgetIndex(1);
