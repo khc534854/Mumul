@@ -15,11 +15,12 @@ class MUMUL_API UIMGManager : public UObject
 	GENERATED_BODY()
 	UIMGManager();
 	
+
 public:
 	UPROPERTY()
 	class UTeamIconDataAsset* ImageAsset;
 
 	int32 CurrentIndex = 0;
-
-	UTexture2D* GetNextImage();
+	
+	UTexture2D* GetImageByTeamID(const FString& TeamID);
 };

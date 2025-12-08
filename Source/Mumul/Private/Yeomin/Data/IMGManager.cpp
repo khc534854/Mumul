@@ -15,12 +15,16 @@ UIMGManager::UIMGManager()
 	}
 }
 
-UTexture2D* UIMGManager::GetNextImage()
+UTexture2D* UIMGManager::GetImageByTeamID(const FString& TeamID)
 {
-		if (!ImageAsset || ImageAsset->TeamIconList.Num() == 0)
-			return nullptr;
+	if (!ImageAsset || ImageAsset->TeamIconList.Num() == 0)
+		return nullptr;
 
-		UTexture2D* IMG = ImageAsset->TeamIconList[CurrentIndex];
-		CurrentIndex = (CurrentIndex + 1) % ImageAsset->TeamIconList.Num();
-		return IMG;
+	// FString → uint32 해시 변환
+	uint32 HashValue = GetTypeHash(TeamID);
+
+	// 아이콘 개수 범위 안에서 고정 인덱스 산출
+	int32 IconIndex = HashValue % ImageAsset->TeamIconList.Num();
+
+	return ImageAsset->TeamIconList[IconIndex];
 }

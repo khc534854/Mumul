@@ -1077,7 +1077,7 @@ void ACuteAlienController::Server_CreateGroupChatUI_Implementation(const TArray<
 {
     if (IMGManager)
     {
-        UTexture2D* TeamIconIMG = IMGManager->GetNextImage();
+        UTexture2D* TeamIconIMG = IMGManager->GetImageByTeamID(TeamID);
         
         // Add GroupChatUI for each Client
         for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
@@ -1109,7 +1109,7 @@ void ACuteAlienController::Client_CreateGroupChatUI_Implementation(const FString
     {
         GroupIconUI->ChatBlockUI->AddTeamUser(User.UserId, User.UserName);
     }
-    GroupIconUI->SetTeamIconIMG(IMG);
+    GroupIconUI->SetIconIMG(IMG);
 }
 
 

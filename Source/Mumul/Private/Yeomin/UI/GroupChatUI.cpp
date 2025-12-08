@@ -668,7 +668,6 @@ void UGroupChatUI::OnServerTeamChatListResponse(bool bSuccess, FString Message)
 			GroupScrollBox->ClearChildren();
 			for (const FTeamChatListResponse& TeamChat : TeamChatList)
 			{
-				UTexture2D* TeamIconIMG = IMGManager->GetNextImage();
 				// Create Group Icon
 				UGroupIconUI* GroupIconUI = CreateWidget<UGroupIconUI>(GetWorld(), GroupIconUIClass);
 				AddGroupIcon(GroupIconUI);
@@ -679,7 +678,8 @@ void UGroupChatUI::OnServerTeamChatListResponse(bool bSuccess, FString Message)
 				{
 					GroupIconUI->ChatBlockUI->AddTeamUser(User.userId, *User.userName);
 				}
-				GroupIconUI->SetTeamIconIMG(TeamIconIMG);
+				UTexture2D* TeamIconIMG = IMGManager->GetImageByTeamID(TeamChat.teamChatId);
+				GroupIconUI->SetIconIMG(TeamIconIMG);
 
 				if (ACuteAlienController* PS = Cast<ACuteAlienController>(GetOwningPlayer()))
 				{
