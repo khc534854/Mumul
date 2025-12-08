@@ -70,7 +70,7 @@ void ULobbyWidget::OnClickLogin()
     PendingID = InputId; // ID 임시 저장
 
     // [수정] 테스트 계정 예외 처리 및 임시 데이터 주입
-    if (InputId == TEXT("admin") || InputId == TEXT("user1"))
+    if (InputId == TEXT("admin"))
     {
         if (AccountMap.Contains(InputId) && AccountMap[InputId] == InputPw)
         {
