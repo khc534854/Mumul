@@ -24,12 +24,17 @@
 #include "Yeomin/UI/BaseUI/BaseText.h"
 #include "MumulGameInstance.h" // 필수
 #include "Components/Image.h"
+#include "Components/ScaleBox.h"
+#include "Components/VerticalBoxSlot.h"
 #include "Library/MathLibrary.h"
+#include "Yeomin/Data/IMGManager.h"
 #include "Yeomin/UI/BotChatMessageBlockUI.h"
 
 void UGroupChatUI::NativeConstruct()
 {
 	Super::NativeConstruct();
+
+	IMGManager = NewObject<UIMGManager>(this, UIMGManager::StaticClass());
 
 	ChatEnter->OnPressed.AddDynamic(this, &UGroupChatUI::OnTextBoxCommitted);
 	AddGroupBtn->OnPressed.AddDynamic(this, &UGroupChatUI::ToggleCreateGroupChatUI);
@@ -62,10 +67,15 @@ void UGroupChatUI::NativeConstruct()
 		WebSocketSystem->OnAIChatAnswer.AddDynamic(this, &UGroupChatUI::OnAIChatAnswer);
 	}
 
+	if (InviteBtn && NaNumiScaleBox)
+	{
+		InviteBtn->SetVisibility(ESlateVisibility::Collapsed);
+		NaNumiScaleBox->SetVisibility(ESlateVisibility::Collapsed);
+	}
+
 	if (QuestionBtn)
 	{
 		QuestionBtn->OnClicked.AddDynamic(this, &UGroupChatUI::OnClickQuestionBtn);
-		QuestionBtn->SetVisibility(ESlateVisibility::Collapsed);
 	}
 
 	// [신규] 챗봇 방 생성 및 상단 배치
@@ -133,7 +143,11 @@ void UGroupChatUI::SelectGroupChat(class UGroupIconUI* SelectedIcon)
 			WebSocketSystem->Close();
 		}
 		bIsMeetingChatbotActive = false;
-		if (QuestionBtn) QuestionBtn->SetVisibility(ESlateVisibility::Collapsed);
+		if (InviteBtn && NaNumiScaleBox)
+		{
+			InviteBtn->SetVisibility(ESlateVisibility::Collapsed);
+			NaNumiScaleBox->SetVisibility(ESlateVisibility::Collapsed);
+		}
 	}
 
 	// 2. UI 교체
@@ -149,8 +163,12 @@ void UGroupChatUI::SelectGroupChat(class UGroupIconUI* SelectedIcon)
 	// 3. 새 방 진입 처리
 	if (SelectedIcon->bIsChatbotRoom)
 	{
-		if (QuestionBtn) QuestionBtn->SetVisibility(ESlateVisibility::Collapsed);
-
+		if (InviteBtn && NaNumiScaleBox)
+		{
+			ChatbotIcon->SetIconIMG(MumuLeeOnIMG);
+			InviteBtn->SetVisibility(ESlateVisibility::Collapsed);
+			NaNumiScaleBox->SetVisibility(ESlateVisibility::Collapsed);
+		}
 		if (SelectedIcon->ChatBlockUI)
 		{
 			SelectedIcon->ChatBlockUI->ChatScrollBox->ClearChildren();
@@ -196,9 +214,11 @@ void UGroupChatUI::SelectGroupChat(class UGroupIconUI* SelectedIcon)
 	}
 	else
 	{
-		if (QuestionBtn)
+		if (InviteBtn && QuestionBtn && NaNumiScaleBox)
 		{
-			QuestionBtn->SetVisibility(ESlateVisibility::Visible);
+			ChatbotIcon->SetIconIMG(MumuLeeOffIMG);
+			InviteBtn->SetVisibility(ESlateVisibility::Visible);
+			NaNumiScaleBox->SetVisibility(ESlateVisibility::Visible);
 
 			// 방을 옮겼으므로 AI 도우미는 꺼진 상태로 초기화
 			bIsMeetingChatbotActive = false;
@@ -275,7 +295,7 @@ void UGroupChatUI::InitChatbotRoom()
 	if (!GroupIconUIClass || !ChatBlockUIClass) return;
 
 	// 1. 챗봇용 아이콘 생성
-	UGroupIconUI* ChatbotIcon = CreateWidget<UGroupIconUI>(GetWorld(), GroupIconUIClass);
+	ChatbotIcon = CreateWidget<UGroupIconUI>(GetWorld(), GroupIconUIClass);
 	if (ChatbotIcon)
 	{
 		ChatbotIcon->InitParentUI(this);
@@ -284,14 +304,15 @@ void UGroupChatUI::InitChatbotRoom()
 		// 2. 챗봇용 채팅 블록(내용창) 생성
 		UChatBlockUI* ChatbotBlock = CreateWidget<UChatBlockUI>(GetWorld(), ChatBlockUIClass);
 		ChatbotBlock->SetTeamID(TEXT("Chatbot_Room"));
-		ChatbotBlock->SetTeamName(TEXT("무엇이든 물어보세요"));
+		ChatbotBlock->SetTeamName(TEXT("무엇이든 물어보세요!"));
 
 		ChatbotIcon->ChatBlockUI = ChatbotBlock; // 아이콘에 연결
+		ChatbotIcon->SetIconIMG(MumuLeeOffIMG);
 
 		// [수정] 메시지는 여기서 넣지 않음! (비워둠)
 
 		// 3. [수정] 스크롤박스에 추가 (InsertAt 대신 AddChild 사용)
-		GroupScrollBox->AddChild(ChatbotIcon);
+		MumuLeeBox->AddChild(ChatbotIcon);
 	}
 }
 
@@ -567,6 +588,7 @@ void UGroupChatUI::OnServerTeamChatListResponse(bool bSuccess, FString Message)
 			GroupScrollBox->ClearChildren();
 			for (const FTeamChatListResponse& TeamChat : TeamChatList)
 			{
+				UTexture2D* TeamIconIMG = IMGManager->GetNextImage();
 				// Create Group Icon
 				UGroupIconUI* GroupIconUI = CreateWidget<UGroupIconUI>(GetWorld(), GroupIconUIClass);
 				AddGroupIcon(GroupIconUI);
@@ -577,6 +599,7 @@ void UGroupChatUI::OnServerTeamChatListResponse(bool bSuccess, FString Message)
 				{
 					GroupIconUI->ChatBlockUI->AddTeamUser(User.userId, *User.userName);
 				}
+				GroupIconUI->SetIconIMG(TeamIconIMG);
 
 				if (ACuteAlienController* PS = Cast<ACuteAlienController>(GetOwningPlayer()))
 				{
@@ -631,18 +654,18 @@ void UGroupChatUI::ToggleGroupChatAlignment()
 
 	// 버튼 이미지 처리
 	FSlateBrush Brush;
-	Brush.ImageSize = FVector2D(55.f, 90.f);
+	Brush.ImageSize = FVector2D(56.f, 84.f);
 	Brush.SetResourceObject(bIsToggled ? RightIMG : LeftIMG);
 
 	FButtonStyle Style;
-	Style.Normal   = Brush;
-	Style.Hovered  = Brush;
-	Style.Pressed  = Brush;
+	Style.Normal = Brush;
+	Style.Hovered = Brush;
+	Style.Pressed = Brush;
 	ToggleVisibilityBtn->SetStyle(Style);
 
 	// 애니메이션 시작
 	StartVal = AlignmentVal;
-	TargetVal = bIsToggled ? 1.f : 0.178f;
+	TargetVal = bIsToggled ? 1.f : 0.1968f;
 	Elapsed = 0.f;
 	bAnimating = true;
 }
@@ -666,7 +689,7 @@ void UGroupChatUI::OnToggleVisibilityBtn()
 			TArray<int32> testList = {10, 11};
 			TArray<FTeamUser> TeamUserIDs;
 			PC->Server_CreateGroupChatUI(testList, FString(TEXT("team01")), FString(TEXT("Test")),
-									 TeamUserIDs);
+			                             TeamUserIDs);
 		}
 	}
 }
@@ -795,7 +818,7 @@ void UGroupChatUI::OnRecordBtnState(bool bIsOn)
 	if (bIsOn == true)
 	{
 		RecordIMG->SetBrushFromTexture(RecordIMGs[1]);
-		RecordText0->BaseText->SetText(FText::FromString(TEXT("나누미가")));
+		RecordText0->BaseText->SetText(FText::FromString(TEXT("나눔이가")));
 
 		GetWorld()->GetTimerManager().SetTimer(
 			DotTimer,
@@ -809,7 +832,7 @@ void UGroupChatUI::OnRecordBtnState(bool bIsOn)
 	{
 		GetWorld()->GetTimerManager().ClearTimer(DotTimer);
 		RecordIMG->SetBrushFromTexture(RecordIMGs[0]);
-		RecordText0->BaseText->SetText(FText::FromString(TEXT("나누미로")));
+		RecordText0->BaseText->SetText(FText::FromString(TEXT("나눔이로")));
 		RecordText1->BaseText->SetText(FText::FromString(TEXT("기록하기")));
 	}
 }

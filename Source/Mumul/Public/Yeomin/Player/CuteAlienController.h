@@ -175,7 +175,6 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Voice")
 	TObjectPtr<USoundAttenuation> NormalAttenuation;
-
 	
 	UPROPERTY()
 	TSubclassOf<class UGroupIconUI> GroupIconUIClass;

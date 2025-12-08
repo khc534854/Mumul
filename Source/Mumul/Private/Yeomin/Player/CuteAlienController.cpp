@@ -200,7 +200,7 @@ void ACuteAlienController::BeginPlay()
 	{
 		RadialUI->SetVisibility(ESlateVisibility::Hidden);
 	}
-	
+
 
 	// 4. 데이터 초기화 및 서버 전송
 	UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
@@ -909,7 +909,8 @@ void ACuteAlienController::UpdateVoiceChannelMuting()
 					if (Talker)
 					{
 						CachedTalkers.Add(AlienOtherPS->PS_UserIndex, Talker);
-						UE_LOG(LogTemp, Warning, TEXT("[Voice] Created & Cached Talker for %s"), *OtherPS->GetPlayerName());
+						UE_LOG(LogTemp, Warning, TEXT("[Voice] Created & Cached Talker for %s"),
+						       *OtherPS->GetPlayerName());
 					}
 				}
 
@@ -933,11 +934,13 @@ void ACuteAlienController::UpdateVoiceChannelMuting()
 
 								if (TargetComponent)
 								{
-									UE_LOG(LogTemp, Log, TEXT("[Voice] %s -> Set 3D Lobby Mode (Attached)"), *OtherPS->GetPlayerName());
+									UE_LOG(LogTemp, Log, TEXT("[Voice] %s -> Set 3D Lobby Mode (Attached)"),
+									       *OtherPS->GetPlayerName());
 								}
 								else
 								{
-									UE_LOG(LogTemp, Warning, TEXT("[Voice] %s -> Set 3D Lobby Mode (Pending Pawn...)"), *OtherPS->GetPlayerName());
+									UE_LOG(LogTemp, Warning, TEXT("[Voice] %s -> Set 3D Lobby Mode (Pending Pawn...)"),
+									       *OtherPS->GetPlayerName());
 								}
 							}
 						}
@@ -1046,6 +1049,7 @@ void ACuteAlienController::Server_CreateGroupChatUI_Implementation(const TArray<
                                                                    const TArray<FTeamUser>& TeamUserIDs)
 {
 	UTexture2D* TeamIconIMG = IMGManager->GetNextImage();
+	
 	// Add GroupChatUI for each Client
 	for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
 	{

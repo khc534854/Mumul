@@ -77,17 +77,25 @@ void UGroupIconUI::InitParentUI(UGroupChatUI* Parent)
 
 void UGroupIconUI::SetIconIMG(UTexture2D* IMG)
 {
-	FSlateBrush Brush;
-	Brush.SetResourceObject(IMG);
-	Brush.ImageSize = FVector2D(120.f);
+	FSlateBrush NormalBrush;
+	NormalBrush.SetResourceObject(IMG);
+	NormalBrush.ImageSize = FVector2D(120.f);
+	NormalBrush.TintColor = FSlateColor(FLinearColor(1.f, 1.f, 1.f, 1.f));
+
+	FSlateBrush HoveredBrush = NormalBrush;
+	HoveredBrush.TintColor = FSlateColor(FLinearColor(0.9f, 0.9f, 0.9f, 1.f));
+
+	FSlateBrush PressedBrush = NormalBrush;
+	PressedBrush.TintColor = FSlateColor(FLinearColor(0.75f, 0.75f, 0.75f, 1.f));
 
 	FButtonStyle Style;
-	Style.Normal = Brush;
-	Style.Hovered = Brush;
-	Style.Pressed = Brush;
+	Style.Normal = NormalBrush;
+	Style.Hovered = HoveredBrush;
+	Style.Pressed = PressedBrush;
 
 	GroupIconBtn->SetStyle(Style);
 }
+
 
 void UGroupIconUI::OnServerTeamChatMessageResponse(bool bSuccess, FString Message)
 {

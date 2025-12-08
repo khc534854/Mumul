@@ -17,7 +17,9 @@ class MUMUL_API UGroupChatUI : public UUserWidget
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
-
+	
+	UPROPERTY()
+	TObjectPtr<class UIMGManager> IMGManager;
 	UPROPERTY()
 	TObjectPtr<class UHttpNetworkSubsystem> HttpSystem;
 	
@@ -102,6 +104,14 @@ public:
 	UFUNCTION()
 	void ToggleCreateGroupChatUI();
 protected:
+	UPROPERTY()
+	TObjectPtr<class UGroupIconUI> ChatbotIcon;
+	UPROPERTY(EditDefaultsOnly, Category="UI Image")
+	TObjectPtr<class UTexture2D> MumuLeeOnIMG;
+	UPROPERTY(EditDefaultsOnly, Category="UI Image")
+	TObjectPtr<class UTexture2D> MumuLeeOffIMG;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class USizeBox> MumuLeeBox;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UScrollBox> GroupScrollBox;
 public:
@@ -128,7 +138,7 @@ protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> ToggleVisibilityBtn;
 	bool bIsToggled = false;
-	float AlignmentVal = 0.178f;
+	float AlignmentVal = 0.1968f;
 	float StartVal;
 	float TargetVal;
 	float Elapsed;
@@ -179,4 +189,7 @@ public:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> RecordBtn;
 	void OnRecordBtnState(bool bIsOn);
+	
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UScaleBox> NaNumiScaleBox;
 };
