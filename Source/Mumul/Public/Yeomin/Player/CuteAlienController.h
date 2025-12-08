@@ -169,6 +169,13 @@ protected:
 
 	UPROPERTY()
 	TMap<int32, class UVOIPTalker*> CachedTalkers;
+
+protected:
+	// PlayerState 초기화 대기용 타이머 핸들
+	FTimerHandle InitPlayerStateTimerHandle;
+
+	// 타이머에 의해 호출될 초기화 함수
+	void TryInitPlayerInfo();
 	
 public:
 	UFUNCTION(BlueprintCallable, Category = "Voice")

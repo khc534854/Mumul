@@ -143,114 +143,76 @@ void ACuteAlienController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	GS = Cast<AMumulGameState>(GetWorld()->GetGameState());
+    GS = Cast<AMumulGameState>(GetWorld()->GetGameState());
 
-	if (UHttpNetworkSubsystem* HttpSystem = GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>())
-	{
-		HttpSystem->OnCreateTeamChatResponse.
-		            AddDynamic(this, &ACuteAlienController::OnServerCreateTeamChatResponse);
-	}
+    if (UHttpNetworkSubsystem* HttpSystem = GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>())
+    {
+        HttpSystem->OnCreateTeamChatResponse.AddDynamic(this, &ACuteAlienController::OnServerCreateTeamChatResponse);
+        // [이동] HTTP 응답 바인딩은 여기서 한 번만 해도 됩니다.
+        HttpSystem->OnStartMeeting.AddDynamic(this, &ACuteAlienController::OnStartMeetingResponse);
+        HttpSystem->OnJoinMeeting.AddDynamic(this, &ACuteAlienController::OnJoinMeetingResponse);
+    }
 
-	if (!IsLocalController())
-		return;
+    if (!IsLocalController())
+        return;
 
-	IMGManager = NewObject<UIMGManager>(this, UIMGManager::StaticClass());
+    IMGManager = NewObject<UIMGManager>(this, UIMGManager::StaticClass());
 
-	if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
-		ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
-	{
-		Subsystem->AddMappingContext(IMC_Player, 0);
-	}
+    if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
+       ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+    {
+       Subsystem->AddMappingContext(IMC_Player, 0);
+    }
 
-	if (RadialUIClass)
-	{
-		RadialUI = CreateWidget<URadialUI>(this, RadialUIClass);
-		if (RadialUI)
-		{
-			RadialUI->AddToViewport();
-			RadialUI->SetVisibility(ESlateVisibility::Hidden);
-		}
-	}
+    if (RadialUIClass)
+    {
+       RadialUI = CreateWidget<URadialUI>(this, RadialUIClass);
+       if (RadialUI)
+       {
+          RadialUI->AddToViewport();
+          RadialUI->SetVisibility(ESlateVisibility::Hidden);
+       }
+    }
 
-	// [수정] Player UI 안전 생성
-	if (PlayerUIClass)
-	{
-		PlayerUI = CreateWidget<UPlayerUI>(this, PlayerUIClass);
-		if (PlayerUI)
-		{
-			PlayerUI->AddToViewport();
-		}
-	}
+    if (PlayerUIClass)
+    {
+       PlayerUI = CreateWidget<UPlayerUI>(this, PlayerUIClass);
+       if (PlayerUI)
+       {
+          PlayerUI->AddToViewport();
+       }
+    }
 
-	// [수정] Group Chat UI 안전 생성 (여기가 원인일 확률 높음)
-	if (GroupChatUIClass)
-	{
-		GroupChatUI = CreateWidget<UGroupChatUI>(this, GroupChatUIClass);
-		if (GroupChatUI)
-		{
-			GroupChatUI->AddToViewport();
-		}
-	}
+    if (GroupChatUIClass)
+    {
+       GroupChatUI = CreateWidget<UGroupChatUI>(this, GroupChatUIClass);
+       if (GroupChatUI)
+       {
+          GroupChatUI->AddToViewport();
+       }
+    }
 
-	if (PlayerUI && GroupChatUI)
-	{
-		PlayerUI->InitGroupChatUI(GroupChatUI);
-	}
-	if (PlayerUI && GroupChatUI)
-	{
-		RadialUI->SetVisibility(ESlateVisibility::Hidden);
-	}
+    if (PlayerUI && GroupChatUI)
+    {
+       PlayerUI->InitGroupChatUI(GroupChatUI);
+    }
+    if (PlayerUI && GroupChatUI)
+    {
+       RadialUI->SetVisibility(ESlateVisibility::Hidden);
+    }
+    
+    if (VoiceMeetingUIClass)
+    {
+       VoiceMeetingUI = CreateWidget<UVoiceMeetingUI>(this, VoiceMeetingUIClass);
+       if (VoiceMeetingUI)
+       {
+          VoiceMeetingUI->AddToViewport();
+          VoiceMeetingUI->SetVisibility(ESlateVisibility::Hidden);
+       }
+    }
 
-
-	// 4. 데이터 초기화 및 서버 전송
-	UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
-	if (GI)
-	{
-		// [체크] 로비 스킵 여부 확인 (데이터가 비어있으면 더미 데이터 주입)
-		if (GI->PlayerUniqueID == 10)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("[Test] Detected Direct Level Start! Injecting Dummy Data..."));
-
-			GI->PlayerUniqueID = 9 + GetWorld()->GetGameState()->PlayerArray.Num(); // 테스트 ID
-			GI->PlayerName = GI->PlayerName + FString::FromInt(GI->PlayerUniqueID); // 이름 + index
-			GI->CampID = 1; // 임시 캠프 ID
-			GI->PlayerType = (GI->PlayerUniqueID == 10) ? TEXT("운영진") : TEXT("학생");
-			GI->PlayerTendency = 0;
-			GI->bHasSurveyCompleted = true;
-		}
-
-		// [전송] 확정된 데이터를 서버로 1회 전송
-		Server_InitPlayerInfo(
-			GI->PlayerUniqueID,
-			GI->PlayerName,
-			GI->PlayerType,
-			GI->PlayerTendency
-		);
-		// Refresh PlayerList
-		OnPlayerArrayUpdated.Broadcast();
-		
-		if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
-		{
-			// Get TeamChatList
-			AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>();
-			HttpSystem->SendTeamChatListRequest(PS->PS_UserIndex);
-			// [추가] HTTP 응답 바인딩
-			HttpSystem->OnStartMeeting.AddDynamic(this, &ACuteAlienController::OnStartMeetingResponse);
-			HttpSystem->OnJoinMeeting.AddDynamic(this, &ACuteAlienController::OnJoinMeetingResponse);
-		}
-
-		UE_LOG(LogTemp, Log, TEXT("[Client] Sent Init Info: %s (ID: %d)"), *GI->PlayerName, GI->PlayerUniqueID);
-	}
-
-	if (VoiceMeetingUIClass)
-	{
-		VoiceMeetingUI = CreateWidget<UVoiceMeetingUI>(this, VoiceMeetingUIClass);
-		if (VoiceMeetingUI)
-		{
-			VoiceMeetingUI->AddToViewport();
-			VoiceMeetingUI->SetVisibility(ESlateVisibility::Hidden);
-		}
-	}
+    // [수정] PlayerState가 준비될 때까지 타이머로 확인 (0.5초 간격)
+    GetWorldTimerManager().SetTimer(InitPlayerStateTimerHandle, this, &ACuteAlienController::TryInitPlayerInfo, 0.5f, true);
 }
 
 void ACuteAlienController::SetupInputComponent()
@@ -879,6 +841,60 @@ void ACuteAlienController::Server_UnregisterMeetingState_Implementation(const FS
 	if (GS)
 	{
 		GS->UnregisterMeeting(ChannelID);
+	}
+}
+
+void ACuteAlienController::TryInitPlayerInfo()
+{
+	AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>();
+    
+	// PlayerState가 아직 없으면 다음 틱을 기다림
+	if (!PS)
+	{
+		return; 
+	}
+
+	// PlayerState가 유효하면 타이머 종료
+	GetWorldTimerManager().ClearTimer(InitPlayerStateTimerHandle);
+
+	UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
+	if (GI)
+	{
+		// [체크] 로비 스킵 여부 확인 (테스트용)
+		if (GI->PlayerUniqueID == 10)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[Test] Detected Direct Level Start! Injecting Dummy Data..."));
+
+			// GameState 확인 (안전장치)
+			int32 CurrentPlayerCount = 0;
+			if (AGameStateBase* CurrentGS = GetWorld()->GetGameState())
+			{
+				CurrentPlayerCount = CurrentGS->PlayerArray.Num();
+			}
+
+			GI->PlayerUniqueID = 9 + CurrentPlayerCount; 
+			GI->PlayerName = GI->PlayerName + FString::FromInt(GI->PlayerUniqueID); 
+			GI->CampID = 1; 
+			GI->PlayerType = (GI->PlayerUniqueID == 10) ? TEXT("운영진") : TEXT("학생");
+			GI->PlayerTendency = 0;
+			GI->bHasSurveyCompleted = true;
+		}
+
+		// [전송] 확정된 데이터를 서버로 1회 전송
+		Server_InitPlayerInfo(
+			GI->PlayerUniqueID,
+			GI->PlayerName,
+			GI->PlayerType,
+			GI->PlayerTendency
+		);
+
+		if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
+		{
+			// PS가 이제 확실히 있으므로 안전하게 접근 가능
+			HttpSystem->SendTeamChatListRequest(PS->PS_UserIndex);
+		}
+
+		UE_LOG(LogTemp, Log, TEXT("[Client] Sent Init Info: %s (ID: %d)"), *GI->PlayerName, GI->PlayerUniqueID);
 	}
 }
 
