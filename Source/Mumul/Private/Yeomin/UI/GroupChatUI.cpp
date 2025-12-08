@@ -903,8 +903,12 @@ void UGroupChatUI::OnRecordBtnState(bool bIsOn)
 {
 	if (bIsOn == true)
 	{
-		RecordIMG->SetBrushFromTexture(RecordIMGs[1]);
-		RecordText0->BaseText->SetText(FText::FromString(TEXT("나눔이가")));
+		if (RecordIMG && RecordIMGs[1] && RecordText0)
+		{
+			RecordIMG->SetBrushFromTexture(RecordIMGs[1]);
+			RecordText0->BaseText->SetText(FText::FromString(TEXT("나눔이가")));
+		}
+		
 
 		GetWorld()->GetTimerManager().SetTimer(
 			DotTimer,
@@ -917,8 +921,12 @@ void UGroupChatUI::OnRecordBtnState(bool bIsOn)
 	else if (bIsOn == false)
 	{
 		GetWorld()->GetTimerManager().ClearTimer(DotTimer);
-		RecordIMG->SetBrushFromTexture(RecordIMGs[0]);
-		RecordText0->BaseText->SetText(FText::FromString(TEXT("나눔이로")));
-		RecordText1->BaseText->SetText(FText::FromString(TEXT("기록하기")));
+		
+		if (RecordIMG && RecordIMGs[0] && RecordText0)
+		{
+			RecordIMG->SetBrushFromTexture(RecordIMGs[0]);
+			RecordText0->BaseText->SetText(FText::FromString(TEXT("나눔이로")));
+			RecordText1->BaseText->SetText(FText::FromString(TEXT("기록하기")));
+		}
 	}
 }
