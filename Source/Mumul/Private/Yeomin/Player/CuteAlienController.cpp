@@ -213,10 +213,7 @@ void ACuteAlienController::BeginPlay()
 	TryInitPlayerInfo();
 	
     // [수정] PlayerState가 준비될 때까지 타이머로 확인 (0.5초 간격)
-    // GetWorld()->GetTimerManager().SetTimer(InitPlayerStateTimerHandle, [&]()
-    // {
-    // 	OnPlayerArrayUpdated.Broadcast();
-    // }, 0.5f, true);
+	GetWorldTimerManager().SetTimer(InitPlayerStateTimerHandle, this, &ACuteAlienController::TryInitPlayerInfo, 0.5f, true);
 }
 
 void ACuteAlienController::SetupInputComponent()
