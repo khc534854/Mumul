@@ -1078,19 +1078,21 @@ void ACuteAlienController::Server_CreateGroupChatUI_Implementation(const TArray<
     if (IMGManager)
     {
         UTexture2D* TeamIconIMG = IMGManager->GetNextImage();
-    }
-
-    // Add GroupChatUI for each Client
-    for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
-    {
-        if (UserIDs.Contains(Cast<AMumulPlayerState>(PS)->PS_UserIndex))
+        
+        // Add GroupChatUI for each Client
+        for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
         {
-            if (ACuteAlienController* PC = Cast<ACuteAlienController>(PS->GetOwningController()))
+            if (UserIDs.Contains(Cast<AMumulPlayerState>(PS)->PS_UserIndex))
             {
-                PC->Client_CreateGroupChatUI(TeamID, TeamName, TeamUserIDs, TeamIconIMG);
+                if (ACuteAlienController* PC = Cast<ACuteAlienController>(PS->GetOwningController()))
+                {
+                    PC->Client_CreateGroupChatUI(TeamID, TeamName, TeamUserIDs, TeamIconIMG);
+                }
             }
         }
     }
+
+    
 }
 
 void ACuteAlienController::Client_CreateGroupChatUI_Implementation(const FString& TeamID, const FString& TeamName,
