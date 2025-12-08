@@ -63,8 +63,15 @@ void UGroupChatUI::NativeConstruct()
 	WebSocketSystem = GetGameInstance()->GetSubsystem<UWebSocketSubsystem>();
 	if (WebSocketSystem)
 	{
-		WebSocketSystem->OnAIChatStarted.AddDynamic(this, &UGroupChatUI::OnAIChatStarted);
-		WebSocketSystem->OnAIChatAnswer.AddDynamic(this, &UGroupChatUI::OnAIChatAnswer);
+		// 1. 학습 챗봇 (Learning)
+		WebSocketSystem->OnLearningChatStarted.AddDynamic(this, &UGroupChatUI::OnLearningChatStarted);
+		WebSocketSystem->OnLearningChatAnswer.AddDynamic(this, &UGroupChatUI::OnLearningChatAnswer);
+		WebSocketSystem->OnLearningChatEnded.AddDynamic(this, &UGroupChatUI::OnLearningChatEnded);
+
+		// 2. 회의 도우미 (Meeting)
+		WebSocketSystem->OnMeetingChatStarted.AddDynamic(this, &UGroupChatUI::OnMeetingChatStarted);
+		WebSocketSystem->OnMeetingChatAnswer.AddDynamic(this, &UGroupChatUI::OnMeetingChatAnswer);
+		WebSocketSystem->OnMeetingChatEnded.AddDynamic(this, &UGroupChatUI::OnMeetingChatEnded);
 	}
 
 	if (InviteBtn && NaNumiScaleBox)
@@ -253,42 +260,111 @@ void UGroupChatUI::SelectGroupChat(class UGroupIconUI* SelectedIcon)
 	}
 }
 
-void UGroupChatUI::OnAIChatStarted(FString Message)
+// [1] 학습 챗봇 핸들러 (Chatbot_Room 전용)
+void UGroupChatUI::OnLearningChatStarted(FString Message)
+{
+	// 학습 챗봇 방을 보고 있을 때만 메시지 표시
+	if (CurrentSelectedGroup && CurrentSelectedGroup->bIsChatbotRoom)
+	{
+		AddBotChat(Message);
+	}
+}
+
+void UGroupChatUI::OnLearningChatAnswer(FString Answer)
+{
+	// 학습 챗봇은 무조건 챗봇 전용 방에만 뜹니다.
+	if (CurrentSelectedGroup && CurrentSelectedGroup->bIsChatbotRoom)
+	{
+		AddBotChat(Answer);
+	}
+}
+
+void UGroupChatUI::OnLearningChatEnded(FString Message)
 {
 	if (CurrentSelectedGroup && CurrentSelectedGroup->bIsChatbotRoom)
 	{
-		AddBotChat(Message); // [수정] AddChat -> AddBotChat
+		AddBotChat(Message);
 	}
 }
 
-void UGroupChatUI::OnAIChatAnswer(FString Answer, FString GroupId)
+
+// [2] 회의 도우미 핸들러 (일반 채팅방 전용)
+void UGroupChatUI::OnMeetingChatStarted(FString Message, FString GroupId, FString UserName)
 {
-	// 1. 학습 챗봇 (GroupId가 없거나 특정 ID)
-	if (GroupId.IsEmpty() || GroupId == TEXT("Chatbot_Room"))
+	// 내가 보고 있는 방이, 도우미가 시작된 그 방인지 확인
+	if (CurrentSelectedGroup && CurrentSelectedGroup->ChatBlockUI)
 	{
-		// 현재 보고 있는 방이 챗봇 방이면 바로 추가
-		if (CurrentSelectedGroup && CurrentSelectedGroup->bIsChatbotRoom)
+		if (CurrentSelectedGroup->ChatBlockUI->GetTeamID() == GroupId)
+		{
+			// 예: "[알림] 홍길동님이 회의 도우미를 시작했습니다." 같은 시스템 메시지로 띄울 수도 있음
+			AddBotChat(FString::Printf(TEXT("[알림] %s"), *Message));
+		}
+	}
+}
+
+void UGroupChatUI::OnMeetingChatAnswer(FString Answer, FString GroupId)
+{
+	// 답변이 도착한 방(GroupId)이 현재 보고 있는 방과 일치하는지 확인
+	if (CurrentSelectedGroup && CurrentSelectedGroup->ChatBlockUI)
+	{
+		if (CurrentSelectedGroup->ChatBlockUI->GetTeamID() == GroupId)
 		{
 			AddBotChat(Answer);
 		}
-		// 안 보고 있다면? (나중에 볼 수 있게 데이터에만 추가하거나 알림)
-	}
-	// 2. 회의 도우미 (GroupId가 있음)
-	else
-	{
-		// 현재 보고 있는 방이 그 방인가?
-		if (CurrentSelectedGroup && CurrentSelectedGroup->ChatBlockUI)
-		{
-			if (CurrentSelectedGroup->ChatBlockUI->GetTeamID() == GroupId)
-			{
-				AddBotChat(Answer); // 현재 화면에 추가
-			}
-		}
-
-		// (선택) 안 보고 있더라도 그 방의 ChatBlockUI를 찾아서 추가해줘야 함.
-		// GroupScrollBox를 순회하며 GroupId가 일치하는 아이콘 찾기 -> 그 아이콘의 ChatBlockUI에 추가
 	}
 }
+
+void UGroupChatUI::OnMeetingChatEnded(FString Message, FString GroupId)
+{
+	if (CurrentSelectedGroup && CurrentSelectedGroup->ChatBlockUI)
+	{
+		if (CurrentSelectedGroup->ChatBlockUI->GetTeamID() == GroupId)
+		{
+			AddBotChat(FString::Printf(TEXT("[알림] %s"), *Message));
+            
+			// 만약 내가 켠 사람이라면 버튼 상태도 꺼줌
+			bIsMeetingChatbotActive = false;
+			UpdateQuestionButtonState();
+		}
+	}
+}
+
+// void UGroupChatUI::OnAIChatStarted(FString Message)
+// {
+// 	if (CurrentSelectedGroup && CurrentSelectedGroup->bIsChatbotRoom)
+// 	{
+// 		AddBotChat(Message); // [수정] AddChat -> AddBotChat
+// 	}
+// }
+//
+// void UGroupChatUI::OnAIChatAnswer(FString Answer, FString GroupId)
+// {
+// 	// 1. 학습 챗봇 (GroupId가 없거나 특정 ID)
+// 	if (GroupId.IsEmpty() || GroupId == TEXT("Chatbot_Room"))
+// 	{
+// 		// 현재 보고 있는 방이 챗봇 방이면 바로 추가
+// 		if (CurrentSelectedGroup && CurrentSelectedGroup->bIsChatbotRoom)
+// 		{
+// 			AddBotChat(Answer);
+// 		}
+// 		// 안 보고 있다면? (나중에 볼 수 있게 데이터에만 추가하거나 알림)
+// 	}
+// 	// 2. 회의 도우미 (GroupId가 있음)
+// 	else
+// 	{
+// 		// 현재 보고 있는 방이 그 방인가?
+// 		if (CurrentSelectedGroup && CurrentSelectedGroup->ChatBlockUI)
+// 		{
+// 			if (CurrentSelectedGroup->ChatBlockUI->GetTeamID() == GroupId)
+// 			{
+// 				AddBotChat(Answer); // 현재 화면에 추가
+// 			}
+// 		}
+//
+// 		// (선택) 안 보고 있더라도 그 방의 ChatBlockUI를 찾아서 추가해줘야 함.
+// 		// GroupScrollBox를 순회하며 GroupId가 일치하는 아이콘 찾기 -> 그 아이콘의 ChatBlockUI에 추가
+// 	}
+// }
 
 void UGroupChatUI::InitChatbotRoom()
 {
@@ -395,13 +471,17 @@ void UGroupChatUI::AddBotChat(const FString& Message)
 	// 2. 챗봇용 말풍선 생성
 	if (BotChatMessageBlockUIClass)
 	{
-		UChatMessageBlockUI* BotChat = CreateWidget<UChatMessageBlockUI>(GetWorld(), BotChatMessageBlockUIClass);
+		UBotChatMessageBlockUI* BotChat = CreateWidget<UBotChatMessageBlockUI>(GetWorld(), BotChatMessageBlockUIClass);
 		if (BotChat)
 		{
 			ChatChunk->ChatScrollBox->AddChild(BotChat);
 
 			FString TimeStamp = FDateTime::Now().ToString(TEXT("%H:%M"));
-			BotChat->SetContent(TimeStamp, TEXT("무물이"), Message);
+			if (WebSocketSystem->CurrentChatbotType == EWebSocketChatbotType::Learning)
+				BotChat->SetContent(TimeStamp,  TEXT("무물이"), Message);
+			else if (WebSocketSystem->CurrentChatbotType == EWebSocketChatbotType::Meeting)
+				BotChat->SetContent(TimeStamp,  TEXT("나눔이"), Message);
+				
 
 			// 스크롤 내리기
 			FTimerHandle Handle;

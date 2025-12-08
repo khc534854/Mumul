@@ -2,7 +2,7 @@
 #include "MumulGameSettings.h"
 #include "WebSocketsModule.h"
 #include "Async/Async.h"
-#include "Serialization/JsonSerializer.h" // [필수] JSON 처리용
+#include "Serialization/JsonSerializer.h"
 
 void UWebSocketSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -34,21 +34,36 @@ void UWebSocketSubsystem::Connect(FString EndPoint)
         Close();
     }
     
-    // BaseURL 뒤에 슬래시가 있는지 확인 후 결합
-    FString FullURL = FString::Printf(TEXT("%s/%s/"), *BaseURL, *EndPoint);
+    // [신규] 엔드포인트에 따라 챗봇 타입 설정
+    if (EndPoint.Contains(TEXT("learning_chatbot")))
+    {
+        CurrentChatbotType = EWebSocketChatbotType::Learning;
+    }
+    else if (EndPoint.Contains(TEXT("meeting_chatbot")))
+    {
+        CurrentChatbotType = EWebSocketChatbotType::Meeting;
+    }
+    else
+    {
+        CurrentChatbotType = EWebSocketChatbotType::None;
+        UE_LOG(LogTemp, Warning, TEXT("[WebSocket] Unknown Endpoint Type: %s"), *EndPoint);
+    }
 
+    // BaseURL 뒤에 슬래시 처리
+    FString FullURL = FString::Printf(TEXT("%s/%s"), *BaseURL, *EndPoint);
+    // 만약 BaseURL이 슬래시로 안 끝나고 EndPoint도 슬래시로 시작 안하면 중간에 / 추가 필요
+    // 여기서는 간단히 포맷팅
+    
     WebSocket = FWebSocketsModule::Get().CreateWebSocket(FullURL);
     TWeakObjectPtr<UWebSocketSubsystem> WeakThis(this);
     
-    UE_LOG(LogTemp, Log, TEXT("[WebSocket] Connecting to: %s"), *FullURL);
-
+    UE_LOG(LogTemp, Log, TEXT("[WebSocket] Connecting to: %s (Type: %d)"), *FullURL, (int32)CurrentChatbotType);
 
     // 1. 연결 성공
     WebSocket->OnConnected().AddLambda([WeakThis]()
     {
         AsyncTask(ENamedThreads::GameThread, [WeakThis]()
         {
-            // 살아있는지 확인 (IsValid 대신 Get() 유무 확인)
             if (UWebSocketSubsystem* StrongThis = WeakThis.Get())
             {
                 UE_LOG(LogTemp, Log, TEXT("[WebSocket] Connected!"));
@@ -70,15 +85,13 @@ void UWebSocketSubsystem::Connect(FString EndPoint)
         });
     });
 
-    // 3. 연결 종료 (여기가 크래시 지점)
+    // 3. 연결 종료
     WebSocket->OnClosed().AddLambda([WeakThis](int32 StatusCode, const FString& Reason, bool bWasClean)
     {
         AsyncTask(ENamedThreads::GameThread, [WeakThis, StatusCode, Reason]()
         {
-            // 서브시스템이 살아있을 때만 방송
             if (UWebSocketSubsystem* StrongThis = WeakThis.Get())
             {
-                // 1000번대(정상)가 아니면 로그
                 if (StatusCode != 1000)
                 {
                     UE_LOG(LogTemp, Warning, TEXT("[WebSocket] Closed Abnormally. Code: %d, Reason: %s"), StatusCode, *Reason);
@@ -89,6 +102,7 @@ void UWebSocketSubsystem::Connect(FString EndPoint)
                 }
                 
                 StrongThis->OnClosed.Broadcast(StatusCode);
+                StrongThis->CurrentChatbotType = EWebSocketChatbotType::None; // 타입 초기화
             }
         });
     });
@@ -101,7 +115,6 @@ void UWebSocketSubsystem::Connect(FString EndPoint)
             if (UWebSocketSubsystem* StrongThis = WeakThis.Get())
             {
                 UE_LOG(LogTemp, Log, TEXT("[WebSocket] Received: %s"), *Message);
-                
                 StrongThis->OnMessageReceived.Broadcast(Message);
                 StrongThis->HandleWebSocketMessage(Message); 
             }
@@ -142,52 +155,92 @@ void UWebSocketSubsystem::HandleWebSocketMessage(const FString& Message)
     TSharedPtr<FJsonObject> JsonObject;
     TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Message);
 
-    // 1. JSON 파싱 시도
     if (FJsonSerializer::Deserialize(Reader, JsonObject) && JsonObject.IsValid())
     {
-        FString EventType = JsonObject->GetStringField(TEXT("event"));
-
-        // [이벤트 분기 처리]
-
-        if (EventType == TEXT("chat_started"))
+        // [핵심] 현재 설정된 타입에 따라 다른 처리 함수 호출
+        switch (CurrentChatbotType)
         {
-            FString Msg = JsonObject->GetStringField(TEXT("message"));
-            UE_LOG(LogTemp, Log, TEXT("[WS] Chat Started: %s"), *Msg);
-            OnAIChatStarted.Broadcast(Msg);
-        }
-        else if (EventType == TEXT("answer"))
-        {
-            FString AnswerText = JsonObject->GetStringField(TEXT("answer"));
-            FString GroupID = JsonObject->GetStringField(TEXT("groupId")); // [추가]
-
-            // groupId가 없으면 빈 문자열로 보냄
-            UE_LOG(LogTemp, Log, TEXT("[WS] AI Answer: %s"), *AnswerText);
-            OnAIChatAnswer.Broadcast(AnswerText, GroupID);
-
-        }
-        else if (EventType == TEXT("chat_ended"))
-        {
-            FString Msg = JsonObject->GetStringField(TEXT("message"));
-            UE_LOG(LogTemp, Log, TEXT("[WS] Chat Ended: %s"), *Msg);
-            OnAIChatEnded.Broadcast(Msg);
-        }
-        else
-        {
-            UE_LOG(LogTemp, Warning, TEXT("[WS] Unknown Event Type: %s"), *EventType);
+        case EWebSocketChatbotType::Learning:
+            HandleLearningMessage(JsonObject);
+            break;
+        case EWebSocketChatbotType::Meeting:
+            HandleMeetingMessage(JsonObject);
+            break;
+        default:
+            UE_LOG(LogTemp, Warning, TEXT("[WS] Message received but ChatbotType is None/Unknown."));
+            break;
         }
     }
     else
     {
-        // 2. JSON이 아닐 경우 (단순 텍스트 메시지 처리)
+        // JSON 파싱 실패 혹은 단순 텍스트 메시지
         if (Message.Contains(TEXT("Welcome client")))
         {
-            // 서버의 연결 환영 메시지는 에러가 아님
-            UE_LOG(LogTemp, Log, TEXT("[WS] Server Handshake Message: %s"), *Message);
+            UE_LOG(LogTemp, Log, TEXT("[WS] Handshake: %s"), *Message);
         }
         else
         {
-            // 그 외의 파싱 실패는 에러로 출력
-            UE_LOG(LogTemp, Error, TEXT("[WS] JSON Parsing Failed. Raw Message: %s"), *Message);
+            UE_LOG(LogTemp, Error, TEXT("[WS] JSON Parsing Failed."));
         }
+    }
+}
+
+// [1] 학습 챗봇 메시지 처리 (1:1)
+void UWebSocketSubsystem::HandleLearningMessage(TSharedPtr<FJsonObject> JsonObject)
+{
+    FString EventType = JsonObject->GetStringField(TEXT("event"));
+
+    if (EventType == TEXT("chat_started"))
+    {
+        FString Msg = JsonObject->GetStringField(TEXT("message"));
+        OnLearningChatStarted.Broadcast(Msg);
+    }
+    else if (EventType == TEXT("answer"))
+    {
+        FString AnswerText = JsonObject->GetStringField(TEXT("answer"));
+        OnLearningChatAnswer.Broadcast(AnswerText);
+    }
+    else if (EventType == TEXT("chat_ended"))
+    {
+        FString Msg = JsonObject->GetStringField(TEXT("message"));
+        OnLearningChatEnded.Broadcast(Msg);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[WS-Learning] Unknown Event: %s"), *EventType);
+    }
+}
+
+// [2] 회의 챗봇 메시지 처리 (그룹)
+void UWebSocketSubsystem::HandleMeetingMessage(TSharedPtr<FJsonObject> JsonObject)
+{
+    FString EventType = JsonObject->GetStringField(TEXT("event"));
+    FString GroupId = JsonObject->GetStringField(TEXT("groupId"));
+
+    if (EventType == TEXT("chat_started"))
+    {
+        FString Msg = JsonObject->GetStringField(TEXT("message"));
+        FString UserName = JsonObject->GetStringField(TEXT("userName"));
+        OnMeetingChatStarted.Broadcast(Msg, GroupId, UserName);
+    }
+    else if (EventType == TEXT("answer"))
+    {
+        FString AnswerText = JsonObject->GetStringField(TEXT("answer"));
+        OnMeetingChatAnswer.Broadcast(AnswerText, GroupId);
+    }
+    else if (EventType == TEXT("chat_ended"))
+    {
+        FString Msg = JsonObject->GetStringField(TEXT("message"));
+        OnMeetingChatEnded.Broadcast(Msg, GroupId);
+    }
+    else if (EventType == TEXT("error"))
+    {
+         FString ErrorMsg = JsonObject->GetStringField(TEXT("message"));
+         UE_LOG(LogTemp, Error, TEXT("[WS-Meeting] Error: %s"), *ErrorMsg);
+         OnError.Broadcast(ErrorMsg);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[WS-Meeting] Unknown Event: %s"), *EventType);
     }
 }

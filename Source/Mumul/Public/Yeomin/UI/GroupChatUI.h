@@ -38,12 +38,25 @@ public:
 	void SelectGroupChat(class UGroupIconUI* SelectedIcon);
 
 protected:
-	// [신규] 챗봇 응답 핸들러
+	// [신규] 학습 챗봇용 핸들러 (1:1)
 	UFUNCTION()
-	void OnAIChatStarted(FString Message);
+	void OnLearningChatStarted(FString Message);
     
 	UFUNCTION()
-	void OnAIChatAnswer(FString Answer, FString GroupId);
+	void OnLearningChatAnswer(FString Answer);
+    
+	UFUNCTION()
+	void OnLearningChatEnded(FString Message);
+
+	// [신규] 회의 도우미용 핸들러 (그룹)
+	UFUNCTION()
+	void OnMeetingChatStarted(FString Message, FString GroupId, FString UserName);
+
+	UFUNCTION()
+	void OnMeetingChatAnswer(FString Answer, FString GroupId);
+
+	UFUNCTION()
+	void OnMeetingChatEnded(FString Message, FString GroupId);
     
 	// [신규] 챗봇 방 초기화 함수
 	void InitChatbotRoom();

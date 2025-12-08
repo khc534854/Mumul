@@ -1,6 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
@@ -8,85 +6,110 @@
 #include "JsonObjectConverter.h"
 #include "WebSocketSubsystem.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAIChatAnswer, FString, Answer, FString, GroupId); // 답변 왔을 때
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAIChatStarted, FString, Message); // 시작됨
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAIChatEnded, FString, Message);   // 종료됨
+// [신규] 챗봇 타입 열거형
+UENUM(BlueprintType)
+enum class EWebSocketChatbotType : uint8
+{
+    None,
+    Learning,   // 학습 챗봇 (1:1)
+    Meeting     // 회의 도우미 (그룹)
+};
 
+// [기존] 공통 연결 관련 델리게이트
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWebSocketConnected);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWebSocketClosed, int32, StatusCode);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWebSocketMessage, const FString&, Message);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWebSocketError, const FString&, ErrorMsg);
 
+// [신규] 학습 챗봇용 델리게이트 (Learning)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLearningChatStarted, FString, Message);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLearningChatAnswer, FString, Answer); // 학습은 1:1이라 ID 불필요
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLearningChatEnded, FString, Message);
+
+// [신규] 회의 챗봇용 델리게이트 (Meeting)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnMeetingChatStarted, FString, Message, FString, GroupId, FString, UserName);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnMeetingChatAnswer, FString, Answer, FString, GroupId);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnMeetingChatEnded, FString, Message, FString, GroupId);
+
+
 UCLASS()
 class MUMUL_API UWebSocketSubsystem : public UGameInstanceSubsystem
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
-	virtual void Deinitialize() override;
+    virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+    virtual void Deinitialize() override;
 
-	UFUNCTION(BlueprintCallable, Category = "Network|WebSocket")
-	void Connect(FString EndPoint);
+    UFUNCTION(BlueprintCallable, Category = "Network|WebSocket")
+    void Connect(FString EndPoint);
 
-	UFUNCTION(BlueprintCallable, Category = "Network|WebSocket")
-	void Close();
+    UFUNCTION(BlueprintCallable, Category = "Network|WebSocket")
+    void Close();
 
-	UFUNCTION(BlueprintCallable, Category = "Network|WebSocket")
-	void SendMessage(const FString& Message);
+    UFUNCTION(BlueprintCallable, Category = "Network|WebSocket")
+    void SendMessage(const FString& Message);
 
-	// [추가] 구조체를 JSON으로 변환해서 보내는 템플릿 함수
-	template <typename StructType>
-	void SendStructMessage(const StructType& InStruct);
+    template <typename StructType>
+    void SendStructMessage(const StructType& InStruct);
 
-	UFUNCTION(BlueprintPure, Category = "Network|WebSocket")
-	bool IsConnected() const;
-
-public:
-	UPROPERTY(EditAnywhere, Category="Network")
-	FString BaseURL = TEXT("ws://127.0.0.1:8000/ws");
+    UFUNCTION(BlueprintPure, Category = "Network|WebSocket")
+    bool IsConnected() const;
 
 public:
-	UPROPERTY(BlueprintAssignable)
-	FOnWebSocketConnected OnConnected;
+    UPROPERTY(EditAnywhere, Category="Network")
+    FString BaseURL = TEXT("ws://127.0.0.1:8000/ws");
 
-	UPROPERTY(BlueprintAssignable)
-	FOnWebSocketClosed OnClosed;
+    // [신규] 현재 연결된 챗봇 타입
+    UPROPERTY(BlueprintReadOnly, Category="Network|WebSocket")
+    EWebSocketChatbotType CurrentChatbotType = EWebSocketChatbotType::None;
 
-	UPROPERTY(BlueprintAssignable)
-	FOnWebSocketMessage OnMessageReceived; // 원본 메시지 알림
+    // --- Delegates ---
+    UPROPERTY(BlueprintAssignable)
+    FOnWebSocketConnected OnConnected;
+    UPROPERTY(BlueprintAssignable)
+    FOnWebSocketClosed OnClosed;
+    UPROPERTY(BlueprintAssignable)
+    FOnWebSocketMessage OnMessageReceived;
+    UPROPERTY(BlueprintAssignable)
+    FOnWebSocketError OnError;
 
-	UPROPERTY(BlueprintAssignable)
-	FOnWebSocketError OnError;
+    // 학습 챗봇 이벤트
+    UPROPERTY(BlueprintAssignable)
+    FOnLearningChatStarted OnLearningChatStarted;
+    UPROPERTY(BlueprintAssignable)
+    FOnLearningChatAnswer OnLearningChatAnswer;
+    UPROPERTY(BlueprintAssignable)
+    FOnLearningChatEnded OnLearningChatEnded;
 
-	// [추가] AI 채팅용 델리게이트
-	UPROPERTY(BlueprintAssignable)
-	FOnAIChatAnswer OnAIChatAnswer;
-
-	UPROPERTY(BlueprintAssignable)
-	FOnAIChatStarted OnAIChatStarted;
-    
-	UPROPERTY(BlueprintAssignable)
-	FOnAIChatEnded OnAIChatEnded;
+    // 회의 챗봇 이벤트
+    UPROPERTY(BlueprintAssignable)
+    FOnMeetingChatStarted OnMeetingChatStarted;
+    UPROPERTY(BlueprintAssignable)
+    FOnMeetingChatAnswer OnMeetingChatAnswer;
+    UPROPERTY(BlueprintAssignable)
+    FOnMeetingChatEnded OnMeetingChatEnded;
 
 private:
-	TSharedPtr<IWebSocket> WebSocket;
+    TSharedPtr<IWebSocket> WebSocket;
 
-	// [추가] 수신된 메시지 파싱 함수
-	void HandleWebSocketMessage(const FString& Message);
+    void HandleWebSocketMessage(const FString& Message);
+    
+    // 내부 분리 처리 함수
+    void HandleLearningMessage(TSharedPtr<FJsonObject> JsonObject);
+    void HandleMeetingMessage(TSharedPtr<FJsonObject> JsonObject);
 };
 
-// 템플릿 함수 구현
 template <typename StructType>
 void UWebSocketSubsystem::SendStructMessage(const StructType& InStruct)
 {
-	FString JsonString;
-	if (FJsonObjectConverter::UStructToJsonObjectString(StructType::StaticStruct(), &InStruct, JsonString, 0, 0))
-	{
-		SendMessage(JsonString);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("[WebSocket] Failed to serialize struct to JSON"));
-	}
+    FString JsonString;
+    if (FJsonObjectConverter::UStructToJsonObjectString(StructType::StaticStruct(), &InStruct, JsonString, 0, 0))
+    {
+        SendMessage(JsonString);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("[WebSocket] Failed to serialize struct to JSON"));
+    }
 }
