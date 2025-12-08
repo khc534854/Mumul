@@ -40,12 +40,12 @@ void UVoiceMeetingUI::SetMeetingState(bool bIsActive)
     {
         SetVisibility(ESlateVisibility::Hidden);
         
-        // 입력 모드 복귀
-        if (ACuteAlienController* PC = GetMyController())
-        {
-            PC->SetShowMouseCursor(false);
-            PC->SetInputMode(FInputModeGameOnly());
-        }
+        // // 입력 모드 복귀
+        // if (ACuteAlienController* PC = GetMyController())
+        // {
+        //     PC->SetShowMouseCursor(false);
+        //     PC->SetInputMode(FInputModeGameOnly());
+        // }
     }
 }
 
@@ -80,13 +80,13 @@ void UVoiceMeetingUI::OnClickReturnMeeting()
 {
     SetVisibility(ESlateVisibility::Hidden);
     
-    // 입력 모드 게임으로 복귀
-    if (ACuteAlienController* PC = GetMyController())
-    {
-        FInputModeGameOnly InputMode;
-        PC->SetInputMode(InputMode);
-        PC->SetShowMouseCursor(false);
-    }
+    // // 입력 모드 게임으로 복귀
+    // if (ACuteAlienController* PC = GetMyController())
+    // {
+    //     FInputModeGameOnly InputMode;
+    //     PC->SetInputMode(InputMode);
+    //     PC->SetShowMouseCursor(false);
+    // }
 }
 
 ACuteAlienController* UVoiceMeetingUI::GetMyController()

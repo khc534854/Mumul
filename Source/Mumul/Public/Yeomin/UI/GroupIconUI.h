@@ -34,8 +34,10 @@ protected:
 	TSubclassOf<class UChatBlockUI> ChatBlockUIClass;
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
 	TSubclassOf<class UChatMessageBlockUI> ChatMessageBlockUIClass;
+	bool bHasTeamIcon = false;
 public:
 	void SetIconIMG(UTexture2D* IMG);
+	void SetTeamIconIMG(UTexture2D* IMG);
 	UPROPERTY()
 	TObjectPtr<class UChatBlockUI> ChatBlockUI;
 

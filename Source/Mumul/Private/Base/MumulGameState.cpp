@@ -19,16 +19,12 @@ void AMumulGameState::AddPlayerState(APlayerState* PlayerState)
 {
 	Super::AddPlayerState(PlayerState);
 
-	UE_LOG(LogTemp, Warning, TEXT("Player Joined: %s"), *PlayerState->GetPlayerName());
-	OnPlayerArrayUpdated.Broadcast();
 }
 
 void AMumulGameState::RemovePlayerState(APlayerState* PlayerState)
 {
 	Super::RemovePlayerState(PlayerState);
 
-	UE_LOG(LogTemp, Warning, TEXT("Player Left: %s"), *PlayerState->GetPlayerName());
-	OnPlayerArrayUpdated.Broadcast();
 }
 
 void AMumulGameState::RegisterMeeting(FString ChannelID, FString MeetingID)

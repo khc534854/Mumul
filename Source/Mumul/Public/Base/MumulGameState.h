@@ -6,7 +6,7 @@
 #include "GameFramework/GameState.h"
 #include "MumulGameState.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPlayerArrayUpdated);
+
 
 
 UCLASS()
@@ -19,10 +19,6 @@ protected:
 	
 	virtual void AddPlayerState(APlayerState* PlayerState) override;
 	virtual void RemovePlayerState(APlayerState* PlayerState) override;
-
-public:
-	UPROPERTY()
-	FPlayerArrayUpdated OnPlayerArrayUpdated;
 
 public:
 	// [핵심] 모든 클라이언트에게 "네 컴퓨터에 텐트 정보 저장해!"라고 명령하는 함수

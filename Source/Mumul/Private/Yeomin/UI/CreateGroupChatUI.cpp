@@ -11,6 +11,7 @@
 #include "Components/ScrollBox.h"
 #include "GameFramework/PlayerState.h"
 #include "khc/Player/MumulPlayerState.h"
+#include "Yeomin/Player/CuteAlienController.h"
 #include "Yeomin/UI/GroupChatUI.h"
 #include "Yeomin/UI/GroupProfileUI.h"
 #include "Yeomin/UI/BaseUI/BaseButton.h"
@@ -22,14 +23,15 @@ void UCreateGroupChatUI::NativeConstruct()
 	Super::NativeConstruct();
 
 	GS = GetWorld()->GetGameState<AMumulGameState>();
-	if (GS)
+	
+	ACuteAlienController* PS = Cast<ACuteAlienController>(GetOwningPlayer());
+	if (PS)
 	{
-		GS->OnPlayerArrayUpdated.AddDynamic(this, &UCreateGroupChatUI::RefreshJoinedPlayerList);
+		PS->OnPlayerArrayUpdated.AddDynamic(this, &UCreateGroupChatUI::RefreshJoinedPlayerList);
 	}
 	CreateGroupBtn->BaseButton->OnPressed.AddDynamic(this, &UCreateGroupChatUI::CreateGroupChat);
 	SearchBox->BaseTextBox->OnTextChanged.AddDynamic(this, &UCreateGroupChatUI::OnSearchTextChanged);
 	ExitBtn->BaseExitButton->OnPressed.AddDynamic(this, &UCreateGroupChatUI::OnExitUI);
-	RefreshJoinedPlayerList();
 
 	HttpSystem = GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>();
 }

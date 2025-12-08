@@ -10,6 +10,8 @@
 /**
  * 
  */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPlayerArrayUpdated);
+
 
 USTRUCT()
 struct FTeamUser
@@ -30,10 +32,14 @@ class MUMUL_API ACuteAlienController : public APlayerController
 	GENERATED_BODY()
 	ACuteAlienController();
 
+public:
+	UPROPERTY()
+	FPlayerArrayUpdated OnPlayerArrayUpdated;
+	
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
-
+	
 	UPROPERTY()
 	TObjectPtr<class AMumulGameState> GS;
 

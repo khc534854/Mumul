@@ -185,6 +185,12 @@ protected:
 	FTimerHandle DotTimer;
 	int32 DotCount = 0;
 	void UpdateDot();
+	UPROPERTY(EditDefaultsOnly, Category="UI Image")
+	TObjectPtr<class UTexture2D> NaNumiOnIMG;
+	UPROPERTY(EditDefaultsOnly, Category="UI Image")
+	TObjectPtr<class UTexture2D> NaNumiOffIMG;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UImage> NaNumiIMG;
 public:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> RecordBtn;

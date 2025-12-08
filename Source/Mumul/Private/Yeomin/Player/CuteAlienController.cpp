@@ -226,9 +226,14 @@ void ACuteAlienController::BeginPlay()
 			GI->PlayerType,
 			GI->PlayerTendency
 		);
-
+		// Refresh PlayerList
+		OnPlayerArrayUpdated.Broadcast();
+		
 		if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
 		{
+			// Get TeamChatList
+			AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>();
+			HttpSystem->SendTeamChatListRequest(PS->PS_UserIndex);
 			// [추가] HTTP 응답 바인딩
 			HttpSystem->OnStartMeeting.AddDynamic(this, &ACuteAlienController::OnStartMeetingResponse);
 			HttpSystem->OnJoinMeeting.AddDynamic(this, &ACuteAlienController::OnJoinMeetingResponse);
@@ -679,6 +684,7 @@ void ACuteAlienController::Client_StopChannelRecording_Implementation()
 
 				UE_LOG(LogTemp, Warning, TEXT("[Host] Binded OnHostRecordingStopped delegate."));
 			}
+			GroupChatUI->OnRecordBtnState(false);
 
 			// 녹음 종료 및 마지막 파일 전송 시작
 			VoiceComp->StopRecording();
@@ -715,6 +721,7 @@ void ACuteAlienController::Server_BroadcastJoinMeeting_Implementation(const FStr
 				// Server RPC 내부에서 'this'는 이 함수를 호출한 컨트롤러(방장)입니다.
 				if (PS->GetOwner() == this)
 				{
+					GroupChatUI->OnRecordBtnState(true);
 					continue; // 나는 이미 시작했으므로 패스
 				}
 
@@ -761,10 +768,10 @@ void ACuteAlienController::OpenMeetingSetupUI()
 		VoiceMeetingUI->InitMeetingUI(true); // 방장 모드
 		VoiceMeetingUI->SetVisibility(ESlateVisibility::Visible);
 
-		SetShowMouseCursor(true);
-		FInputModeUIOnly InputMode;
-		InputMode.SetWidgetToFocus(VoiceMeetingUI->TakeWidget());
-		SetInputMode(InputMode);
+		// SetShowMouseCursor(true);
+		// FInputModeUIOnly InputMode;
+		// InputMode.SetWidgetToFocus(VoiceMeetingUI->TakeWidget());
+		// SetInputMode(InputMode);
 	}
 }
 
@@ -786,10 +793,10 @@ void ACuteAlienController::OpenEndMeetingPopup()
 
 		VoiceMeetingUI->SetVisibility(ESlateVisibility::Visible);
 
-		SetShowMouseCursor(true);
-		FInputModeUIOnly InputMode;
-		InputMode.SetWidgetToFocus(VoiceMeetingUI->TakeWidget());
-		SetInputMode(InputMode);
+		// SetShowMouseCursor(true);
+		// FInputModeUIOnly InputMode;
+		// InputMode.SetWidgetToFocus(VoiceMeetingUI->TakeWidget());
+		// SetInputMode(InputMode);
 	}
 }
 
@@ -847,6 +854,8 @@ void ACuteAlienController::OnJoinMeetingResponse(bool bSuccess)
 				// 녹음 시작 시 MeetingID를 전달해줘야 함 (VoiceComponent 수정 필요)
 				VoiceComp->SetCurrentMeetingID(CurrentMeetingSessionID);
 				VoiceComp->StartRecording();
+
+				GroupChatUI->OnRecordBtnState(true);
 			}
 		}
 	}
@@ -1049,7 +1058,7 @@ void ACuteAlienController::Server_CreateGroupChatUI_Implementation(const TArray<
                                                                    const TArray<FTeamUser>& TeamUserIDs)
 {
 	UTexture2D* TeamIconIMG = IMGManager->GetNextImage();
-	
+
 	// Add GroupChatUI for each Client
 	for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
 	{
@@ -1077,7 +1086,7 @@ void ACuteAlienController::Client_CreateGroupChatUI_Implementation(const FString
 	{
 		GroupIconUI->ChatBlockUI->AddTeamUser(User.UserId, User.UserName);
 	}
-	GroupIconUI->SetIconIMG(IMG);
+	GroupIconUI->SetTeamIconIMG(IMG);
 }
 
 

@@ -599,7 +599,7 @@ void UGroupChatUI::OnServerTeamChatListResponse(bool bSuccess, FString Message)
 				{
 					GroupIconUI->ChatBlockUI->AddTeamUser(User.userId, *User.userName);
 				}
-				GroupIconUI->SetIconIMG(TeamIconIMG);
+				GroupIconUI->SetTeamIconIMG(TeamIconIMG);
 
 				if (ACuteAlienController* PS = Cast<ACuteAlienController>(GetOwningPlayer()))
 				{
@@ -672,12 +672,6 @@ void UGroupChatUI::ToggleGroupChatAlignment()
 
 void UGroupChatUI::OnToggleVisibilityBtn()
 {
-	CreateGroupChatUI->RefreshJoinedPlayerList();
-
-	// Get TeamChatList
-	AMumulPlayerState* PS = Cast<AMumulPlayerState>(GetOwningPlayerState());
-	HttpSystem->SendTeamChatListRequest(PS->PS_UserIndex);
-
 	ToggleGroupChatAlignment();
 
 	// test: create team
@@ -772,11 +766,13 @@ void UGroupChatUI::UpdateQuestionButtonState()
 	if (bIsMeetingChatbotActive)
 	{
 		// [ON 상태] 예: 초록색 배경
+		NaNumiIMG->SetBrushFromTexture(NaNumiOnIMG);
 		QuestionBtn->SetBackgroundColor(FLinearColor(0.2f, 1.0f, 0.2f, 1.0f));
 	}
 	else
 	{
 		// [OFF 상태] 예: 기본색 (흰색/회색)
+		NaNumiIMG->SetBrushFromTexture(NaNumiOffIMG);
 		QuestionBtn->SetBackgroundColor(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));
 	}
 }

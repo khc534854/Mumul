@@ -6,18 +6,20 @@
 #include "Base/MumulGameState.h"
 #include "Components/ScrollBox.h"
 #include "GameFramework/PlayerState.h"
+#include "Yeomin/Player/CuteAlienController.h"
 #include "Yeomin/UI/GroupProfileUI.h"
 
 void UInvitationUI::NativeConstruct()
 {
 	Super::NativeConstruct();
 	
-	GS = GetWorld()->GetGameState<AMumulGameState>();
-	if (GS)
+	ACuteAlienController* PS = Cast<ACuteAlienController>(GetOwningPlayer());
+	if (PS)
 	{
-		GS->OnPlayerArrayUpdated.AddDynamic(this, &UInvitationUI::RefreshJoinedPlayerList);
-		RefreshJoinedPlayerList();
+		PS->OnPlayerArrayUpdated.AddDynamic(this, &UInvitationUI::RefreshJoinedPlayerList);
 	}
+	
+	GS = GetWorld()->GetGameState<AMumulGameState>();
 }
 
 void UInvitationUI::RefreshJoinedPlayerList()
