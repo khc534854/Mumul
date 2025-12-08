@@ -508,7 +508,6 @@ void UGroupChatUI::OnTextBoxCommitted()
 	FText Text = EditBox->GetText();
 
 	if (Text.IsEmpty()) return;
-	EditBox->SetText(FText::GetEmpty());
 	if (!CurrentSelectedGroup) return;
 
 	// 기본 변수 선언
@@ -591,7 +590,8 @@ void UGroupChatUI::OnTextBoxCommitted()
 			}
 		}
 	}
-
+	FSlateApplication::Get().SetKeyboardFocus(ChatEnter->TakeWidget());
+	EditBox->SetText(FText::FromString(TEXT("")));
 	EditBox->SetFocus();
 }
 
