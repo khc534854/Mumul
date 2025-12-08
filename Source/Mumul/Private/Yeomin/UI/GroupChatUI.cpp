@@ -753,7 +753,13 @@ void UGroupChatUI::ToggleGroupChatAlignment()
 void UGroupChatUI::OnToggleVisibilityBtn()
 {
 	ToggleGroupChatAlignment();
+	
 	CreateGroupChatUI->RefreshJoinedPlayerList();
+	
+	// Get TeamChatList
+	AMumulPlayerState* PS = Cast<AMumulPlayerState>(GetOwningPlayerState());
+	HttpSystem->SendTeamChatListRequest(PS->PS_UserIndex);
+	
 	// test: create team
 	if (bITestCreateTeamChat)
 	{
