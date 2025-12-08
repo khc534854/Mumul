@@ -51,4 +51,14 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class UVoiceChatComponent* VoiceComponent;
+
+public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	class USpringArmComponent* MinimapSpringArm;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	class USceneCaptureComponent2D* MinimapCapture;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Minimap")
+	class UTextureRenderTarget2D* MinimapRenderTarget;
 };

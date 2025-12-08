@@ -20,6 +20,16 @@ protected:
 	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UBaseText> CurrentTime;
+
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UImage> Minimap;
+
+	FTimerHandle MinimapBindTimer;
+    
+	// [신규] 미니맵 연결 함수
+	UFUNCTION()
+	void TryBindMinimap();
+	
 	FTimerHandle FirstMinuteTimer;
 	UFUNCTION()
 	void StartMinuteTimer();

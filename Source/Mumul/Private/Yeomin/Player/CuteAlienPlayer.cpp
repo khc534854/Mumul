@@ -4,8 +4,11 @@
 #include "Yeomin/Player/CuteAlienPlayer.h"
 
 #include "Base/MumulGameState.h"
+#include "Components/SceneCaptureComponent2D.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "khc/Player/MumulPlayerState.h"
 #include "khc/Player/VoiceChatComponent.h"
+#include "Kismet/KismetRenderingLibrary.h"
 #include "Yeomin/Player/CuteAlienAnim.h"
 
 
@@ -58,12 +61,44 @@ TEXT("/Game/Yeomin/Characters/CuteAlien/Animations/Animation2/Greeting2_Montage.
 	}
 
 	VoiceComponent = CreateDefaultSubobject<UVoiceChatComponent>(TEXT("VoiceComponent"));
+
+	MinimapSpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("MinimapSpringArm"));
+	MinimapSpringArm->SetupAttachment(RootComponent);
+
+	MinimapCapture = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("MinimapCapture"));
+	MinimapCapture->SetupAttachment(MinimapSpringArm);
+
+
 }
 
 // Called when the game starts or when spawned
 void ACuteAlienPlayer::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (IsLocallyControlled())
+	{
+		if (MinimapCapture)
+		{
+			// 2. 렌더 타겟을 동적으로 생성 (너비, 높이는 256, 512 등 원하는 해상도로)
+			MinimapRenderTarget = UKismetRenderingLibrary::CreateRenderTarget2D(this, 512, 512);
+            
+			// 3. 생성된 렌더 타겟을 캡처 컴포넌트에 연결
+			MinimapCapture->TextureTarget = MinimapRenderTarget;
+            
+			// 4. 캡처 시작
+			MinimapCapture->CaptureScene(); // 혹은 CaptureEveryFrame이 켜져있다면 자동 시작됨
+		}
+	}
+	else
+	{
+		// 내 캐릭터가 아니면 캡처 컴포넌트를 꺼서 성능 낭비를 막습니다.
+		if (MinimapCapture)
+		{
+			MinimapCapture->Deactivate();
+			MinimapCapture->SetComponentTickEnabled(false);
+		}
+	}
 	
 }
 
