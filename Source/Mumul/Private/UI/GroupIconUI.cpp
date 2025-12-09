@@ -1,0 +1,142 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "UI/GroupIconUI.h"
+
+#include "Network/HttpNetworkSubsystem.h"
+#include "UI/ChatBlockUI.h"
+#include "Components/Button.h"
+#include "Components/ScrollBox.h"
+#include "Components/SizeBox.h"
+#include "Network/NetworkStructs.h"
+#include "UI/ChatMessageBlockUI.h"
+#include "UI/GroupChatUI.h"
+
+void UGroupIconUI::NativeConstruct()
+{
+	Super::NativeConstruct();
+
+	HttpSystem = GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>();
+	if (HttpSystem)
+	{
+		HttpSystem->OnTeamChatMessageResponse.AddDynamic(this, &UGroupIconUI::OnServerTeamChatMessageResponse);
+	}
+
+	if (!ChatBlockUI)
+	{
+		if (ChatBlockUIClass)
+		{
+			ChatBlockUI = CreateWidget<UChatBlockUI>(GetWorld(), ChatBlockUIClass);
+		}
+	}
+
+	GroupIconBtn->OnPressed.AddDynamic(this, &UGroupIconUI::DisplayGroupChat);
+}
+
+void UGroupIconUI::DisplayGroupChat()
+{
+	// ParentUI->RemoveChatBlock();
+	// ParentUI->AddChatBlock(ChatBlockUI);
+	//
+	// if (AMumulPlayerState* PS = GetOwningPlayer()->GetPlayerState<AMumulPlayerState>())
+	// {
+	// 	if (PS->bIsNearByCampFire)
+	// 	{
+	// 		PS->Server_SetVoiceChannelID(ChatBlockUI->GetTeamID());
+	// 	}
+	// 	else
+	// 	{
+	// 		PS->WaitingChannelID = ChatBlockUI->GetTeamID();
+	// 	}
+	// }
+	//
+	//
+	// ParentUI->SetGroupNameTitle(ChatBlockUI->GetTeamName());
+	//
+	// // Send TeamChatMessage Request
+	// HttpSystem->SendTeamChatMessageRequest(ChatBlockUI->GetTeamID());
+
+	if (ParentUI)
+	{
+		ParentUI->SelectGroupChat(this);
+
+		if (ParentUI->IsGroupChatToggled() == false)
+		{
+			if (ChatBlockUI->GetTeamID() == Cast<UChatBlockUI>(ParentUI->ChatSizeBox->GetChildAt(0))->GetTeamID())
+			{
+				ParentUI->OnToggleVisibilityBtn();
+			}
+		}
+	}
+}
+
+void UGroupIconUI::InitParentUI(UGroupChatUI* Parent)
+{
+	ParentUI = Parent;
+}
+
+void UGroupIconUI::SetIconIMG(UTexture2D* IMG)
+{
+	FSlateBrush NormalBrush;
+	NormalBrush.SetResourceObject(IMG);
+	NormalBrush.ImageSize = FVector2D(120.f);
+	NormalBrush.TintColor = FSlateColor(FLinearColor(1.f, 1.f, 1.f, 1.f));
+
+	FSlateBrush HoveredBrush = NormalBrush;
+	HoveredBrush.TintColor = FSlateColor(FLinearColor(0.9f, 0.9f, 0.9f, 1.f));
+
+	FSlateBrush PressedBrush = NormalBrush;
+	PressedBrush.TintColor = FSlateColor(FLinearColor(0.75f, 0.75f, 0.75f, 1.f));
+
+	FButtonStyle Style;
+	Style.Normal = NormalBrush;
+	Style.Hovered = HoveredBrush;
+	Style.Pressed = PressedBrush;
+
+	GroupIconBtn->SetStyle(Style);
+}
+
+
+void UGroupIconUI::OnServerTeamChatMessageResponse(bool bSuccess, FString Message)
+{
+	if (bSuccess)
+	{
+		// Init ChatBlockUI
+		ChatBlockUI->ChatScrollBox->ClearChildren();
+
+		// 1. JSON 파싱 (Message에는 JSON 원본이 들어있음)
+		TArray<FTeamChatMessageResponse> TeamChatMessage;
+
+		if (FJsonObjectConverter::JsonArrayStringToUStruct(Message, &TeamChatMessage, 0, 0))
+		{
+			// JSON Parsing LOG
+			for (const FTeamChatMessageResponse& Msg : TeamChatMessage)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("======== Chat Message ========"));
+				UE_LOG(LogTemp, Warning, TEXT("chatId     : %s"), *Msg.chatId);
+				UE_LOG(LogTemp, Warning, TEXT("userId     : %d"), Msg.userId);
+				UE_LOG(LogTemp, Warning, TEXT("userName   : %s"), *Msg.userName);
+				UE_LOG(LogTemp, Warning, TEXT("message    : %s"), *Msg.message);
+				UE_LOG(LogTemp, Warning, TEXT("createdAt  : %s"), *Msg.createdAt);
+			}
+
+			for (const FTeamChatMessageResponse& Msg : TeamChatMessage)
+			{
+				// Add Chat Chunk to ScrollBox
+				UChatMessageBlockUI* Chat = CreateWidget<UChatMessageBlockUI>(GetWorld(), ChatMessageBlockUIClass);
+				ChatBlockUI->ChatScrollBox->AddChild(Chat);
+				Chat->SetContent(*Msg.createdAt, *Msg.userName, *Msg.message);
+				Chat->SetChatID(Msg.chatId);
+				Chat->SetUserID(Msg.userId);
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("TeamChatMessage 파싱 실패"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("TeamChatMessage Response 실패 : %s"), *Message);
+	}
+}

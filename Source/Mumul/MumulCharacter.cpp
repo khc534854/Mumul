@@ -10,7 +10,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
-#include "Yeomin/Player/CuteAlienAnim.h"
+#include "Player/CuteAlienAnim.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 

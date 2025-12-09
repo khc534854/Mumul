@@ -8,7 +8,11 @@ public class Mumul : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[]
+        PrivateIncludePaths.AddRange(new string[] {
+            "Mumul/Public"
+        });
+
+        PublicDependencyModuleNames.AddRange(new string[]
 		{
 			"Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput",
 			"OnlineSubsystem", "OnlineSubsystemUtils", "OnlineSubsystemSteam", "SteamSockets", "UMG", "Slate",
