@@ -145,6 +145,12 @@ void AMumulCharacter::Look(const FInputActionValue& Value)
 
 void AMumulCharacter::Server_OnJump_Implementation(const FInputActionValue& Value)
 {
+	if (GetCharacterMovement()->IsFalling())
+	{
+		Multicast_OnRollAnimation();
+		return;
+	}
+	
 	Multicast_OnJumpAnimation();
 }
 
@@ -153,5 +159,14 @@ void AMumulCharacter::Multicast_OnJumpAnimation_Implementation()
 	if (PlayerAnim->Montage_IsPlaying(JumpMontage) == false && GetCharacterMovement()->IsFalling() == false)
 	{
 		PlayerAnim->Montage_Play(JumpMontage);
+	}
+}
+
+void AMumulCharacter::Multicast_OnRollAnimation_Implementation()
+{
+	if (PlayerAnim->Montage_IsPlaying(RollMontage) == false)
+	{
+		LaunchCharacter(GetActorForwardVector() * RollStrength, false, false);
+		PlayerAnim->Montage_Play(RollMontage);
 	}
 }

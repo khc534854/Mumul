@@ -18,6 +18,11 @@ public:
 	// 생성자
 	UMumulGameInstance();
 
+	UFUNCTION()
+	void HandleNotice(const FString& Msg)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[TEST NOTICE] %s"), *Msg);
+	}
 	// UGameInstance 오버라이드
 	virtual void Init() override;
 

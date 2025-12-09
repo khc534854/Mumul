@@ -12,7 +12,8 @@ enum class EWebSocketChatbotType : uint8
 {
     None,
     Learning,   // 학습 챗봇 (1:1)
-    Meeting     // 회의 도우미 (그룹)
+    Meeting,    // 회의 도우미 (그룹)
+    Notice,     // 공지
 };
 
 // [기존] 공통 연결 관련 델리게이트
@@ -30,6 +31,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLearningChatEnded, FString, Messa
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnMeetingChatStarted, FString, Message, FString, GroupId, FString, UserName);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnMeetingChatAnswer, FString, Answer, FString, GroupId);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnMeetingChatEnded, FString, Message, FString, GroupId);
+
+// 공지 델리게이트 (Notice)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNoticeReceived, const FString&, NoticeMessage);
 
 
 UCLASS()
@@ -90,6 +94,10 @@ public:
     UPROPERTY(BlueprintAssignable)
     FOnMeetingChatEnded OnMeetingChatEnded;
 
+    // 공지 이벤트
+    UPROPERTY(BlueprintAssignable)
+    FOnNoticeReceived OnNoticeReceived;
+    
 private:
     TSharedPtr<IWebSocket> WebSocket;
 
@@ -98,6 +106,7 @@ private:
     // 내부 분리 처리 함수
     void HandleLearningMessage(TSharedPtr<FJsonObject> JsonObject);
     void HandleMeetingMessage(TSharedPtr<FJsonObject> JsonObject);
+    void HandleNoticeMessage(TSharedPtr<FJsonObject> JsonObject);
 };
 
 template <typename StructType>

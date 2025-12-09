@@ -28,7 +28,6 @@
 #include "Components/VerticalBoxSlot.h"
 #include "Library/MathLibrary.h"
 #include "Yeomin/Data/IMGManager.h"
-#include "Yeomin/UI/BotChatMessageBlockUI.h"
 
 void UGroupChatUI::NativeConstruct()
 {

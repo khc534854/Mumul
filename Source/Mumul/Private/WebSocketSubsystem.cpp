@@ -43,6 +43,10 @@ void UWebSocketSubsystem::Connect(FString EndPoint)
     {
         CurrentChatbotType = EWebSocketChatbotType::Meeting;
     }
+    else if (EndPoint.Contains(TEXT("notice")))    // notice
+    {
+        CurrentChatbotType = EWebSocketChatbotType::Notice;
+    }
     else
     {
         CurrentChatbotType = EWebSocketChatbotType::None;
@@ -166,6 +170,9 @@ void UWebSocketSubsystem::HandleWebSocketMessage(const FString& Message)
         case EWebSocketChatbotType::Meeting:
             HandleMeetingMessage(JsonObject);
             break;
+        case EWebSocketChatbotType::Notice:
+            HandleNoticeMessage(JsonObject);
+            break;
         default:
             UE_LOG(LogTemp, Warning, TEXT("[WS] Message received but ChatbotType is None/Unknown."));
             break;
@@ -242,5 +249,20 @@ void UWebSocketSubsystem::HandleMeetingMessage(TSharedPtr<FJsonObject> JsonObjec
     else
     {
         UE_LOG(LogTemp, Warning, TEXT("[WS-Meeting] Unknown Event: %s"), *EventType);
+    }
+}
+
+void UWebSocketSubsystem::HandleNoticeMessage(TSharedPtr<FJsonObject> JsonObject)
+{
+    FString EventType = JsonObject->GetStringField(TEXT("event"));
+
+    if (EventType == TEXT("notice"))
+    {
+        FString NoticeMsg = JsonObject->GetStringField(TEXT("message"));
+        OnNoticeReceived.Broadcast(NoticeMsg);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[WS-Notice] Unknown Event: %s"), *EventType);
     }
 }
