@@ -256,10 +256,10 @@ struct FWSRequest_StartChat
 	FString event = TEXT("start_chat");
 
 	UPROPERTY()
-	int32 sessionId; // 명세서: 유저아이디와 동일
+	int32 sessionId = 0; // 명세서: 유저아이디와 동일
 
 	UPROPERTY()
-	int32 userId;
+	int32 userId = 0;
 };
 
 // 2. 질문 보내기 (query)
@@ -272,10 +272,10 @@ struct FWSRequest_Query
 	FString event = TEXT("query");
 
 	UPROPERTY()
-	int32 userId; // 유저아이디
+	int32 userId = 0; // 유저아이디
 
 	UPROPERTY()
-	int32 sessionId; // 유저아이디와 동일
+	int32 sessionId = 0; // 유저아이디와 동일
 
 	UPROPERTY()
 	FString query;
@@ -291,7 +291,7 @@ struct FWSRequest_EndChat
 	FString event = TEXT("end_chat");
 
 	UPROPERTY()
-	int32 sessionId; // 유저아이디와 동일
+	int32 sessionId = 0; // 유저아이디와 동일
 };
 
 
@@ -307,10 +307,10 @@ struct FWSResponse_Answer
 	FString event;
 
 	UPROPERTY()
-	int32 sessionId;
+	int32 sessionId = 0;
     
 	UPROPERTY()
-	int32 userId; // [추가됨] 명세서 반영
+	int32 userId = 0; // [추가됨] 명세서 반영
 
 	UPROPERTY()
 	FString answer;
@@ -322,7 +322,7 @@ struct FUserDetail
 	GENERATED_BODY()
 
 	UPROPERTY()
-	int32 userId;
+	int32 userId = 0;
 
 	UPROPERTY()
 	FString userName;
@@ -354,7 +354,7 @@ struct FTeamChatMessageResponse
 	FString chatId;
 	
 	UPROPERTY()
-	int32 userId;
+	int32 userId = 0;
 	
 	UPROPERTY()
 	FString userName;
@@ -374,7 +374,7 @@ struct FChatMessageRequest
 	GENERATED_BODY()
 
 	UPROPERTY()
-	int32 userId;
+	int32 userId = 0;
 	
 	UPROPERTY()
 	FString message;

@@ -19,7 +19,7 @@ struct FTeamUser
 	GENERATED_BODY()
 
 	UPROPERTY()
-	int32 UserId;
+	int32 UserId = 0;
 
 	UPROPERTY()
 	FString UserName;
@@ -47,8 +47,10 @@ protected:
 
 	UFUNCTION(Server, Reliable)
 	void Server_InitPlayerInfo(int32 UID, const FString& Name, const FString& Type, int32 Tendency);
+public:
 	UFUNCTION(Server, Reliable)
 	void Server_InitPlayerArray();
+protected:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_InitPlayerArray();
 

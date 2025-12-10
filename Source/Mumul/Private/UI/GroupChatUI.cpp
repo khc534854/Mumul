@@ -710,6 +710,8 @@ void UGroupChatUI::SetGroupNameTitle(const FString& GroupName)
 
 void UGroupChatUI::ToggleCreateGroupChatUI()
 {
+	CreateGroupChatUI->RefreshJoinedPlayerList();
+	
 	ToggleVisibility(CreateGroupChatBox);
 	if (InvitationBox->GetVisibility() == ESlateVisibility::Visible)
 	{
@@ -724,6 +726,8 @@ void UGroupChatUI::AddGroupIcon(UGroupIconUI* UI) const
 
 void UGroupChatUI::ToggleInvitationUI()
 {
+	InvitationUI->RefreshJoinedPlayerList();
+	
 	ToggleVisibility(InvitationBox);
 	if (CreateGroupChatBox->GetVisibility() == ESlateVisibility::Visible)
 	{

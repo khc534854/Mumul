@@ -237,6 +237,7 @@ void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const
 	if (PS)
 	{
 		PS->PS_UserIndex = UID;
+		PS->OnRep_UserIndex();
 		PS->SetPlayerName(Name);
 		PS->PS_RealName = Name;
 		PS->PS_UserType = Type;
@@ -284,6 +285,16 @@ void ACuteAlienController::Server_InitPlayerArray_Implementation()
 void ACuteAlienController::Multicast_InitPlayerArray_Implementation()
 {
 	OnPlayerArrayUpdated.Broadcast();
+	
+	// Get TeamChatList
+	if (HttpSystem)
+	{
+		if (APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+		{
+			AMumulPlayerState* PS = PC->GetPlayerState<AMumulPlayerState>();
+			HttpSystem->SendTeamChatListRequest(PS->PS_UserIndex);
+		}
+	}
 }
 
 void ACuteAlienController::Tick(float DeltaSeconds)
@@ -904,14 +915,6 @@ void ACuteAlienController::TryInitPlayerInfo()
 			GI->PlayerTendency
 		);
 
-		Server_InitPlayerArray();
-
-		if (HttpSystem)
-		{
-			// PS가 이제 확실히 있으므로 안전하게 접근 가능
-			HttpSystem->SendTeamChatListRequest(PS->PS_UserIndex);
-		}
-
 		UE_LOG(LogTemp, Log, TEXT("[Client] Sent Init Info: %s (ID: %d)"), *GI->PlayerName, GI->PlayerUniqueID);
 	}
 }
@@ -1095,8 +1098,11 @@ void ACuteAlienController::Server_RequestTeamChatList_Implementation()
 void ACuteAlienController::Multicast_RequestTeamChatList_Implementation()
 {
 	// Get TeamChatList
-	AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>();
-	HttpSystem->SendTeamChatListRequest(PS->PS_UserIndex);
+	if (APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+	{
+		AMumulPlayerState* PS = PC->GetPlayerState<AMumulPlayerState>();
+		HttpSystem->SendTeamChatListRequest(PS->PS_UserIndex);
+	}
 }
 
 void ACuteAlienController::Server_CreateGroupChatUI_Implementation(const TArray<int32>& UserIDs, const FString& TeamID,
