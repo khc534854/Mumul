@@ -21,11 +21,11 @@ public:
     class UWidgetSwitcher* WidgetSwitcher;
 
     // --- [기존] 메인 메뉴 ---
-    UPROPERTY(meta=(BindWidget))
-    class UButton* btn_goCreate;
-
-    UPROPERTY(meta=(BindWidget))
-    class UButton* btn_goFind;
+    // UPROPERTY(meta=(BindWidget))
+    // class UButton* btn_goCreate;
+    //
+    // UPROPERTY(meta=(BindWidget))
+    // class UButton* btn_goFind;
     
     // --- [추가] 로그인 화면 UI ---
     UPROPERTY(meta=(BindWidget))
@@ -101,4 +101,18 @@ private:
     void OnServerLoginResponse(bool bSuccess, FString Message);
 
     FString PendingID;
+
+protected:
+    UPROPERTY(meta=(BindWidget))
+    class UBaseText* QuestionCountText;
+
+    UPROPERTY(meta=(BindWidget))
+    class UBaseText* QuestionText;
+    
+    UPROPERTY(meta=(BindWidget))
+    class UBaseButton* btn_SurveyYes;
+    
+    UPROPERTY(meta=(BindWidget))
+    class UBaseButton* btn_SurveyNo;
+    
 };

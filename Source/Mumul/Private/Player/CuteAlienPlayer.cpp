@@ -5,13 +5,14 @@
 
 #include "Base/MumulGameState.h"
 #include "Components/SceneCaptureComponent2D.h"
+#include "Data/FCustomItemData.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Player/MumulPlayerState.h"
 #include "Player/VoiceChatComponent.h"
 #include "Kismet/KismetRenderingLibrary.h"
 #include "Player/CuteAlienAnim.h"
 
-
+static const FString ItemDataTablePath = TEXT("/Game/Khc/Blueprint/Object/CustomItemList.CustomItemList");
 // Sets default values
 ACuteAlienPlayer::ACuteAlienPlayer()
 {
@@ -68,7 +69,10 @@ TEXT("/Game/Yeomin/Characters/CuteAlien/Animations/Animation2/Greeting2_Montage.
 	MinimapCapture = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("MinimapCapture"));
 	MinimapCapture->SetupAttachment(MinimapSpringArm);
 
-
+	CustomMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CosmeticMesh"));
+	CustomMeshComponent->SetupAttachment(GetMesh()); // 캐릭터의 스켈레탈 메시에 부착
+	CustomMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CustomMeshComponent->SetRelativeScale3D(FVector::OneVector);
 }
 
 // Called when the game starts or when spawned
@@ -131,6 +135,86 @@ void ACuteAlienPlayer::Tick(float DeltaTime)
 void ACuteAlienPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+}
+
+void ACuteAlienPlayer::Server_EquipCustom_Implementation(FName ItemID)
+{
+	AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>();
+	if (PS)
+	{
+		// 이미 장착된 아이템을 해제하거나, 새 아이템을 장착합니다.
+		if (PS->EquippedCustomID == ItemID)
+		{
+			// 같은 아이템을 다시 클릭하면 해제합니다.
+			PS->EquippedCustomID = NAME_None;
+		}
+		else
+		{
+			PS->EquippedCustomID = ItemID;
+		}
+
+		PS->OnRep_EquippedCustomID();
+	}
+}
+
+void ACuteAlienPlayer::UpdateCustomMesh(FName ItemID)
+{
+	if (!CustomMeshComponent) return;
+
+	if (ItemID == NAME_None) // 아이템 해제 명령
+	{
+		CustomMeshComponent->SetStaticMesh(nullptr);
+		// 부착 상태를 유지할 경우 부착 해제는 선택적입니다. (KeepRelativeTransform)
+		// CosmeticMeshComponent->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+		return;
+	}
+
+	// 1. 데이터 테이블 로드 및 아이템 데이터 찾기 (동기 로드)
+	UDataTable* ItemDataTable = LoadObject<UDataTable>(nullptr, *ItemDataTablePath);
+
+	if (ItemDataTable)
+	{
+		// FCustomItemData를 사용
+		FCustomItemData* ItemData = ItemDataTable->FindRow<FCustomItemData>(ItemID, TEXT("Cosmetic Load"));
+
+		if (ItemData)
+		{
+			// TSoftObjectPtr의 에셋을 동기적으로 로드
+			UStaticMesh* MeshToEquip = ItemData->ItemStaticMesh.LoadSynchronous();
+
+			if (MeshToEquip)
+			{
+				// 2. 메시 설정 및 부착
+				CustomMeshComponent->SetStaticMesh(MeshToEquip);
+            
+				// 소켓에 부착 (GetMesh()는 캐릭터의 스켈레탈 메시 컴포넌트)
+				CustomMeshComponent->AttachToComponent(
+					GetMesh(), 
+					FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+					ItemData->AttachSocketName // 데이터에 저장된 소켓 이름 사용
+				);
+            
+				// 3. 트랜스폼 오프셋 적용
+				CustomMeshComponent->SetRelativeTransform(ItemData->RelativeTransform);
+				return;
+			}
+			else
+			{
+				UE_LOG(LogTemp, Error, TEXT("[Cosmetic] Failed to load Static Mesh for item: %s"), *ItemID.ToString());
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("[Cosmetic] Failed to find row for item: %s"), *ItemID.ToString());
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Cosmetic] Item DataTable not found at: %s"), *ItemDataTablePath);
+	}
+	
+	// 실패 시 안전하게 메시 제거
+	CustomMeshComponent->SetStaticMesh(nullptr);
 }
 
 void ACuteAlienPlayer::Server_PlayAlienDance_Implementation(int32 SelectIdx)

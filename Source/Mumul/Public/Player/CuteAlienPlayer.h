@@ -41,7 +41,9 @@ protected:
 	TObjectPtr<class UAnimMontage> DanceMontage6;
 	UPROPERTY()
 	TObjectPtr<class UAnimMontage> DanceMontage7;
-	
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Customs")
+	UStaticMeshComponent* CustomMeshComponent;
 	
 public:
 	UFUNCTION(Server, Reliable)
@@ -52,6 +54,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class UVoiceChatComponent* VoiceComponent;
 
+	//Minimap
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	class USpringArmComponent* MinimapSpringArm;
@@ -61,4 +64,12 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Minimap")
 	class UTextureRenderTarget2D* MinimapRenderTarget;
+
+	// Custom Item
+public:
+	UFUNCTION(Server, Reliable)
+	void Server_EquipCustom(FName ItemID);
+
+	void UpdateCustomMesh(FName ItemID);
+	
 };

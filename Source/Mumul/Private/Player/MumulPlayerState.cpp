@@ -6,6 +6,7 @@
 #include "Base/MumulGameState.h"
 #include "Net/UnrealNetwork.h"
 #include "Player/CuteAlienController.h"
+#include "Player/CuteAlienPlayer.h"
 
 void AMumulPlayerState::Server_SetVoiceChannelID_Implementation(const FString& NewChannelID)
 {
@@ -59,6 +60,7 @@ void AMumulPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(AMumulPlayerState, PS_PlayerTeamList);
 	DOREPLIFETIME(AMumulPlayerState, bIsTentInstalled);
 	DOREPLIFETIME(AMumulPlayerState, bIsNearByCampFire);
+	DOREPLIFETIME(AMumulPlayerState, EquippedCustomID);
 }
 
 void AMumulPlayerState::OnRep_VoiceChannelID()
@@ -67,5 +69,13 @@ void AMumulPlayerState::OnRep_VoiceChannelID()
 	if (ACuteAlienController* MyPC = Cast<ACuteAlienController>(LocalPC))
 	{
 		MyPC->UpdateVoiceChannelMuting();
+	}
+}
+
+void AMumulPlayerState::OnRep_EquippedCustomID()
+{
+	if (ACuteAlienPlayer* Character = Cast<ACuteAlienPlayer>(GetPawn()))
+	{
+		Character->UpdateCustomMesh(EquippedCustomID);
 	}
 }

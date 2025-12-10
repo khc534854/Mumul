@@ -36,8 +36,8 @@ void ULobbyWidget::NativeConstruct()
     }
     
     // 기존 버튼 바인딩
-    btn_goCreate->OnClicked.AddDynamic(this,&ULobbyWidget::OnClickGoCreate);
-    btn_goFind->OnClicked.AddDynamic(this,&ULobbyWidget::OnClickGoFind);
+    //btn_goCreate->OnClicked.AddDynamic(this,&ULobbyWidget::OnClickGoCreate);
+    //btn_goFind->OnClicked.AddDynamic(this,&ULobbyWidget::OnClickGoFind);
     btn_Create->OnClicked.AddDynamic(this,&ULobbyWidget::OnClickCreate);
     editSessionName->OnTextChanged.AddDynamic(this,&ULobbyWidget::OnValudeChangedSessionName);
     sliderPlayerCount->OnValueChanged.AddDynamic(this,&ULobbyWidget::OnValudeChangedPlayerCount);

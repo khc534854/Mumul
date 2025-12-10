@@ -64,10 +64,17 @@ public:
 	UFUNCTION(BlueprintCallable, Server, Reliable)
 	void Server_SetVoiceChannelID(const FString& NewChannelID);
 
+	UPROPERTY(ReplicatedUsing = OnRep_EquippedCustomID, BlueprintReadOnly, Category = "Customs")
+	FName EquippedCustomID = NAME_None;
+	
+	UFUNCTION()
+	void OnRep_EquippedCustomID();
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	// ID가 변경되면 호출되는 함수 (클라이언트)
 	UFUNCTION()
 	void OnRep_VoiceChannelID();
+
+
 };
