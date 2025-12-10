@@ -279,6 +279,9 @@ struct FWSRequest_Query
 
 	UPROPERTY()
 	FString query;
+	
+	UPROPERTY()
+	FString grade;
 };
 
 // 3. 세션 종료 (end_chat)
