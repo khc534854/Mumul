@@ -42,9 +42,15 @@ protected:
 	
 	UPROPERTY()
 	TObjectPtr<class AMumulGameState> GS;
+	UPROPERTY()
+	TObjectPtr<class UHttpNetworkSubsystem> HttpSystem;
 
 	UFUNCTION(Server, Reliable)
 	void Server_InitPlayerInfo(int32 UID, const FString& Name, const FString& Type, int32 Tendency);
+	UFUNCTION(Server, Reliable)
+	void Server_InitPlayerArray();
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_InitPlayerArray();
 
 	UPROPERTY()
 	TObjectPtr<class UInputMappingContext> IMC_Player;
@@ -200,6 +206,11 @@ public:
 	
 	UPROPERTY()
 	TObjectPtr<class UIMGManager> IMGManager;
+
+	UFUNCTION(Server, Reliable)
+	void Server_RequestTeamChatList();
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_RequestTeamChatList();
 	
 	UFUNCTION(Server, Reliable)
 	void Server_CreateGroupChatUI(const TArray<int32>& UserIDs, const FString& TeamID, const FString& TeamName,

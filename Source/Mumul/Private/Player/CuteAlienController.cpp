@@ -145,7 +145,8 @@ void ACuteAlienController::BeginPlay()
 
 	GS = Cast<AMumulGameState>(GetWorld()->GetGameState());
 
-	if (UHttpNetworkSubsystem* HttpSystem = GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>())
+	HttpSystem = GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>();
+	if (HttpSystem)
 	{
 		HttpSystem->OnCreateTeamChatResponse.AddDynamic(this, &ACuteAlienController::OnServerCreateTeamChatResponse);
 		// [이동] HTTP 응답 바인딩은 여기서 한 번만 해도 됩니다.
@@ -273,6 +274,16 @@ void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const
 
 		UE_LOG(LogTemp, Log, TEXT("[Server] PlayerState Initialized: %s (ID: %d)"), *Name, UID);
 	}
+}
+
+void ACuteAlienController::Server_InitPlayerArray_Implementation()
+{
+	Multicast_InitPlayerArray();
+}
+
+void ACuteAlienController::Multicast_InitPlayerArray_Implementation()
+{
+	OnPlayerArrayUpdated.Broadcast();
 }
 
 void ACuteAlienController::Tick(float DeltaSeconds)
@@ -522,7 +533,7 @@ void ACuteAlienController::RequestStartMeetingRecording(FString InMeetingTitle, 
 
 		// [HTTP] 방장(Organizer)이 Start Meeting API 호출
 		// (서버 응답이 오면 OnStartMeetingResponse가 실행됨)
-		if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
+		if (HttpSystem)
 		{
 			HttpSystem->StartMeetingRequest(
 				InMeetingTitle,
@@ -710,7 +721,7 @@ void ACuteAlienController::Client_RequestJoinMeeting_Implementation(const FStrin
 	UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
 	if (GI)
 	{
-		if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
+		if (HttpSystem)
 		{
 			// [HTTP] Join Meeting API 호출
 			GroupChatUI->OnRecordBtnState(true);
@@ -893,7 +904,9 @@ void ACuteAlienController::TryInitPlayerInfo()
 			GI->PlayerTendency
 		);
 
-		if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
+		Server_InitPlayerArray();
+
+		if (HttpSystem)
 		{
 			// PS가 이제 확실히 있으므로 안전하게 접근 가능
 			HttpSystem->SendTeamChatListRequest(PS->PS_UserIndex);
@@ -1024,43 +1037,43 @@ void ACuteAlienController::OnServerCreateTeamChatResponse(bool bSuccess, FString
 
 		if (FJsonObjectConverter::JsonObjectStringToUStruct(Message, &CreateTeamChat, 0, 0))
 		{
-			// JSON Parsing LOG
-			UE_LOG(LogTemp, Warning, TEXT("===== CreateTeamChat Response ====="));
-			UE_LOG(LogTemp, Warning, TEXT("groupId: %s"), *CreateTeamChat.groupId);
-			UE_LOG(LogTemp, Warning, TEXT("groupName: %s"), *CreateTeamChat.groupName);
-
-			UE_LOG(LogTemp, Warning, TEXT("userIdList (%d명):"), CreateTeamChat.userIdList.Num());
-			for (int32 UserID : CreateTeamChat.userIdList)
-			{
-				UE_LOG(LogTemp, Warning, TEXT(" - userId: %d"), UserID);
-			}
-
-			TArray<FTeamUser> TeamUserIDs;
-
-			FTeamData NewTeamData;
-			NewTeamData.UniqueTeamID = CreateTeamChat.groupId;
-			NewTeamData.TeamName = CreateTeamChat.groupName;
-			NewTeamData.TeamMateList = CreateTeamChat.userIdList;
-
-			for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
-			{
-				if (AMumulPlayerState* MPS = Cast<AMumulPlayerState>(PS))
-				{
-					MPS->PS_PlayerTeamList.Add(NewTeamData);
-					if (CreateTeamChat.userIdList.Contains(MPS->PS_UserIndex))
-					{
-						FTeamUser NewUser;
-						NewUser.UserId = MPS->PS_UserIndex;
-						NewUser.UserName = MPS->PS_RealName;
-						TeamUserIDs.Add(NewUser);
-					}
-				}
-			}
+			// // JSON Parsing LOG
+			// UE_LOG(LogTemp, Warning, TEXT("===== CreateTeamChat Response ====="));
+			// UE_LOG(LogTemp, Warning, TEXT("groupId: %s"), *CreateTeamChat.groupId);
+			// UE_LOG(LogTemp, Warning, TEXT("groupName: %s"), *CreateTeamChat.groupName);
+			//
+			// UE_LOG(LogTemp, Warning, TEXT("userIdList (%d명):"), CreateTeamChat.userIdList.Num());
+			// for (int32 UserID : CreateTeamChat.userIdList)
+			// {
+			// 	UE_LOG(LogTemp, Warning, TEXT(" - userId: %d"), UserID);
+			// }
+			//
+			// TArray<FTeamUser> TeamUserIDs;
+			//
+			// FTeamData NewTeamData;
+			// NewTeamData.UniqueTeamID = CreateTeamChat.groupId;
+			// NewTeamData.TeamName = CreateTeamChat.groupName;
+			// NewTeamData.TeamMateList = CreateTeamChat.userIdList;
+			//
+			// for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
+			// {
+			// 	if (AMumulPlayerState* MPS = Cast<AMumulPlayerState>(PS))
+			// 	{
+			// 		MPS->PS_PlayerTeamList.Add(NewTeamData);
+			// 		if (CreateTeamChat.userIdList.Contains(MPS->PS_UserIndex))
+			// 		{
+			// 			FTeamUser NewUser;
+			// 			NewUser.UserId = MPS->PS_UserIndex;
+			// 			NewUser.UserName = MPS->PS_RealName;
+			// 			TeamUserIDs.Add(NewUser);
+			// 		}
+			// 	}
+			// }
 
 			if (IsLocalController())
 			{
-				Server_CreateGroupChatUI(CreateTeamChat.userIdList, CreateTeamChat.groupId, CreateTeamChat.groupName,
-				                         TeamUserIDs);
+				Server_RequestTeamChatList();
+				// Server_CreateGroupChatUI(CreateTeamChat.userIdList, CreateTeamChat.groupId, CreateTeamChat.groupName, TeamUserIDs);
 			}
 		}
 		else
@@ -1072,6 +1085,18 @@ void ACuteAlienController::OnServerCreateTeamChatResponse(bool bSuccess, FString
 	{
 		UE_LOG(LogTemp, Error, TEXT("CreateTeamChat Response 실패 : %s"), *Message);
 	}
+}
+
+void ACuteAlienController::Server_RequestTeamChatList_Implementation()
+{
+	Multicast_RequestTeamChatList();
+}
+
+void ACuteAlienController::Multicast_RequestTeamChatList_Implementation()
+{
+	// Get TeamChatList
+	AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>();
+	HttpSystem->SendTeamChatListRequest(PS->PS_UserIndex);
 }
 
 void ACuteAlienController::Server_CreateGroupChatUI_Implementation(const TArray<int32>& UserIDs, const FString& TeamID,

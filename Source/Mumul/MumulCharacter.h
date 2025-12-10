@@ -62,10 +62,16 @@ protected:
 	void Server_OnJump(const FInputActionValue& Value);
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_OnJumpAnimation();
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_OnRollAnimation();
 	UPROPERTY()
 	TObjectPtr<class UCuteAlienAnim> PlayerAnim;
 	UPROPERTY()
 	TObjectPtr<class UAnimMontage> JumpMontage;
+	UPROPERTY(EditDefaultsOnly, Category = "Montage")
+	TObjectPtr<class UAnimMontage> RollMontage;
+	UPROPERTY(EditDefaultsOnly, Category = "Roll Velocity")
+	float RollStrength = 100.f;
 
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
