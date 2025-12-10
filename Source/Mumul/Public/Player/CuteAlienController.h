@@ -19,7 +19,7 @@ struct FTeamUser
 	GENERATED_BODY()
 
 	UPROPERTY()
-	int32 UserId;
+	int32 UserId = 0;
 
 	UPROPERTY()
 	FString UserName;
