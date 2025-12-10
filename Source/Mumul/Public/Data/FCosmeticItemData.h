@@ -4,7 +4,7 @@
 #include "Engine/DataTable.h" // FTableRowBase 사용을 위해 추가
 #include "Engine/StaticMesh.h"
 #include "Engine/Texture2D.h"
-#include "CosmeticItemData.generated.h"
+#include "FCosmeticItemData.generated.h"
 
 // [아이템 정보를 담을 구조체]
 USTRUCT(BlueprintType)
