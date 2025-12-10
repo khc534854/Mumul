@@ -1095,8 +1095,11 @@ void ACuteAlienController::Server_RequestTeamChatList_Implementation()
 void ACuteAlienController::Multicast_RequestTeamChatList_Implementation()
 {
 	// Get TeamChatList
-	AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>();
-	HttpSystem->SendTeamChatListRequest(PS->PS_UserIndex);
+	if (APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+	{
+		AMumulPlayerState* PS = PC->GetPlayerState<AMumulPlayerState>();
+		HttpSystem->SendTeamChatListRequest(PS->PS_UserIndex);
+	}
 }
 
 void ACuteAlienController::Server_CreateGroupChatUI_Implementation(const TArray<int32>& UserIDs, const FString& TeamID,
