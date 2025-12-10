@@ -34,6 +34,19 @@ void AMumulPlayerState::Server_SetVoiceChannelID_Implementation(const FString& N
 	}
 }
 
+void AMumulPlayerState::OnRep_UserIndex()
+{
+	// TeamList, UserProfileList 초기화
+	if (APlayerController* PC = Cast<APlayerController>(GetOwner()))
+	{
+		ACuteAlienController* CAPC = Cast<ACuteAlienController>(PC);
+		if (CAPC)
+		{
+			CAPC->Server_InitPlayerArray();
+		}
+	}
+}
+
 void AMumulPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

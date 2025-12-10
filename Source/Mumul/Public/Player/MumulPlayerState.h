@@ -7,7 +7,6 @@
 #include "MumulPlayerState.generated.h"
 
 
-
 USTRUCT(Blueprintable)
 struct FTeamData
 {
@@ -33,8 +32,10 @@ class MUMUL_API AMumulPlayerState : public APlayerState
 
 	// Player Information
 public:
-	UPROPERTY(Replicated, BlueprintReadOnly, Category = "User Info")
+	UPROPERTY(ReplicatedUsing = OnRep_UserIndex, BlueprintReadOnly, Category = "User Info")
 	int32 PS_UserIndex = 0; // userId
+	UFUNCTION()
+	void OnRep_UserIndex();
 
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "User Info")
 	FString PS_RealName; // name
@@ -47,13 +48,13 @@ public:
 
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "User Info")
 	TArray<FTeamData> PS_PlayerTeamList;
-	
+
 	// 현재 보이스 채널 ID (Replicated)
 	UPROPERTY(ReplicatedUsing = OnRep_VoiceChannelID, BlueprintReadOnly, Category = "Voice")
 	FString VoiceChannelID = TEXT("None"); // 0: 로비, 1~N: 특정 채널
 
 	FString WaitingChannelID = TEXT("Lobby");
-	
+
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Game State")
 	bool bIsTentInstalled;
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Game State")
