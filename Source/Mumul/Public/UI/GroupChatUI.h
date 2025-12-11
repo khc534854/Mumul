@@ -9,6 +9,15 @@
 /**
  * 
  */
+UENUM(BlueprintType)
+enum class EMumuLeeDifficulty : uint8
+{
+	Beginner,
+	Normal,
+	Advanced
+};
+
+
 UCLASS()
 class MUMUL_API UGroupChatUI : public UUserWidget
 {
@@ -17,6 +26,8 @@ class MUMUL_API UGroupChatUI : public UUserWidget
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+	
+	EMumuLeeDifficulty Difficulty = EMumuLeeDifficulty::Beginner;
 	
 	UPROPERTY()
 	TObjectPtr<class UIMGManager> IMGManager;
@@ -208,5 +219,20 @@ public:
 	void OnRecordBtnState(bool bIsOn);
 	
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UScaleBox> NaNumiScaleBox;
+	TObjectPtr<class USizeBox> MumuLeeSizeBox;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class USizeBox> NaNumiSizeBox;
+	
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UButton> BeginnerBtn;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UButton> IntermediateBtn;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UButton> AdvancedBtn;
+	UFUNCTION()
+	void OnBeginnerClicked();
+	UFUNCTION()
+	void OnNormalClicked();
+	UFUNCTION()
+	void OnAdvancedClicked();
 };

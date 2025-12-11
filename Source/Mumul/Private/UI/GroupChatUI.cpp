@@ -28,7 +28,6 @@
 #include "Components/VerticalBoxSlot.h"
 #include "Library/MathLibrary.h"
 #include "Data/IMGManager.h"
-#include "UI/BotChatMessageBlockUI.h"
 
 void UGroupChatUI::NativeConstruct()
 {
@@ -74,19 +73,35 @@ void UGroupChatUI::NativeConstruct()
 		WebSocketSystem->OnMeetingChatEnded.AddDynamic(this, &UGroupChatUI::OnMeetingChatEnded);
 	}
 
-	if (InviteBtn && NaNumiScaleBox)
+	if (InviteBtn && NaNumiSizeBox && MumuLeeSizeBox)
 	{
 		InviteBtn->SetVisibility(ESlateVisibility::Collapsed);
-		NaNumiScaleBox->SetVisibility(ESlateVisibility::Collapsed);
+		MumuLeeSizeBox->SetVisibility(ESlateVisibility::Collapsed);
+		NaNumiSizeBox->SetVisibility(ESlateVisibility::Collapsed);
 	}
 
 	if (QuestionBtn)
 	{
 		QuestionBtn->OnClicked.AddDynamic(this, &UGroupChatUI::OnClickQuestionBtn);
 	}
+	
+	if (BeginnerBtn && IntermediateBtn && AdvancedBtn)
+	{
+		BeginnerBtn->OnClicked.AddDynamic(this, &UGroupChatUI::OnBeginnerClicked);
+		IntermediateBtn->OnClicked.AddDynamic(this, &UGroupChatUI::OnNormalClicked);
+		AdvancedBtn->OnClicked.AddDynamic(this, &UGroupChatUI::OnAdvancedClicked);
+	}
 
 	// [신규] 챗봇 방 생성 및 상단 배치
 	InitChatbotRoom();
+	
+	// 테스트용 팀채팅
+	UGroupIconUI* GroupIconUI = CreateWidget<UGroupIconUI>(GetWorld(), GroupIconUIClass);
+	AddGroupIcon(GroupIconUI);
+	GroupIconUI->InitParentUI(this);
+	GroupIconUI->ChatBlockUI->SetTeamID(TEXT("testteam"));
+	GroupIconUI->ChatBlockUI->SetTeamName(TEXT("테스트용"));
+	GroupIconUI->ChatBlockUI->AddTeamUser(1220, TEXT("테스트 유저"));
 }
 
 void UGroupChatUI::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
@@ -150,10 +165,12 @@ void UGroupChatUI::SelectGroupChat(class UGroupIconUI* SelectedIcon)
 			WebSocketSystem->Close();
 		}
 		bIsMeetingChatbotActive = false;
-		if (InviteBtn && NaNumiScaleBox)
+		if (InviteBtn && NaNumiSizeBox && MumuLeeSizeBox)
 		{
+			MumuLeeSizeBox->SetVisibility(ESlateVisibility::Visible);
+			
 			InviteBtn->SetVisibility(ESlateVisibility::Collapsed);
-			NaNumiScaleBox->SetVisibility(ESlateVisibility::Collapsed);
+			NaNumiSizeBox->SetVisibility(ESlateVisibility::Collapsed);
 		}
 	}
 
@@ -170,11 +187,13 @@ void UGroupChatUI::SelectGroupChat(class UGroupIconUI* SelectedIcon)
 	// 3. 새 방 진입 처리
 	if (SelectedIcon->bIsChatbotRoom)
 	{
-		if (InviteBtn && NaNumiScaleBox)
+		if (InviteBtn && NaNumiSizeBox && MumuLeeSizeBox)
 		{
 			ChatbotIcon->SetIconIMG(MumuLeeOnIMG);
+			MumuLeeSizeBox->SetVisibility(ESlateVisibility::Visible);
+			
 			InviteBtn->SetVisibility(ESlateVisibility::Collapsed);
-			NaNumiScaleBox->SetVisibility(ESlateVisibility::Collapsed);
+			NaNumiSizeBox->SetVisibility(ESlateVisibility::Collapsed);
 		}
 		if (SelectedIcon->ChatBlockUI)
 		{
@@ -221,11 +240,13 @@ void UGroupChatUI::SelectGroupChat(class UGroupIconUI* SelectedIcon)
 	}
 	else
 	{
-		if (InviteBtn && QuestionBtn && NaNumiScaleBox)
+		if (InviteBtn && QuestionBtn && NaNumiSizeBox && MumuLeeSizeBox)
 		{
 			ChatbotIcon->SetIconIMG(MumuLeeOffIMG);
+			MumuLeeSizeBox->SetVisibility(ESlateVisibility::Collapsed);
+			
 			InviteBtn->SetVisibility(ESlateVisibility::Visible);
-			NaNumiScaleBox->SetVisibility(ESlateVisibility::Visible);
+			NaNumiSizeBox->SetVisibility(ESlateVisibility::Visible);
 
 			// 방을 옮겼으므로 AI 도우미는 꺼진 상태로 초기화
 			bIsMeetingChatbotActive = false;
@@ -517,6 +538,20 @@ void UGroupChatUI::OnTextBoxCommitted()
 	UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
 	FString MyName = GI ? GI->PlayerName : TEXT("Me");
 	int32 MyID = GI ? GI->PlayerUniqueID : 0;
+	
+	FString Grade;
+	switch (Difficulty)
+	{
+	case EMumuLeeDifficulty::Beginner:
+		Grade = FString(TEXT("초급"));
+		break;
+	case EMumuLeeDifficulty::Normal:
+		Grade = FString(TEXT("중급"));
+		break;
+	case EMumuLeeDifficulty::Advanced:
+		Grade = FString(TEXT("고급"));
+		break;
+	}
 
 
 	// [핵심 수정: 2. 텍스트 박스 내용을 비웁니다.]
@@ -539,6 +574,7 @@ void UGroupChatUI::OnTextBoxCommitted()
 			QueryReq.sessionId = MyID; // 학습 챗봇은 sessionId = userId
 			QueryReq.userId = MyID;
 			QueryReq.query = Content;
+			QueryReq.grade = Grade;
 			WebSocketSystem->SendStructMessage(QueryReq);
 		}
 		else
@@ -957,4 +993,28 @@ void UGroupChatUI::OnRecordBtnState(bool bIsOn)
 		RecordText0->BaseText->SetText(FText::FromString(TEXT("나눔이로")));
 		RecordText1->BaseText->SetText(FText::FromString(TEXT("기록하기")));
 	}
+}
+
+void UGroupChatUI::OnBeginnerClicked()
+{
+	Difficulty = EMumuLeeDifficulty::Beginner;
+	BeginnerBtn->SetBackgroundColor(FLinearColor(0.2f, 1.0f, 0.2f, 1.0f));
+	IntermediateBtn->SetBackgroundColor(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));
+	AdvancedBtn->SetBackgroundColor(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));
+}
+
+void UGroupChatUI::OnNormalClicked()
+{
+	Difficulty = EMumuLeeDifficulty::Normal;
+	IntermediateBtn->SetBackgroundColor(FLinearColor(0.2f, 1.0f, 0.2f, 1.0f));
+	BeginnerBtn->SetBackgroundColor(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));
+	AdvancedBtn->SetBackgroundColor(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));
+}
+
+void UGroupChatUI::OnAdvancedClicked()
+{
+	Difficulty = EMumuLeeDifficulty::Advanced;
+	AdvancedBtn->SetBackgroundColor(FLinearColor(0.2f, 1.0f, 0.2f, 1.0f));
+	BeginnerBtn->SetBackgroundColor(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));
+	IntermediateBtn->SetBackgroundColor(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));
 }
