@@ -23,6 +23,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEndMeetingResponse, bool, bSucces
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnChatHistoryResponseReceived, bool, bSuccess, FString, Message);
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnHttpCompleteLowLevel, FHttpRequestPtr, FHttpResponsePtr, bool);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSurveyResultResponse, bool, bSuccess, FString, Message);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSurveyListResponse, bool, bSuccess, FString, Message);
 
 UCLASS()
 class MUMUL_API UHttpNetworkSubsystem : public UGameInstanceSubsystem
@@ -65,6 +66,8 @@ public:
 	FOnEndMeetingResponse OnEndMeeting;
 	UPROPERTY(BlueprintAssignable)
 	FOnSurveyResultResponse OnSurveyResultResponse;
+	UPROPERTY(BlueprintAssignable)
+	FOnSurveyListResponse OnSurveyListResponse;
 	
 	FOnHttpCompleteLowLevel OnSendVoiceCompleteDelegate_LowLevel;
 	
@@ -92,6 +95,9 @@ public:
 	// POST CreateTeamChat
 	UFUNCTION(BlueprintCallable, Category = "Network")
 	void SendCreateTeamChatRequest(const FString& TeamName, const TArray<int32>& UserIDs);
+
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void RequestSurveyData();
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnCreateTeamChatResponseReceived OnCreateTeamChatResponse;
@@ -109,6 +115,7 @@ private:
 	void OnChatMessageComplete(TSharedPtr<IHttpRequest> HttpRequest, TSharedPtr<IHttpResponse> HttpResponse, bool bArg) const;
 	void OnCreateTeamChatComplete(TSharedPtr<IHttpRequest> HttpRequest, TSharedPtr<IHttpResponse> HttpResponse, bool bArg) const;
 	void OnSurveyResultComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnSurveyListComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	
 	void AddString(TArray<uint8>& OutPayload, const FString& InString);

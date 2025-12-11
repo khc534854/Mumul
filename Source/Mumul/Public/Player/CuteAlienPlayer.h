@@ -65,8 +65,12 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Minimap")
 	class UTextureRenderTarget2D* MinimapRenderTarget;
 
+
 	// Custom Item
 public:
+	UPROPERTY(EditDefaultsOnly)
+	TArray<UMaterialInterface*> PlayerBodyMaterials;
+	
 	UFUNCTION(Server, Reliable)
 	void Server_EquipCustom(FName ItemID);
 

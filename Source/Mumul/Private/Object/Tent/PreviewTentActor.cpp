@@ -36,30 +36,71 @@ void APreviewTentActor::OnOverlap(UPrimitiveComponent* OverlappedComponent, AAct
                                   UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
                                   const FHitResult& SweepResult)
 {
-	if (OtherActor->IsA(ATentActor::StaticClass()))
+	if (OtherActor && (OtherActor->ActorHasTag("MainArea") ||
+		OtherActor->ActorHasTag("PlayerTent")))
 	{
-		bIsPlaceable = false;
-		for (TPair<TObjectPtr<UStaticMeshComponent>, TObjectPtr<UMaterialInstanceDynamic>>& Comp : SMeshMap)
+		// 1. 카운트 증가
+		OverlapCount++;
+
+		// 2. 하나라도 겹쳐 있다면 설치 불가 처리
+		if (OverlapCount > 0)
 		{
-			Comp.Value->SetVectorParameterValue(TEXT("EmissiveColor"), FLinearColor(1, 0, 0));
+			bIsPlaceable = false;
+            
+			// 머티리얼 빨간색 변경
+			for (auto& Elem : SMeshMap)
+			{
+				if (Elem.Value)
+				{
+					Elem.Value->SetVectorParameterValue(TEXT("EmissiveColor"), FLinearColor(1, 0, 0));
+				}
+			}
 		}
 	}
+	
+	
+	// if (OtherActor->IsA(ATentActor::StaticClass()))
+	// {
+	// 	bIsPlaceable = false;
+	// 	for (TPair<TObjectPtr<UStaticMeshComponent>, TObjectPtr<UMaterialInstanceDynamic>>& Comp : SMeshMap)
+	// 	{
+	// 		Comp.Value->SetVectorParameterValue(TEXT("EmissiveColor"), FLinearColor(1, 0, 0));
+	// 	}
+	// }
 }
 
 void APreviewTentActor::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (OtherActor->IsA(ATentActor::StaticClass()))
+	if (OtherActor && (OtherActor->ActorHasTag("MainArea") || OtherActor->ActorHasTag("PlayerTent")))
 	{
-		bIsPlaceable = true;
-		for (TPair<TObjectPtr<UStaticMeshComponent>, TObjectPtr<UMaterialInstanceDynamic>>& Comp : SMeshMap)
+		// 1. 카운트 감소
+		OverlapCount--;
+
+		// 방어 코드: 0보다 작아지지 않게 (혹시 모를 버그 방지)
+		if (OverlapCount < 0) OverlapCount = 0;
+
+		// 2. 겹친 물체가 하나도 없을 때만 설치 가능으로 변경
+		if (OverlapCount == 0)
 		{
-			if (Comp.Key->GetName() == TEXT("Cylinder"))
+			bIsPlaceable = true;
+
+			// 머티리얼 원래 색(초록색)으로 복구
+			for (auto& Elem : SMeshMap)
 			{
-				Comp.Value->SetVectorParameterValue(TEXT("EmissiveColor"), FLinearColor(0, 1, 0));
-				continue;
+				if (Elem.Value)
+				{
+					// 특정 파츠(Cylinder)만 다른 색이면 분기 처리
+					if (Elem.Key->GetName() == TEXT("Cylinder"))
+					{
+						Elem.Value->SetVectorParameterValue(TEXT("EmissiveColor"), FLinearColor(0, 1, 0));
+					}
+					else
+					{
+						Elem.Value->SetVectorParameterValue(TEXT("EmissiveColor"), FLinearColor(1, 1, 1));
+					}
+				}
 			}
-			Comp.Value->SetVectorParameterValue(TEXT("EmissiveColor"), FLinearColor(1, 1, 1));
 		}
 	}
 }

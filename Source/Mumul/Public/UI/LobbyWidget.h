@@ -72,6 +72,9 @@ public:
     UPROPERTY(meta=(BindWidget))
     class UButton* btn_Create;
 
+    UPROPERTY(meta=(BindWidget))
+    class UButton* btn_Create_1;
+
 public:
     //UFUNCTION()
     //void OnClickGoCreate();
@@ -133,6 +136,9 @@ protected:
     int32 CurrentQuestionIndex = 0;
     TArray<int32> SurveyResults;
 
+    UPROPERTY(Transient, meta = (BindWidgetAnim))
+    TObjectPtr<class UWidgetAnimation > PopResult;
+
     // 1. 설문조사 JSON 로드 및 파싱 (NativeConstruct에서 호출)
     void LoadSurveyData();
 
@@ -155,6 +161,9 @@ protected:
     // 5. 설문 결과 HTTP 응답 처리
     UFUNCTION()
     void OnSurveyResultResponse(bool bSuccess, FString Message);
+
+    UFUNCTION()
+    void OnSurveyListResponse(bool bSuccess, FString Message);
 
     UFUNCTION()
     void OnClickEnterGame();

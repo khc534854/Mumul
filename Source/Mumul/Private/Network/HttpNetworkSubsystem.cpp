@@ -615,6 +615,23 @@ void UHttpNetworkSubsystem::SendCreateTeamChatRequest(const FString& TeamName, c
 	Request->ProcessRequest();
 }
 
+void UHttpNetworkSubsystem::RequestSurveyData()
+{
+	// 3. HTTP 요청 생성
+	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
+	FString FullURL = FString::Printf(TEXT("%s/user/survey"), *BaseURL);
+	UE_LOG(LogTemp, Warning, TEXT("%s/user/survey"), *BaseURL);
+
+	Request->SetURL(FullURL);
+	Request->SetVerb("GET");
+	Request->SetHeader("Content-Type", "application/json");
+
+	// 4. 콜백 연결
+
+	Request->OnProcessRequestComplete().BindUObject(this, &UHttpNetworkSubsystem::OnSurveyListComplete);
+	Request->ProcessRequest();
+}
+
 void UHttpNetworkSubsystem::OnCreateTeamChatComplete(TSharedPtr<IHttpRequest> HttpRequest,
                                                      TSharedPtr<IHttpResponse> HttpResponse, bool bArg) const
 {
@@ -678,6 +695,37 @@ void UHttpNetworkSubsystem::OnSurveyResultComplete(FHttpRequestPtr Request, FHtt
 		else
 		{
 			OnSurveyResultResponse.Broadcast(false, FString::Printf(TEXT("설문 결과 전송 실패. 서버 코드: %d"), Code));
+		}
+	}
+}
+
+void UHttpNetworkSubsystem::OnSurveyListComplete(FHttpRequestPtr Request, FHttpResponsePtr Response,
+	bool bWasSuccessful)
+{
+	if (!bWasSuccessful || !Response.IsValid())
+	{
+		OnSurveyListResponse.Broadcast(false, TEXT("네트워크 연결 실패"));
+		return;
+	}
+
+	int32 Code = Response->GetResponseCode();
+	FString Content = Response->GetContentAsString();
+
+	if (Code == 200) // 성공
+	{
+		// 응답 JSON(typeCode 포함)을 위젯으로 전달
+		OnSurveyListResponse.Broadcast(true, Content);
+	}
+	else // 실패 (4xx, 5xx)
+	{
+		FFailResponse FailData;
+		if (FJsonObjectConverter::JsonObjectStringToUStruct(Content, &FailData, 0, 0))
+		{
+			OnSurveyListResponse.Broadcast(false, FailData.detail.message);
+		}
+		else
+		{
+			OnSurveyListResponse.Broadcast(false, FString::Printf(TEXT("설문 리스트 요청 실패. 서버 코드: %d"), Code));
 		}
 	}
 }

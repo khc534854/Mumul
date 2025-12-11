@@ -17,6 +17,7 @@ ATentActor::ATentActor()
 
 	bReplicates = true;
 	AActor::SetReplicateMovement(true);
+
 }
 
 // Called when the game starts or when spawned
@@ -126,6 +127,18 @@ void ATentActor::Deactivate()
 	bIsActive = false;
 }
 
+void ATentActor::OnRep_HousingItems()
+{
+}
+
+void ATentActor::Server_PlaceHousingItem(FName ItemID, FTransform Transform)
+{
+}
+
+void ATentActor::SpawnHousingItem(const FHousingSaveData& Data)
+{
+}
+
 void ATentActor::Mulicast_OnScaleAnimation_Implementation()
 {
 	TentSequence1st = 0.f;
@@ -135,9 +148,4 @@ void ATentActor::Mulicast_OnScaleAnimation_Implementation()
 void ATentActor::SetOwnerUserIndex(int32 NewUserIndex)
 {
 	OwnerUserIndex = NewUserIndex;
-
-	// if (ChildCampFire)
-	// {
-	// 	ChildCampFire->CampfireChannelID = NewUserIndex;
-	// }
 }

@@ -42,6 +42,7 @@ void ULobbyWidget::NativeConstruct()
     //btn_goCreate->OnClicked.AddDynamic(this,&ULobbyWidget::OnClickGoCreate);
     //btn_goFind->OnClicked.AddDynamic(this,&ULobbyWidget::OnClickGoFind);
     btn_Create->OnClicked.AddDynamic(this,&ULobbyWidget::OnClickCreate);
+    btn_Create_1->OnClicked.AddDynamic(this,&ULobbyWidget::OnClickCreate);
     editSessionName->OnTextChanged.AddDynamic(this,&ULobbyWidget::OnValudeChangedSessionName);
     sliderPlayerCount->OnValueChanged.AddDynamic(this,&ULobbyWidget::OnValudeChangedPlayerCount);
     btn_find->OnClicked.AddDynamic(this,&ULobbyWidget::OnClickFind);
@@ -61,6 +62,7 @@ void ULobbyWidget::NativeConstruct()
         {
             HttpSystem->OnLoginResponse.AddDynamic(this, &ULobbyWidget::OnServerLoginResponse);
             HttpSystem->OnSurveyResultResponse.AddDynamic(this, &ULobbyWidget::OnSurveyResultResponse);
+            HttpSystem->OnSurveyListResponse.AddDynamic(this, &ULobbyWidget::OnSurveyListResponse);
         }
     }
 
@@ -239,23 +241,13 @@ void ULobbyWidget::UpdateTendencyResultImage(int32 TendencyID)
 
 void ULobbyWidget::LoadSurveyData()
 {
-    FString JsonFilePath = FPaths::ProjectContentDir() / TEXT("Data/personal_survey.json");
-    
-    FString JsonString;
-    if (!FFileHelper::LoadFileToString(JsonString, *JsonFilePath))
+    if (UGameInstance* GI = GetGameInstance())
     {
-        UE_LOG(LogTemp, Error, TEXT("[Survey] Failed to load JSON file at: %s"), *JsonFilePath);
-        return;
-    }
-
-    if (FJsonObjectConverter::JsonObjectStringToUStruct(JsonString, &SurveyData, 0, 0))
-    {
-        UE_LOG(LogTemp, Log, TEXT("[Survey] Successfully loaded %d questions."), SurveyData.questions.Num());
-    }
-    else
-    {
-        UE_LOG(LogTemp, Error, TEXT("[Survey] Failed to parse JSON data."));
-    }
+        if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
+        {
+            HttpSystem->RequestSurveyData();
+        }
+    }   
 }
 
 void ULobbyWidget::UpdateSurveyUI()
@@ -317,6 +309,7 @@ void ULobbyWidget::OnSurveyChoiceClicked(int32 ChoiceIndex)
     {
         // 3. 모든 질문 완료 -> 결과 제출
         SendSurveyResult();
+        //WidgetSwitcher->SetActiveWidgetIndex(3);
     }
 }
 
@@ -364,13 +357,33 @@ void ULobbyWidget::OnSurveyResultResponse(bool bSuccess, FString Message)
             
             // 2. 메인 메뉴 화면으로 전환 (1번 화면)
             UpdateTendencyResultImage(GI->PlayerTendency);
-            WidgetSwitcher->SetActiveWidgetIndex(1); 
+            PlayAnimation(PopResult);
+            WidgetSwitcher->SetActiveWidgetIndex(3); 
         }
     }
     else
     {
         UE_LOG(LogTemp, Error, TEXT("[Survey] Result submission failed: %s"), *Message);
         // 사용자에게 실패 메시지 표시 (textLoginMsg 재활용 가능)
+    }
+}
+
+void ULobbyWidget::OnSurveyListResponse(bool bSuccess, FString Message)
+{
+    if (bSuccess)
+    {
+        if (FJsonObjectConverter::JsonObjectStringToUStruct(Message, &SurveyData, 0, 0))
+        {
+            UE_LOG(LogTemp, Error, TEXT("[Survey] List Parsing Complete"));
+
+            CurrentQuestionIndex = 0;
+            SurveyResults.Empty();
+            UpdateSurveyUI();
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("[Survey] List Is Not Complete"));
     }
 }
 

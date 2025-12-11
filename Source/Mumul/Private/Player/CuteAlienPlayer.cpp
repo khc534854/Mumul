@@ -103,6 +103,42 @@ void ACuteAlienPlayer::BeginPlay()
 			MinimapCapture->SetComponentTickEnabled(false);
 		}
 	}
+
+	AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>();
+	if (PS)
+	{
+		uint32 TendencyIdx = PS->PS_TendencyID;
+		if (TendencyIdx == 1 || TendencyIdx == 0)
+		{
+			GetMesh()->SetMaterial(0, PlayerBodyMaterials[0]);
+			GetMesh()->SetMaterial(2, PlayerBodyMaterials[1]);
+			GetMesh()->SetMaterial(3, PlayerBodyMaterials[2]);
+		}
+		else if (TendencyIdx == 2)
+		{
+			GetMesh()->SetMaterial(0, PlayerBodyMaterials[(TendencyIdx - 1) * 3]);
+			GetMesh()->SetMaterial(2, PlayerBodyMaterials[(TendencyIdx - 1) * 3 + 1]);
+			GetMesh()->SetMaterial(3, PlayerBodyMaterials[(TendencyIdx - 1) * 3 + 2]);
+		}
+		else if (TendencyIdx == 3)
+		{
+			GetMesh()->SetMaterial(0, PlayerBodyMaterials[(TendencyIdx - 1) * 3]);
+			GetMesh()->SetMaterial(2, PlayerBodyMaterials[(TendencyIdx - 1) * 3 + 1]);
+			GetMesh()->SetMaterial(3, PlayerBodyMaterials[(TendencyIdx - 1) * 3 + 2]);
+		}
+		else if (TendencyIdx == 4)
+		{
+			GetMesh()->SetMaterial(0, PlayerBodyMaterials[(TendencyIdx - 1) * 3]);
+			GetMesh()->SetMaterial(2, PlayerBodyMaterials[(TendencyIdx - 1) * 3 + 1]);
+			GetMesh()->SetMaterial(3, PlayerBodyMaterials[(TendencyIdx - 1) * 3 + 2]);
+		}
+		else if (TendencyIdx == 5)
+		{
+			GetMesh()->SetMaterial(0, PlayerBodyMaterials[(TendencyIdx - 1) * 3]);
+			GetMesh()->SetMaterial(2, PlayerBodyMaterials[(TendencyIdx - 1) * 3 + 1]);
+			GetMesh()->SetMaterial(3, PlayerBodyMaterials[(TendencyIdx - 1) * 3 + 2]);
+		}
+	}
 	
 }
 
