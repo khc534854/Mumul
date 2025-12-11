@@ -4,11 +4,19 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
+#include "Network/NetworkStructs.h"
 #include "MumulMumulGameMode.generated.h"
 
 /**
  * 
  */
+UENUM()
+enum class EQuizPhase : uint8
+{
+	Question,
+	Answer,
+};
+
 UCLASS()
 class MUMUL_API AMumulMumulGameMode : public AGameMode
 {
@@ -21,6 +29,9 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	UPROPERTY()
+	TObjectPtr<class AMumulGameState> GS;
+		
+	UPROPERTY()
 	TSubclassOf<class ATentActor> TentClass;
 	UPROPERTY(EditDefaultsOnly)
 	int32 PoolSize = 6;
@@ -31,4 +42,26 @@ protected:
 	void SaveUserData(AController* Controller);
 public:
 	void SpawnTent(const FTransform& SpawnTransform, int32 UserIndex, bool bSaveToDisk);
+	
+	TMap<TObjectPtr<class ACuteAlienController>, TArray<bool>> ParticipatingPlayers;
+	void RegisterQuizActor(class AOXQuizActor* InActor);
+protected:
+	UPROPERTY()
+	TObjectPtr<class AOXQuizActor> OXQuizActor;
+	FLearningQuizResponse LearningQuiz;
+	
+	UFUNCTION()
+	void OnServerLearningQuizResponse(bool bSuccess, FString Message);
+	
+	EQuizPhase QuizPhase = EQuizPhase::Question;
+	
+	int32 CurrentQuizIdx;
+	int32 MaxQuizCount;
+	FTimerHandle QuizTimer;
+	void StartLearningQuiz();
+	void StartQuestionPhase();
+	void EnterNextStep();
+	void StartAnswerPhase();
+	
+	void ShowResult();
 };

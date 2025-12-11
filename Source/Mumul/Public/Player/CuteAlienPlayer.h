@@ -71,7 +71,4 @@ public:
 	void Server_EquipCustom(FName ItemID);
 
 	void UpdateCustomMesh(FName ItemID);
-	
-	UFUNCTION(BlueprintCallable)
-	void LearningQuizTestFunc();
 };

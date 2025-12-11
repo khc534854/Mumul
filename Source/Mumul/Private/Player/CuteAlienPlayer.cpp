@@ -27,37 +27,37 @@ ACuteAlienPlayer::ACuteAlienPlayer()
 		DanceMontage1 = Dance1MontageFinder.Object;
 	}
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> Dance2MontageFinder(
-	TEXT("/Game/Yeomin/Characters/CuteAlien/Animations/Animation2/PopPinDance_Montage.PopPinDance_Montage"));
+		TEXT("/Game/Yeomin/Characters/CuteAlien/Animations/Animation2/PopPinDance_Montage.PopPinDance_Montage"));
 	if (Dance2MontageFinder.Succeeded())
 	{
 		DanceMontage2 = Dance2MontageFinder.Object;
 	}
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> Dance3MontageFinder(
-	TEXT("/Game/Yeomin/Characters/CuteAlien/Animations/Animation2/StepDance_Montage.StepDance_Montage"));
+		TEXT("/Game/Yeomin/Characters/CuteAlien/Animations/Animation2/StepDance_Montage.StepDance_Montage"));
 	if (Dance3MontageFinder.Succeeded())
 	{
 		DanceMontage3 = Dance3MontageFinder.Object;
 	}
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> Dance4MontageFinder(
-	TEXT("/Game/Yeomin/Characters/CuteAlien/Animations/Animation2/FootDance_Montage.FootDance_Montage"));
+		TEXT("/Game/Yeomin/Characters/CuteAlien/Animations/Animation2/FootDance_Montage.FootDance_Montage"));
 	if (Dance1MontageFinder.Succeeded())
 	{
 		DanceMontage4 = Dance4MontageFinder.Object;
 	}
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> Dance5MontageFinder(
-	TEXT("/Game/Yeomin/Characters/CuteAlien/Animations/Animation2/Greeting0_Montage.Greeting0_Montage"));
+		TEXT("/Game/Yeomin/Characters/CuteAlien/Animations/Animation2/Greeting0_Montage.Greeting0_Montage"));
 	if (Dance2MontageFinder.Succeeded())
 	{
 		DanceMontage5 = Dance5MontageFinder.Object;
 	}
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> Dance6MontageFinder(
-	TEXT("/Game/Yeomin/Characters/CuteAlien/Animations/Animation2/Greeting1_Montage.Greeting1_Montage"));
+		TEXT("/Game/Yeomin/Characters/CuteAlien/Animations/Animation2/Greeting1_Montage.Greeting1_Montage"));
 	if (Dance3MontageFinder.Succeeded())
 	{
 		DanceMontage6 = Dance6MontageFinder.Object;
 	}
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> Dance7MontageFinder(
-TEXT("/Game/Yeomin/Characters/CuteAlien/Animations/Animation2/Greeting2_Montage.Greeting2_Montage"));
+		TEXT("/Game/Yeomin/Characters/CuteAlien/Animations/Animation2/Greeting2_Montage.Greeting2_Montage"));
 	if (Dance3MontageFinder.Succeeded())
 	{
 		DanceMontage7 = Dance7MontageFinder.Object;
@@ -88,10 +88,10 @@ void ACuteAlienPlayer::BeginPlay()
 		{
 			// 2. 렌더 타겟을 동적으로 생성 (너비, 높이는 256, 512 등 원하는 해상도로)
 			MinimapRenderTarget = UKismetRenderingLibrary::CreateRenderTarget2D(this, 512, 512);
-            
+
 			// 3. 생성된 렌더 타겟을 캡처 컴포넌트에 연결
 			MinimapCapture->TextureTarget = MinimapRenderTarget;
-            
+
 			// 4. 캡처 시작
 			MinimapCapture->CaptureScene(); // 혹은 CaptureEveryFrame이 켜져있다면 자동 시작됨
 		}
@@ -105,7 +105,6 @@ void ACuteAlienPlayer::BeginPlay()
 			MinimapCapture->SetComponentTickEnabled(false);
 		}
 	}
-	
 }
 
 void ACuteAlienPlayer::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -188,14 +187,14 @@ void ACuteAlienPlayer::UpdateCustomMesh(FName ItemID)
 			{
 				// 2. 메시 설정 및 부착
 				CustomMeshComponent->SetStaticMesh(MeshToEquip);
-            
+
 				// 소켓에 부착 (GetMesh()는 캐릭터의 스켈레탈 메시 컴포넌트)
 				CustomMeshComponent->AttachToComponent(
-					GetMesh(), 
+					GetMesh(),
 					FAttachmentTransformRules::SnapToTargetNotIncludingScale,
 					ItemData->AttachSocketName // 데이터에 저장된 소켓 이름 사용
 				);
-            
+
 				// 3. 트랜스폼 오프셋 적용
 				CustomMeshComponent->SetRelativeTransform(ItemData->RelativeTransform);
 				return;
@@ -214,24 +213,11 @@ void ACuteAlienPlayer::UpdateCustomMesh(FName ItemID)
 	{
 		UE_LOG(LogTemp, Error, TEXT("[Cosmetic] Item DataTable not found at: %s"), *ItemDataTablePath);
 	}
-	
+
 	// 실패 시 안전하게 메시 제거
 	CustomMeshComponent->SetStaticMesh(nullptr);
 }
 
-void ACuteAlienPlayer::LearningQuizTestFunc()
-{
-	if (UHttpNetworkSubsystem* HttpSystem = GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>())
-	{
-		FLearningQuizRequest QuizRequest;
-		QuizRequest.question = FString(TEXT("판다스에서 데이터프레임을 합치는 방법을 알려줘"));
-		QuizRequest.grade = FString(TEXT("초급"));
-		
-		FString URL = FString(TEXT("/learning_quiz/generate"));
-		
-		HttpSystem->SendJsonRequest(QuizRequest, URL, &UHttpNetworkSubsystem::OnLearningQuizComplete);
-	}
-}
 
 void ACuteAlienPlayer::Server_PlayAlienDance_Implementation(int32 SelectIdx)
 {
@@ -302,6 +288,4 @@ void ACuteAlienPlayer::Multicast_PlayAlienDance_Implementation(int32 SelectIdx)
 	default:
 		break;
 	}
-	
-
 }

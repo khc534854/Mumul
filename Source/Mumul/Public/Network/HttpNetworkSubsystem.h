@@ -65,6 +65,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Network")
 	void SendCreateTeamChatRequest(const FString& TeamName, const TArray<int32>& UserIDs);
 	
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void StartLearningQuizRequest(const FString& RequestQuestion, const FString& Difficulty);
+	
 	UPROPERTY(BlueprintAssignable)
 	FOnLoginResponseReceived OnLoginResponse;
 	UPROPERTY(BlueprintAssignable)

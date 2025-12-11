@@ -24,8 +24,6 @@ protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UTextBlock> CommentaryText;
 	
-	FLinearColor HexToLinearColor(const FString& Hex);
-	
 public:
 	void SetAnswerColor(bool TrueGreenOrFalseRed);
 	void SetAnswerResult(bool TrueCorrectOrFalseWrong);

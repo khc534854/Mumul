@@ -16,7 +16,7 @@ class MUMUL_API UQuizQuestionUI : public UUserWidget
 
 protected:
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UBaseText> QuestionText;
+	TObjectPtr<class UTextBlock> QuestionText;
 	
 public:
 	void SetQuestionText(const FString& Text);

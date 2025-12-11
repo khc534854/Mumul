@@ -28,14 +28,24 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
 	TSubclassOf<class UQuizAnswerUI> QuizAnswerUIClass;
 	
+	void SetTimerText(const FString& NewTime);
+	
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class USizeBox> QuizResultSizeBox;
+	TObjectPtr<class UScrollBox> AnswerListScrollBox;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UButton> ConfirmBtn;
+	UPROPERTY(EditDefaultsOnly, Category="UI Class")
+	TSubclassOf<class UAnswerCommentaryUI> AnswerCommentaryUIClass;
 	
 public:
 	void SwitchQuizState(const bool& QuizOrResult);
 	
 	void SetQuizQuestion(const FString& NewQuiz);
+	
 	void SetQuizAnswer(const bool& AnswerResult, const bool& NewAnswer, const FString& NewCommentary);
 	
-	void SetTimerText(const FString& NewTime);
+	void StartQuestionTimer();
+	void StartAnswerTimer();
+	
+	void SetQuizResult(const bool& AnswerResult, const FString& QuestionText, const bool& AnswerText, const FString& CommentaryText);
 };

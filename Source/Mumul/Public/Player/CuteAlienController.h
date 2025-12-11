@@ -35,11 +35,11 @@ class MUMUL_API ACuteAlienController : public APlayerController
 public:
 	UPROPERTY()
 	FPlayerArrayUpdated OnPlayerArrayUpdated;
-	
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
-	
+
 	UPROPERTY()
 	TObjectPtr<class AMumulGameState> GS;
 	UPROPERTY()
@@ -47,9 +47,11 @@ protected:
 
 	UFUNCTION(Server, Reliable)
 	void Server_InitPlayerInfo(int32 UID, const FString& Name, const FString& Type, int32 Tendency);
+
 public:
 	UFUNCTION(Server, Reliable)
 	void Server_InitPlayerArray();
+
 protected:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_InitPlayerArray();
@@ -150,10 +152,10 @@ public:
 	// 종료 버튼 클릭 시 호출 (팝업 열기)
 	UFUNCTION(BlueprintCallable, Category = "Meeting")
 	void OpenEndMeetingPopup();
-	
+
 protected:
 	// [변수] 현재 진행 중인 회의 ID (서버에서 받아서 저장)
-	FString CurrentMeetingSessionID; 
+	FString CurrentMeetingSessionID;
 
 	// [함수] HTTP 응답 핸들러 (바인딩용)
 	UFUNCTION()
@@ -184,7 +186,7 @@ protected:
 
 	// 타이머에 의해 호출될 초기화 함수
 	void TryInitPlayerInfo();
-	
+
 public:
 	UFUNCTION(BlueprintCallable, Category = "Voice")
 	void UpdateVoiceChannelMuting();
@@ -196,7 +198,7 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Voice")
 	TObjectPtr<USoundAttenuation> NormalAttenuation;
-	
+
 	UPROPERTY()
 	TSubclassOf<class UGroupIconUI> GroupIconUIClass;
 	UFUNCTION()
@@ -205,7 +207,7 @@ protected:
 public:
 	UFUNCTION(Server, Reliable)
 	void Server_AddTeamChatList(const FString& TeamID);
-	
+
 	UPROPERTY()
 	TObjectPtr<class UIMGManager> IMGManager;
 
@@ -213,10 +215,10 @@ public:
 	void Server_RequestTeamChatList();
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_RequestTeamChatList();
-	
+
 	UFUNCTION(Server, Reliable)
 	void Server_CreateGroupChatUI(const TArray<int32>& UserIDs, const FString& TeamID, const FString& TeamName,
-								  const TArray<FTeamUser>& TeamUserIDs);
+	                              const TArray<FTeamUser>& TeamUserIDs);
 	UFUNCTION(Client, Reliable)
 	void Client_CreateGroupChatUI(const FString& TeamID, const FString& TeamName,
 	                              const TArray<FTeamUser>& TeamUserIDs, UTexture2D* IMG);
@@ -226,4 +228,17 @@ public:
 	                        const FString& Name, const FString& Text);
 	UFUNCTION(Client, Reliable)
 	void Client_SendChat(const FString& TeamID, const FString& CurrentTime, const FString& Name, const FString& Text);
+
+protected:
+	UPROPERTY()
+	TSubclassOf<class UOXQuizUI> OXQuizUIClass;
+	UPROPERTY()
+	TObjectPtr<class UOXQuizUI> OXQuizUI;
+public:
+	UFUNCTION(Client, Reliable)
+	void Client_DisplayQuestion(const FString& NewQuestion);
+	UFUNCTION(Client, Reliable)
+	void Client_DisplayAnswer(bool AnswerResult, bool NewAnswer, const FString& NewCommentary);
+	UFUNCTION(Client, Reliable)
+	void Client_DisplayResult(bool AnswerResult, const FString& QuestionText, bool AnswerText, const FString& CommentaryText);
 };

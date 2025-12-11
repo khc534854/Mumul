@@ -7,44 +7,16 @@
 #include "Components/TextBlock.h"
 #include "UI/BaseUI/BaseText.h"
 
-FLinearColor UQuizAnswerUI::HexToLinearColor(const FString& Hex)
-{
-	FString CleanHex = Hex.Replace(TEXT("#"), TEXT(""));
-	if (CleanHex.Len() != 6 && CleanHex.Len() != 8)
-		return FLinearColor::White;
-
-	uint32 HexValue = FParse::HexNumber(*CleanHex);
-
-	if (CleanHex.Len() == 6)
-	{
-		uint8 R = (HexValue >> 16) & 0xFF;
-		uint8 G = (HexValue >> 8) & 0xFF;
-		uint8 B = HexValue & 0xFF;
-
-		return FLinearColor(R / 255.f, G / 255.f, B / 255.f, 1.f);
-	}
-	else // 8자리 -> ARGB
-	{
-		uint8 A = (HexValue >> 24) & 0xFF;
-		uint8 R = (HexValue >> 16) & 0xFF;
-		uint8 G = (HexValue >> 8) & 0xFF;
-		uint8 B = HexValue & 0xFF;
-
-		return FLinearColor(R / 255.f, G / 255.f, B / 255.f, A / 255.f);
-	}
-}
 
 
 void UQuizAnswerUI::SetAnswerColor(bool TrueGreenOrFalseRed)
 {
 	if (TrueGreenOrFalseRed)
 	{
-		FLinearColor Color = HexToLinearColor("067C1EFF");
-		AnswerBorder->SetBrushColor(Color);
+		AnswerBorder->SetBrushColor(FLinearColor(0.025187f, 0.48515f, 0.116971f));
 		return;
 	}
-	FLinearColor Color = HexToLinearColor("F61A1AFF");
-	AnswerBorder->SetBrushColor(Color);
+	AnswerBorder->SetBrushColor(FLinearColor(0.964686f, 0.102242f, 0.102242f));
 }
 
 void UQuizAnswerUI::SetAnswerResult(bool TrueCorrectOrFalseWrong)

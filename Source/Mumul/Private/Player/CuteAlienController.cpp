@@ -30,6 +30,7 @@
 #include "UI/GroupIconUI.h"
 #include "UI/PlayerUI.h"
 #include "UI/VoiceMeetingUI.h"
+#include "UI/OXQuiz/OXQuizUI.h"
 
 ACuteAlienController::ACuteAlienController()
 {
@@ -137,6 +138,13 @@ ACuteAlienController::ACuteAlienController()
 	{
 		VoiceMeetingUIClass = WidgetFinder.Class;
 	}
+	
+	static ConstructorHelpers::FClassFinder<UOXQuizUI> OXQuizUIClassFinder(
+		TEXT("/Game/Yeomin/Characters/UI/BP/OXQuiz/WBP_OXQuiz.WBP_OXQuiz_C")); // 경로 확인 필수!
+	if (OXQuizUIClassFinder.Succeeded())
+	{
+		OXQuizUIClass = OXQuizUIClassFinder.Class;
+	}
 }
 
 void ACuteAlienController::BeginPlay()
@@ -211,6 +219,18 @@ void ACuteAlienController::BeginPlay()
 			VoiceMeetingUI->SetVisibility(ESlateVisibility::Hidden);
 		}
 	}
+	
+	if (OXQuizUIClass)
+	{
+		OXQuizUI = CreateWidget<UOXQuizUI>(this, OXQuizUIClass);
+		if (OXQuizUI)
+		{
+			OXQuizUI->AddToViewport();
+			OXQuizUI->SetVisibility(ESlateVisibility::Collapsed);
+		}
+	}
+	
+	
 	TryInitPlayerInfo();
 
 	// [수정] PlayerState가 준비될 때까지 타이머로 확인 (0.5초 간격)
@@ -1090,6 +1110,7 @@ void ACuteAlienController::OnServerCreateTeamChatResponse(bool bSuccess, FString
 	}
 }
 
+
 void ACuteAlienController::Server_RequestTeamChatList_Implementation()
 {
 	Multicast_RequestTeamChatList();
@@ -1166,4 +1187,24 @@ void ACuteAlienController::Client_SendChat_Implementation(const FString& TeamID,
                                                           const FString& Name, const FString& Text)
 {
 	GroupChatUI->AddChat(TeamID, CurrentTime, Name, Text);
+}
+
+void ACuteAlienController::Client_DisplayQuestion_Implementation(const FString& NewQuestion)
+{
+	OXQuizUI->SwitchQuizState(true);
+	OXQuizUI->SetVisibility(ESlateVisibility::Visible);
+	OXQuizUI->SetQuizQuestion(NewQuestion);
+	OXQuizUI->StartQuestionTimer();
+}
+
+void ACuteAlienController::Client_DisplayAnswer_Implementation(bool AnswerResult, bool NewAnswer, const FString& NewCommentary)
+{
+	OXQuizUI->SetQuizAnswer(AnswerResult, NewAnswer, NewCommentary);
+	OXQuizUI->StartAnswerTimer();
+}
+
+void ACuteAlienController::Client_DisplayResult_Implementation(bool AnswerResult, const FString& QuestionText, bool AnswerText, const FString& CommentaryText)
+{
+	OXQuizUI->SwitchQuizState(false);
+	OXQuizUI->SetQuizResult(AnswerResult, QuestionText, AnswerText, CommentaryText);
 }
