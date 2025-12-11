@@ -22,5 +22,5 @@ void USessionInfoWidget::SetSessionInfo(int32 idx, FString sessionName)
 void USessionInfoWidget::OnClickJoin()
 {
 	UMumulGameInstance* gi = Cast<UMumulGameInstance>(GetWorld()->GetGameInstance());
-	gi ->JoinGameSession(sessionidx);
+	gi->JoinGameSession(sessionidx);
 }

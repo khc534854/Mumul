@@ -8,6 +8,7 @@
 #include "OnlineSessionSettings.h"
 #include "Components/Button.h"
 #include "Components/EditableTextBox.h"
+#include "Components/Image.h"
 #include "Components/Slider.h"
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
@@ -15,6 +16,8 @@
 #include "Components/ScrollBox.h"
 #include "Player/MumulPlayerState.h"
 #include "Network/NetworkStructs.h"
+#include "UI/BaseUI/BaseButton.h"
+#include "UI/BaseUI/BaseText.h"
 
 void ULobbyWidget::NativeConstruct()
 {
@@ -43,8 +46,8 @@ void ULobbyWidget::NativeConstruct()
     sliderPlayerCount->OnValueChanged.AddDynamic(this,&ULobbyWidget::OnValudeChangedPlayerCount);
     btn_find->OnClicked.AddDynamic(this,&ULobbyWidget::OnClickFind);
     gi->OnFindSessionsCompleteEvent.AddDynamic(this, &ULobbyWidget::RefreshSessionList);
-    btn_BackFromFind->OnClicked.AddDynamic(this,&ULobbyWidget::OnClickBack);
-    btn_BackFromCreate->OnClicked.AddDynamic(this,&ULobbyWidget::OnClickBack);
+    //btn_BackFromFind->OnClicked.AddDynamic(this,&ULobbyWidget::OnClickBack);
+    //btn_BackFromCreate->OnClicked.AddDynamic(this,&ULobbyWidget::OnClickBack);
 
     // 시작 시 로그인 화면(0번) 보여주기
     if (WidgetSwitcher)
@@ -57,8 +60,28 @@ void ULobbyWidget::NativeConstruct()
         if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
         {
             HttpSystem->OnLoginResponse.AddDynamic(this, &ULobbyWidget::OnServerLoginResponse);
+            HttpSystem->OnSurveyResultResponse.AddDynamic(this, &ULobbyWidget::OnSurveyResultResponse);
         }
     }
+
+    if (btn_SurveyYes && btn_SurveyYes->BaseButton)
+    {
+        // 0번 인덱스 선택지 (일반적으로 '예' 또는 긍정)
+        btn_SurveyYes->BaseButton->OnClicked.AddDynamic(this, &ULobbyWidget::OnSurveyYesClicked_Internal);
+    }
+    if (btn_SurveyNo && btn_SurveyNo->BaseButton)
+    {
+        // 1번 인덱스 선택지 (일반적으로 '아니오' 또는 부정)
+        btn_SurveyNo->BaseButton->OnClicked.AddDynamic(this, &ULobbyWidget::OnSurveyNoClicked_Internal);
+    }
+
+    if (btn_Enter)
+    {
+        btn_Enter->BaseButton->OnClicked.AddDynamic(this, &ULobbyWidget::OnClickEnterGame);
+        btn_Enter->SetIsEnabled(false); // 처음에는 비활성화 (검색 전)
+    }
+    
+    LoadSurveyData();
 }
 
 // --- [추가] 로그인 처리 함수 ---
@@ -144,6 +167,15 @@ void ULobbyWidget::OnServerLoginResponse(bool bSuccess, FString Message)
                 GI->CampID = LoginData.campId;
                 GI->PlayerType = LoginData.userType;
                 GI->bHasSurveyCompleted = LoginData.tendencyCompleted;
+                if (GI->bHasSurveyCompleted)
+                {
+                    if (LoginData.tendencyTypeCode == TEXT("analyst")) GI->PlayerTendency = 1;
+                    else if (LoginData.tendencyTypeCode == TEXT("doer")) GI->PlayerTendency = 2;
+                    else if (LoginData.tendencyTypeCode == TEXT("balancer")) GI->PlayerTendency = 3;
+                    else if (LoginData.tendencyTypeCode == TEXT("supporter")) GI->PlayerTendency = 4;
+                    else if (LoginData.tendencyTypeCode == TEXT("pillar")) GI->PlayerTendency = 5;
+                    else GI->PlayerTendency = 0;
+                }
                 // ... 필요한 정보 다 저장
             }
 
@@ -158,12 +190,14 @@ void ULobbyWidget::OnServerLoginResponse(bool bSuccess, FString Message)
             {
                 if (GI->bHasSurveyCompleted)
                 {
-                    WidgetSwitcher->SetActiveWidgetIndex(1);
-                    // http 통신 
+                    UpdateTendencyResultImage(GI->PlayerTendency);
+                    WidgetSwitcher->SetActiveWidgetIndex(3);
                 }
                 else
                 {
-                    WidgetSwitcher->SetActiveWidgetIndex(3);
+                    WidgetSwitcher->SetActiveWidgetIndex(1);
+                    UpdateSurveyUI();
+                    // http 통신 
                 }
                 //btn_goCreate->SetVisibility(ESlateVisibility::Collapsed);
             }
@@ -185,19 +219,192 @@ void ULobbyWidget::OnServerLoginResponse(bool bSuccess, FString Message)
     }
 }
 
-
-void ULobbyWidget::OnClickGoCreate()
+void ULobbyWidget::UpdateTendencyResultImage(int32 TendencyID)
 {
-    // [수정] 인덱스 번호 변경 (2번이 생성 화면이라고 가정)
-    WidgetSwitcher->SetActiveWidgetIndex(3);
+    if (!TendencyResultImg) return;
+
+    // TendencyID는 1부터 시작하므로 배열 인덱스(0부터 시작)로 변환 (-1)
+    int32 ImageIndex = TendencyID - 1;
+
+    if (TendencyImages.IsValidIndex(ImageIndex) && TendencyImages[ImageIndex])
+    {
+        TendencyResultImg->SetBrushFromTexture(TendencyImages[ImageIndex]);
+        UE_LOG(LogTemp, Log, TEXT("[UI] Tendency Image Updated for ID: %d"), TendencyID);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[UI] Invalid Tendency ID or Texture missing. ID: %d"), TendencyID);
+    }
 }
 
-void ULobbyWidget::OnClickGoFind()
+void ULobbyWidget::LoadSurveyData()
 {
-    // [수정] 인덱스 번호 변경 (3번이 찾기 화면이라고 가정)
-    WidgetSwitcher->SetActiveWidgetIndex(3);
-    OnClickFind();
+    FString JsonFilePath = FPaths::ProjectContentDir() / TEXT("Data/personal_survey.json");
+    
+    FString JsonString;
+    if (!FFileHelper::LoadFileToString(JsonString, *JsonFilePath))
+    {
+        UE_LOG(LogTemp, Error, TEXT("[Survey] Failed to load JSON file at: %s"), *JsonFilePath);
+        return;
+    }
+
+    if (FJsonObjectConverter::JsonObjectStringToUStruct(JsonString, &SurveyData, 0, 0))
+    {
+        UE_LOG(LogTemp, Log, TEXT("[Survey] Successfully loaded %d questions."), SurveyData.questions.Num());
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("[Survey] Failed to parse JSON data."));
+    }
 }
+
+void ULobbyWidget::UpdateSurveyUI()
+{
+    if (SurveyData.questions.Num() == 0 || CurrentQuestionIndex >= SurveyData.questions.Num())
+    {
+        // 설문 완료 또는 데이터 없음
+        return;
+    }
+
+    const FSurveyQuestion& CurrentQuestion = SurveyData.questions[CurrentQuestionIndex];
+    int32 TotalQuestions = SurveyData.questions.Num();
+
+    // 1. 질문 번호 업데이트
+    if (QuestionCountText && QuestionCountText->BaseText)
+    {
+        FString CountStr = FString::Printf(TEXT("%d / %d"), CurrentQuestionIndex + 1, TotalQuestions);
+        QuestionCountText->BaseText->SetText(FText::FromString(CountStr));
+    }
+
+    // 2. 질문 내용 업데이트
+    if (QuestionText && QuestionText->BaseText)
+    {
+        QuestionText->BaseText->SetText(FText::FromString(CurrentQuestion.question));
+    }
+}
+
+void ULobbyWidget::OnSurveyYesClicked_Internal()
+{
+    OnSurveyChoiceClicked(0);
+}
+
+void ULobbyWidget::OnSurveyNoClicked_Internal()
+{
+    OnSurveyChoiceClicked(1);
+}
+
+void ULobbyWidget::OnSurveyChoiceClicked(int32 ChoiceIndex)
+{
+    if (CurrentQuestionIndex >= SurveyData.questions.Num())
+    {
+        // 이미 완료됨
+        return;
+    }
+
+    // 1. 결과 저장
+    // (ChoiceIndex는 0 또는 1, value는 3 또는 1이지만, result 배열에는 index 값(0 또는 1)을 저장하므로 ChoiceIndex 저장)
+    SurveyResults.Add(ChoiceIndex); 
+
+    // 2. 다음 질문으로 이동
+    CurrentQuestionIndex++;
+
+    if (CurrentQuestionIndex < SurveyData.questions.Num())
+    {
+        // 다음 질문 업데이트
+        UpdateSurveyUI();
+    }
+    else
+    {
+        // 3. 모든 질문 완료 -> 결과 제출
+        SendSurveyResult();
+    }
+}
+
+void ULobbyWidget::SendSurveyResult()
+{
+    if (UGameInstance* GI = GetGameInstance())
+    {
+        if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
+        {
+            UMumulGameInstance* MumulGI = Cast<UMumulGameInstance>(GI);
+            if (!MumulGI) return;
+            
+            // [수정] 새로운 SendSurveyResultRequest 함수 호출
+            HttpSystem->SendSurveyResultRequest(MumulGI->PlayerUniqueID, SurveyResults);
+            
+            UE_LOG(LogTemp, Warning, TEXT("[Survey] Sending final result for User %d. Total %d responses."), 
+                   MumulGI->PlayerUniqueID, SurveyResults.Num());
+        }
+    }
+}
+
+void ULobbyWidget::OnSurveyResultResponse(bool bSuccess, FString Message)
+{
+    if (bSuccess)
+    {
+        FSurveyResultResponse ResultData;
+        if (FJsonObjectConverter::JsonObjectStringToUStruct(Message, &ResultData, 0, 0))
+        {
+            // 1. GameInstance에 성향 타입 코드 저장 (로그인 시의 로직과 유사)
+            UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
+            if (GI)
+            {
+                GI->bHasSurveyCompleted = true;
+
+                // 성향 타입 코드를 숫자로 변환하여 저장 (예시: "analyst" -> 1)
+                if (ResultData.typeCode == TEXT("analyst")) GI->PlayerTendency = 1;
+                else if (ResultData.typeCode == TEXT("doer")) GI->PlayerTendency = 2;
+                else if (ResultData.typeCode == TEXT("balancer")) GI->PlayerTendency = 3;
+                else if (ResultData.typeCode == TEXT("supporter")) GI->PlayerTendency = 4;
+                else if (ResultData.typeCode == TEXT("pillar")) GI->PlayerTendency = 5;
+                else GI->PlayerTendency = 0;
+
+                UE_LOG(LogTemp, Log, TEXT("[Survey] Result Received: %s (Tendency ID: %d)"), *ResultData.typeCode, GI->PlayerTendency);
+            }
+            
+            // 2. 메인 메뉴 화면으로 전환 (1번 화면)
+            UpdateTendencyResultImage(GI->PlayerTendency);
+            WidgetSwitcher->SetActiveWidgetIndex(1); 
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("[Survey] Result submission failed: %s"), *Message);
+        // 사용자에게 실패 메시지 표시 (textLoginMsg 재활용 가능)
+    }
+}
+
+void ULobbyWidget::OnClickEnterGame()
+{
+    if (FirstSessionIndex != -1)
+    {
+        // GameInstance를 통해 첫 번째 세션(인덱스 0)으로 조인 요청
+        gi->JoinGameSession(FirstSessionIndex);
+        
+        // 중복 클릭 방지
+        if (btn_Enter) btn_Enter->SetIsEnabled(false);
+        if (textFind) textFind->SetText(FText::FromString(TEXT("입장 중...")));
+    }
+    else
+    {
+        // 혹시 모를 예외 처리 (검색 다시 시도 등)
+        gi->FindGameSessions();
+    }
+}
+
+//
+// void ULobbyWidget::OnClickGoCreate()
+// {
+//     // [수정] 인덱스 번호 변경 (2번이 생성 화면이라고 가정)
+//     WidgetSwitcher->SetActiveWidgetIndex(3);
+// }
+//
+// void ULobbyWidget::OnClickGoFind()
+// {
+//     // [수정] 인덱스 번호 변경 (3번이 찾기 화면이라고 가정)
+//     WidgetSwitcher->SetActiveWidgetIndex(3);
+//     OnClickFind();
+// }
 
 void ULobbyWidget::OnClickCreate()
 {
@@ -228,38 +435,70 @@ void ULobbyWidget::OnClickFind()
     gi->FindGameSessions();
 }
 
-void ULobbyWidget::OnClickBack()
-{
-    // [수정] 뒤로 가기 시 로그인 화면(0)이 아니라 메인 메뉴(1)로 이동
-    WidgetSwitcher->SetActiveWidgetIndex(1);
-}
+// void ULobbyWidget::OnClickBack()
+// {
+//     // [수정] 뒤로 가기 시 로그인 화면(0)이 아니라 메인 메뉴(1)로 이동
+//     WidgetSwitcher->SetActiveWidgetIndex(1);
+// }
 
 void ULobbyWidget::RefreshSessionList(bool bWasSuccessful)
 {
+    // 기존 리스트 UI 초기화 (보이지 않더라도 데이터 정리는 필요)
+    if (scrollSessionList)
+    {
+        scrollSessionList->ClearChildren();
+    }
+
     if (!bWasSuccessful || !gi->GetSessionSearch().IsValid())
     {
-       textFind->SetText(FText::FromString(TEXT("세션 조회 실패 또는 없음")));
-       btn_find->SetIsEnabled(true);
-       return;
+        if (textFind) textFind->SetText(FText::FromString(TEXT("세션 조회 실패 또는 없음")));
+       
+        // 검색 실패 시 입장 불가
+        FirstSessionIndex = -1;
+        if (btn_Enter) btn_Enter->SetIsEnabled(false);
+       
+        if (btn_find) btn_find->SetIsEnabled(true);
+        return;
     }
 
-    scrollSessionList->ClearChildren();
-    
     TArray<FOnlineSessionSearchResult> Results = gi->GetSessionSearch()->SearchResults;
-    for (int32 i = 0; i < Results.Num(); i++)
+    
+    if (Results.Num() > 0)
     {
-       if (!Results[i].IsValid()) continue;
-
-       FString SessionName = Results[i].Session.OwningUserName;
+        // [핵심] 첫 번째 세션이 존재함 -> 입장 가능 상태로 변경
+        FirstSessionIndex = 0; 
         
-       USessionInfoWidget* item = CreateWidget<USessionInfoWidget>(GetWorld(), sessionInfoWidget);
-       if(item)
-       {
-          item->SetSessionInfo(i, SessionName);
-          scrollSessionList->AddChild(item);
-       }
+        if (btn_Enter) 
+        {
+            btn_Enter->SetIsEnabled(true);
+        }
+
+        if (textFind) 
+        {
+            FString FoundMsg = FString::Printf(TEXT("입장 가능 (%s)"), *Results[0].Session.OwningUserName);
+            textFind->SetText(FText::FromString(FoundMsg));
+        }
+
+        // (선택) 디버깅용으로 리스트에도 추가할 수 있음 (UI가 Visible이라면)
+        /*
+        for (int32 i = 0; i < Results.Num(); i++)
+        {
+           if (!Results[i].IsValid()) continue;
+           USessionInfoWidget* item = CreateWidget<USessionInfoWidget>(GetWorld(), sessionInfoWidget);
+           if(item) {
+              item->SetSessionInfo(i, Results[i].Session.OwningUserName);
+              scrollSessionList->AddChild(item);
+           }
+        }
+        */
+    }
+    else
+    {
+        // 검색 결과 0개 -> 입장 불가
+        FirstSessionIndex = -1;
+        if (btn_Enter) btn_Enter->SetIsEnabled(false);
+        if (textFind) textFind->SetText(FText::FromString(TEXT("진행 중인 게임이 없습니다.")));
     }
     
-    textFind->SetText(FText::FromString(TEXT("조회 완료")));
-    btn_find->SetIsEnabled(true);
+    if (btn_find) btn_find->SetIsEnabled(true);
 }

@@ -202,6 +202,9 @@ struct FLoginSuccessResponse
 	bool tendencyCompleted = false;
 
 	UPROPERTY()
+	FString tendencyTypeCode;
+
+	UPROPERTY()
 	FString userType;
 };
 
@@ -216,6 +219,96 @@ struct FErrorDetail
 
 	UPROPERTY()
 	FString message;
+};
+
+// --- 성향분석 ---
+USTRUCT(BlueprintType)
+struct FSurveyQuestionChoice
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FString label;
+    
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int32 value = 0; // 정수형은 반드시 초기화
+};
+
+USTRUCT(BlueprintType)
+struct FSurveyCharacterProfile
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FString id;
+    
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FString name;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FString label;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FString core_trait;
+    
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FString color;
+};
+
+USTRUCT(BlueprintType)
+struct FSurveyQuestion
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FString id;
+    
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FString category;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FString question;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TArray<FSurveyQuestionChoice> choices; // 위에서 정의한 선택지 배열 사용
+};
+
+USTRUCT(BlueprintType)
+struct FSurveyListResponse
+{
+	GENERATED_BODY()
+
+	// "characters": JSON 객체는 TMap<Key, Value>로 매핑됩니다.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TMap<FString, FSurveyCharacterProfile> characters;
+
+	// "questions": JSON 배열은 TArray로 매핑됩니다.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TArray<FSurveyQuestion> questions;
+};
+
+USTRUCT(BlueprintType)
+struct FSurveyResultRequest
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	uint32 userId = 0;
+	
+	UPROPERTY()
+	TArray<int32> result;
+};
+
+USTRUCT(BlueprintType)
+struct FSurveyResultResponse
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	uint32 userId = 0;
+	
+	UPROPERTY()
+	FString typeCode;
 };
 
 USTRUCT()
@@ -494,3 +587,4 @@ struct FWSResponse_MeetingAnswer
 	UPROPERTY() FString groupId;
 	UPROPERTY() FString answer;
 };
+

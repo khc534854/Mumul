@@ -166,6 +166,22 @@ void UHttpNetworkSubsystem::EndMeetingRequest(FString MeetingID)
     Request->ProcessRequest();
 }
 
+void UHttpNetworkSubsystem::SendSurveyResultRequest(int32 UserID, const TArray<int32>& Results)
+{
+	FSurveyResultRequest RequestData;
+	RequestData.userId = UserID;
+	RequestData.result = Results;
+
+	// SendJsonRequest 템플릿을 사용하여 POST 요청을 보냅니다.
+	SendJsonRequest(
+		RequestData,
+		TEXT("user/survey-result"),
+		&UHttpNetworkSubsystem::OnSurveyResultComplete
+	);
+    
+	UE_LOG(LogTemp, Log, TEXT("[HTTP] Sending Survey Result for User %d. Responses: %d"), UserID, Results.Num());
+}
+
 void UHttpNetworkSubsystem::OnLoginComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	if (!bWasSuccessful || !Response.IsValid())
@@ -632,5 +648,36 @@ void UHttpNetworkSubsystem::OnCreateTeamChatComplete(TSharedPtr<IHttpRequest> Ht
 	else
 	{
 		OnCreateTeamChatResponse.Broadcast(false, FString::Printf(TEXT("서버 오류: %d"), Code));
+	}
+}
+
+void UHttpNetworkSubsystem::OnSurveyResultComplete(FHttpRequestPtr Request, FHttpResponsePtr Response,
+	bool bWasSuccessful)
+{
+	if (!bWasSuccessful || !Response.IsValid())
+	{
+		OnSurveyResultResponse.Broadcast(false, TEXT("네트워크 연결 실패"));
+		return;
+	}
+
+	int32 Code = Response->GetResponseCode();
+	FString Content = Response->GetContentAsString();
+
+	if (Code == 200) // 성공
+	{
+		// 응답 JSON(typeCode 포함)을 위젯으로 전달
+		OnSurveyResultResponse.Broadcast(true, Content);
+	}
+	else // 실패 (4xx, 5xx)
+	{
+		FFailResponse FailData;
+		if (FJsonObjectConverter::JsonObjectStringToUStruct(Content, &FailData, 0, 0))
+		{
+			OnSurveyResultResponse.Broadcast(false, FailData.detail.message);
+		}
+		else
+		{
+			OnSurveyResultResponse.Broadcast(false, FString::Printf(TEXT("설문 결과 전송 실패. 서버 코드: %d"), Code));
+		}
 	}
 }
