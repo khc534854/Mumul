@@ -23,4 +23,12 @@ protected:
 	TObjectPtr<class UBaseText> AnswerText;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UTextBlock> CommentaryText;
+	
+	FLinearColor HexToLinearColor(const FString& Hex);
+	
+public:
+	void SetAnswerColor(bool TrueGreenOrFalseRed);
+	void SetAnswerResult(bool TrueCorrectOrFalseWrong);
+	void SetQuizAnswer(bool TrueCorrectOrFalseWrong);
+	void SetAnswerCommentary(const FString& NewCommentary);
 };

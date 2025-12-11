@@ -298,6 +298,59 @@ struct FWSRequest_EndChat
 };
 
 
+// --- [Http 학습퀴즈 구조체] ---
+
+// 학습퀴즈 요청
+USTRUCT()
+struct FLearningQuizRequest
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FString question;
+
+	UPROPERTY()
+	FString grade;
+};
+
+// 학습퀴즈 응답
+USTRUCT(BlueprintType)
+struct FQuizContent
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	int32 id;
+
+	UPROPERTY()
+	FString type;
+
+	UPROPERTY()
+	FString question;
+
+	UPROPERTY()
+	FString answer;
+
+	UPROPERTY()
+	FString explanation;
+};
+
+USTRUCT()
+struct FLearningQuizResponse
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	bool isLearningQuestion;
+
+	UPROPERTY()
+	FString grade;
+
+	UPROPERTY()
+	TArray<FQuizContent> quiz;
+};
+
+
 // --- [WebSocket 응답 데이터용 구조체] ---
 
 // 답변 수신용 (answer)
@@ -318,6 +371,9 @@ struct FWSResponse_Answer
 	UPROPERTY()
 	FString answer;
 };
+
+
+// --- [Team Chatting 구조체] ---
 
 USTRUCT()
 struct FUserDetail

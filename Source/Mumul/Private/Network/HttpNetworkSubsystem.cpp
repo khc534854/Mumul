@@ -634,3 +634,38 @@ void UHttpNetworkSubsystem::OnCreateTeamChatComplete(TSharedPtr<IHttpRequest> Ht
 		OnCreateTeamChatResponse.Broadcast(false, FString::Printf(TEXT("서버 오류: %d"), Code));
 	}
 }
+
+void UHttpNetworkSubsystem::OnLearningQuizComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	if (!bWasSuccessful || !Response.IsValid())
+	{
+		OnCreateTeamChatResponse.Broadcast(false, TEXT("네트워크 연결 실패"));
+		return;
+	}
+
+	int32 Code = Response->GetResponseCode();
+	FString Content = Response->GetContentAsString();
+
+	if (Code == 200) // 성공
+	{
+		// [수정] 성공 시에는 가공하지 말고 JSON 원본(Content)을 그대로 보냅니다.
+		// 그래야 위젯에서 데이터를 뽑아 쓸 수 있습니다.
+		OnCreateTeamChatResponse.Broadcast(true, Content);
+	}
+	else if (Code == 400) // 실패
+	{
+		FFailResponse FailData;
+		if (FJsonObjectConverter::JsonObjectStringToUStruct(Content, &FailData, 0, 0))
+		{
+			OnCreateTeamChatResponse.Broadcast(false, FailData.detail.message);
+		}
+		else
+		{
+			OnCreateTeamChatResponse.Broadcast(false, TEXT("학습퀴즈 요청 실패 (알 수 없는 오류)"));
+		}
+	}
+	else
+	{
+		OnCreateTeamChatResponse.Broadcast(false, FString::Printf(TEXT("서버 오류: %d"), Code));
+	}
+}

@@ -72,4 +72,6 @@ public:
 
 	void UpdateCustomMesh(FName ItemID);
 	
+	UFUNCTION(BlueprintCallable)
+	void LearningQuizTestFunc();
 };

@@ -22,6 +22,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnJoinMeetingResponse, bool, bSucce
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEndMeetingResponse, bool, bSuccess);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnChatHistoryResponseReceived, bool, bSuccess, FString, Message);
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnHttpCompleteLowLevel, FHttpRequestPtr, FHttpResponsePtr, bool);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnLearningQuizResponseReceived, bool, bSuccess, FString, Message);
 
 UCLASS()
 class MUMUL_API UHttpNetworkSubsystem : public UGameInstanceSubsystem
@@ -50,6 +51,19 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Network")
 	void EndMeetingRequest(FString MeetingID);
+
+	// GET TeamChatList
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void SendTeamChatListRequest(int32 UserID);
+	// GET TeamChatMessage
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void SendTeamChatMessageRequest(const FString& TeamChatID);
+	// POST ChatMessage
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void SendChatMessageRequest(const FString& TeamChatID, const int32& UserID, const FString& Message, const FString& Time);
+	// POST CreateTeamChat
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void SendCreateTeamChatRequest(const FString& TeamName, const TArray<int32>& UserIDs);
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnLoginResponseReceived OnLoginResponse;
@@ -62,34 +76,18 @@ public:
 
 	FOnHttpCompleteLowLevel OnSendVoiceCompleteDelegate_LowLevel;
 	
-	// GET TeamChatList
-	UFUNCTION(BlueprintCallable, Category = "Network")
-	void SendTeamChatListRequest(int32 UserID);
-	
 	UPROPERTY(BlueprintAssignable)
 	FOnTeamChatListResponseReceived OnTeamChatListResponse;
-	
-	// GET TeamChatMessage
-	UFUNCTION(BlueprintCallable, Category = "Network")
-	void SendTeamChatMessageRequest(const FString& TeamChatID);
-	
 	UPROPERTY(BlueprintAssignable)
 	FOnTeamChatMessageResponseReceived OnTeamChatMessageResponse;
-	
-	// POST ChatMessage
-	UFUNCTION(BlueprintCallable, Category = "Network")
-	void SendChatMessageRequest(const FString& TeamChatID, const int32& UserID, const FString& Message, const FString& Time);
-	
 	UPROPERTY(BlueprintAssignable)
 	FOnChatMessageResponseReceived OnChatMessageResponse;
-	
-	// POST CreateTeamChat
-	UFUNCTION(BlueprintCallable, Category = "Network")
-	void SendCreateTeamChatRequest(const FString& TeamName, const TArray<int32>& UserIDs);
-	
 	UPROPERTY(BlueprintAssignable)
 	FOnCreateTeamChatResponseReceived OnCreateTeamChatResponse;
 	
+	UPROPERTY(BlueprintAssignable)
+	FOnLearningQuizResponseReceived OnLearningQuizResponse;
+
 private:
 	// 통신이 끝났을 때(응답 왔을 때) 호출될 콜백 함수
 	void OnSendVoiceComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
@@ -104,8 +102,10 @@ private:
 	void OnCreateTeamChatComplete(TSharedPtr<IHttpRequest> HttpRequest, TSharedPtr<IHttpResponse> HttpResponse, bool bArg) const;
 
 	
+	
 	void AddString(TArray<uint8>& OutPayload, const FString& InString);
 public:
+	void OnLearningQuizComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	UPROPERTY(EditAnywhere, Category="Network")
 	FString BaseURL = TEXT("http://127.0.0.1:8000");
 

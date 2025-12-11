@@ -16,5 +16,26 @@ class MUMUL_API UOXQuizUI : public UUserWidget
 	
 protected:
 	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UWidgetSwitcher> OXQuizWS;
+	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class USizeBox> QuizSizeBox;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UImage> TimerIMG;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UBaseText> QuizTimerText;
+	UPROPERTY(EditDefaultsOnly, Category="UI Class")
+	TSubclassOf<class UQuizQuestionUI> QuizQuestionUIClass;
+	UPROPERTY(EditDefaultsOnly, Category="UI Class")
+	TSubclassOf<class UQuizAnswerUI> QuizAnswerUIClass;
+	
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class USizeBox> QuizResultSizeBox;
+	
+public:
+	void SwitchQuizState(const bool& QuizOrResult);
+	
+	void SetQuizQuestion(const FString& NewQuiz);
+	void SetQuizAnswer(const bool& AnswerResult, const bool& NewAnswer, const FString& NewCommentary);
+	
+	void SetTimerText(const FString& NewTime);
 };

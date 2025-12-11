@@ -10,6 +10,8 @@
 #include "Player/MumulPlayerState.h"
 #include "Player/VoiceChatComponent.h"
 #include "Kismet/KismetRenderingLibrary.h"
+#include "Network/HttpNetworkSubsystem.h"
+#include "Network/NetworkStructs.h"
 #include "Player/CuteAlienAnim.h"
 
 static const FString ItemDataTablePath = TEXT("/Game/Khc/Blueprint/Object/CustomItemList.CustomItemList");
@@ -215,6 +217,20 @@ void ACuteAlienPlayer::UpdateCustomMesh(FName ItemID)
 	
 	// 실패 시 안전하게 메시 제거
 	CustomMeshComponent->SetStaticMesh(nullptr);
+}
+
+void ACuteAlienPlayer::LearningQuizTestFunc()
+{
+	if (UHttpNetworkSubsystem* HttpSystem = GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>())
+	{
+		FLearningQuizRequest QuizRequest;
+		QuizRequest.question = FString(TEXT("판다스에서 데이터프레임을 합치는 방법을 알려줘"));
+		QuizRequest.grade = FString(TEXT("초급"));
+		
+		FString URL = FString(TEXT("/learning_quiz/generate"));
+		
+		HttpSystem->SendJsonRequest(QuizRequest, URL, &UHttpNetworkSubsystem::OnLearningQuizComplete);
+	}
 }
 
 void ACuteAlienPlayer::Server_PlayAlienDance_Implementation(int32 SelectIdx)
