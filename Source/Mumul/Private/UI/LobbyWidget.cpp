@@ -156,8 +156,16 @@ void ULobbyWidget::OnServerLoginResponse(bool bSuccess, FString Message)
             }
             else if (PendingID == TEXT("user1") || GI->PlayerType == TEXT("학생"))
             {
+                if (GI->bHasSurveyCompleted)
+                {
+                    WidgetSwitcher->SetActiveWidgetIndex(1);
+                    // http 통신 
+                }
+                else
+                {
+                    WidgetSwitcher->SetActiveWidgetIndex(3);
+                }
                 //btn_goCreate->SetVisibility(ESlateVisibility::Collapsed);
-                WidgetSwitcher->SetActiveWidgetIndex(1);
             }
 
             // 다음 화면으로
