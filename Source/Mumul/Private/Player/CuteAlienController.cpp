@@ -21,15 +21,19 @@
 #include "Network/HttpNetworkSubsystem.h"
 #include "Base/MumulGameState.h"
 #include "Components/WidgetSwitcher.h"
+#include "Data/FHousingItemData.h"
 #include "Save/MapDataSaveGame.h"
 #include "Network/NetworkStructs.h"
 #include "Kismet/GameplayStatics.h"
 #include "Data/IMGManager.h"
+#include "Object/PreviewHousingItemActor.h"
 #include "UI/ChatBlockUI.h"
 #include "UI/GroupChatUI.h"
 #include "UI/GroupIconUI.h"
 #include "UI/PlayerUI.h"
 #include "UI/VoiceMeetingUI.h"
+
+static const FString HousingItemDataTablePath = TEXT("/Game/Khc/Blueprint/Object/HousingItemList.HousingItemList");
 
 ACuteAlienController::ACuteAlienController()
 {
@@ -332,6 +336,38 @@ void ACuteAlienController::Tick(float DeltaSeconds)
 			        HitRes.ImpactNormal.Rotation() + FRotator(-90.f, 0.f, 0.f));
 		}
 	}
+
+	if (PreviewHousingItem)
+	{
+		// Line Trace from ViewPoint
+		FHitResult HitRes;
+		FCollisionQueryParams CollisionParams;
+		CollisionParams.AddIgnoredActor(this);
+
+		FVector Start, End;
+		FRotator CamRot;
+		float Dist = 500.f;
+		GetPlayerViewPoint(Start, CamRot);
+		End = Start + CamRot.Vector() * Dist;
+
+		bool bIsHit = GetWorld()->LineTraceSingleByChannel(
+			HitRes,
+			Start,
+			End,
+			ECC_Visibility,
+			CollisionParams
+		);
+
+		FTransform HitPointTransform(HitRes.ImpactNormal.Rotation() + FRotator(-90.f, 0.f, 0.f),
+									 HitRes.ImpactPoint, FVector::OneVector);
+		PreviewHousingItem->SetActorTransform(HitPointTransform);
+
+		if (WasInputKeyJustPressed(EKeys::LeftMouseButton))
+		{
+			OnClick(HitRes.ImpactPoint,
+					HitRes.ImpactNormal.Rotation() + FRotator(-90.f, 0.f, 0.f));
+		}
+	}
 }
 
 void ACuteAlienController::OnHostRecordingStopped()
@@ -470,6 +506,20 @@ void ACuteAlienController::OnClick(const FVector& TentLocation, const FRotator& 
 	}
 }
 
+void ACuteAlienController::OnHousingItemClick(const FVector& HousingItemLocation, const FRotator& HousingItemRotation)
+{
+	if (PreviewHousingItem)
+	{
+		if (PreviewHousingItem->bIsPlaceable)
+		{
+			PreviewHousingItem->Destroy();
+			PreviewHousingItem = nullptr;
+
+			Server_SpawnHousingItem(FTransform(HousingItemRotation, HousingItemLocation));
+		}
+	}
+}
+
 void ACuteAlienController::ShowRadialUI()
 {
 	// Init UI
@@ -531,6 +581,58 @@ void ACuteAlienController::ShowPreviewTent()
 		GetPawn()->GetActorLocation(),
 		FRotator::ZeroRotator
 	);
+}
+
+void ACuteAlienController::ShowPreviewHousingItem(FName idx)
+{
+	// Deactivate Mouse Cursor
+	SetIgnoreLookInput(false);
+	SetShowMouseCursor(false);
+	SetInputMode(FInputModeGameOnly());
+
+	// Spawn Preview Tent
+	PreviewHousingItem = GetWorld()->SpawnActor<APreviewHousingItemActor>(
+		PreviewHousingItemClass,
+		GetPawn()->GetActorLocation(),
+		FRotator::ZeroRotator
+	);
+
+	UDataTable* ItemDataTable = LoadObject<UDataTable>(nullptr, *HousingItemDataTablePath);
+	
+	if (ItemDataTable)
+	{
+		// FCustomItemData를 사용
+		FHousingItemData* ItemData = ItemDataTable->FindRow<FHousingItemData>(idx, TEXT("Housing Item Load"));
+
+		if (ItemData)
+		{
+			// TSoftObjectPtr의 에셋을 동기적으로 로드
+			UStaticMesh* SelectPreviewMesh = ItemData->ItemStaticMesh.LoadSynchronous();
+			PreviewHousingItem->SetPreviewMesh(SelectPreviewMesh);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("[Housing] Failed to load Static Mesh for item"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Housing] Item DataTable not found"));
+	}
+}
+
+void ACuteAlienController::Server_SpawnHousingItem_Implementation(const FTransform& TentTransform)
+{
+	// AMumulMumulGameMode* GM = GetWorld()->GetAuthGameMode<AMumulMumulGameMode>();
+	// if (GM)
+	// {
+	// 	AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>();
+	// 	if (PS)
+	// 	{
+	// 		// [수정] UserIndex도 같이 넘기고, bSaveToDisk = true로 설정
+	// 		GM->SpawnTent(TentTransform, PS->PS_UserIndex, true);
+	// 	}
+	// }
 }
 
 void ACuteAlienController::RequestStartMeetingRecording(FString InMeetingTitle, FString InAgenda, FString InDesc)

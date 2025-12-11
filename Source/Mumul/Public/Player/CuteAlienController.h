@@ -80,6 +80,7 @@ protected:
 	UPROPERTY()
 	TObjectPtr<class UInputAction> IA_Click;
 	void OnClick(const FVector& TentLocation, const FRotator& TentRotation);
+	void OnHousingItemClick(const FVector& HousingItemLocation, const FRotator& HousingItemRotation);
 	UPROPERTY()
 	TObjectPtr<class UInputAction> IA_QuitGame;
 	void OnPressEsc();
@@ -114,11 +115,24 @@ protected:
 	UPROPERTY()
 	TObjectPtr<class ATentActor> Tent;
 
+	UPROPERTY()
+	TSubclassOf<class APreviewHousingItemActor> PreviewHousingItemClass;
+	UPROPERTY()
+	TObjectPtr<class APreviewHousingItemActor> PreviewHousingItem;
+	UPROPERTY()
+	TSubclassOf<class AHousingItemActor> HousingItemClass;
+	UPROPERTY()
+	TObjectPtr<class AHousingItemActor> HousingItem;
+
 public:
 	void ShowPreviewTent();
+	void ShowPreviewHousingItem(FName idx);
 
 	UFUNCTION(Server, Reliable)
 	void Server_SpawnTent(const FTransform& TentTransform);
+
+	UFUNCTION(Server, Reliable)
+	void Server_SpawnHousingItem(const FTransform& TentTransform);
 
 	void RequestStartMeetingRecording(FString InMeetingTitle, FString InAgenda, FString InDesc);
 	void RequestStopMeetingRecording();

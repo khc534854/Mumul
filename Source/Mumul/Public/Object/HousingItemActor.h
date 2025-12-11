@@ -16,19 +16,26 @@ public:
 	AHousingItemActor();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 public:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	class UStaticMeshComponent* MeshComp;
+	// 아이템의 외형을 담당하는 메쉬
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Housing")
+	TObjectPtr<class UStaticMeshComponent> MeshComp;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	class UBoxComponent* CollisionComp;
+	// 충돌 및 오버랩 감지용 (선택 사항, 메쉬 자체 충돌을 쓸 수도 있음)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Housing")
+	TObjectPtr<class UBoxComponent> CollisionComp;
 
-	// 설치 가능/불가능 색상 변경
-	void SetPlacementStatus(bool bCanPlace);
-
-	// 아이템 ID 저장 (나중에 어떤 아이템인지 확인용)
+	// 어떤 아이템인지 식별하기 위한 ID
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadOnly, Category = "Housing")
 	FName ItemID;
+
+	// 주인의 UserIndex (텐트와 소유권 확인용)
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Housing")
+	int32 OwnerUserIndex;
+
+	// 초기화 함수 (스폰 시 호출)
+	void InitHousingItem(FName NewItemID, int32 NewOwnerIndex, UStaticMesh* NewMesh);
 };
