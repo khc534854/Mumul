@@ -71,7 +71,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Montage")
 	TObjectPtr<class UAnimMontage> RollMontage;
 	UPROPERTY(EditDefaultsOnly, Category = "Roll Velocity")
-	float RollStrength = 100.f;
+	float RollStrength = 730.f;
 
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;

@@ -156,7 +156,7 @@ void AMumulCharacter::Server_OnJump_Implementation(const FInputActionValue& Valu
 
 void AMumulCharacter::Multicast_OnJumpAnimation_Implementation()
 {
-	if (PlayerAnim->Montage_IsPlaying(JumpMontage) == false && GetCharacterMovement()->IsFalling() == false)
+	if (PlayerAnim->Montage_IsPlaying(JumpMontage) == false && GetCharacterMovement()->IsFalling() == false && PlayerAnim->Montage_IsPlaying(RollMontage) == false)
 	{
 		PlayerAnim->Montage_Play(JumpMontage);
 	}
@@ -166,7 +166,7 @@ void AMumulCharacter::Multicast_OnRollAnimation_Implementation()
 {
 	if (PlayerAnim->Montage_IsPlaying(RollMontage) == false)
 	{
-		FVector Dir = GetActorForwardVector() + FVector(0, 0, 0.25f);
+		FVector Dir = GetActorForwardVector() + FVector(0, 0, 0.21f);
 		Dir.Normalize();
 		LaunchCharacter(Dir * RollStrength, false, false);
 		PlayerAnim->Montage_Play(RollMontage);

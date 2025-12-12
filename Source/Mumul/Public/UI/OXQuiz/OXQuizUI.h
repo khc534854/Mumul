@@ -15,6 +15,7 @@ class MUMUL_API UOXQuizUI : public UUserWidget
 	GENERATED_BODY()
 	
 protected:
+	virtual void NativeConstruct() override;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UWidgetSwitcher> OXQuizWS;
 	UPROPERTY(meta=(BindWidget))
@@ -34,6 +35,8 @@ protected:
 	TObjectPtr<class UScrollBox> AnswerListScrollBox;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> ConfirmBtn;
+	UFUNCTION()
+	void OnConfirmResult();
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
 	TSubclassOf<class UAnswerCommentaryUI> AnswerCommentaryUIClass;
 	

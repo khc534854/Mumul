@@ -3,6 +3,7 @@
 
 #include "UI/OXQuiz/OXQuizUI.h"
 
+#include "Components/Button.h"
 #include "Components/ScrollBox.h"
 #include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
@@ -13,9 +14,21 @@
 #include "UI/OXQuiz/QuizQuestionUI.h"
 
 
+void UOXQuizUI::NativeConstruct()
+{
+	Super::NativeConstruct();
+	
+	ConfirmBtn->OnPressed.AddDynamic(this, &UOXQuizUI::OnConfirmResult);
+}
+
 void UOXQuizUI::SetTimerText(const FString& NewTime)
 {
 	QuizTimerText->BaseText->SetText(FText::FromString(NewTime));
+}
+
+void UOXQuizUI::OnConfirmResult()
+{
+	this->SetVisibility(ESlateVisibility::Collapsed);
 }
 
 void UOXQuizUI::SwitchQuizState(const bool& QuizOrResult)

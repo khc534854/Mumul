@@ -147,7 +147,7 @@ ACuteAlienController::ACuteAlienController()
 	{
 		OXQuizUIClass = OXQuizUIClassFinder.Class;
 	}
-	
+
 	static ConstructorHelpers::FObjectFinder<UInputAction> IA_InteractFinder(
 		TEXT("/Game/Yeomin/Characters/Inputs/Actions/IA_Interact.IA_Interact"));
 	if (IA_InteractFinder.Succeeded())
@@ -161,8 +161,9 @@ void ACuteAlienController::BeginPlay()
 	Super::BeginPlay();
 
 	GS = Cast<AMumulGameState>(GetWorld()->GetGameState());
-	
-	OXQuizTrigger = Cast<AOXQuizTriggerActor>(UGameplayStatics::GetActorOfClass(GetWorld(), AOXQuizTriggerActor::StaticClass()));
+
+	OXQuizTrigger = Cast<AOXQuizTriggerActor>(
+		UGameplayStatics::GetActorOfClass(GetWorld(), AOXQuizTriggerActor::StaticClass()));
 
 	HttpSystem = GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>();
 	if (HttpSystem)
@@ -265,7 +266,7 @@ void ACuteAlienController::SetupInputComponent()
 void ACuteAlienController::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	
+
 	DOREPLIFETIME(ACuteAlienController, bIsNearEnoughToTrigger)
 }
 
@@ -441,7 +442,7 @@ void ACuteAlienController::Server_RequestStartQuiz_Implementation()
 	UE_LOG(LogTemp, Warning, TEXT("OnInteract bIsNearEnoughToTrigger: %d"), bIsNearEnoughToTrigger)
 	if (!bIsNearEnoughToTrigger)
 		return;
-	
+
 	OXQuizTrigger->OnTriggerQuiz(Cast<AMumulPlayerState>(PlayerState)->PS_UserIndex);
 }
 
@@ -1224,10 +1225,13 @@ void ACuteAlienController::Client_SendChat_Implementation(const FString& TeamID,
 
 void ACuteAlienController::Client_DisplayQuestion_Implementation(const FString& NewQuestion)
 {
-	OXQuizUI->SwitchQuizState(true);
-	OXQuizUI->SetVisibility(ESlateVisibility::Visible);
-	OXQuizUI->SetQuizQuestion(NewQuestion);
-	OXQuizUI->StartQuestionTimer();
+	if (OXQuizUI)
+	{
+		OXQuizUI->SwitchQuizState(true);
+		OXQuizUI->SetVisibility(ESlateVisibility::Visible);
+		OXQuizUI->SetQuizQuestion(NewQuestion);
+		OXQuizUI->StartQuestionTimer();
+	}
 }
 
 void ACuteAlienController::Client_DisplayAnswer_Implementation(bool AnswerResult, bool NewAnswer,
@@ -1238,7 +1242,7 @@ void ACuteAlienController::Client_DisplayAnswer_Implementation(bool AnswerResult
 	{
 		CheckAnswer = true;
 	}
-	
+
 	OXQuizUI->SetQuizAnswer(CheckAnswer, NewAnswer, NewCommentary);
 	OXQuizUI->StartAnswerTimer();
 }
@@ -1251,7 +1255,7 @@ void ACuteAlienController::Client_DisplayResult_Implementation(bool AnswerResult
 	{
 		CheckAnswer = true;
 	}
-	
+
 	OXQuizUI->SwitchQuizState(false);
 	OXQuizUI->SetQuizResult(CheckAnswer, QuestionText, AnswerText, CommentaryText);
 }
