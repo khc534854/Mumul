@@ -599,10 +599,10 @@ void UHttpNetworkSubsystem::SendCreateTeamChatRequest(const FString& TeamName, c
 	Request->ProcessRequest();
 }
 
-void UHttpNetworkSubsystem::StartLearningQuizRequest(const FString& RequestQuestion, const FString& Difficulty)
+void UHttpNetworkSubsystem::StartLearningQuizRequest(const int32& UserID, const FString& Difficulty)
 {
 	FLearningQuizRequest QuizRequest;
-	QuizRequest.question = RequestQuestion;
+	QuizRequest.userId = UserID;
 	QuizRequest.grade = Difficulty;
 
 	FString Endpoint = FString(TEXT("learning_quiz/generate"));

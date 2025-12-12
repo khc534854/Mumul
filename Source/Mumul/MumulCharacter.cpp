@@ -166,7 +166,9 @@ void AMumulCharacter::Multicast_OnRollAnimation_Implementation()
 {
 	if (PlayerAnim->Montage_IsPlaying(RollMontage) == false)
 	{
-		LaunchCharacter(GetActorForwardVector() * RollStrength, false, false);
+		FVector Dir = GetActorForwardVector() + FVector(0, 0, 0.25f);
+		Dir.Normalize();
+		LaunchCharacter(Dir * RollStrength, false, false);
 		PlayerAnim->Montage_Play(RollMontage);
 	}
 }

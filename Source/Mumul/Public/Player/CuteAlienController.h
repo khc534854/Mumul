@@ -35,15 +35,20 @@ class MUMUL_API ACuteAlienController : public APlayerController
 public:
 	UPROPERTY()
 	FPlayerArrayUpdated OnPlayerArrayUpdated;
-
+	UPROPERTY(Replicated)
+	bool bIsNearEnoughToTrigger = false;
+	
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UPROPERTY()
 	TObjectPtr<class AMumulGameState> GS;
 	UPROPERTY()
 	TObjectPtr<class UHttpNetworkSubsystem> HttpSystem;
+	UPROPERTY()
+	TObjectPtr<class AOXQuizTriggerActor> OXQuizTrigger;
 
 	UFUNCTION(Server, Reliable)
 	void Server_InitPlayerInfo(int32 UID, const FString& Name, const FString& Type, int32 Tendency);
@@ -85,6 +90,11 @@ protected:
 	UPROPERTY()
 	TObjectPtr<class UInputAction> IA_QuitGame;
 	void OnPressEsc();
+	UPROPERTY()
+	TObjectPtr<class UInputAction> IA_Interact;
+	void OnInteract();
+	UFUNCTION(Server, Reliable)
+	void Server_RequestStartQuiz();
 
 	UPROPERTY()
 	TSubclassOf<class URadialUI> RadialUIClass;

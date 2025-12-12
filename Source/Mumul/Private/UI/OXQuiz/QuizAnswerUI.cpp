@@ -5,8 +5,6 @@
 
 #include "Components/Border.h"
 #include "Components/TextBlock.h"
-#include "UI/BaseUI/BaseText.h"
-
 
 
 void UQuizAnswerUI::SetAnswerColor(bool TrueGreenOrFalseRed)
@@ -23,20 +21,20 @@ void UQuizAnswerUI::SetAnswerResult(bool TrueCorrectOrFalseWrong)
 {
 	if (TrueCorrectOrFalseWrong)
 	{
-		JudgingAnswerText->BaseText->SetText(FText::FromString("정답!)"));
+		JudgingAnswerText->SetText(FText::FromString(TEXT("정답!")));
 		return;
 	}
-	JudgingAnswerText->BaseText->SetText(FText::FromString("오답!)"));
+	JudgingAnswerText->SetText(FText::FromString(TEXT("오답!")));
 }
 
 void UQuizAnswerUI::SetQuizAnswer(bool TrueCorrectOrFalseWrong)
 {
 		if (TrueCorrectOrFalseWrong)
 		{
-			AnswerText->BaseText->SetText(FText::FromString("정답은 O 입니다.)"));
+			AnswerText->SetText(FText::FromString(TEXT("정답은 O 입니다.")));
 			return;
 		}
-	AnswerText->BaseText->SetText(FText::FromString("정답은 X 입니다.)"));
+	AnswerText->SetText(FText::FromString(TEXT("정답은 X 입니다.")));
 }
 
 void UQuizAnswerUI::SetAnswerCommentary(const FString& NewCommentary)

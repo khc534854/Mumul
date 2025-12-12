@@ -307,8 +307,8 @@ struct FLearningQuizRequest
 	GENERATED_BODY()
 
 	UPROPERTY()
-	FString question;
-
+	int32 userId;
+	
 	UPROPERTY()
 	FString grade;
 };

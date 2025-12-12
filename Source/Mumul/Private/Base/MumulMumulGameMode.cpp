@@ -5,6 +5,7 @@
 
 #include "JsonObjectConverter.h"
 #include "Base/MumulGameState.h"
+#include "Components/BoxComponent.h"
 #include "Player/MumulPlayerState.h"
 #include "Save/MapDataSaveGame.h"
 #include "Kismet/GameplayStatics.h"
@@ -259,23 +260,20 @@ void AMumulMumulGameMode::StartQuestionPhase()
 
 void AMumulMumulGameMode::EnterNextStep()
 {
-	// 정답 판정
-	OXQuizActor->JudgePlayerAnswers();
-	
 	if (QuizPhase == EQuizPhase::Question)
 	{
-		if (CurrentQuizIdx == MaxQuizCount - 1)
-		{
-			ShowResult();
-			return;
-		}
-
 		StartAnswerPhase();
 		return;
 	}
 
 	if (QuizPhase == EQuizPhase::Answer)
 	{
+		if (CurrentQuizIdx == MaxQuizCount - 1)
+		{
+			ShowResult();
+			return;
+		}
+		
 		CurrentQuizIdx++;
 		StartQuestionPhase();
 	}
@@ -283,8 +281,11 @@ void AMumulMumulGameMode::EnterNextStep()
 
 void AMumulMumulGameMode::StartAnswerPhase()
 {
+	// 정답 판정
+	OXQuizActor->JudgePlayerAnswers();
+	
 	QuizPhase = EQuizPhase::Answer;
-
+	
 	UE_LOG(LogTemp, Warning, TEXT("해설 %d 표시"), CurrentQuizIdx);
 
 	bool Answer = false;
@@ -309,6 +310,9 @@ void AMumulMumulGameMode::StartAnswerPhase()
 
 void AMumulMumulGameMode::ShowResult()
 {
+	// 정답 판정
+	OXQuizActor->JudgePlayerAnswers();
+	
 	// 전체 정답 표기
 	for (TPair<TObjectPtr<ACuteAlienController>, TArray<bool>>& Elem : ParticipatingPlayers)
 	{
@@ -326,4 +330,9 @@ void AMumulMumulGameMode::ShowResult()
 			Elem.Key->Client_DisplayResult(Elem.Value[QuestionIdx], LearningQuiz.quiz[QuestionIdx].question, Answer, LearningQuiz.quiz[QuestionIdx].explanation);
 		}
 	}
+	
+	OXQuizActor->FrontBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	OXQuizActor->BackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	OXQuizActor->LeftBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	OXQuizActor->RightBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }

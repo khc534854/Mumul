@@ -18,9 +18,9 @@ protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UBorder> AnswerBorder;
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UBaseText> JudgingAnswerText;
+	TObjectPtr<class UTextBlock> JudgingAnswerText;
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UBaseText> AnswerText;
+	TObjectPtr<class UTextBlock> AnswerText;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UTextBlock> CommentaryText;
 	

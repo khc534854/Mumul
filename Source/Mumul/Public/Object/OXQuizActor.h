@@ -14,19 +14,25 @@ class MUMUL_API AOXQuizActor : public AActor
 
 protected:
 	virtual void BeginPlay() override;
-	virtual void Tick(float DeltaTime) override;
 	
 	UPROPERTY()
 	TObjectPtr<class AMumulMumulGameMode> GM;
 	
 	UPROPERTY()
-	TObjectPtr<class UArrowComponent> LineArrow;
-	UPROPERTY()
-	TObjectPtr<class UBoxComponent> ParticipateBox;
-	
-	UFUNCTION(Server, Reliable)
-	void Server_StartOXQuiz(const FString& Question, const FString& Difficulty);
-	void CheckParticipatingPlayers();
+	TObjectPtr<class AOXQuizPlayerFinderActor> OXQuizPlayerFinder;
+
 public:
+	UPROPERTY()
+	TObjectPtr<class UArrowComponent> LineArrow;
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<class UBoxComponent> FrontBox;
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<class UBoxComponent> BackBox;
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<class UBoxComponent> LeftBox;
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<class UBoxComponent> RightBox;
+
+	void StartOXQuiz(const int32 UserID, const FString& Difficulty);
 	void JudgePlayerAnswers();
 };
