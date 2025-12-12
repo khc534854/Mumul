@@ -1223,19 +1223,19 @@ void ACuteAlienController::Client_SendChat_Implementation(const FString& TeamID,
 	GroupChatUI->AddChat(TeamID, CurrentTime, Name, Text);
 }
 
-void ACuteAlienController::Client_DisplayQuestion_Implementation(const FString& NewQuestion)
+void ACuteAlienController::Client_DisplayQuestion_Implementation(const FString& NewQuestion, const int32& QuestionTime)
 {
 	if (OXQuizUI)
 	{
 		OXQuizUI->SwitchQuizState(true);
 		OXQuizUI->SetVisibility(ESlateVisibility::Visible);
 		OXQuizUI->SetQuizQuestion(NewQuestion);
-		OXQuizUI->StartQuestionTimer();
+		OXQuizUI->StartQuestionTimer(QuestionTime);
 	}
 }
 
 void ACuteAlienController::Client_DisplayAnswer_Implementation(bool AnswerResult, bool NewAnswer,
-                                                               const FString& NewCommentary)
+                                                               const FString& NewCommentary, const int32& AnswerTime)
 {
 	bool CheckAnswer = false;
 	if (AnswerResult == NewAnswer)
@@ -1244,7 +1244,7 @@ void ACuteAlienController::Client_DisplayAnswer_Implementation(bool AnswerResult
 	}
 
 	OXQuizUI->SetQuizAnswer(CheckAnswer, NewAnswer, NewCommentary);
-	OXQuizUI->StartAnswerTimer();
+	OXQuizUI->StartAnswerTimer(AnswerTime);
 }
 
 void ACuteAlienController::Client_DisplayResult_Implementation(bool AnswerResult, const FString& QuestionText,

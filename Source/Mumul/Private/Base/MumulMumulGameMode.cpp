@@ -250,7 +250,7 @@ void AMumulMumulGameMode::StartQuestionPhase()
 	// 문제 표시
 	for (TPair<TObjectPtr<ACuteAlienController>, TArray<bool>>& Elem : ParticipatingPlayers)
 	{
-		Elem.Key->Client_DisplayQuestion(LearningQuiz.quiz[CurrentQuizIdx].question);
+		Elem.Key->Client_DisplayQuestion(LearningQuiz.quiz[CurrentQuizIdx].question, QuestionTime);
 	}
 
 
@@ -301,7 +301,7 @@ void AMumulMumulGameMode::StartAnswerPhase()
 	// 해설 표시
 	for (TPair<TObjectPtr<ACuteAlienController>, TArray<bool>>& Elem : ParticipatingPlayers)
 	{
-		Elem.Key->Client_DisplayAnswer(Elem.Value[CurrentQuizIdx], Answer, LearningQuiz.quiz[CurrentQuizIdx].explanation);
+		Elem.Key->Client_DisplayAnswer(Elem.Value[CurrentQuizIdx], Answer, LearningQuiz.quiz[CurrentQuizIdx].explanation, AnswerTime);
 	}
 
 	GetWorld()->GetTimerManager().SetTimer(

@@ -21,9 +21,27 @@ void UOXQuizUI::NativeConstruct()
 	ConfirmBtn->OnPressed.AddDynamic(this, &UOXQuizUI::OnConfirmResult);
 }
 
-void UOXQuizUI::SetTimerText(const FString& NewTime)
+void UOXQuizUI::SetTimerText(const int32& NewTime)
 {
-	QuizTimerText->BaseText->SetText(FText::FromString(NewTime));
+	if (QuizTimerText)
+	{
+		QuizTimerText->SetText(FText::FromString(FString::Printf(TEXT("%d초"), NewTime)));
+	}
+}
+
+void UOXQuizUI::UpdateTimer()
+{
+	RemainingTime--;
+
+	if (RemainingTime <= 0)
+	{
+		SetTimerText(0);
+		
+		GetWorld()->GetTimerManager().ClearTimer(QuizRemainingTimeHandler);
+		return;
+	}
+
+	SetTimerText(RemainingTime);
 }
 
 void UOXQuizUI::OnConfirmResult()
@@ -66,12 +84,36 @@ void UOXQuizUI::SetQuizAnswer(const bool& AnswerResult, const bool& NewAnswer, c
 	QuizSizeBox->AddChild(QuizAnswerUI);
 }
 
-void UOXQuizUI::StartQuestionTimer()
+void UOXQuizUI::StartQuestionTimer(const int32& QuestionTime)
 {
+	RemainingTime = QuestionTime;
+
+	SetTimerText(RemainingTime);
+	GetWorld()->GetTimerManager().ClearTimer(QuizRemainingTimeHandler);
+
+	GetWorld()->GetTimerManager().SetTimer(
+		QuizRemainingTimeHandler,
+		this,
+		&UOXQuizUI::UpdateTimer,
+		1.0f,
+		true
+	);
 }
 
-void UOXQuizUI::StartAnswerTimer()
+void UOXQuizUI::StartAnswerTimer(const int32& AnswerTime)
 {
+	RemainingTime = AnswerTime;
+
+	SetTimerText(RemainingTime);
+	GetWorld()->GetTimerManager().ClearTimer(QuizRemainingTimeHandler);
+
+	GetWorld()->GetTimerManager().SetTimer(
+		QuizRemainingTimeHandler,
+		this,
+		&UOXQuizUI::UpdateTimer,
+		1.0f,
+		true
+	);
 }
 
 

@@ -23,13 +23,16 @@ protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UImage> TimerIMG;
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UBaseText> QuizTimerText;
+	TObjectPtr<class UTextBlock> QuizTimerText;
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
 	TSubclassOf<class UQuizQuestionUI> QuizQuestionUIClass;
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
 	TSubclassOf<class UQuizAnswerUI> QuizAnswerUIClass;
 	
-	void SetTimerText(const FString& NewTime);
+	FTimerHandle QuizRemainingTimeHandler;
+	int32 RemainingTime;
+	void SetTimerText(const int32& NewTime);
+	void UpdateTimer();
 	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UScrollBox> AnswerListScrollBox;
@@ -47,8 +50,8 @@ public:
 	
 	void SetQuizAnswer(const bool& AnswerResult, const bool& NewAnswer, const FString& NewCommentary);
 	
-	void StartQuestionTimer();
-	void StartAnswerTimer();
+	void StartQuestionTimer(const int32& QuestionTime);
+	void StartAnswerTimer(const int32& QuestionTime);
 	
 	void SetQuizResult(const bool& AnswerResult, const FString& QuestionText, const bool& AnswerText, const FString& CommentaryText);
 };

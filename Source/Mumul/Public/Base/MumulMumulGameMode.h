@@ -57,6 +57,10 @@ protected:
 	
 	int32 CurrentQuizIdx;
 	int32 MaxQuizCount;
+	UPROPERTY(EditAnywhere, Category="OXQuiz Time")
+	int32 QuestionTime = 5;
+	UPROPERTY(EditAnywhere, Category="OXQuiz Time")
+	int32 AnswerTime = 2;
 	FTimerHandle QuizTimer;
 	void StartLearningQuiz();
 	void StartQuestionPhase();

@@ -246,9 +246,9 @@ protected:
 	TObjectPtr<class UOXQuizUI> OXQuizUI;
 public:
 	UFUNCTION(Client, Reliable)
-	void Client_DisplayQuestion(const FString& NewQuestion);
+	void Client_DisplayQuestion(const FString& NewQuestion, const int32& QuestionTime);
 	UFUNCTION(Client, Reliable)
-	void Client_DisplayAnswer(bool AnswerResult, bool NewAnswer, const FString& NewCommentary);
+	void Client_DisplayAnswer(bool AnswerResult, bool NewAnswer, const FString& NewCommentary, const int32& AnswerTime);
 	UFUNCTION(Client, Reliable)
 	void Client_DisplayResult(bool AnswerResult, const FString& QuestionText, bool AnswerText, const FString& CommentaryText);
 };

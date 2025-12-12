@@ -4,6 +4,7 @@
 #include "Object/OXQuizTriggerActor.h"
 
 #include "Components/SphereComponent.h"
+#include "Components/WidgetComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Object/OXQuizActor.h"
 #include "Player/CuteAlienController.h"
@@ -13,8 +14,7 @@
 // Sets default values
 AOXQuizTriggerActor::AOXQuizTriggerActor()
 {
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 	
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	
@@ -22,6 +22,9 @@ AOXQuizTriggerActor::AOXQuizTriggerActor()
 	TriggerSphere->SetupAttachment(RootComponent);
 	TriggerSphere->OnComponentBeginOverlap.AddDynamic(this, &AOXQuizTriggerActor::OnBeginOverlapPlayer);
 	TriggerSphere->OnComponentEndOverlap.AddDynamic(this, &AOXQuizTriggerActor::OnEndOverlapPlayer);
+	
+	DifficultyBubble = CreateDefaultSubobject<UWidgetComponent>(TEXT("DifficultyBubble"));
+	DifficultyBubble->SetupAttachment(TriggerSphere);
 }
 
 // Called when the game starts or when spawned
@@ -30,10 +33,36 @@ void AOXQuizTriggerActor::BeginPlay()
 	Super::BeginPlay();
 	
 	OXQuizActor = Cast<AOXQuizActor>(UGameplayStatics::GetActorOfClass(GetWorld(), AOXQuizActor::StaticClass()));
+
+	OriginalLocation = GetActorLocation();
+	Time = 0.f;
+}
+
+void AOXQuizTriggerActor::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	
+	// Hover
+	Time += DeltaTime;
+	float OffsetZ = FMath::Sin(Time * HoverSpeed) * HoverAmplitude;
+
+	FVector NewLocation = OriginalLocation;
+	NewLocation.Z += OffsetZ;
+	SetActorLocation(NewLocation);
+	
+	if (DifficultyBubble)
+	{
+		if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+		{
+			FRotator CamRot = PC->PlayerCameraManager->GetCameraRotation();
+			CamRot.Yaw += 180.f;
+			DifficultyBubble->SetWorldRotation(CamRot);
+		}
+	}
 }
 
 void AOXQuizTriggerActor::OnBeginOverlapPlayer(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+                                               UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (!HasAuthority())
 		return;
