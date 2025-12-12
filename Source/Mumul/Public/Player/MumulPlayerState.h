@@ -46,7 +46,7 @@ public:
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "User Info")
 	int32 PS_TendencyID = 0;
 
-	UPROPERTY(Replicated, BlueprintReadOnly, Category = "User Info")
+	UPROPERTY(ReplicatedUsing = OnRep_TendencyID, BlueprintReadOnly, Category = "User Info")
 	TArray<FTeamData> PS_PlayerTeamList;
 
 	// 현재 보이스 채널 ID (Replicated)
@@ -69,6 +69,9 @@ public:
 	
 	UFUNCTION()
 	void OnRep_EquippedCustomID();
+
+	UFUNCTION()
+	void OnRep_TendencyID();
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 

@@ -79,3 +79,11 @@ void AMumulPlayerState::OnRep_EquippedCustomID()
 		Character->UpdateCustomMesh(EquippedCustomID);
 	}
 }
+
+void AMumulPlayerState::OnRep_TendencyID()
+{
+	if (ACuteAlienPlayer* Character = Cast<ACuteAlienPlayer>(GetPawn()))
+	{
+		Character->UpdateBodyMaterial(PS_TendencyID);
+	}
+}

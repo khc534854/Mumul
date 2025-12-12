@@ -104,40 +104,13 @@ void ACuteAlienPlayer::BeginPlay()
 		}
 	}
 
-	AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>();
-	if (PS)
+	if (AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>())
 	{
-		uint32 TendencyIdx = PS->PS_TendencyID;
-		if (TendencyIdx == 1 || TendencyIdx == 0)
-		{
-			GetMesh()->SetMaterial(0, PlayerBodyMaterials[0]);
-			GetMesh()->SetMaterial(2, PlayerBodyMaterials[1]);
-			GetMesh()->SetMaterial(3, PlayerBodyMaterials[2]);
-		}
-		else if (TendencyIdx == 2)
-		{
-			GetMesh()->SetMaterial(0, PlayerBodyMaterials[(TendencyIdx - 1) * 3]);
-			GetMesh()->SetMaterial(2, PlayerBodyMaterials[(TendencyIdx - 1) * 3 + 1]);
-			GetMesh()->SetMaterial(3, PlayerBodyMaterials[(TendencyIdx - 1) * 3 + 2]);
-		}
-		else if (TendencyIdx == 3)
-		{
-			GetMesh()->SetMaterial(0, PlayerBodyMaterials[(TendencyIdx - 1) * 3]);
-			GetMesh()->SetMaterial(2, PlayerBodyMaterials[(TendencyIdx - 1) * 3 + 1]);
-			GetMesh()->SetMaterial(3, PlayerBodyMaterials[(TendencyIdx - 1) * 3 + 2]);
-		}
-		else if (TendencyIdx == 4)
-		{
-			GetMesh()->SetMaterial(0, PlayerBodyMaterials[(TendencyIdx - 1) * 3]);
-			GetMesh()->SetMaterial(2, PlayerBodyMaterials[(TendencyIdx - 1) * 3 + 1]);
-			GetMesh()->SetMaterial(3, PlayerBodyMaterials[(TendencyIdx - 1) * 3 + 2]);
-		}
-		else if (TendencyIdx == 5)
-		{
-			GetMesh()->SetMaterial(0, PlayerBodyMaterials[(TendencyIdx - 1) * 3]);
-			GetMesh()->SetMaterial(2, PlayerBodyMaterials[(TendencyIdx - 1) * 3 + 1]);
-			GetMesh()->SetMaterial(3, PlayerBodyMaterials[(TendencyIdx - 1) * 3 + 2]);
-		}
+		UpdateBodyMaterial(PS->PS_TendencyID);
+		// 이미 장착된 아이템이 있다면 적용 (Replication 타이밍 이슈 방지)
+		UpdateCustomMesh(PS->EquippedCustomID);
+		
+
 	}
 	
 }
@@ -173,6 +146,29 @@ void ACuteAlienPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
 
+void ACuteAlienPlayer::UpdateBodyMaterial(int32 TendencyIdx)
+{
+	if (PlayerBodyMaterials.Num() == 0) return;
+
+	int32 MatIndexStart = 0;
+
+	if (TendencyIdx <= 1)
+	{
+		MatIndexStart = 0;
+	}
+	else if (TendencyIdx >=2 && TendencyIdx <= 5)
+	{
+		MatIndexStart = (TendencyIdx - 1) * 3;
+	}
+	
+	if (PlayerBodyMaterials.IsValidIndex(MatIndexStart + 2))
+	{
+		GetMesh()->SetMaterial(0, PlayerBodyMaterials[MatIndexStart]);
+		GetMesh()->SetMaterial(2, PlayerBodyMaterials[MatIndexStart + 1]);
+		GetMesh()->SetMaterial(3, PlayerBodyMaterials[MatIndexStart + 2]);
+	}
+}
+
 void ACuteAlienPlayer::Server_EquipCustom_Implementation(FName ItemID)
 {
 	AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>();
@@ -190,6 +186,11 @@ void ACuteAlienPlayer::Server_EquipCustom_Implementation(FName ItemID)
 		}
 
 		PS->OnRep_EquippedCustomID();
+
+		if (AMumulGameState* GS = GetWorld()->GetGameState<AMumulGameState>())
+		{
+			GS->Multicast_SavePlayerCosmetic(PS->PS_UserIndex, PS->EquippedCustomID);
+		}
 	}
 }
 

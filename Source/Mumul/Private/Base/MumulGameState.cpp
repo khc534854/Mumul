@@ -30,6 +30,36 @@ void AMumulGameState::RemovePlayerState(APlayerState* PlayerState)
 
 }
 
+void AMumulGameState::Multicast_SavePlayerCosmetic(int32 UserIndex, FName ItemID)
+{
+	FString SlotName = TEXT("IslandMapSave");
+
+	// 1. 로드
+	UMapDataSaveGame* SaveInst = Cast<UMapDataSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, 0));
+	if (!SaveInst)
+	{
+		SaveInst = Cast<UMapDataSaveGame>(UGameplayStatics::CreateSaveGameObject(UMapDataSaveGame::StaticClass()));
+	}
+
+	// 2. 데이터 갱신
+	if (ItemID == NAME_None)
+	{
+		// 해제 시 맵에서 제거하거나 None으로 저장
+		SaveInst->PlayerCosmetics.Remove(UserIndex);
+	}
+	else
+	{
+		// 맵에 추가/덮어쓰기
+		SaveInst->PlayerCosmetics.Add(UserIndex, ItemID);
+	}
+
+	// 3. 저장
+	if (UGameplayStatics::SaveGameToSlot(SaveInst, SlotName, 0))
+	{
+		UE_LOG(LogTemp, Log, TEXT("[SaveGame] User %d Equipped Item: %s"), UserIndex, *ItemID.ToString());
+	}
+}
+
 void AMumulGameState::RegisterMeeting(FString ChannelID, FString MeetingID)
 {
 	ActiveMeetings.Add(ChannelID, MeetingID);

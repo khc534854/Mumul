@@ -49,4 +49,7 @@ public:
 
 	UPROPERTY()
 	TMap<int32, FTransform> PlayerLocations;
+
+	UPROPERTY()
+	TMap<int32, FName> PlayerCosmetics;
 };

@@ -252,9 +252,12 @@ void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const
 		PS->SetPlayerName(Name);
 		PS->PS_RealName = Name;
 		PS->PS_UserType = Type;
-		PS->PS_TendencyID = Tendency;
 		PS->Server_SetVoiceChannelID(TEXT("Lobby"));
 		// PS->CampID = CampID; (인자 추가 시)
+
+		PS->PS_TendencyID = Tendency;
+		PS->OnRep_TendencyID();
+		
 
 		// 강제 동기화 (선택)
 		PS->ForceNetUpdate();
@@ -280,10 +283,17 @@ void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const
 
 					UE_LOG(LogTemp, Warning, TEXT("[Server] Restored User %d Location to %s"), UID,
 					       *SafeLoc.ToString());
+
+					FName SavedItemID = LoadInst->PlayerCosmetics[UID];
+                
+					// PlayerState에 적용
+					PS->EquippedCustomID = SavedItemID;
+					PS->OnRep_EquippedCustomID(); // 서버의 Pawn 업데이트
+                
+					UE_LOG(LogTemp, Log, TEXT("[Server] Loaded User %d Cosmetic: %s"), UID, *SavedItemID.ToString());
 				}
 			}
 		}
-
 		UE_LOG(LogTemp, Log, TEXT("[Server] PlayerState Initialized: %s (ID: %d)"), *Name, UID);
 	}
 }

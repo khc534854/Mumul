@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameState.h"
+#include "Player/MumulPlayerState.h"
 #include "MumulGameState.generated.h"
 
 
@@ -27,6 +28,7 @@ public:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_SavePlayerLocation(int32 UserIndex, FTransform Location);
+	void Multicast_SavePlayerCosmetic(int32 UserIndex, FName ItemID);
 
 protected:
 	UPROPERTY(Replicated)
