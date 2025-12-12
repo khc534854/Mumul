@@ -33,6 +33,7 @@
 #include "UI/GroupIconUI.h"
 #include "UI/PlayerUI.h"
 #include "UI/VoiceMeetingUI.h"
+#include "Kismet/KismetMathLibrary.h"
 
 static const FString HousingItemDataTablePath = TEXT("/Game/Khc/Blueprint/Object/HousingItemList.HousingItemList");
 
@@ -269,29 +270,28 @@ void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const
 			UMapDataSaveGame* LoadInst = Cast<UMapDataSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, 0));
 
 			// 해당 유저의 저장된 위치가 있는지 확인
-			if (LoadInst && LoadInst->PlayerLocations.Contains(UID))
+			if (LoadInst)
 			{
-				FTransform SavedTr = LoadInst->PlayerLocations[UID];
-
-				// 폰 이동 (텔레포트)
-				if (APawn* MyPawn = GetPawn())
+				// Z축(높이)을 살짝 띄워주는 게 안전합니다 (바닥 끼임 방지)
+				if (FTransform* SavedTr = LoadInst->PlayerLocations.Find(UID))
 				{
-					// Z축(높이)을 살짝 띄워주는 게 안전합니다 (바닥 끼임 방지)
-					FVector SafeLoc = SavedTr.GetLocation() + FVector(0, 0, 50.0f);
-					SavedTr.SetLocation(SafeLoc);
+					if (APawn* MyPawn = GetPawn())
+					{
+						// Z축 보정 (바닥 끼임 방지)
+						FVector SafeLoc = SavedTr->GetLocation() + FVector(0, 0, 50.0f);
+						SavedTr->SetLocation(SafeLoc);
+                   
+						MyPawn->SetActorTransform(*SavedTr, false, nullptr, ETeleportType::TeleportPhysics);
+                   
+						UE_LOG(LogTemp, Warning, TEXT("[Server] Restored User %d Location to %s"), UID, *SafeLoc.ToString());
+					}
+				}
 
-					MyPawn->SetActorTransform(SavedTr, false, nullptr, ETeleportType::TeleportPhysics);
-
-					UE_LOG(LogTemp, Warning, TEXT("[Server] Restored User %d Location to %s"), UID,
-					       *SafeLoc.ToString());
-
-					FName SavedItemID = LoadInst->PlayerCosmetics[UID];
-                
-					// PlayerState에 적용
-					PS->EquippedCustomID = SavedItemID;
-					PS->OnRep_EquippedCustomID(); // 서버의 Pawn 업데이트
-                
-					UE_LOG(LogTemp, Log, TEXT("[Server] Loaded User %d Cosmetic: %s"), UID, *SavedItemID.ToString());
+				if (FName* SavedItemID = LoadInst->PlayerCosmetics.Find(UID))
+				{
+					PS->EquippedCustomID = *SavedItemID;
+					PS->OnRep_EquippedCustomID();
+					UE_LOG(LogTemp, Log, TEXT("[Server] Loaded User %d Cosmetic: %s"), UID, *SavedItemID->ToString());
 				}
 			}
 		}
@@ -333,48 +333,64 @@ void ACuteAlienController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	if (PreviewTent)
-	{
-		// Line Trace from ViewPoint
-		FHitResult HitRes;
-		FCollisionQueryParams CollisionParams;
-		CollisionParams.AddIgnoredActor(this);
-
-		if (GetPawn())
-		{
-			TArray<AActor*> AttachedActors;
-			GetPawn()->GetAttachedActors(AttachedActors);
-			CollisionParams.AddIgnoredActors(AttachedActors);
-		}
-
-		FVector Start, End;
-		FRotator CamRot;
-		float Dist = 1500.f;
-		GetPlayerViewPoint(Start, CamRot);
-		End = Start + CamRot.Vector() * Dist;
-
-		bool bIsHit = GetWorld()->LineTraceSingleByChannel(
-			HitRes,
-			Start,
-			End,
-			ECC_Visibility,
-			CollisionParams
-		);
-
-		FTransform HitPointTransform(HitRes.ImpactNormal.Rotation() + FRotator(-90.f, 0.f, 0.f),
-		                             HitRes.ImpactPoint, FVector::OneVector);
-		PreviewTent->SetActorTransform(HitPointTransform);
-
-		if (WasInputKeyJustPressed(EKeys::LeftMouseButton))
-		{
-			OnClick(HitRes.ImpactPoint,
-			        HitRes.ImpactNormal.Rotation() + FRotator(-90.f, 0.f, 0.f));
-		}
-	}
-
-	if (PreviewHousingItem)
+    // ====================================================================================
+    // [1] 텐트 프리뷰 (Preview Tent)
+    // ====================================================================================
+    if (PreviewTent)
     {
-        // 1. 레이저 트레이스 (위치 업데이트)
+		FHitResult HitRes;
+       	FCollisionQueryParams CollisionParams;
+       	CollisionParams.AddIgnoredActor(this);
+       	if (GetPawn())
+       	{
+       	   CollisionParams.AddIgnoredActor(GetPawn());
+       	   TArray<AActor*> AttachedActors;
+       	   GetPawn()->GetAttachedActors(AttachedActors);
+       	   CollisionParams.AddIgnoredActors(AttachedActors);
+       	}
+	   	
+       	FVector Start, End;
+       	FRotator CamRot;
+       	float Dist = 1500.f;
+       	GetPlayerViewPoint(Start, CamRot);
+       	End = Start + CamRot.Vector() * Dist;
+	   	
+       	bool bIsHit = GetWorld()->LineTraceSingleByChannel(
+       	   HitRes, Start, End, ECC_Visibility, CollisionParams
+       	);
+	   	
+       	if (bIsHit)
+       	{
+       	    // [로테이션 수정]
+       	    // 1. 플레이어를 향하는 3D 벡터 계산 (2D 아님)
+       	    FVector DirectionToPlayer = GetPawn()->GetActorLocation() - HitRes.ImpactPoint;
+	   	
+       	    // 2. 이 벡터를 바닥 경사면(Normal) 위로 투영(Project) -> "경사면을 따라 플레이어를 보는 방향"
+       	    FVector ProjectedForward = FVector::VectorPlaneProject(DirectionToPlayer, HitRes.ImpactNormal);
+       	    ProjectedForward.Normalize();
+	   	
+       	    // 3. Z(Up)는 바닥 수직, X(Forward)는 투영된 방향으로 회전 생성
+       	    // 이렇게 하면 옆으로 비틀어지는(Roll) 현상이 사라집니다.
+       	    FRotator TargetRot = UKismetMathLibrary::MakeRotFromZX(HitRes.ImpactNormal, ProjectedForward);
+       		TargetRot.Pitch = 0.0f;
+       		TargetRot.Roll = 0.0f;
+       		
+	   	
+       	    FTransform HitPointTransform(TargetRot, HitRes.ImpactPoint, FVector::OneVector);
+       	    PreviewTent->SetActorTransform(HitPointTransform);
+	   	
+       	    if (WasInputKeyJustPressed(EKeys::LeftMouseButton))
+       	    {
+       	       OnClick(HitRes.ImpactPoint, TargetRot);
+       	    }
+       	}
+    }
+
+    // ====================================================================================
+    // [2] 하우징 아이템 프리뷰 (Preview Housing Item)
+    // ====================================================================================
+    if (PreviewHousingItem)
+    {
         FHitResult HitRes;
         FCollisionQueryParams CollisionParams;
         CollisionParams.AddIgnoredActor(this);
@@ -392,70 +408,74 @@ void ACuteAlienController::Tick(float DeltaSeconds)
         GetPlayerViewPoint(Start, CamRot);
         End = Start + CamRot.Vector() * 1500.f;
 
-        // ECC_WorldStatic: 바닥만 감지
         bool bIsHit = GetWorld()->LineTraceSingleByChannel(HitRes, Start, End, ECC_WorldStatic, CollisionParams);
 
         if (bIsHit)
         {
-        	float HalfHeight = 0.f;
-        	UBoxComponent* Box = PreviewHousingItem->FindComponentByClass<UBoxComponent>();
-        	if (Box)
-        	{
-        		HalfHeight = Box->GetScaledBoxExtent().Z;
-        	}
+            float HalfHeight = 0.f;
+            UBoxComponent* Box = PreviewHousingItem->FindComponentByClass<UBoxComponent>();
+            if (Box)
+            {
+               HalfHeight = Box->GetScaledBoxExtent().Z;
+            }
 
-        	// 2. 바닥의 기울기(Normal) 방향으로 절반 높이만큼 밀어냅니다.
-        	// 이렇게 하면 경사면에서도 파묻히지 않고 표면에 딱 붙습니다.
-        	FVector LiftOffset = HitRes.ImpactNormal * HalfHeight;
-        	FVector FinalLocation = HitRes.ImpactPoint + LiftOffset;
+            FVector LiftOffset = HitRes.ImpactNormal * HalfHeight;
+            FVector FinalLocation = HitRes.ImpactPoint + LiftOffset;
 
-        	// 3. 트랜스폼 설정
-        	FTransform HitPointTransform(
-				HitRes.ImpactNormal.Rotation() + FRotator(-90.f, 0.f, 0.f), // 회전 (모델 축에 따라 조절)
-				FinalLocation, // 수정된 위치 적용
-				FVector::OneVector
-			);
+            // [로테이션 수정 - 위와 동일한 논리 적용]
+            FVector DirectionToPlayer = GetPawn()->GetActorLocation() - HitRes.ImpactPoint;
+            
+            // 바닥 평면에 투영하여 기울어진 바닥에서도 자연스럽게 플레이어를 보게 함
+            FVector ProjectedForward = FVector::VectorPlaneProject(DirectionToPlayer, HitRes.ImpactNormal);
+            ProjectedForward.Normalize();
+
+            FRotator TargetRot = UKismetMathLibrary::MakeRotFromZX(HitRes.ImpactNormal, ProjectedForward);
+        	TargetRot.Pitch = 0.0f;
+        	TargetRot.Roll = 0.0f;
+
+            FTransform HitPointTransform(
+             TargetRot, 
+             FinalLocation, 
+             FVector::OneVector
+            );
             PreviewHousingItem->SetActorTransform(HitPointTransform);
         }
        
-        // 2. 입력 처리 (충돌 방지)
-        
+        // 입력 처리 부분 (기존 유지)
         if (WasInputKeyJustPressed(EKeys::LeftMouseButton))
         {
             if (PreviewHousingItem->bIsPlaceable && PreviewHousingItem->CurrentTargetTent)
             {
-                // 상대 좌표 계산
                 FTransform WorldTransform = PreviewHousingItem->GetActorTransform();
                 FTransform TentTransform = PreviewHousingItem->CurrentTargetTent->GetActorTransform();
                 FTransform RelativeTransform = WorldTransform.GetRelativeTransform(TentTransform);
 
-                // 서버에 설치 요청 (단일 진입점)
                 Server_PlaceHousingItem(PreviewHousingItem->CurrentTargetTent, SelectedItemID, RelativeTransform);
-
-                // 설치 완료 후 프리뷰 종료 및 UI 초기화
+                
                 StopPreviewHousingItem();
                 
-                // 1인칭 해제
                 if (AMumulCharacter* MyChar = Cast<AMumulCharacter>(GetPawn()))
                 {
                     MyChar->SetFirstPersonView(false);
                 }
-            }
-            else
-            {
-                // 설치 불가 피드백
-                // UE_LOG(LogTemp, Warning, TEXT("설치할 수 없는 위치입니다."));
+                if (PlayerUI)
+                {
+                    PlayerUI->ResetHousingSelection();
+                }
             }
         }
-        // else if (WasInputKeyJustPressed(EKeys::RightMouseButton))
-        // {
-        //     StopPreviewHousingItem();
-        //     if (AMumulCharacter* MyChar = Cast<AMumulCharacter>(GetPawn()))
-        //     {
-        //         MyChar->SetFirstPersonView(false);
-        //     }
-        //
-        // }
+        else if (WasInputKeyJustPressed(EKeys::RightMouseButton))
+        {
+            StopPreviewHousingItem();
+            if (AMumulCharacter* MyChar = Cast<AMumulCharacter>(GetPawn()))
+            {
+                MyChar->SetFirstPersonView(false);
+            }
+             if (PlayerUI)
+            {
+                PlayerUI->ResetHousingSelection();
+            }
+        }
     }
 }
 
