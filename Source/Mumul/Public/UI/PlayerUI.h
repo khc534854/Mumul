@@ -18,100 +18,81 @@ class MUMUL_API UPlayerUI : public UUserWidget
 protected:
 	virtual void NativeConstruct() override;
 
-	UFUNCTION()
-	void OnLogOutBtnClicked();
-	
-	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UBaseText> CurrentTime;
-
-	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UButton> PlayerCustomizeBtn;
-
-	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UScaleBox> CustomizeBox;
-
-	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UHorizontalBox> PlayerCustomizeItemBox;
-
+	// Minimap
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UImage> Minimap;
 
 	FTimerHandle MinimapBindTimer;
     
-	// [신규] 미니맵 연결 함수
 	UFUNCTION()
 	void TryBindMinimap();
 	
-	FTimerHandle FirstMinuteTimer;
-	UFUNCTION()
-	void StartMinuteTimer();
-	FTimerHandle TimeUpdater;
-	UFUNCTION()
-	void UpdateCurrentTime();
-
-	UFUNCTION(BlueprintCallable)
-	UVoiceChatComponent* GetVoiceComponent() const;
-	UFUNCTION(BlueprintImplementableEvent)
-	void ChangeMicStateImage();
-
-	UPROPERTY()
-	TObjectPtr<class ACuteAlienController> PC;
-	UPROPERTY()
-	TObjectPtr<class UGroupChatUI> GroupChatUI;
-	FTimerHandle GroupChatCheckTimer;
-	void CheckGroupChatUI();
-public:
-	void InitGroupChatUI(UGroupChatUI* UI);
-	
+	// Customize
 protected:
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UButton> TentBtn;
+	TObjectPtr<class UButton> PlayerCustomizeBtn;
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UButton> MicrophoneBtn;
-	
-	UPROPERTY(Transient, meta = (BindWidgetAnim))
-	TObjectPtr<class UWidgetAnimation > MicOn;
-
+	TObjectPtr<class UScaleBox> CustomizeBox;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UHorizontalBox> PlayerCustomizeItemBox;
 	UPROPERTY(Transient, meta = (BindWidgetAnim))
 	TObjectPtr<class UWidgetAnimation > CustomizeBoxAnim;
 
 	bool bIsOpenCustomizeUI = false;
 
-	UFUNCTION()
-	void OnCustomizeBoxClick();
-	void LoadAndGenerateItemList();
-
-protected:
 	UPROPERTY(EditDefaultsOnly, Category="Cosmetic")
-	TSubclassOf<class UCustomItemEntryUI> ItemEntryUIClass; // 새로 만든 위젯 클래스
+	TSubclassOf<class UCustomItemEntryUI> ItemEntryUIClass;
     
-	// 데이터 테이블 레퍼런스 (에디터에서 연결)
 	UPROPERTY(EditDefaultsOnly, Category="Cosmetic")
 	TObjectPtr<class UDataTable> CustomItemDataTable; 
 
-	// 장착 상태 변경 핸들러
+	UFUNCTION()
+	void OnCustomizeBoxClick();
+	void LoadAndGenerateItemList();
 	UFUNCTION()
 	void OnCustomItemEntryChecked(FName ItemID, bool bIsChecked);
     
-	// 장착된 아이템의 ID를 저장 (선택된 위젯을 빠르게 찾기 위해)
 	UPROPERTY()
 	TMap<FName, TObjectPtr<UCustomItemEntryUI>> ItemWidgetMap;
-	
-protected:
-	// 버튼 스타일 업데이트 함수 분리
-	UFUNCTION()
-	void UpdateMicButtonState(bool bActive);
-	UFUNCTION()
-	void UpdateRecordButtonState(bool bActive);
 
+	// Housing
+protected:
 	UFUNCTION()
 	void OnTentClicked();
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UButton> TentBtn;
 
-	UFUNCTION()
-	void OnMicClicked();
-	UFUNCTION()
-	void OnRecordClicked();
+	
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UButton> HousingBtn;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UScaleBox> HousingBox;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UHorizontalBox> HousingItemBox;
+	UPROPERTY(Transient, meta = (BindWidgetAnim))
+	TObjectPtr<class UWidgetAnimation > HousingBoxAnim;
 
+	bool bIsOpenHousingUI = false;
+	
+	UPROPERTY(EditDefaultsOnly, Category="Housing")
+	TSubclassOf<class UCustomItemEntryUI> HousingItemEntryUIClass;
+    
+	// 데이터 테이블 레퍼런스 (에디터에서 연결)
+	UPROPERTY(EditDefaultsOnly, Category="Housing")
+	TObjectPtr<class UDataTable> HousingItemDataTable;
+	
+	UFUNCTION()
+	void OnHousingBoxClick();
+	void LoadAndGenerateHousingItemList();
+	UFUNCTION()
+	void OnHousingItemEntryChecked(FName ItemID, bool bIsChecked);
+
+
+	UPROPERTY()
+	TMap<FName, TObjectPtr<UCustomItemEntryUI>> HousingWidgetMap;
+
+	// LogOut
+protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton > ProfileBtn;
 	UPROPERTY(meta=(BindWidget))
@@ -120,6 +101,9 @@ protected:
 	bool bIsSubHovered = false;
 	bool bIsTryingToHide = false;
 	FTimerHandle HideLogOutTimer;
+
+	UFUNCTION()
+	void OnLogOutBtnClicked();
 	void TryHideLogOutBtn();
 	void HideLogOutBtn();
 	UFUNCTION()
@@ -130,4 +114,51 @@ protected:
 	void OnLogOutBtnHovered();
 	UFUNCTION()
 	void OnLogOutBtnUnhovered();
+
+	// Voice
+protected:
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UButton> MicrophoneBtn;
+	UPROPERTY(Transient, meta = (BindWidgetAnim))
+	TObjectPtr<class UWidgetAnimation > MicOn;
+
+	UFUNCTION(BlueprintCallable)
+	UVoiceChatComponent* GetVoiceComponent() const;
+	UFUNCTION(BlueprintImplementableEvent)
+	void ChangeMicStateImage();
+	UFUNCTION()
+	void UpdateMicButtonState(bool bActive);
+	UFUNCTION()
+	void UpdateRecordButtonState(bool bActive);
+	UFUNCTION()
+	void OnMicClicked();
+	UFUNCTION()
+	void OnRecordClicked();
+
+	
+	// Time
+protected:
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UBaseText> CurrentTime;
+	
+	FTimerHandle FirstMinuteTimer;
+	FTimerHandle TimeUpdater;
+	
+	UFUNCTION()
+	void StartMinuteTimer();
+	UFUNCTION()
+	void UpdateCurrentTime();
+
+public :
+	// 공용 변수
+	UPROPERTY()
+	TObjectPtr<class ACuteAlienController> PC;
+	UPROPERTY()
+	TObjectPtr<class UGroupChatUI> GroupChatUI;
+	
+	FTimerHandle GroupChatCheckTimer;
+	
+	void CheckGroupChatUI();
+	void ResetHousingSelection();
+	void InitGroupChatUI(UGroupChatUI* UI);
 };

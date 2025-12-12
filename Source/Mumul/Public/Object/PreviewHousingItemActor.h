@@ -27,7 +27,18 @@ public:
 	// 설치 가능 여부
 	bool bIsPlaceable = true;
 
+	void SetOwnerInfo(int32 InUserIndex);
+
+	UPROPERTY(BlueprintReadOnly)
+	class ATentActor* CurrentTargetTent;
+
 protected:
+	// 내 텐트인지 확인하기 위한 ID
+	int32 MyUserIndex = -1;
+
+	// 겹쳐진 "내 텐트"의 개수 (1개 이상이어야 설치 가능)
+	int32 ValidTentCount = 0;
+
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	TObjectPtr<class UBoxComponent> BoxComp;
 

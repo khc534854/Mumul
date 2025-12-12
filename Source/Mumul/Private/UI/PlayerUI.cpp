@@ -3,12 +3,14 @@
 
 #include "UI/PlayerUI.h"
 
+#include "Animation/WidgetAnimation.h"
 #include "Components/Button.h"
 #include "Components/CheckBox.h"
 #include "Components/HorizontalBox.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Data/FCustomItemData.h"
+#include "Data/FHousingItemData.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Player/VoiceChatComponent.h"
 #include "Player/CuteAlienController.h"
@@ -57,32 +59,6 @@ void UPlayerUI::NativeConstruct()
 		0.5f, 
 		true // 반복 실행
 	);
-	//
-	// if (Minimap)
-	// {
-	// 	// 내 캐릭터(Pawn) 가져오기
-	// 	ACuteAlienPlayer* MyPawn = Cast<ACuteAlienPlayer>(GetOwningPlayerPawn());
- //        
-	// 	// 캐릭터가 있고, 캐릭터 안에 렌더 타겟이 생성되어 있다면
-	// 	if (MyPawn && MyPawn->MinimapRenderTarget)
-	// 	{
-	// 		// 1. 이미지 위젯의 머티리얼을 동적(Dynamic)으로 변환하여 가져옴
-	// 		UMaterialInstanceDynamic* DynMat = Minimap->GetDynamicMaterial();
- //            
-	// 		if (DynMat)
-	// 		{
-	// 			// 2. 머티리얼의 텍스처 파라미터에 렌더 타겟을 할당
-	// 			// 주의: "MinimapTexture" 부분은 실제 머티리얼의 파라미터 이름과 똑같아야 합니다!
-	// 			DynMat->SetTextureParameterValue(FName("MinimapTexture"), MyPawn->MinimapRenderTarget);
- //                
-	// 			UE_LOG(LogTemp, Log, TEXT("[UI] Minimap RenderTarget Assigned Successfully!"));
-	// 		}
-	// 	}
-	// 	else
-	// 	{
-	// 		UE_LOG(LogTemp, Warning, TEXT("[UI] Failed to get MinimapRenderTarget from Pawn."));
-	// 	}
-	// }
 	
 	if (UVoiceChatComponent* VoiceComp = GetVoiceComponent())
 	{
@@ -104,7 +80,9 @@ void UPlayerUI::NativeConstruct()
 	LogOutBtn->OnClicked.AddDynamic(this, &UPlayerUI::OnLogOutBtnClicked);
 
 	PlayerCustomizeBtn->OnClicked.AddDynamic(this, &UPlayerUI::OnCustomizeBoxClick);
+	HousingBtn->OnClicked.AddDynamic(this, &UPlayerUI::OnHousingBoxClick);
 	LoadAndGenerateItemList();
+	LoadAndGenerateHousingItemList();
 }
 
 void UPlayerUI::OnLogOutBtnClicked()
@@ -201,11 +179,17 @@ void UPlayerUI::OnCustomizeBoxClick()
 
 	if (bIsOpenCustomizeUI)
 	{
+		if (bIsOpenHousingUI)
+		{
+			PlayAnimation(HousingBoxAnim, 0, 1, EUMGSequencePlayMode::Reverse);
+			bIsOpenHousingUI = false;
+		}
 		PlayAnimation(CustomizeBoxAnim, 0, 1, EUMGSequencePlayMode::Forward);
 	}
 	else
 	{
 		PlayAnimation(CustomizeBoxAnim, 0, 1, EUMGSequencePlayMode::Reverse);
+		PC->OnToggleMouse();
 	}
 }
 
@@ -308,6 +292,111 @@ void UPlayerUI::UpdateRecordButtonState(bool bActive)
 void UPlayerUI::OnTentClicked()
 {
 	PC->ShowPreviewTent();
+}
+
+void UPlayerUI::OnHousingBoxClick()
+{
+	bIsOpenHousingUI = !bIsOpenHousingUI;
+
+	ResetHousingSelection();
+	if (bIsOpenHousingUI)
+	{
+		if (bIsOpenCustomizeUI)
+		{
+			PlayAnimation(CustomizeBoxAnim, 0, 1, EUMGSequencePlayMode::Reverse);
+			bIsOpenCustomizeUI = false;
+		}
+		PlayAnimation(HousingBoxAnim, 0, 1, EUMGSequencePlayMode::Forward);
+	}
+	else
+	{
+		PlayAnimation(HousingBoxAnim, 0, 1, EUMGSequencePlayMode::Reverse);
+		PC->OnToggleMouse();
+	}
+}
+
+void UPlayerUI::LoadAndGenerateHousingItemList()
+{
+	if (!HousingItemDataTable || !HousingItemEntryUIClass || !PC) return;
+    
+	HousingItemBox->ClearChildren();
+	HousingWidgetMap.Empty();
+
+	// 현재 캐릭터 (Pawn) 가져오기
+	ACuteAlienPlayer* MyPawn = Cast<ACuteAlienPlayer>(GetOwningPlayerPawn());
+	if (!MyPawn) return; 
+	
+	// 1. 데이터 테이블 순회
+	FString ContextString;
+	TArray<FName> RowNames = HousingItemDataTable->GetRowNames();
+
+	for (const FName& RowName : RowNames)
+	{
+		FHousingItemData* HousingItemData = HousingItemDataTable->FindRow<FHousingItemData>(RowName, ContextString);
+		if (!HousingItemData) continue;
+
+		// 2. 위젯 생성
+		UCustomItemEntryUI* ItemUI = CreateWidget<UCustomItemEntryUI>(this, HousingItemEntryUIClass);
+		if (ItemUI)
+		{
+			// 3. UI 초기화 및 데이터 전달
+			ItemUI->InitItem(
+				HousingItemData->ItemID, 
+				HousingItemData->ItemThumbnail.LoadSynchronous(), 
+				HousingItemData->ItemName.ToString(), 
+				MyPawn // 캐릭터 전달
+			);
+            
+			// 4. 이벤트 바인딩
+			ItemUI->OnItemChecked.AddDynamic(this, &UPlayerUI::OnHousingItemEntryChecked);
+
+			// 5. ScrollBox에 추가
+			HousingItemBox->AddChild(ItemUI);
+			HousingWidgetMap.Add(HousingItemData->ItemID, ItemUI);
+		}
+	}
+}
+
+void UPlayerUI::OnHousingItemEntryChecked(FName ItemID, bool bIsChecked)
+{
+	if (!PC) return;
+
+	if (bIsChecked)
+	{
+		// 1. [단일 선택] 다른 모든 항목 체크 해제
+		for (const TPair<FName, TObjectPtr<UCustomItemEntryUI>>& Pair : HousingWidgetMap)
+		{
+			if (Pair.Key != ItemID)
+			{
+				if (Pair.Value->ItemCheckBox && Pair.Value->ItemCheckBox->IsChecked())
+				{
+					// 이벤트 전파 없이 상태만 변경 (무한 루프 방지)
+					Pair.Value->ItemCheckBox->SetIsChecked(false);
+				}
+			}
+		}
+
+		// 2. 컨트롤러에게 해당 아이템의 프리뷰 모드 시작 요청
+		PC->ShowPreviewHousingItem(ItemID);
+	}
+	else
+	{
+		// 3. 체크 해제 시 하우징 모드 종료 (프리뷰 제거)
+		// 만약 현재 프리뷰 중인 아이템과 동일하다면 취소
+		PC->StopPreviewHousingItem();
+	}
+}
+
+void UPlayerUI::ResetHousingSelection()
+{
+	for (const TPair<FName, TObjectPtr<UCustomItemEntryUI>>& Pair : HousingWidgetMap)
+	{
+		if (Pair.Value && Pair.Value->ItemCheckBox)
+		{
+			// 이벤트 트리거 없이 체크 해제 (SetIsChecked는 이벤트를 발생시키지 않음)
+			Pair.Value->ItemCheckBox->SetIsChecked(false);
+		}
+	}
 }
 
 void UPlayerUI::OnMicClicked()

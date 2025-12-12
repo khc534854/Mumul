@@ -6,6 +6,7 @@
 #include "Engine/Texture2D.h"
 #include "FHousingItemData.generated.h"
 
+
 USTRUCT(BlueprintType)
 struct FHousingItemData : public FTableRowBase
 {

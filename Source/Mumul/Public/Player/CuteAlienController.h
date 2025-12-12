@@ -50,6 +50,9 @@ protected:
 public:
 	UFUNCTION(Server, Reliable)
 	void Server_InitPlayerArray();
+
+	UFUNCTION(Server, Reliable)
+	void Server_PlaceHousingItem(class ATentActor* TargetTent, FName ItemID, FTransform RelativeTransform);
 protected:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_InitPlayerArray();
@@ -76,11 +79,10 @@ protected:
 	void OnCancelUI();
 	UPROPERTY()
 	TObjectPtr<class UInputAction> IA_ToggleMouse;
-	void OnToggleMouse();
+	
 	UPROPERTY()
 	TObjectPtr<class UInputAction> IA_Click;
 	void OnClick(const FVector& TentLocation, const FRotator& TentRotation);
-	void OnHousingItemClick(const FVector& HousingItemLocation, const FRotator& HousingItemRotation);
 	UPROPERTY()
 	TObjectPtr<class UInputAction> IA_QuitGame;
 	void OnPressEsc();
@@ -124,15 +126,18 @@ protected:
 	UPROPERTY()
 	TObjectPtr<class AHousingItemActor> HousingItem;
 
+	FName SelectedItemID = NAME_None;
+
 public:
 	void ShowPreviewTent();
+	void StopPreviewTent();
 	void ShowPreviewHousingItem(FName idx);
+	void StopPreviewHousingItem();
+	
 
 	UFUNCTION(Server, Reliable)
 	void Server_SpawnTent(const FTransform& TentTransform);
 
-	UFUNCTION(Server, Reliable)
-	void Server_SpawnHousingItem(const FTransform& TentTransform);
 
 	void RequestStartMeetingRecording(FString InMeetingTitle, FString InAgenda, FString InDesc);
 	void RequestStopMeetingRecording();
@@ -157,6 +162,8 @@ public:
 	void Client_RequestJoinMeeting(const FString& MeetingID);
 
 public:
+	void OnToggleMouse();
+	
 	// 녹음 버튼 클릭 시 호출 (UI 열기)
 	UFUNCTION(BlueprintCallable, Category = "Meeting")
 	void OpenMeetingSetupUI();

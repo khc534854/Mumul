@@ -71,6 +71,33 @@ void AMumulCharacter::BeginPlay()
 	PlayerAnim = Cast<UCuteAlienAnim>(GetMesh()->GetAnimInstance());
 }
 
+void AMumulCharacter::SetFirstPersonView(bool bEnable)
+{
+	if (bEnable)
+	{
+		// 1인칭 모드: 카메라 붐 길이를 0으로 줄임
+		CameraBoom->TargetArmLength = 30.0f;
+        
+		// 카메라 위치를 약간 위로 조정 (캐릭터 눈높이)
+		// 필요에 따라 Z값을 조정하세요 (예: 20~60)
+		CameraBoom->SocketOffset = FVector(0, 0, 80.f); 
+
+		// 캐릭터가 카메라 회전을 따라가도록 설정 (설치 편의성)
+		bUseControllerRotationYaw = true;
+		GetMesh()->SetOwnerNoSee(true);
+	}
+	else
+	{
+		// 3인칭 모드: 원래 설정으로 복구
+		CameraBoom->TargetArmLength = 400.0f; // 생성자 기본값
+		CameraBoom->SocketOffset = FVector::ZeroVector;
+
+		// 자유로운 카메라 회전 복구
+		bUseControllerRotationYaw = false;
+		GetMesh()->SetOwnerNoSee(false);
+	}
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Input
 

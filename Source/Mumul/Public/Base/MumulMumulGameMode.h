@@ -9,6 +9,7 @@
 /**
  * 
  */
+struct FHousingSaveData;
 UCLASS()
 class MUMUL_API AMumulMumulGameMode : public AGameMode
 {
@@ -30,5 +31,5 @@ protected:
 	// 저장 로직이 중복되므로 함수로 분리
 	void SaveUserData(AController* Controller);
 public:
-	void SpawnTent(const FTransform& SpawnTransform, int32 UserIndex, bool bSaveToDisk);
+	void SpawnTent(const FTransform& SpawnTransform, int32 UserIndex, bool bSaveToDisk, const TArray<FHousingSaveData>& LoadedItems = TArray<FHousingSaveData>());
 };

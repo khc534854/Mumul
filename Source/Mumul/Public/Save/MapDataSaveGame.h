@@ -6,9 +6,19 @@
 #include "GameFramework/SaveGame.h"
 #include "MapDataSaveGame.generated.h"
 
-/**
- * 
- */
+
+USTRUCT(BlueprintType)
+struct FHousingSaveData
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FName ItemID;
+
+	UPROPERTY()
+	FTransform RelativeTransform;
+};
+
 USTRUCT(BlueprintType)
 struct FTentSaveData
 {
@@ -19,6 +29,9 @@ struct FTentSaveData
 
 	UPROPERTY()
 	FTransform Transform;     // 텐트 위치 및 회전
+
+	UPROPERTY()
+	TArray<FHousingSaveData> HousingItems;
 };
 
 /**

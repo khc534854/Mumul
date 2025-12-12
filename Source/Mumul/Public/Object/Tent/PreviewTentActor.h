@@ -29,8 +29,6 @@ protected:
 	void EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 public:
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
 
 	int32 OverlapCount = 0;
 	bool bIsPlaceable = true;

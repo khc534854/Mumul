@@ -104,10 +104,3 @@ void APreviewTentActor::EndOverlap(UPrimitiveComponent* OverlappedComponent, AAc
 		}
 	}
 }
-
-// Called every frame
-void APreviewTentActor::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-	
-}

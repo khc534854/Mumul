@@ -6,18 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "TentActor.generated.h"
 
-USTRUCT(BlueprintType)
-struct FHousingSaveData
-{
-	GENERATED_BODY()
 
-	UPROPERTY()
-	FName ItemID;
-
-	UPROPERTY()
-	FTransform RelativeTransform;
-};
-
+struct FHousingSaveData;
 UCLASS()
 class MUMUL_API ATentActor : public AActor
 {
@@ -29,7 +19,6 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
-	int32 OwnerUserIndex;
 	
 public:
 	// Called every frame
@@ -56,6 +45,9 @@ public:
 
 	UFUNCTION()
 	void OnRep_HousingItems();
+
+	UPROPERTY(Replicated)
+	int32 OwnerUserIndex;
 
 	// 아이템 설치 요청 (서버)
 	void Server_PlaceHousingItem(FName ItemID, FTransform Transform);

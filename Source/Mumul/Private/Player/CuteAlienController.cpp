@@ -114,6 +114,13 @@ ACuteAlienController::ACuteAlienController()
 		PreviewTentClass = PreviewTentFinder.Class;
 	}
 
+	static ConstructorHelpers::FClassFinder<APreviewHousingItemActor> PreviewHousingItemFinder(
+	TEXT("/Game/Khc/Blueprint/Object/BP_PreviewHousingItemActor.BP_PreviewHousingItemActor_C"));
+	if (PreviewHousingItemFinder.Succeeded())
+	{
+		PreviewHousingItemClass = PreviewHousingItemFinder.Class;
+	}
+
 	static ConstructorHelpers::FClassFinder<ATentActor> TentFinder(
 		TEXT("/Game/Yeomin/Actors/Tent/BP_Tent.BP_Tent_C"));
 	if (TentFinder.Succeeded())
@@ -301,6 +308,16 @@ void ACuteAlienController::Multicast_InitPlayerArray_Implementation()
 	}
 }
 
+void ACuteAlienController::Server_PlaceHousingItem_Implementation(class ATentActor* TargetTent, FName ItemID,
+	FTransform RelativeTransform)
+{
+	if (TargetTent)
+	{
+		// 텐트에게 아이템 추가 위임
+		TargetTent->Server_PlaceHousingItem(ItemID, RelativeTransform);
+	}
+}
+
 void ACuteAlienController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
@@ -311,6 +328,13 @@ void ACuteAlienController::Tick(float DeltaSeconds)
 		FHitResult HitRes;
 		FCollisionQueryParams CollisionParams;
 		CollisionParams.AddIgnoredActor(this);
+
+		if (GetPawn())
+		{
+			TArray<AActor*> AttachedActors;
+			GetPawn()->GetAttachedActors(AttachedActors);
+			CollisionParams.AddIgnoredActors(AttachedActors);
+		}
 
 		FVector Start, End;
 		FRotator CamRot;
@@ -338,36 +362,77 @@ void ACuteAlienController::Tick(float DeltaSeconds)
 	}
 
 	if (PreviewHousingItem)
-	{
-		// Line Trace from ViewPoint
-		FHitResult HitRes;
-		FCollisionQueryParams CollisionParams;
-		CollisionParams.AddIgnoredActor(this);
+    {
+        // 1. 레이저 트레이스 (위치 업데이트)
+        FHitResult HitRes;
+        FCollisionQueryParams CollisionParams;
+        CollisionParams.AddIgnoredActor(this);
+        if (GetPawn())
+        {
+            CollisionParams.AddIgnoredActor(GetPawn());
+            TArray<AActor*> AttachedActors;
+            GetPawn()->GetAttachedActors(AttachedActors);
+            CollisionParams.AddIgnoredActors(AttachedActors);
+        }
+        CollisionParams.AddIgnoredActor(PreviewHousingItem);
 
-		FVector Start, End;
-		FRotator CamRot;
-		float Dist = 500.f;
-		GetPlayerViewPoint(Start, CamRot);
-		End = Start + CamRot.Vector() * Dist;
+        FVector Start, End;
+        FRotator CamRot;
+        GetPlayerViewPoint(Start, CamRot);
+        End = Start + CamRot.Vector() * 1500.f;
 
-		bool bIsHit = GetWorld()->LineTraceSingleByChannel(
-			HitRes,
-			Start,
-			End,
-			ECC_Visibility,
-			CollisionParams
-		);
+        // ECC_WorldStatic: 바닥만 감지
+        bool bIsHit = GetWorld()->LineTraceSingleByChannel(HitRes, Start, End, ECC_WorldStatic, CollisionParams);
 
-		FTransform HitPointTransform(HitRes.ImpactNormal.Rotation() + FRotator(-90.f, 0.f, 0.f),
-									 HitRes.ImpactPoint, FVector::OneVector);
-		PreviewHousingItem->SetActorTransform(HitPointTransform);
+        if (bIsHit)
+        {
+            FTransform HitPointTransform(
+                HitRes.ImpactNormal.Rotation() + FRotator(-90.f, 0.f, 0.f),
+                HitRes.ImpactPoint, 
+                FVector::OneVector
+            );
+            PreviewHousingItem->SetActorTransform(HitPointTransform);
+        }
+       
+        // 2. 입력 처리 (충돌 방지)
+        
+        if (WasInputKeyJustPressed(EKeys::LeftMouseButton))
+        {
+            if (PreviewHousingItem->bIsPlaceable && PreviewHousingItem->CurrentTargetTent)
+            {
+                // 상대 좌표 계산
+                FTransform WorldTransform = PreviewHousingItem->GetActorTransform();
+                FTransform TentTransform = PreviewHousingItem->CurrentTargetTent->GetActorTransform();
+                FTransform RelativeTransform = WorldTransform.GetRelativeTransform(TentTransform);
 
-		if (WasInputKeyJustPressed(EKeys::LeftMouseButton))
-		{
-			OnClick(HitRes.ImpactPoint,
-					HitRes.ImpactNormal.Rotation() + FRotator(-90.f, 0.f, 0.f));
-		}
-	}
+                // 서버에 설치 요청 (단일 진입점)
+                Server_PlaceHousingItem(PreviewHousingItem->CurrentTargetTent, SelectedItemID, RelativeTransform);
+
+                // 설치 완료 후 프리뷰 종료 및 UI 초기화
+                StopPreviewHousingItem();
+                
+                // 1인칭 해제
+                if (AMumulCharacter* MyChar = Cast<AMumulCharacter>(GetPawn()))
+                {
+                    MyChar->SetFirstPersonView(false);
+                }
+            }
+            else
+            {
+                // 설치 불가 피드백
+                // UE_LOG(LogTemp, Warning, TEXT("설치할 수 없는 위치입니다."));
+            }
+        }
+        // else if (WasInputKeyJustPressed(EKeys::RightMouseButton))
+        // {
+        //     StopPreviewHousingItem();
+        //     if (AMumulCharacter* MyChar = Cast<AMumulCharacter>(GetPawn()))
+        //     {
+        //         MyChar->SetFirstPersonView(false);
+        //     }
+        //
+        // }
+    }
 }
 
 void ACuteAlienController::OnHostRecordingStopped()
@@ -470,6 +535,13 @@ void ACuteAlienController::OnCancelUI()
 		PreviewTent->Destroy();
 		PreviewTent = nullptr;
 	}
+
+	StopPreviewHousingItem();
+
+	if (AMumulCharacter* MyChar = Cast<AMumulCharacter>(GetPawn()))
+	{
+		MyChar->SetFirstPersonView(false);
+	}
 }
 
 void ACuteAlienController::OnToggleMouse()
@@ -502,20 +574,11 @@ void ACuteAlienController::OnClick(const FVector& TentLocation, const FRotator& 
 
 			// Spawn or Move Tent
 			Server_SpawnTent(FTransform(TentRotation, TentLocation));
-		}
-	}
-}
 
-void ACuteAlienController::OnHousingItemClick(const FVector& HousingItemLocation, const FRotator& HousingItemRotation)
-{
-	if (PreviewHousingItem)
-	{
-		if (PreviewHousingItem->bIsPlaceable)
-		{
-			PreviewHousingItem->Destroy();
-			PreviewHousingItem = nullptr;
-
-			Server_SpawnHousingItem(FTransform(HousingItemRotation, HousingItemLocation));
+			if (AMumulCharacter* MyChar = Cast<AMumulCharacter>(GetPawn()))
+			{
+				MyChar->SetFirstPersonView(false);
+			}
 		}
 	}
 }
@@ -570,6 +633,11 @@ void ACuteAlienController::CancelRadialUI()
 
 void ACuteAlienController::ShowPreviewTent()
 {
+	if (AMumulCharacter* MyChar = Cast<AMumulCharacter>(GetPawn()))
+	{
+		MyChar->SetFirstPersonView(true);
+	}
+	
 	// Deactivate Mouse Cursor
 	SetIgnoreLookInput(false);
 	SetShowMouseCursor(false);
@@ -583,56 +651,92 @@ void ACuteAlienController::ShowPreviewTent()
 	);
 }
 
+void ACuteAlienController::StopPreviewTent()
+{
+	
+}
+
 void ACuteAlienController::ShowPreviewHousingItem(FName idx)
 {
+	if (idx.IsNone())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ShowPreviewHousingItem: ItemID is None!"));
+		return;
+	}
+
+	// [방어 코드] 클래스가 없으면 중단
+	if (!PreviewHousingItemClass)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ShowPreviewHousingItem: PreviewHousingItemClass is NULL! Check Blueprint."));
+		return;
+	}
+	
+	if (AMumulCharacter* MyChar = Cast<AMumulCharacter>(GetPawn()))
+	{
+		MyChar->SetFirstPersonView(true);
+	}
+	
+	if (PreviewHousingItem)
+	{
+		PreviewHousingItem->Destroy();
+		PreviewHousingItem = nullptr;
+	}
+	
 	// Deactivate Mouse Cursor
 	SetIgnoreLookInput(false);
 	SetShowMouseCursor(false);
 	SetInputMode(FInputModeGameOnly());
-
-	// Spawn Preview Tent
-	PreviewHousingItem = GetWorld()->SpawnActor<APreviewHousingItemActor>(
-		PreviewHousingItemClass,
-		GetPawn()->GetActorLocation(),
-		FRotator::ZeroRotator
-	);
-
-	UDataTable* ItemDataTable = LoadObject<UDataTable>(nullptr, *HousingItemDataTablePath);
 	
-	if (ItemDataTable)
+	// Spawn Preview Tent
+	UDataTable* HousingTable = LoadObject<UDataTable>(nullptr, *HousingItemDataTablePath);
+	if (HousingTable)
 	{
-		// FCustomItemData를 사용
-		FHousingItemData* ItemData = ItemDataTable->FindRow<FHousingItemData>(idx, TEXT("Housing Item Load"));
-
-		if (ItemData)
+		FHousingItemData* ItemData = HousingTable->FindRow<FHousingItemData>(idx, TEXT("Housing Preview"));
+        
+		// 3. 데이터가 유효하고 메쉬가 있을 때만 스폰
+		if (ItemData && ItemData->ItemStaticMesh.LoadSynchronous())
 		{
-			// TSoftObjectPtr의 에셋을 동기적으로 로드
-			UStaticMesh* SelectPreviewMesh = ItemData->ItemStaticMesh.LoadSynchronous();
-			PreviewHousingItem->SetPreviewMesh(SelectPreviewMesh);
+			// 4. 프리뷰 액터 스폰 (이제 안전함)
+			PreviewHousingItem = GetWorld()->SpawnActor<APreviewHousingItemActor>(
+			   PreviewHousingItemClass,
+			   GetPawn()->GetActorLocation(),
+			   FRotator::ZeroRotator
+			);
+
+			if (PreviewHousingItem)
+			{
+				if (AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>())
+				{
+					PreviewHousingItem->SetOwnerInfo(PS->PS_UserIndex);
+				}
+				
+				// 5. 메쉬 설정
+				PreviewHousingItem->SetPreviewMesh(ItemData->ItemStaticMesh.Get());
+				SelectedItemID = idx; 
+			}
 		}
 		else
 		{
-			UE_LOG(LogTemp, Error, TEXT("[Housing] Failed to load Static Mesh for item"));
+			UE_LOG(LogTemp, Warning, TEXT("Housing Item Data Not Found or Mesh is invalid for ID: %s"), *idx.ToString());
 		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("[Housing] Item DataTable not found"));
 	}
 }
 
-void ACuteAlienController::Server_SpawnHousingItem_Implementation(const FTransform& TentTransform)
+void ACuteAlienController::StopPreviewHousingItem()
 {
-	// AMumulMumulGameMode* GM = GetWorld()->GetAuthGameMode<AMumulMumulGameMode>();
-	// if (GM)
-	// {
-	// 	AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>();
-	// 	if (PS)
-	// 	{
-	// 		// [수정] UserIndex도 같이 넘기고, bSaveToDisk = true로 설정
-	// 		GM->SpawnTent(TentTransform, PS->PS_UserIndex, true);
-	// 	}
-	// }
+	if (PreviewHousingItem)
+	{
+		PreviewHousingItem->Destroy();
+		PreviewHousingItem = nullptr;
+		SelectedItemID = NAME_None;
+        
+		SetShowMouseCursor(true);
+		FInputModeGameAndUI InputMode;
+		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+		SetInputMode(InputMode);
+		PlayerUI->ResetHousingSelection();
+		OnToggleMouse();
+	}
 }
 
 void ACuteAlienController::RequestStartMeetingRecording(FString InMeetingTitle, FString InAgenda, FString InDesc)
