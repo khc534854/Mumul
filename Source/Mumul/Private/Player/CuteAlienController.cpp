@@ -20,6 +20,7 @@
 
 #include "Network/HttpNetworkSubsystem.h"
 #include "Base/MumulGameState.h"
+#include "Components/BoxComponent.h"
 #include "Components/WidgetSwitcher.h"
 #include "Data/FHousingItemData.h"
 #include "Save/MapDataSaveGame.h"
@@ -396,11 +397,24 @@ void ACuteAlienController::Tick(float DeltaSeconds)
 
         if (bIsHit)
         {
-            FTransform HitPointTransform(
-                HitRes.ImpactNormal.Rotation() + FRotator(-90.f, 0.f, 0.f),
-                HitRes.ImpactPoint, 
-                FVector::OneVector
-            );
+        	float HalfHeight = 0.f;
+        	UBoxComponent* Box = PreviewHousingItem->FindComponentByClass<UBoxComponent>();
+        	if (Box)
+        	{
+        		HalfHeight = Box->GetScaledBoxExtent().Z;
+        	}
+
+        	// 2. 바닥의 기울기(Normal) 방향으로 절반 높이만큼 밀어냅니다.
+        	// 이렇게 하면 경사면에서도 파묻히지 않고 표면에 딱 붙습니다.
+        	FVector LiftOffset = HitRes.ImpactNormal * HalfHeight;
+        	FVector FinalLocation = HitRes.ImpactPoint + LiftOffset;
+
+        	// 3. 트랜스폼 설정
+        	FTransform HitPointTransform(
+				HitRes.ImpactNormal.Rotation() + FRotator(-90.f, 0.f, 0.f), // 회전 (모델 축에 따라 조절)
+				FinalLocation, // 수정된 위치 적용
+				FVector::OneVector
+			);
             PreviewHousingItem->SetActorTransform(HitPointTransform);
         }
        
