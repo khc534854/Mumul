@@ -3,16 +3,20 @@
 
 #include "Player/CuteAlienPlayer.h"
 
+#include "EnhancedInputComponent.h"
 #include "Base/MumulGameState.h"
+#include "Camera/CameraComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
+#include "Components/WidgetComponent.h"
+#include "Components/WidgetInteractionComponent.h"
 #include "Data/FCustomItemData.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Player/MumulPlayerState.h"
 #include "Player/VoiceChatComponent.h"
 #include "Kismet/KismetRenderingLibrary.h"
-#include "Network/HttpNetworkSubsystem.h"
-#include "Network/NetworkStructs.h"
+#include "Object/OXQuizTriggerActor.h"
 #include "Player/CuteAlienAnim.h"
+#include "Player/CuteAlienController.h"
 
 static const FString ItemDataTablePath = TEXT("/Game/Khc/Blueprint/Object/CustomItemList.CustomItemList");
 // Sets default values
@@ -62,6 +66,17 @@ ACuteAlienPlayer::ACuteAlienPlayer()
 	{
 		DanceMontage7 = Dance7MontageFinder.Object;
 	}
+
+	static ConstructorHelpers::FObjectFinder<UInputAction> IA_ClickFinder(
+		TEXT("/Game/Yeomin/Characters/Inputs/Actions/IA_Click.IA_Click"));
+	if (IA_ClickFinder.Succeeded())
+	{
+		IA_Click = IA_ClickFinder.Object;
+	}
+
+	UIInteractionComp = CreateDefaultSubobject<UWidgetInteractionComponent>(TEXT("UI InteractionComp"));
+	UIInteractionComp->SetupAttachment(GetFollowCamera());
+	UIInteractionComp->InteractionDistance = 800.f;
 
 	VoiceComponent = CreateDefaultSubobject<UVoiceChatComponent>(TEXT("VoiceComponent"));
 
@@ -136,6 +151,25 @@ void ACuteAlienPlayer::Tick(float DeltaTime)
 void ACuteAlienPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	UEnhancedInputComponent* Input = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
+
+	Input->BindAction(IA_Click, ETriggerEvent::Started, this, &ACuteAlienPlayer::OnClickInteraction);
+}
+
+void ACuteAlienPlayer::OnClickInteraction()
+{
+	const FHitResult& Hit = UIInteractionComp->GetLastHitResult();
+	if (Hit.GetComponent())
+	{
+		UWidgetComponent* WidgetComp = Cast<UWidgetComponent>(Hit.GetComponent());
+		if (WidgetComp)
+		{
+			AOXQuizTriggerActor* QuizTriggerActor = Cast<AOXQuizTriggerActor>(WidgetComp->GetOwner());
+
+			Cast<ACuteAlienController>(GetController())->Server_RequestStartQuiz(QuizTriggerActor);
+		}
+	}
 }
 
 void ACuteAlienPlayer::Server_EquipCustom_Implementation(FName ItemID)

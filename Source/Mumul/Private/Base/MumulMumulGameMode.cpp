@@ -255,7 +255,7 @@ void AMumulMumulGameMode::StartQuestionPhase()
 
 
 	GetWorld()->GetTimerManager().SetTimer(
-		QuizTimer, this, &AMumulMumulGameMode::EnterNextStep, 2.f, false);
+		QuizTimer, this, &AMumulMumulGameMode::EnterNextStep, QuestionTime, false);
 }
 
 void AMumulMumulGameMode::EnterNextStep()
@@ -305,7 +305,7 @@ void AMumulMumulGameMode::StartAnswerPhase()
 	}
 
 	GetWorld()->GetTimerManager().SetTimer(
-		QuizTimer, this, &AMumulMumulGameMode::EnterNextStep, 1.f, false);
+		QuizTimer, this, &AMumulMumulGameMode::EnterNextStep, AnswerTime, false);
 }
 
 void AMumulMumulGameMode::ShowResult()

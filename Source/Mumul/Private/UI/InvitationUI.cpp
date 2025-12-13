@@ -12,13 +12,7 @@
 void UInvitationUI::NativeConstruct()
 {
 	Super::NativeConstruct();
-	
-	ACuteAlienController* PS = Cast<ACuteAlienController>(GetOwningPlayer());
-	if (PS)
-	{
-		PS->OnPlayerArrayUpdated.AddDynamic(this, &UInvitationUI::RefreshJoinedPlayerList);
-	}
-	
+		
 	GS = GetWorld()->GetGameState<AMumulGameState>();
 }
 

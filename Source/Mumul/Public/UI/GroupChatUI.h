@@ -115,8 +115,10 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
 	TSubclassOf<class UCreateGroupChatUI> CreateGroupChatUIClass;
+public:
 	UPROPERTY()
 	TObjectPtr<class UCreateGroupChatUI> CreateGroupChatUI;
+protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class USizeBox> CreateGroupChatBox;
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
@@ -144,8 +146,10 @@ public:
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
 	TSubclassOf<class UInvitationUI> InvitationUIClass;
+public:
 	UPROPERTY()
 	TObjectPtr<class UInvitationUI> InvitationUI;
+protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class USizeBox> InvitationBox;
 	UPROPERTY(meta=(BindWidget))

@@ -31,35 +31,18 @@ class MUMUL_API ACuteAlienController : public APlayerController
 {
 	GENERATED_BODY()
 	ACuteAlienController();
-
-public:
-	UPROPERTY()
-	FPlayerArrayUpdated OnPlayerArrayUpdated;
-	UPROPERTY(Replicated)
-	bool bIsNearEnoughToTrigger = false;
 	
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
-	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UPROPERTY()
 	TObjectPtr<class AMumulGameState> GS;
 	UPROPERTY()
 	TObjectPtr<class UHttpNetworkSubsystem> HttpSystem;
-	UPROPERTY()
-	TObjectPtr<class AOXQuizTriggerActor> OXQuizTrigger;
 
 	UFUNCTION(Server, Reliable)
 	void Server_InitPlayerInfo(int32 UID, const FString& Name, const FString& Type, int32 Tendency);
-
-public:
-	UFUNCTION(Server, Reliable)
-	void Server_InitPlayerArray();
-
-protected:
-	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_InitPlayerArray();
 
 	UPROPERTY()
 	TObjectPtr<class UInputMappingContext> IMC_Player;
@@ -84,18 +67,20 @@ protected:
 	UPROPERTY()
 	TObjectPtr<class UInputAction> IA_ToggleMouse;
 	void OnToggleMouse();
-	UPROPERTY()
-	TObjectPtr<class UInputAction> IA_Click;
+	
 	void OnClick(const FVector& TentLocation, const FRotator& TentRotation);
+	
 	UPROPERTY()
 	TObjectPtr<class UInputAction> IA_QuitGame;
 	void OnPressEsc();
 	UPROPERTY()
 	TObjectPtr<class UInputAction> IA_Interact;
 	void OnInteract();
+public:
 	UFUNCTION(Server, Reliable)
-	void Server_RequestStartQuiz();
+	void Server_RequestStartQuiz(class AOXQuizTriggerActor* QuizTrigger);
 
+protected:
 	UPROPERTY()
 	TSubclassOf<class URadialUI> RadialUIClass;
 	UPROPERTY()
@@ -114,9 +99,11 @@ protected:
 
 	UPROPERTY()
 	TSubclassOf<class UGroupChatUI> GroupChatUIClass;
+public:
 	UPROPERTY()
 	TObjectPtr<UGroupChatUI> GroupChatUI;
-
+	
+protected:
 	UPROPERTY()
 	TSubclassOf<class APreviewTentActor> PreviewTentClass;
 	UPROPERTY()

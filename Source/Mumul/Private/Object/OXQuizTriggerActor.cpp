@@ -9,39 +9,51 @@
 #include "Object/OXQuizActor.h"
 #include "Player/CuteAlienController.h"
 #include "Player/CuteAlienPlayer.h"
+#include "UI/OXQuiz/DifficultyBubbleUI.h"
 
 
 // Sets default values
 AOXQuizTriggerActor::AOXQuizTriggerActor()
 {
 	PrimaryActorTick.bCanEverTick = true;
-	
+
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
-	
+
 	TriggerSphere = CreateDefaultSubobject<USphereComponent>(TEXT("TriggerSphere"));
 	TriggerSphere->SetupAttachment(RootComponent);
 	TriggerSphere->OnComponentBeginOverlap.AddDynamic(this, &AOXQuizTriggerActor::OnBeginOverlapPlayer);
 	TriggerSphere->OnComponentEndOverlap.AddDynamic(this, &AOXQuizTriggerActor::OnEndOverlapPlayer);
+
+	SceneComp = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComp"));
+	SceneComp->SetupAttachment(TriggerSphere);
 	
 	DifficultyBubble = CreateDefaultSubobject<UWidgetComponent>(TEXT("DifficultyBubble"));
-	DifficultyBubble->SetupAttachment(TriggerSphere);
+	DifficultyBubble->SetupAttachment(SceneComp);
+	DifficultyBubble->SetVisibility(false);
 }
 
 // Called when the game starts or when spawned
 void AOXQuizTriggerActor::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	OXQuizActor = Cast<AOXQuizActor>(UGameplayStatics::GetActorOfClass(GetWorld(), AOXQuizActor::StaticClass()));
 
 	OriginalLocation = GetActorLocation();
 	Time = 0.f;
+
+	if (UDifficultyBubbleUI* Widget = Cast<UDifficultyBubbleUI>(DifficultyBubble->GetUserWidgetObject()))
+	{
+		const FText DifficultyText = StaticEnum<EQuizDifficulty>()->GetDisplayNameTextByValue(
+			static_cast<int32>(QuizDifficulty));
+		Widget->SetDifficultyText(DifficultyText);
+	}
 }
 
 void AOXQuizTriggerActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
+
 	// Hover
 	Time += DeltaTime;
 	float OffsetZ = FMath::Sin(Time * HoverSpeed) * HoverAmplitude;
@@ -49,47 +61,66 @@ void AOXQuizTriggerActor::Tick(float DeltaTime)
 	FVector NewLocation = OriginalLocation;
 	NewLocation.Z += OffsetZ;
 	SetActorLocation(NewLocation);
-	
-	if (DifficultyBubble)
+
+	if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
 	{
-		if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+		if (ACharacter* Character = PC->GetCharacter())
 		{
-			FRotator CamRot = PC->PlayerCameraManager->GetCameraRotation();
-			CamRot.Yaw += 180.f;
-			DifficultyBubble->SetWorldRotation(CamRot);
+			FVector PlayerLoc = Character->GetActorLocation();
+			float DistSquare = FVector::DistSquared(PlayerLoc, this->GetActorLocation());
+
+			if (DistSquare < FMath::Square(UIRotDistance))
+			{
+				if (DifficultyBubble)
+				{
+					FRotator CamRot = PC->PlayerCameraManager->GetCameraRotation();
+					CamRot.Yaw += 180.f;
+					CamRot.Pitch = 0.f;
+					DifficultyBubble->SetWorldRotation(CamRot);
+				}
+
+				if (DistSquare < FMath::Square(LookAtDistance))
+				{
+					FVector Dir = PlayerLoc - GetActorLocation();
+					FRotator TargetRot = Dir.Rotation();
+					TargetRot.Pitch = 0.f;
+					TargetRot.Roll = 0.f;
+
+					FRotator NewLookRot = FMath::RInterpTo(
+						GetActorRotation(),
+						TargetRot,
+						DeltaTime,
+						1.3f // 회전 속도
+					);
+					SetActorRotation(NewLookRot);
+				}
+			}
 		}
 	}
 }
 
 void AOXQuizTriggerActor::OnBeginOverlapPlayer(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-                                               UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+                                               UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+                                               const FHitResult& SweepResult)
 {
-	if (!HasAuthority())
-		return;
-	
 	if (ACuteAlienPlayer* Player = Cast<ACuteAlienPlayer>(OtherActor))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Player BeginOverlap"))
-		ACuteAlienController* PC = Cast<ACuteAlienController>(Player->GetController());
-		PC->bIsNearEnoughToTrigger = true;
-		
-		// 키 가이드 UI 표시
+		if (Player->IsLocallyControlled())
+		{
+			DifficultyBubble->SetVisibility(true);
+		}
 	}
 }
 
 void AOXQuizTriggerActor::OnEndOverlapPlayer(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+                                             UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (!HasAuthority())
-		return;
-	
 	if (ACuteAlienPlayer* Player = Cast<ACuteAlienPlayer>(OtherActor))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Player EndOverlap"))
-		ACuteAlienController* PC = Cast<ACuteAlienController>(Player->GetController());
-		PC->bIsNearEnoughToTrigger = false;
-		
-		// 키 가이드 UI 숨기기
+		if (Player->IsLocallyControlled())
+		{
+			DifficultyBubble->SetVisibility(false);
+		}
 	}
 }
 
@@ -113,4 +144,3 @@ void AOXQuizTriggerActor::OnTriggerQuiz(const int32 UserID)
 		break;
 	}
 }
-

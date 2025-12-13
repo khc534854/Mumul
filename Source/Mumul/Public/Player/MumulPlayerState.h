@@ -30,6 +30,12 @@ class MUMUL_API AMumulPlayerState : public APlayerState
 {
 	GENERATED_BODY()
 
+protected:
+	virtual void BeginPlay() override;
+	
+	UPROPERTY()
+	TObjectPtr<class UHttpNetworkSubsystem> HttpSystem;
+	
 	// Player Information
 public:
 	UPROPERTY(ReplicatedUsing = OnRep_UserIndex, BlueprintReadOnly, Category = "User Info")
@@ -48,7 +54,15 @@ public:
 
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "User Info")
 	TArray<FTeamData> PS_PlayerTeamList;
+	
+	UFUNCTION(Server, Reliable)
+	void Server_InitPlayerArray();
 
+protected:
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_InitPlayerArray();
+
+public:
 	// 현재 보이스 채널 ID (Replicated)
 	UPROPERTY(ReplicatedUsing = OnRep_VoiceChannelID, BlueprintReadOnly, Category = "Voice")
 	FString VoiceChannelID = TEXT("None"); // 0: 로비, 1~N: 특정 채널

@@ -76,7 +76,9 @@ void AOXQuizActor::StartOXQuiz(const int32 UserID, const FString& Difficulty)
 	{
 		for (TPair<TObjectPtr<ACuteAlienController>, TArray<bool>>& Elem : GM->ParticipatingPlayers)
 		{
-			Elem.Key->GetCharacter()->SetActorLocation(this->GetActorLocation() + FVector(0, 0, 100.f));
+			float X = FMath::RandRange(-100.f, 100.f);
+			float Y = FMath::RandRange(-100.f, 100.f);
+			Elem.Key->GetCharacter()->SetActorLocation(this->GetActorLocation() + FVector(X, Y, 300.f));
 		}
 	}
 

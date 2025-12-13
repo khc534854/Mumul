@@ -57,6 +57,7 @@ void UOXQuizUI::SwitchQuizState(const bool& QuizOrResult)
 		AnswerListScrollBox->ClearChildren();
 		return;
 	}
+	StopAnimation(TimerAnimation);
 	OXQuizWS->SetActiveWidgetIndex(1);
 }
 
@@ -71,6 +72,8 @@ void UOXQuizUI::SetQuizQuestion(const FString& NewQuiz)
 
 void UOXQuizUI::SetQuizAnswer(const bool& AnswerResult, const bool& NewAnswer, const FString& NewCommentary)
 {
+	StopAnimation(TimerAnimation);
+	
 	QuizSizeBox->ClearChildren();
 	
 	UQuizAnswerUI* QuizAnswerUI = CreateWidget<UQuizAnswerUI>(GetWorld(), QuizAnswerUIClass);
@@ -86,6 +89,8 @@ void UOXQuizUI::SetQuizAnswer(const bool& AnswerResult, const bool& NewAnswer, c
 
 void UOXQuizUI::StartQuestionTimer(const int32& QuestionTime)
 {
+	PlayAnimation(TimerAnimation, 0.f, 0);
+	
 	RemainingTime = QuestionTime;
 
 	SetTimerText(RemainingTime);
@@ -101,7 +106,7 @@ void UOXQuizUI::StartQuestionTimer(const int32& QuestionTime)
 }
 
 void UOXQuizUI::StartAnswerTimer(const int32& AnswerTime)
-{
+{	
 	RemainingTime = AnswerTime;
 
 	SetTimerText(RemainingTime);
@@ -115,7 +120,6 @@ void UOXQuizUI::StartAnswerTimer(const int32& AnswerTime)
 		true
 	);
 }
-
 
 void UOXQuizUI::SetQuizResult(const bool& AnswerResult, const FString& QuestionText, const bool& AnswerText, const FString& CommentaryText)
 {

@@ -25,18 +25,23 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	
+	float UIRotDistance = 500.f;
+	float LookAtDistance = 370.f;
+	
 	UPROPERTY(EditAnywhere, Category="Hover")
-	float HoverAmplitude = 20.f;
+	float HoverAmplitude = 25.f;
 
 	UPROPERTY(EditAnywhere, Category="Hover")
-	float HoverSpeed = 1.f;
+	float HoverSpeed = 0.95f;
 	FVector OriginalLocation;
 	float Time;
 	
 	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<class USceneComponent> SceneComp;
+	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<class UWidgetComponent> DifficultyBubble;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Quiz Level")
+	UPROPERTY(EditAnywhere, Category="Quiz Level")
 	EQuizDifficulty QuizDifficulty = EQuizDifficulty::Beginner;
 
 	UPROPERTY(EditDefaultsOnly)

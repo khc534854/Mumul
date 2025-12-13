@@ -22,6 +22,8 @@ protected:
 	TObjectPtr<class USizeBox> QuizSizeBox;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UImage> TimerIMG;
+	UPROPERTY(meta=(BindWidgetAnim), Transient)
+	TObjectPtr<class UWidgetAnimation> TimerAnimation;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UTextBlock> QuizTimerText;
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")

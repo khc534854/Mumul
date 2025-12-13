@@ -145,6 +145,9 @@ void AMumulCharacter::Look(const FInputActionValue& Value)
 
 void AMumulCharacter::Server_OnJump_Implementation(const FInputActionValue& Value)
 {
+	if (!IsValid(PlayerAnim) || !IsValid(JumpMontage) || !IsValid(RollMontage))
+		return;
+	
 	if (GetCharacterMovement()->IsFalling())
 	{
 		Multicast_OnRollAnimation();
