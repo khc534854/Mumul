@@ -324,25 +324,6 @@ void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const
 	}
 }
 
-void ACuteAlienController::Server_InitPlayerArray_Implementation()
-{
-	Multicast_InitPlayerArray();
-}
-
-void ACuteAlienController::Multicast_InitPlayerArray_Implementation()
-{
-	
-	// Get TeamChatList
-	if (HttpSystem)
-	{
-		if (APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0))
-		{
-			AMumulPlayerState* PS = PC->GetPlayerState<AMumulPlayerState>();
-			HttpSystem->SendTeamChatListRequest(PS->PS_UserIndex);
-		}
-	}
-}
-
 void ACuteAlienController::Server_PlaceHousingItem_Implementation(class ATentActor* TargetTent, FName ItemID,
 	FTransform RelativeTransform)
 {

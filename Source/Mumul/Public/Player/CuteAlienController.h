@@ -43,15 +43,9 @@ protected:
 
 	UFUNCTION(Server, Reliable)
 	void Server_InitPlayerInfo(int32 UID, const FString& Name, const FString& Type, int32 Tendency);
-public:
-	UFUNCTION(Server, Reliable)
-	void Server_InitPlayerArray();
 
 	UFUNCTION(Server, Reliable)
 	void Server_PlaceHousingItem(class ATentActor* TargetTent, FName ItemID, FTransform RelativeTransform);
-protected:
-	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_InitPlayerArray();
 
 	UPROPERTY()
 	TObjectPtr<class UInputMappingContext> IMC_Player;
