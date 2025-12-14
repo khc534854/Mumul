@@ -20,6 +20,7 @@
 #include "Player/Component/PlayerMeetingManagerComponent.h"
 #include "UI/CustomItemEntryUI.h"
 #include "UI/GroupChatUI.h"
+#include "UI/BaseUI/BaseButton.h"
 #include "UI/BaseUI/BaseText.h"
 
 void UPlayerUI::NativeConstruct()
@@ -83,6 +84,7 @@ void UPlayerUI::NativeConstruct()
 
 	PlayerCustomizeBtn->OnClicked.AddDynamic(this, &UPlayerUI::OnCustomizeBoxClick);
 	HousingBtn->OnClicked.AddDynamic(this, &UPlayerUI::OnHousingBoxClick);
+	HousingDeleteModeBtn->BaseButton->OnClicked.AddDynamic(this, &UPlayerUI::OnDeleteButtonClicked);
 	LoadAndGenerateItemList();
 	LoadAndGenerateHousingItemList();
 }
@@ -294,6 +296,16 @@ void UPlayerUI::UpdateRecordButtonState(bool bActive)
 void UPlayerUI::OnTentClicked()
 {
 	PC->HousingComp->ShowPreviewTent();
+}
+
+void UPlayerUI::OnDeleteButtonClicked()
+{
+	if (PC && PC->HousingComp)
+	{
+		ResetHousingSelection(); 
+        
+		PC->HousingComp->StartHousingDeleteMode();
+	}
 }
 
 void UPlayerUI::OnHousingBoxClick()

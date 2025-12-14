@@ -58,25 +58,29 @@ void UPlayerMeetingManagerComponent::BeginPlay()
 	if (owner)
 		player = Cast<ACuteAlienPlayer>(owner->GetPawn()); 
 
-	UMumulGameInstance* GI = Cast<UMumulGameInstance>(owner->GetGameInstance());
-	if (GI)
-	{
-		// 여기서 로컬 변수로 받아와서 바인딩 (Controller의 변수에 의존 X)
-		UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>();
-		if (HttpSystem)
-		{
-			HttpSystem->OnStartMeeting.AddDynamic(this, &UPlayerMeetingManagerComponent::OnStartMeetingResponse);
-			HttpSystem->OnJoinMeeting.AddDynamic(this, &UPlayerMeetingManagerComponent::OnJoinMeetingResponse);
-		}
-	}
 	
-	if (VoiceMeetingUIClass)
+	if (owner && owner->IsLocalController())
 	{
-		VoiceMeetingUI = CreateWidget<UVoiceMeetingUI>(owner, VoiceMeetingUIClass);
-		if (VoiceMeetingUI)
+		UMumulGameInstance* GI = Cast<UMumulGameInstance>(owner->GetGameInstance());
+		if (GI)
 		{
-			VoiceMeetingUI->AddToViewport();
-			VoiceMeetingUI->SetVisibility(ESlateVisibility::Hidden);
+			// 여기서 로컬 변수로 받아와서 바인딩 (Controller의 변수에 의존 X)
+			UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>();
+			if (HttpSystem)
+			{
+				HttpSystem->OnStartMeeting.AddDynamic(this, &UPlayerMeetingManagerComponent::OnStartMeetingResponse);
+				HttpSystem->OnJoinMeeting.AddDynamic(this, &UPlayerMeetingManagerComponent::OnJoinMeetingResponse);
+			}
+		}
+	
+		if (VoiceMeetingUIClass)
+		{
+			VoiceMeetingUI = CreateWidget<UVoiceMeetingUI>(owner, VoiceMeetingUIClass);
+			if (VoiceMeetingUI)
+			{
+				VoiceMeetingUI->AddToViewport();
+				VoiceMeetingUI->SetVisibility(ESlateVisibility::Hidden);
+			}
 		}
 	}
 }

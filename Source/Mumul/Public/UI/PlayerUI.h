@@ -62,6 +62,10 @@ protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> TentBtn;
 
+	UFUNCTION()
+	void OnDeleteButtonClicked();
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UBaseButton> HousingDeleteModeBtn;
 	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> HousingBtn;

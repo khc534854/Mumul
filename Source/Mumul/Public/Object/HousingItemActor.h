@@ -28,14 +28,29 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Housing")
 	TObjectPtr<class UBoxComponent> CollisionComp;
 
-	// 어떤 아이템인지 식별하기 위한 ID
-	UPROPERTY(Replicated, EditAnywhere, BlueprintReadOnly, Category = "Housing")
-	FName ItemID;
-
 	// 주인의 UserIndex (텐트와 소유권 확인용)
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Housing")
 	int32 OwnerUserIndex;
 
 	// 초기화 함수 (스폰 시 호출)
 	void InitHousingItem(FName NewItemID, int32 NewOwnerIndex, UStaticMesh* NewMesh);
+	
+	void SetHighlightState(bool bIsTargeted);
+
+	UPROPERTY(ReplicatedUsing = OnRep_ItemID, EditAnywhere, BlueprintReadOnly, Category = "Housing")
+	FName ItemID;
+protected:
+
+	UPROPERTY()
+    TArray<UMaterialInterface*> CachedOriginalMaterials;
+
+    // 에디터나 생성자에서 설정할 '빨간색 머티리얼'
+    UPROPERTY(EditDefaultsOnly, Category = "Visual")
+    TObjectPtr<UMaterialInterface> DeletePreviewMaterial;
+
+
+
+	// [신규] RepNotify 함수
+	UFUNCTION()
+	void OnRep_ItemID();
 };

@@ -58,6 +58,23 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Server_PlaceHousingItem(class ATentActor* TargetTent, FName ItemID, FTransform RelativeTransform);
 	
+	void StartHousingDeleteMode();
+	void StopHousingDeleteMode();
+
+	// [신규] 삭제 실행 (좌클릭 시 호출)
+	void TryDeleteHousingItem();
+
+	// [신규] 서버 삭제 요청 RPC
+	UFUNCTION(Server, Reliable)
+	void Server_DestroyHousingItem(class ATentActor* ParentTent, FName ItemID);
+
+protected:
+	bool bIsDeleteMode = false;
+
+	// 현재 바라보고 있는(삭제 예정인) 아이템
+	UPROPERTY()
+	TObjectPtr<class AHousingItemActor> CurrentTargetItem;
+	
 	class ACuteAlienController* owner;
 	class ACuteAlienPlayer* player;
 };

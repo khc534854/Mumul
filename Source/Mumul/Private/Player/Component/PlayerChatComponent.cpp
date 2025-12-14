@@ -43,33 +43,35 @@ UPlayerChatComponent::UPlayerChatComponent()
 void UPlayerChatComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	
+    
 	owner = Cast<ACuteAlienController>(GetOwner());
-	
 	if (owner)
 		player = Cast<ACuteAlienPlayer>(owner->GetPawn()); 
 
-	if (UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetWorld()->GetGameInstance()))
+	// [중요] 내 컨트롤러일 때만 UI와 서브시스템을 초기화해야 합니다.
+	if (owner && owner->IsLocalController()) 
 	{
-		if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
+		// 1. 서브시스템 바인딩
+		if (UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetWorld()->GetGameInstance()))
 		{
-			// 델리게이트 바인딩
-			HttpSystem->OnCreateTeamChatResponse.AddDynamic(this, &UPlayerChatComponent::OnServerCreateTeamChatResponse);
-		}
-	}
-	
-	if (GroupChatUIClass)
-	{
-		GroupChatUI = CreateWidget<UGroupChatUI>(owner, GroupChatUIClass);
-		if (GroupChatUI)
-		{
-			GroupChatUI->AddToViewport(1);
-          
-			// [추가] 생성 직후 컨트롤러의 PlayerUI에 연결 시도
-			if (owner && owner->PlayerUI)
+			if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
 			{
-				owner->PlayerUI->InitGroupChatUI(GroupChatUI);
-				// 컨트롤러에 있던 RadialUI 숨김 로직 등은 여기서 처리하거나 PlayerUI가 알아서 하도록 둠
+				HttpSystem->OnCreateTeamChatResponse.AddDynamic(this, &UPlayerChatComponent::OnServerCreateTeamChatResponse);
+			}
+		}
+
+		// 2. 위젯 생성
+		if (GroupChatUIClass)
+		{
+			GroupChatUI = CreateWidget<UGroupChatUI>(owner, GroupChatUIClass);
+			if (GroupChatUI)
+			{
+				GroupChatUI->AddToViewport();
+              
+				if (owner->PlayerUI)
+				{
+					owner->PlayerUI->InitGroupChatUI(GroupChatUI);
+				}
 			}
 		}
 	}
