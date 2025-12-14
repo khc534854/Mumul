@@ -4,6 +4,7 @@
 #include "Components/EditableTextBox.h"
 #include "Components/MultiLineEditableTextBox.h"
 #include "Components/WidgetSwitcher.h"
+#include "Player/Component/PlayerMeetingManagerComponent.h"
 #include "UI/BaseUI/BaseButton.h"
 #include "UI/BaseUI/BaseExitButton.h"
 #include "UI/BaseUI/BaseTextBox.h"
@@ -59,7 +60,7 @@ void UVoiceMeetingUI::OnClickStartMeeting()
         if (Title.IsEmpty()) return; // 제목 필수
 
         // 컨트롤러에게 시작 요청 (API 전송)
-        PC->RequestStartMeetingRecording(Title, MeetingAgendaText->BaseTextBox->GetText().ToString(), MeetingDescText->BaseTextBox->GetText().ToString());
+        PC->MeetingComp->RequestStartMeetingRecording(Title, MeetingAgendaText->BaseTextBox->GetText().ToString(), MeetingDescText->BaseTextBox->GetText().ToString());
     }
 }
 
@@ -70,7 +71,7 @@ void UVoiceMeetingUI::OnClickConfirmEnd()
     if (PC)
     {
         // 컨트롤러에게 종료 요청 (RPC)
-        PC->RequestStopMeetingRecording();
+        PC->MeetingComp->RequestStopMeetingRecording();
     }
     SetVisibility(ESlateVisibility::Hidden);
 }

@@ -27,6 +27,7 @@
 #include "Components/VerticalBoxSlot.h"
 #include "Library/MathLibrary.h"
 #include "Data/IMGManager.h"
+#include "Player/Component/PlayerChatComponent.h"
 
 void UGroupChatUI::NativeConstruct()
 {
@@ -601,7 +602,7 @@ void UGroupChatUI::OnTextBoxCommitted()
 
 			if (ACuteAlienController* PC = Cast<ACuteAlienController>(GetOwningPlayer()))
 			{
-				PC->Server_RequestChat(TeamID, UserIDs, TimeStamp, MyID, MyName, Content);
+				PC->ChatComp->Server_RequestChat(TeamID, UserIDs, TimeStamp, MyID, MyName, Content);
 			}
 
 			// 3. [AI 질문] 도우미가 켜져 있다면 웹소켓으로도 전송
@@ -724,7 +725,7 @@ void UGroupChatUI::OnServerTeamChatListResponse(bool bSuccess, FString Message)
 
 				if (ACuteAlienController* PS = Cast<ACuteAlienController>(GetOwningPlayer()))
 				{
-					PS->Server_AddTeamChatList(TeamChat.teamChatId);
+					PS->ChatComp->Server_AddTeamChatList(TeamChat.teamChatId);
 				}
 			}
 		}

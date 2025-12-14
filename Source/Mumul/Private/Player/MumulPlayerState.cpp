@@ -9,6 +9,8 @@
 #include "Network/HttpNetworkSubsystem.h"
 #include "Player/CuteAlienController.h"
 #include "Player/CuteAlienPlayer.h"
+#include "Player/Component/PlayerChatComponent.h"
+#include "Player/Component/PlayerMeetingManagerComponent.h"
 #include "UI/CreateGroupChatUI.h"
 #include "UI/GroupChatUI.h"
 #include "UI/InvitationUI.h"
@@ -46,7 +48,7 @@ void AMumulPlayerState::Server_SetVoiceChannelID_Implementation(const FString& N
 				       *GetPlayerName(), *NewChannelID);
 
 				// 컨트롤러에게 "너도 빨리 참가해!" 명령 (기존 함수 재활용)
-				PC->Client_RequestJoinMeeting(ActiveMeetingID);
+				PC->MeetingComp->Client_RequestJoinMeeting(ActiveMeetingID);
 			}
 		}
 	}
@@ -92,10 +94,10 @@ void AMumulPlayerState::Multicast_InitPlayerArray_Implementation()
 	{
 		if (ACuteAlienController* PC = Cast<ACuteAlienController>(GetWorld()->GetFirstPlayerController()))
 		{
-			if (PC->GroupChatUI && PC->GroupChatUI->CreateGroupChatUI && PC->GroupChatUI->InvitationUI)
+			if (PC->ChatComp->GroupChatUI && PC->ChatComp->GroupChatUI->CreateGroupChatUI && PC->ChatComp->GroupChatUI->InvitationUI)
 			{
-				PC->GroupChatUI->CreateGroupChatUI->RefreshJoinedPlayerList();
-				PC->GroupChatUI->InvitationUI->RefreshJoinedPlayerList();
+				PC->ChatComp->GroupChatUI->CreateGroupChatUI->RefreshJoinedPlayerList();
+				PC->ChatComp->GroupChatUI->InvitationUI->RefreshJoinedPlayerList();
 			}
 		}
 	}
@@ -121,7 +123,7 @@ void AMumulPlayerState::OnRep_VoiceChannelID()
 	APlayerController* LocalPC = GetGameInstance()->GetFirstLocalPlayerController();
 	if (ACuteAlienController* MyPC = Cast<ACuteAlienController>(LocalPC))
 	{
-		MyPC->UpdateVoiceChannelMuting();
+		MyPC->MeetingComp->UpdateVoiceChannelMuting();
 	}
 }
 

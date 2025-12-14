@@ -12,32 +12,25 @@
 #include "Base/MumulGameInstance.h"
 #include "GameFramework/GameStateBase.h"
 #include "Player/MumulPlayerState.h"
-#include "Base/MumulMumulGameMode.h"
 #include "Object/Tent/PreviewTentActor.h"
-#include "Object/Tent/TentActor.h"
 #include "Net/VoiceConfig.h"
-#include "Player/VoiceChatComponent.h"
 
 #include "Network/HttpNetworkSubsystem.h"
 #include "Base/MumulGameState.h"
-#include "Components/BoxComponent.h"
 #include "Components/WidgetSwitcher.h"
-#include "Data/FHousingItemData.h"
 #include "Save/MapDataSaveGame.h"
 #include "Network/NetworkStructs.h"
 #include "Kismet/GameplayStatics.h"
 #include "Data/IMGManager.h"
-#include "Object/PreviewHousingItemActor.h"
 #include "Object/OXQuizTriggerActor.h"
 #include "UI/ChatBlockUI.h"
 #include "UI/GroupChatUI.h"
 #include "UI/GroupIconUI.h"
 #include "UI/PlayerUI.h"
-#include "UI/VoiceMeetingUI.h"
 #include "UI/OXQuiz/OXQuizUI.h"
-#include "Kismet/KismetMathLibrary.h"
-
-static const FString HousingItemDataTablePath = TEXT("/Game/Khc/Blueprint/Object/HousingItemList.HousingItemList");
+#include "Player/Component/PlayerChatComponent.h"
+#include "Player/Component/PlayerHousingSystemComponent.h"
+#include "Player/Component/PlayerMeetingManagerComponent.h"
 
 ACuteAlienController::ACuteAlienController()
 {
@@ -55,19 +48,19 @@ ACuteAlienController::ACuteAlienController()
 		PlayerUIClass = PlayerUIFinder.Class;
 	}
 
-	static ConstructorHelpers::FClassFinder<UGroupChatUI> GroupChatUIFinder(
-		TEXT("/Game/Yeomin/Characters/UI/BP/WBP_GroupChatUI.WBP_GroupChatUI_C"));
-	if (GroupChatUIFinder.Succeeded())
-	{
-		GroupChatUIClass = GroupChatUIFinder.Class;
-	}
-
-	static ConstructorHelpers::FClassFinder<UGroupIconUI> GroupIconUIFinder(
-		TEXT("/Game/Yeomin/Characters/UI/BP/WBP_GroupProfileUI.WBP_GroupProfileUI_C"));
-	if (GroupIconUIFinder.Succeeded())
-	{
-		GroupIconUIClass = GroupIconUIFinder.Class;
-	}
+	// static ConstructorHelpers::FClassFinder<UGroupChatUI> GroupChatUIFinder(
+	// 	TEXT("/Game/Yeomin/Characters/UI/BP/WBP_GroupChatUI.WBP_GroupChatUI_C"));
+	// if (GroupChatUIFinder.Succeeded())
+	// {
+	// 	GroupChatUIClass = GroupChatUIFinder.Class;
+	// }
+	//
+	// static ConstructorHelpers::FClassFinder<UGroupIconUI> GroupIconUIFinder(
+	// 	TEXT("/Game/Yeomin/Characters/UI/BP/WBP_GroupProfileUI.WBP_GroupProfileUI_C"));
+	// if (GroupIconUIFinder.Succeeded())
+	// {
+	// 	GroupIconUIClass = GroupIconUIFinder.Class;
+	// }
 
 	static ConstructorHelpers::FObjectFinder<UInputMappingContext> IMCFinder(
 		TEXT("/Game/Yeomin/Characters/Inputs/IMC_Player.IMC_Player"));
@@ -97,55 +90,6 @@ ACuteAlienController::ACuteAlienController()
 		IA_ToggleMouse = IA_ToggleMouseFinder.Object;
 	}
 
-	// static ConstructorHelpers::FObjectFinder<UInputAction> IA_QuitGameFinder(
-	// 	TEXT("/Game/Yeomin/Characters/Inputs/Actions/IA_QuitGame.IA_QuitGame"));
-	// if (IA_QuitGameFinder.Succeeded())
-	// {
-	// 	IA_QuitGame = IA_QuitGameFinder.Object;
-	// }
-
-	static ConstructorHelpers::FClassFinder<APreviewTentActor> PreviewTentFinder(
-		TEXT("/Game/Yeomin/Actors/Tent/BP_PreviewTent.BP_PreviewTent_C"));
-	if (PreviewTentFinder.Succeeded())
-	{
-		PreviewTentClass = PreviewTentFinder.Class;
-	}
-
-	static ConstructorHelpers::FClassFinder<APreviewHousingItemActor> PreviewHousingItemFinder(
-	TEXT("/Game/Khc/Blueprint/Object/BP_PreviewHousingItemActor.BP_PreviewHousingItemActor_C"));
-	if (PreviewHousingItemFinder.Succeeded())
-	{
-		PreviewHousingItemClass = PreviewHousingItemFinder.Class;
-	}
-
-	static ConstructorHelpers::FClassFinder<ATentActor> TentFinder(
-		TEXT("/Game/Yeomin/Actors/Tent/BP_Tent.BP_Tent_C"));
-	if (TentFinder.Succeeded())
-	{
-		TentClass = TentFinder.Class;
-	}
-
-	static ConstructorHelpers::FObjectFinder<USoundAttenuation> SilentAttFinder(
-		TEXT("/Game/Khc/Audio/SA_Silent.SA_Silent")); // 예시 경로
-	if (SilentAttFinder.Succeeded())
-	{
-		SilentAttenuation = SilentAttFinder.Object;
-	}
-
-	static ConstructorHelpers::FObjectFinder<USoundAttenuation> NormalAttFinder(
-		TEXT("/Game/Khc/Audio/SA_Proximity.SA_Proximity")); // 경로 확인 필수!
-	if (NormalAttFinder.Succeeded())
-	{
-		NormalAttenuation = NormalAttFinder.Object;
-	}
-
-	static ConstructorHelpers::FClassFinder<UVoiceMeetingUI> WidgetFinder(
-		TEXT("/Game/Khc/Blueprint/UI/WBP_CreateMeeting.WBP_CreateMeeting_C")); // 경로 확인 필수!
-	if (WidgetFinder.Succeeded())
-	{
-		VoiceMeetingUIClass = WidgetFinder.Class;
-	}
-
 	static ConstructorHelpers::FClassFinder<UOXQuizUI> OXQuizUIClassFinder(
 		TEXT("/Game/Yeomin/Characters/UI/BP/OXQuiz/WBP_OXQuiz.WBP_OXQuiz_C")); // 경로 확인 필수!
 	if (OXQuizUIClassFinder.Succeeded())
@@ -159,6 +103,16 @@ ACuteAlienController::ACuteAlienController()
 	{
 		IA_Interact = IA_InteractFinder.Object;
 	}
+	
+	// Component
+	HousingComp = CreateDefaultSubobject<UPlayerHousingSystemComponent>(TEXT("HousingComp"));
+	HousingComp->SetIsReplicated(true); // RPC 사용 시 필수
+
+	MeetingComp = CreateDefaultSubobject<UPlayerMeetingManagerComponent>(TEXT("MeetingComp"));
+	MeetingComp->SetIsReplicated(true);
+
+	ChatComp = CreateDefaultSubobject<UPlayerChatComponent>(TEXT("SocialComp"));
+	ChatComp->SetIsReplicated(true);
 }
 
 void ACuteAlienController::BeginPlay()
@@ -168,13 +122,7 @@ void ACuteAlienController::BeginPlay()
 	GS = Cast<AMumulGameState>(GetWorld()->GetGameState());
 
 	HttpSystem = GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>();
-	if (HttpSystem)
-	{
-		HttpSystem->OnCreateTeamChatResponse.AddDynamic(this, &ACuteAlienController::OnServerCreateTeamChatResponse);
-		// [이동] HTTP 응답 바인딩은 여기서 한 번만 해도 됩니다.
-		HttpSystem->OnStartMeeting.AddDynamic(this, &ACuteAlienController::OnStartMeetingResponse);
-		HttpSystem->OnJoinMeeting.AddDynamic(this, &ACuteAlienController::OnJoinMeetingResponse);
-	}
+
 
 	if (!IsLocalController())
 		return;
@@ -206,32 +154,19 @@ void ACuteAlienController::BeginPlay()
 		}
 	}
 
-	if (GroupChatUIClass)
-	{
-		GroupChatUI = CreateWidget<UGroupChatUI>(this, GroupChatUIClass);
-		if (GroupChatUI)
-		{
-			GroupChatUI->AddToViewport();
-		}
-	}
+	// if (GroupChatUIClass)
+	// {
+	// 	GroupChatUI = CreateWidget<UGroupChatUI>(this, GroupChatUIClass);
+	// 	if (GroupChatUI)
+	// 	{
+	// 		GroupChatUI->AddToViewport();
+	// 	}
+	// }
 
-	if (PlayerUI && GroupChatUI)
+	if (PlayerUI && ChatComp->GroupChatUI)
 	{
-		PlayerUI->InitGroupChatUI(GroupChatUI);
-	}
-	if (PlayerUI && GroupChatUI)
-	{
+		PlayerUI->InitGroupChatUI(ChatComp->GroupChatUI);
 		RadialUI->SetVisibility(ESlateVisibility::Hidden);
-	}
-
-	if (VoiceMeetingUIClass)
-	{
-		VoiceMeetingUI = CreateWidget<UVoiceMeetingUI>(this, VoiceMeetingUIClass);
-		if (VoiceMeetingUI)
-		{
-			VoiceMeetingUI->AddToViewport();
-			VoiceMeetingUI->SetVisibility(ESlateVisibility::Hidden);
-		}
 	}
 
 	if (OXQuizUIClass)
@@ -324,218 +259,12 @@ void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const
 	}
 }
 
-void ACuteAlienController::Server_PlaceHousingItem_Implementation(class ATentActor* TargetTent, FName ItemID,
-	FTransform RelativeTransform)
-{
-	if (TargetTent)
-	{
-		// 텐트에게 아이템 추가 위임
-		TargetTent->Server_PlaceHousingItem(ItemID, RelativeTransform);
-	}
-}
 
 void ACuteAlienController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-
-    // ====================================================================================
-    // [1] 텐트 프리뷰 (Preview Tent)
-    // ====================================================================================
-    if (PreviewTent)
-    {
-		FHitResult HitRes;
-       	FCollisionQueryParams CollisionParams;
-       	CollisionParams.AddIgnoredActor(this);
-       	if (GetPawn())
-       	{
-       	   CollisionParams.AddIgnoredActor(GetPawn());
-       	   TArray<AActor*> AttachedActors;
-       	   GetPawn()->GetAttachedActors(AttachedActors);
-       	   CollisionParams.AddIgnoredActors(AttachedActors);
-       	}
-	   	
-       	FVector Start, End;
-       	FRotator CamRot;
-       	float Dist = 1500.f;
-       	GetPlayerViewPoint(Start, CamRot);
-       	End = Start + CamRot.Vector() * Dist;
-	   	
-       	bool bIsHit = GetWorld()->LineTraceSingleByChannel(
-       	   HitRes, Start, End, ECC_Visibility, CollisionParams
-       	);
-	   	
-       	if (bIsHit)
-       	{
-       	    // [로테이션 수정]
-       	    // 1. 플레이어를 향하는 3D 벡터 계산 (2D 아님)
-       	    FVector DirectionToPlayer = GetPawn()->GetActorLocation() - HitRes.ImpactPoint;
-	   	
-       	    // 2. 이 벡터를 바닥 경사면(Normal) 위로 투영(Project) -> "경사면을 따라 플레이어를 보는 방향"
-       	    FVector ProjectedForward = FVector::VectorPlaneProject(DirectionToPlayer, HitRes.ImpactNormal);
-       	    ProjectedForward.Normalize();
-	   	
-       	    // 3. Z(Up)는 바닥 수직, X(Forward)는 투영된 방향으로 회전 생성
-       	    // 이렇게 하면 옆으로 비틀어지는(Roll) 현상이 사라집니다.
-       	    FRotator TargetRot = UKismetMathLibrary::MakeRotFromZX(HitRes.ImpactNormal, ProjectedForward);
-       		TargetRot.Pitch = 0.0f;
-       		TargetRot.Roll = 0.0f;
-       		
-	   	
-       	    FTransform HitPointTransform(TargetRot, HitRes.ImpactPoint, FVector::OneVector);
-       	    PreviewTent->SetActorTransform(HitPointTransform);
-	   	
-       	    if (WasInputKeyJustPressed(EKeys::LeftMouseButton))
-       	    {
-       	       OnClick(HitRes.ImpactPoint, TargetRot);
-       	    }
-       	}
-    }
-
-    // ====================================================================================
-    // [2] 하우징 아이템 프리뷰 (Preview Housing Item)
-    // ====================================================================================
-    if (PreviewHousingItem)
-    {
-        FHitResult HitRes;
-        FCollisionQueryParams CollisionParams;
-        CollisionParams.AddIgnoredActor(this);
-        if (GetPawn())
-        {
-            CollisionParams.AddIgnoredActor(GetPawn());
-            TArray<AActor*> AttachedActors;
-            GetPawn()->GetAttachedActors(AttachedActors);
-            CollisionParams.AddIgnoredActors(AttachedActors);
-        }
-        CollisionParams.AddIgnoredActor(PreviewHousingItem);
-
-        FVector Start, End;
-        FRotator CamRot;
-        GetPlayerViewPoint(Start, CamRot);
-        End = Start + CamRot.Vector() * 1500.f;
-
-        bool bIsHit = GetWorld()->LineTraceSingleByChannel(HitRes, Start, End, ECC_WorldStatic, CollisionParams);
-
-        if (bIsHit)
-        {
-            float HalfHeight = 0.f;
-            UBoxComponent* Box = PreviewHousingItem->FindComponentByClass<UBoxComponent>();
-            if (Box)
-            {
-               HalfHeight = Box->GetScaledBoxExtent().Z;
-            }
-
-            FVector LiftOffset = HitRes.ImpactNormal * HalfHeight;
-            FVector FinalLocation = HitRes.ImpactPoint + LiftOffset;
-
-            // [로테이션 수정 - 위와 동일한 논리 적용]
-            FVector DirectionToPlayer = GetPawn()->GetActorLocation() - HitRes.ImpactPoint;
-            
-            // 바닥 평면에 투영하여 기울어진 바닥에서도 자연스럽게 플레이어를 보게 함
-            FVector ProjectedForward = FVector::VectorPlaneProject(DirectionToPlayer, HitRes.ImpactNormal);
-            ProjectedForward.Normalize();
-
-            FRotator TargetRot = UKismetMathLibrary::MakeRotFromZX(HitRes.ImpactNormal, ProjectedForward);
-        	TargetRot.Pitch = 0.0f;
-        	TargetRot.Roll = 0.0f;
-
-            FTransform HitPointTransform(
-             TargetRot, 
-             FinalLocation, 
-             FVector::OneVector
-            );
-            PreviewHousingItem->SetActorTransform(HitPointTransform);
-        }
-       
-        // 입력 처리 부분 (기존 유지)
-        if (WasInputKeyJustPressed(EKeys::LeftMouseButton))
-        {
-            if (PreviewHousingItem->bIsPlaceable && PreviewHousingItem->CurrentTargetTent)
-            {
-                FTransform WorldTransform = PreviewHousingItem->GetActorTransform();
-                FTransform TentTransform = PreviewHousingItem->CurrentTargetTent->GetActorTransform();
-                FTransform RelativeTransform = WorldTransform.GetRelativeTransform(TentTransform);
-
-                Server_PlaceHousingItem(PreviewHousingItem->CurrentTargetTent, SelectedItemID, RelativeTransform);
-                
-                StopPreviewHousingItem();
-                
-                if (AMumulCharacter* MyChar = Cast<AMumulCharacter>(GetPawn()))
-                {
-                    MyChar->SetFirstPersonView(false);
-                }
-                if (PlayerUI)
-                {
-                    PlayerUI->ResetHousingSelection();
-                }
-            }
-        }
-        else if (WasInputKeyJustPressed(EKeys::RightMouseButton))
-        {
-            StopPreviewHousingItem();
-            if (AMumulCharacter* MyChar = Cast<AMumulCharacter>(GetPawn()))
-            {
-                MyChar->SetFirstPersonView(false);
-            }
-             if (PlayerUI)
-            {
-                PlayerUI->ResetHousingSelection();
-            }
-        }
-    }
 }
 
-void ACuteAlienController::OnHostRecordingStopped()
-{
-	// 1. 델리게이트 해제 (중복 호출 방지)
-	if (APawn* MyPawn = GetPawn())
-	{
-		if (UVoiceChatComponent* VoiceComp = MyPawn->FindComponentByClass<UVoiceChatComponent>())
-		{
-			VoiceComp->OnRecordingStopped.RemoveDynamic(this, &ACuteAlienController::OnHostRecordingStopped);
-		}
-	}
-
-	// [안전장치] 이미 처리되었으면 무시
-	if (CurrentMeetingSessionID.IsEmpty())
-	{
-		return;
-	}
-
-	// 2. [수정] 3초 딜레이 후 회의 종료 요청 (오디오 업로드 대기)
-	// 네트워크 속도에 따라 시간을 조절하세요 (2.0f ~ 5.0f)
-	float UploadWaitTime = 5.0f;
-
-	FTimerHandle WaitTimerHandle;
-
-	AMumulPlayerState* MyPS = GetPlayerState<AMumulPlayerState>();
-	if (MyPS)
-	{
-		Server_UnregisterMeetingState(MyPS->VoiceChannelID);
-	}
-
-	GetWorldTimerManager().SetTimer(WaitTimerHandle, [this]()
-	{
-		// 람다 실행 시점에 컨트롤러가 살아있는지 확인
-		if (!IsValid(this)) return;
-
-		// ID가 그새 비워졌는지 다시 확인
-		if (CurrentMeetingSessionID.IsEmpty()) return;
-
-		UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
-		if (GI)
-		{
-			if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
-			{
-				// [수정] 타이머 없이 즉시 호출!
-				// (VoiceComponent가 이미 업로드 완료를 보장하고 호출했기 때문)
-				UE_LOG(LogTemp, Warning, TEXT("[HTTP] Requesting End Meeting API... (Upload Confirmed)"));
-				HttpSystem->EndMeetingRequest(CurrentMeetingSessionID);
-
-				CurrentMeetingSessionID = TEXT("");
-			}
-		}
-	}, UploadWaitTime, false);
-}
 
 void ACuteAlienController::OnPressEsc()
 {
@@ -565,36 +294,22 @@ void ACuteAlienController::SaveAndExit()
 			}
 		}
 	}
-
-	// 2. 저장 후 종료 처리 (방장은 맵 이동, 클라이언트는 접속 종료)
-	// 상황에 맞게 선택하세요.
-
-	// Case A: 아예 게임 끄기 (Quit)
 	UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, false);
 
-	// Case B: 로비(메인 메뉴)로 돌아가기
-	// if (HasAuthority()) // 방장이라면
-	// {
-	// 	// 방장이 나가면 다 같이 튕기거나 로비로 이동
-	// 	GetWorld()->ServerTravel("/Game/Khc/Maps/Main?listen"); 
-	// }
-	// else // 클라이언트라면
-	// {
-	// 	ClientTravel("/Game/Khc/Maps/Main", TRAVEL_Absolute);
-	// }
+
 }
 
 void ACuteAlienController::OnCancelUI()
 {
 	CancelRadialUI();
 
-	if (PreviewTent)
+	if (HousingComp->PreviewTent)
 	{
-		PreviewTent->Destroy();
-		PreviewTent = nullptr;
+		HousingComp->PreviewTent->Destroy();
+		HousingComp->PreviewTent = nullptr;
 	}
 
-	StopPreviewHousingItem();
+	HousingComp->StopPreviewHousingItem();
 
 	if (AMumulCharacter* MyChar = Cast<AMumulCharacter>(GetPawn()))
 	{
@@ -622,16 +337,16 @@ void ACuteAlienController::OnToggleMouse()
 void ACuteAlienController::OnClick(const FVector& TentLocation, const FRotator& TentRotation)
 {
 	// Place Tent
-	if (PreviewTent)
+	if (HousingComp->PreviewTent)
 	{
 		// If Tent is Placeable
-		if (PreviewTent->bIsPlaceable)
+		if (HousingComp->PreviewTent->bIsPlaceable)
 		{
-			PreviewTent->Destroy();
-			PreviewTent = nullptr;
+			HousingComp->PreviewTent->Destroy();
+			HousingComp->PreviewTent = nullptr;
 
 			// Spawn or Move Tent
-			Server_SpawnTent(FTransform(TentRotation, TentLocation));
+			HousingComp->Server_SpawnTent(FTransform(TentRotation, TentLocation));
 
 			if (AMumulCharacter* MyChar = Cast<AMumulCharacter>(GetPawn()))
 			{
@@ -689,452 +404,6 @@ void ACuteAlienController::CancelRadialUI()
 	bIsRadialVisible = false;
 }
 
-void ACuteAlienController::ShowPreviewTent()
-{
-	if (AMumulCharacter* MyChar = Cast<AMumulCharacter>(GetPawn()))
-	{
-		MyChar->SetFirstPersonView(true);
-	}
-	
-	// Deactivate Mouse Cursor
-	SetIgnoreLookInput(false);
-	SetShowMouseCursor(false);
-	SetInputMode(FInputModeGameOnly());
-
-	// Spawn Preview Tent
-	PreviewTent = GetWorld()->SpawnActor<APreviewTentActor>(
-		PreviewTentClass,
-		GetPawn()->GetActorLocation(),
-		FRotator::ZeroRotator
-	);
-}
-
-void ACuteAlienController::StopPreviewTent()
-{
-	
-}
-
-void ACuteAlienController::ShowPreviewHousingItem(FName idx)
-{
-	if (idx.IsNone())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("ShowPreviewHousingItem: ItemID is None!"));
-		return;
-	}
-
-	// [방어 코드] 클래스가 없으면 중단
-	if (!PreviewHousingItemClass)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ShowPreviewHousingItem: PreviewHousingItemClass is NULL! Check Blueprint."));
-		return;
-	}
-	
-	if (AMumulCharacter* MyChar = Cast<AMumulCharacter>(GetPawn()))
-	{
-		MyChar->SetFirstPersonView(true);
-	}
-	
-	if (PreviewHousingItem)
-	{
-		PreviewHousingItem->Destroy();
-		PreviewHousingItem = nullptr;
-	}
-	
-	// Deactivate Mouse Cursor
-	SetIgnoreLookInput(false);
-	SetShowMouseCursor(false);
-	SetInputMode(FInputModeGameOnly());
-	
-	// Spawn Preview Tent
-	UDataTable* HousingTable = LoadObject<UDataTable>(nullptr, *HousingItemDataTablePath);
-	if (HousingTable)
-	{
-		FHousingItemData* ItemData = HousingTable->FindRow<FHousingItemData>(idx, TEXT("Housing Preview"));
-        
-		// 3. 데이터가 유효하고 메쉬가 있을 때만 스폰
-		if (ItemData && ItemData->ItemStaticMesh.LoadSynchronous())
-		{
-			// 4. 프리뷰 액터 스폰 (이제 안전함)
-			PreviewHousingItem = GetWorld()->SpawnActor<APreviewHousingItemActor>(
-			   PreviewHousingItemClass,
-			   GetPawn()->GetActorLocation(),
-			   FRotator::ZeroRotator
-			);
-
-			if (PreviewHousingItem)
-			{
-				if (AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>())
-				{
-					PreviewHousingItem->SetOwnerInfo(PS->PS_UserIndex);
-				}
-				
-				// 5. 메쉬 설정
-				PreviewHousingItem->SetPreviewMesh(ItemData->ItemStaticMesh.Get());
-				SelectedItemID = idx; 
-			}
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Housing Item Data Not Found or Mesh is invalid for ID: %s"), *idx.ToString());
-		}
-	}
-}
-
-void ACuteAlienController::StopPreviewHousingItem()
-{
-	if (PreviewHousingItem)
-	{
-		PreviewHousingItem->Destroy();
-		PreviewHousingItem = nullptr;
-		SelectedItemID = NAME_None;
-        
-		SetShowMouseCursor(true);
-		FInputModeGameAndUI InputMode;
-		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-		SetInputMode(InputMode);
-		PlayerUI->ResetHousingSelection();
-		OnToggleMouse();
-	}
-}
-
-void ACuteAlienController::RequestStartMeetingRecording(FString InMeetingTitle, FString InAgenda, FString InDesc)
-{
-	AMumulPlayerState* MyPS = GetPlayerState<AMumulPlayerState>();
-	UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
-
-	if (MyPS && GI)
-	{
-		FString ChannelID = MyPS->VoiceChannelID;
-
-		// [HTTP] 방장(Organizer)이 Start Meeting API 호출
-		// (서버 응답이 오면 OnStartMeetingResponse가 실행됨)
-		if (HttpSystem)
-		{
-			HttpSystem->StartMeetingRequest(
-				InMeetingTitle,
-				MyPS->VoiceChannelID,
-				GI->PlayerUniqueID, // Organizer ID
-				InAgenda,
-				InDesc
-			);
-
-			UE_LOG(LogTemp, Log, TEXT("[Meeting] Requesting Start Meeting API..."));
-		}
-	}
-}
-
-void ACuteAlienController::RequestStopMeetingRecording()
-{
-	AMumulPlayerState* MyPS = GetPlayerState<AMumulPlayerState>();
-	UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
-
-	if (MyPS && GI)
-	{
-		Server_StopChannelRecording(MyPS->VoiceChannelID);
-	}
-}
-
-void ACuteAlienController::Server_StartChannelRecording_Implementation(const FString& TargetChannelID)
-{
-	UE_LOG(LogTemp, Warning, TEXT("[Server] Request Start for Ch: %s"), *TargetChannelID);
-
-
-	// [핵심 변경] GameState를 통해 접속한 모든 플레이어(Controller)를 찾음
-	if (UWorld* World = GetWorld())
-	{
-		if (AGameStateBase* GameState = World->GetGameState())
-		{
-			for (APlayerState* PS : GameState->PlayerArray)
-			{
-				if (!PS) continue;
-
-				AMumulPlayerState* MumulPS = Cast<AMumulPlayerState>(PS);
-				// 채널이 같은지 확인
-				if (MumulPS && MumulPS->VoiceChannelID == TargetChannelID)
-				{
-					// 해당 플레이어의 컨트롤러를 가져옴 (서버에는 모든 컨트롤러가 있음)
-					if (ACuteAlienController* TargetPC = Cast<ACuteAlienController>(PS->GetOwner()))
-					{
-						// 그 컨트롤러에게 "녹음 시작해"라고 명령 (Client RPC)
-						TargetPC->Client_StartChannelRecording(TargetChannelID);
-
-						UE_LOG(LogTemp, Log, TEXT("[Server] Sent Start Command to: %s"), *PS->GetPlayerName());
-					}
-				}
-			}
-		}
-	}
-}
-
-void ACuteAlienController::Client_StartChannelRecording_Implementation(const FString& TargetChannelID)
-{
-	APawn* MyPawn = GetPawn();
-	if (MyPawn)
-	{
-		if (UVoiceChatComponent* VoiceComp = MyPawn->FindComponentByClass<UVoiceChatComponent>())
-		{
-			VoiceComp->StartRecording(); // 실제 녹음 시작
-
-			UE_LOG(LogTemp, Warning, TEXT(">>> [RECORD START] MeetingID: %s"), *TargetChannelID);
-		}
-	}
-}
-
-void ACuteAlienController::Server_StopChannelRecording_Implementation(const FString& TargetChannelID)
-{
-	//UE_LOG(LogTemp, Warning, TEXT("[Server] Request Stop for Ch: %d"), TargetChannelID);
-
-	// UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
-	// if (GI)
-	// {
-	// 	if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
-	// 	{
-	// 		if (!CurrentMeetingSessionID.IsEmpty())
-	// 		{
-	// 			HttpSystem->EndMeetingRequest(CurrentMeetingSessionID);
-	// 		}
-	// 	}
-	// }
-
-	if (UWorld* World = GetWorld())
-	{
-		if (AGameStateBase* GameState = World->GetGameState())
-		{
-			for (APlayerState* PS : GameState->PlayerArray)
-			{
-				if (!PS) continue;
-
-				AMumulPlayerState* MumulPS = Cast<AMumulPlayerState>(PS);
-				if (MumulPS && MumulPS->VoiceChannelID == TargetChannelID)
-				{
-					if (ACuteAlienController* TargetPC = Cast<ACuteAlienController>(PS->GetOwner()))
-					{
-						// 그 컨트롤러에게 "녹음 꺼"라고 명령 (Client RPC)
-						TargetPC->Client_StopChannelRecording();
-					}
-				}
-			}
-		}
-	}
-}
-
-void ACuteAlienController::Client_StopChannelRecording_Implementation()
-{
-	APawn* MyPawn = GetPawn();
-	if (MyPawn)
-	{
-		if (UVoiceChatComponent* VoiceComp = MyPawn->FindComponentByClass<UVoiceChatComponent>())
-		{
-			// [핵심] 방장(Authority)이라면 종료 처리를 위해 바인딩 필수!
-			if (HasAuthority())
-			{
-				// 기존 바인딩이 있을 수 있으니 안전하게 제거 후 추가 (중복 방지)
-				VoiceComp->OnRecordingStopped.RemoveDynamic(this, &ACuteAlienController::OnHostRecordingStopped);
-				VoiceComp->OnRecordingStopped.AddDynamic(this, &ACuteAlienController::OnHostRecordingStopped);
-
-				UE_LOG(LogTemp, Warning, TEXT("[Host] Binded OnHostRecordingStopped delegate."));
-			}
-			GroupChatUI->OnRecordBtnState(false);
-
-			// 녹음 종료 및 마지막 파일 전송 시작
-			VoiceComp->StopRecording();
-
-			UE_LOG(LogTemp, Warning, TEXT(">>> [RECORD STOP]"));
-		}
-	}
-}
-
-void ACuteAlienController::Server_SpawnTent_Implementation(const FTransform& TentTransform)
-{
-	AMumulMumulGameMode* GM = GetWorld()->GetAuthGameMode<AMumulMumulGameMode>();
-	if (GM)
-	{
-		AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>();
-		if (PS)
-		{
-			// [수정] UserIndex도 같이 넘기고, bSaveToDisk = true로 설정
-			GM->SpawnTent(TentTransform, PS->PS_UserIndex, true);
-		}
-	}
-}
-
-void ACuteAlienController::Server_BroadcastJoinMeeting_Implementation(const FString& TargetChannelID,
-                                                                      const FString& MeetingID)
-{
-	if (UWorld* World = GetWorld())
-	{
-		if (AGameStateBase* GameState = World->GetGameState())
-		{
-			for (APlayerState* PS : GameState->PlayerArray)
-			{
-				// 1. 나 자신(방장)인지 확인
-				// Server RPC 내부에서 'this'는 이 함수를 호출한 컨트롤러(방장)입니다.
-				if (PS->GetOwner() == this)
-				{
-					continue; // 나는 이미 시작했으므로 패스
-				}
-
-				AMumulPlayerState* MumulPS = Cast<AMumulPlayerState>(PS);
-
-				// 2. 같은 채널에 있는 다른 사람들에게만 전송
-				if (MumulPS && MumulPS->VoiceChannelID == TargetChannelID)
-				{
-					if (ACuteAlienController* TargetPC = Cast<ACuteAlienController>(PS->GetOwner()))
-					{
-						TargetPC->Client_RequestJoinMeeting(MeetingID);
-					}
-				}
-			}
-		}
-	}
-}
-
-void ACuteAlienController::Client_RequestJoinMeeting_Implementation(const FString& MeetingID)
-{
-	CurrentMeetingSessionID = MeetingID;
-
-	UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
-	if (GI)
-	{
-		if (HttpSystem)
-		{
-			// [HTTP] Join Meeting API 호출
-			GroupChatUI->OnRecordBtnState(true);
-			HttpSystem->JoinMeetingRequest(GI->PlayerUniqueID, MeetingID);
-		}
-	}
-}
-
-void ACuteAlienController::OpenMeetingSetupUI()
-{
-	if (VoiceMeetingUIClass)
-	{
-		if (!VoiceMeetingUI)
-		{
-			VoiceMeetingUI = CreateWidget<UVoiceMeetingUI>(this, VoiceMeetingUIClass);
-			VoiceMeetingUI->AddToViewport();
-		}
-
-		VoiceMeetingUI->InitMeetingUI(true); // 방장 모드
-		VoiceMeetingUI->SetVisibility(ESlateVisibility::Visible);
-
-		// SetShowMouseCursor(true);
-		// FInputModeUIOnly InputMode;
-		// InputMode.SetWidgetToFocus(VoiceMeetingUI->TakeWidget());
-		// SetInputMode(InputMode);
-	}
-}
-
-void ACuteAlienController::OpenEndMeetingPopup()
-{
-	if (VoiceMeetingUIClass)
-	{
-		if (!VoiceMeetingUI)
-		{
-			VoiceMeetingUI = CreateWidget<UVoiceMeetingUI>(this, VoiceMeetingUIClass);
-			VoiceMeetingUI->AddToViewport();
-		}
-
-		// 종료 확인 화면(Index 1)으로 전환
-		if (VoiceMeetingUI->MeetingWidgetSwitcher)
-		{
-			VoiceMeetingUI->MeetingWidgetSwitcher->SetActiveWidgetIndex(1);
-		}
-
-		VoiceMeetingUI->SetVisibility(ESlateVisibility::Visible);
-
-		// SetShowMouseCursor(true);
-		// FInputModeUIOnly InputMode;
-		// InputMode.SetWidgetToFocus(VoiceMeetingUI->TakeWidget());
-		// SetInputMode(InputMode);
-	}
-}
-
-void ACuteAlienController::OnStartMeetingResponse(bool bSuccess, FString MeetingID)
-{
-	if (bSuccess)
-	{
-		UE_LOG(LogTemp, Log, TEXT("[Meeting] Created Successfully: %s"), *MeetingID);
-
-		if (VoiceMeetingUI)
-		{
-			VoiceMeetingUI->SetMeetingState(true);
-		}
-
-		// 1. 미팅 ID 저장
-		CurrentMeetingSessionID = MeetingID;
-
-		// 2. [수정] 방장은 Join API 호출 없이 "즉시 녹음 시작"
-		if (APawn* MyPawn = GetPawn())
-		{
-			if (UVoiceChatComponent* VoiceComp = MyPawn->FindComponentByClass<UVoiceChatComponent>())
-			{
-				VoiceComp->SetCurrentMeetingID(CurrentMeetingSessionID);
-				VoiceComp->StartRecording();
-
-				UE_LOG(LogTemp, Warning, TEXT(">>> [HOST] Start Recording Immediately (Skip Join)"));
-			}
-		}
-
-		// 3. 다른 팀원들에게만 Join 명령 내리기 위해 RPC 호출
-		AMumulPlayerState* MyPS = GetPlayerState<AMumulPlayerState>();
-		if (MyPS)
-		{
-			Server_RegisterMeetingState(MyPS->VoiceChannelID, MeetingID);
-			Server_BroadcastJoinMeeting(MyPS->VoiceChannelID, MeetingID);
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("[Meeting] Failed to Create Meeting."));
-	}
-}
-
-void ACuteAlienController::OnJoinMeetingResponse(bool bSuccess)
-{
-	if (bSuccess)
-	{
-		UE_LOG(LogTemp, Log, TEXT("[Meeting] Joined Successfully! Starting Recording..."));
-
-		// [최종] 녹음 컴포넌트 실행
-		if (APawn* MyPawn = GetPawn())
-		{
-			if (UVoiceChatComponent* VoiceComp = MyPawn->FindComponentByClass<UVoiceChatComponent>())
-			{
-				// 녹음 시작 시 MeetingID를 전달해줘야 함 (VoiceComponent 수정 필요)
-				VoiceComp->SetCurrentMeetingID(CurrentMeetingSessionID);
-				VoiceComp->StartRecording();
-
-				if (IsLocalController())
-				{
-					GroupChatUI->OnRecordBtnState(true);
-				}
-			}
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("[Meeting] Failed to Join Meeting."));
-	}
-}
-
-void ACuteAlienController::Server_RegisterMeetingState_Implementation(const FString& ChannelID,
-                                                                      const FString& MeetingID)
-{
-	if (GS)
-	{
-		GS->RegisterMeeting(ChannelID, MeetingID);
-	}
-}
-
-void ACuteAlienController::Server_UnregisterMeetingState_Implementation(const FString& ChannelID)
-{
-	if (GS)
-	{
-		GS->UnregisterMeeting(ChannelID);
-	}
-}
-
 void ACuteAlienController::TryInitPlayerInfo()
 {
 	AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>();
@@ -1183,257 +452,154 @@ void ACuteAlienController::TryInitPlayerInfo()
 	}
 }
 
-void ACuteAlienController::UpdateVoiceChannelMuting()
-{
-	AMumulPlayerState* MyPS = GetPlayerState<AMumulPlayerState>();
-	if (!MyPS) return;
 
-	FString MyChannelID = MyPS->VoiceChannelID;
-
-	if (UWorld* World = GetWorld())
-	{
-		if (AGameStateBase* GameState = World->GetGameState())
-		{
-			for (APlayerState* OtherPS : GameState->PlayerArray)
-			{
-				if (OtherPS == MyPS) continue;
-
-				AMumulPlayerState* AlienOtherPS = Cast<AMumulPlayerState>(OtherPS);
-				if (!AlienOtherPS) continue;
-
-				// [1. Talker 찾기 및 생성 (GC 방지 포함)]
-				UVOIPTalker* Talker = nullptr;
-				if (CachedTalkers.Contains(AlienOtherPS->PS_UserIndex))
-				{
-					Talker = CachedTalkers[AlienOtherPS->PS_UserIndex];
-				}
-
-				if (!Talker)
-				{
-					Talker = UVOIPStatics::GetVOIPTalkerForPlayer(OtherPS->GetUniqueId());
-				}
-
-				if (!Talker)
-				{
-					Talker = UVOIPTalker::CreateTalkerForPlayer(OtherPS);
-					if (Talker)
-					{
-						CachedTalkers.Add(AlienOtherPS->PS_UserIndex, Talker);
-						UE_LOG(LogTemp, Warning, TEXT("[Voice] Created & Cached Talker for %s"),
-						       *OtherPS->GetPlayerName());
-					}
-				}
-
-				if (Talker)
-				{
-					// 채널이 같은지 확인
-					if (AlienOtherPS->VoiceChannelID == MyChannelID)
-					{
-						// [Case A] 로비 채널 (3D 거리 기반)
-						if (MyChannelID == TEXT("Lobby"))
-						{
-							APawn* OtherPawn = OtherPS->GetPawn();
-							USceneComponent* TargetComponent = OtherPawn ? OtherPawn->GetRootComponent() : nullptr;
-
-							// [핵심] 현재 설정이 목표와 다를 때만 변경 (중복 설정 방지)
-							if (Talker->Settings.AttenuationSettings != NormalAttenuation ||
-								Talker->Settings.ComponentToAttachTo != TargetComponent)
-							{
-								Talker->Settings.AttenuationSettings = NormalAttenuation;
-								Talker->Settings.ComponentToAttachTo = TargetComponent; // Pawn이 없으면 nullptr이 들어감 (안전함)
-
-								if (TargetComponent)
-								{
-									UE_LOG(LogTemp, Log, TEXT("[Voice] %s -> Set 3D Lobby Mode (Attached)"),
-									       *OtherPS->GetPlayerName());
-								}
-								else
-								{
-									UE_LOG(LogTemp, Warning, TEXT("[Voice] %s -> Set 3D Lobby Mode (Pending Pawn...)"),
-									       *OtherPS->GetPlayerName());
-								}
-							}
-						}
-						// [Case B] 일반 그룹/회의 채널 (2D 전체)
-						else
-						{
-							// 목표: Attenuation 없음(nullptr), 위치 부착 없음(nullptr)
-							if (Talker->Settings.AttenuationSettings != nullptr ||
-								Talker->Settings.ComponentToAttachTo != nullptr)
-							{
-								Talker->Settings.AttenuationSettings = nullptr;
-								Talker->Settings.ComponentToAttachTo = nullptr;
-
-								UE_LOG(LogTemp, Log, TEXT("[Voice] %s -> Set 2D Team Mode"), *OtherPS->GetPlayerName());
-							}
-						}
-					}
-					// [Case C] 다른 채널 (음소거)
-					else
-					{
-						// 목표: Attenuation은 SilentAttenuation
-						if (Talker->Settings.AttenuationSettings != SilentAttenuation)
-						{
-							Talker->Settings.AttenuationSettings = SilentAttenuation;
-							Talker->Settings.ComponentToAttachTo = nullptr;
-
-							UE_LOG(LogTemp, Log, TEXT("[Voice] %s -> Muted"), *OtherPS->GetPlayerName());
-						}
-					}
-				}
-			}
-		}
-	}
-}
+// void ACuteAlienController::Server_AddTeamChatList_Implementation(const FString& TeamID)
+// {
+// 	if (GS)
+// 	{
+// 		GS->AddTeamChatList(TeamID);
+// 	}
+// }
+//
+// void ACuteAlienController::OnServerCreateTeamChatResponse(bool bSuccess, FString Message)
+// {
+// 	if (bSuccess)
+// 	{
+// 		// 1. JSON 파싱 (Message에는 JSON 원본이 들어있음)
+// 		FCreateTeamChatResponse CreateTeamChat;
+//
+// 		if (FJsonObjectConverter::JsonObjectStringToUStruct(Message, &CreateTeamChat, 0, 0))
+// 		{
+// 			// // JSON Parsing LOG
+// 			// UE_LOG(LogTemp, Warning, TEXT("===== CreateTeamChat Response ====="));
+// 			// UE_LOG(LogTemp, Warning, TEXT("groupId: %s"), *CreateTeamChat.groupId);
+// 			// UE_LOG(LogTemp, Warning, TEXT("groupName: %s"), *CreateTeamChat.groupName);
+// 			//
+// 			// UE_LOG(LogTemp, Warning, TEXT("userIdList (%d명):"), CreateTeamChat.userIdList.Num());
+// 			// for (int32 UserID : CreateTeamChat.userIdList)
+// 			// {
+// 			// 	UE_LOG(LogTemp, Warning, TEXT(" - userId: %d"), UserID);
+// 			// }
+// 			//
+// 			// TArray<FTeamUser> TeamUserIDs;
+// 			//
+// 			// FTeamData NewTeamData;
+// 			// NewTeamData.UniqueTeamID = CreateTeamChat.groupId;
+// 			// NewTeamData.TeamName = CreateTeamChat.groupName;
+// 			// NewTeamData.TeamMateList = CreateTeamChat.userIdList;
+// 			//
+// 			// for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
+// 			// {
+// 			// 	if (AMumulPlayerState* MPS = Cast<AMumulPlayerState>(PS))
+// 			// 	{
+// 			// 		MPS->PS_PlayerTeamList.Add(NewTeamData);
+// 			// 		if (CreateTeamChat.userIdList.Contains(MPS->PS_UserIndex))
+// 			// 		{
+// 			// 			FTeamUser NewUser;
+// 			// 			NewUser.UserId = MPS->PS_UserIndex;
+// 			// 			NewUser.UserName = MPS->PS_RealName;
+// 			// 			TeamUserIDs.Add(NewUser);
+// 			// 		}
+// 			// 	}
+// 			// }
+//
+// 			if (IsLocalController())
+// 			{
+// 				Server_RequestTeamChatList();
+// 				// Server_CreateGroupChatUI(CreateTeamChat.userIdList, CreateTeamChat.groupId, CreateTeamChat.groupName, TeamUserIDs);
+// 			}
+// 		}
+// 		else
+// 		{
+// 			UE_LOG(LogTemp, Error, TEXT("CreateTeamChat 파싱 실패"));
+// 		}
+// 	}
+// 	else
+// 	{
+// 		UE_LOG(LogTemp, Error, TEXT("CreateTeamChat Response 실패 : %s"), *Message);
+// 	}
+// }
 
 
-void ACuteAlienController::Server_AddTeamChatList_Implementation(const FString& TeamID)
-{
-	if (GS)
-	{
-		GS->AddTeamChatList(TeamID);
-	}
-}
+// void ACuteAlienController::Server_RequestTeamChatList_Implementation()
+// {
+// 	Multicast_RequestTeamChatList();
+// }
 
-void ACuteAlienController::OnServerCreateTeamChatResponse(bool bSuccess, FString Message)
-{
-	if (bSuccess)
-	{
-		// 1. JSON 파싱 (Message에는 JSON 원본이 들어있음)
-		FCreateTeamChatResponse CreateTeamChat;
+// void ACuteAlienController::Multicast_RequestTeamChatList_Implementation()
+// {
+// 	// Get TeamChatList
+// 	if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+// 	{
+// 		AMumulPlayerState* PS = PC->GetPlayerState<AMumulPlayerState>();
+// 		HttpSystem->SendTeamChatListRequest(PS->PS_UserIndex);
+// 	}
+// }
 
-		if (FJsonObjectConverter::JsonObjectStringToUStruct(Message, &CreateTeamChat, 0, 0))
-		{
-			// // JSON Parsing LOG
-			// UE_LOG(LogTemp, Warning, TEXT("===== CreateTeamChat Response ====="));
-			// UE_LOG(LogTemp, Warning, TEXT("groupId: %s"), *CreateTeamChat.groupId);
-			// UE_LOG(LogTemp, Warning, TEXT("groupName: %s"), *CreateTeamChat.groupName);
-			//
-			// UE_LOG(LogTemp, Warning, TEXT("userIdList (%d명):"), CreateTeamChat.userIdList.Num());
-			// for (int32 UserID : CreateTeamChat.userIdList)
-			// {
-			// 	UE_LOG(LogTemp, Warning, TEXT(" - userId: %d"), UserID);
-			// }
-			//
-			// TArray<FTeamUser> TeamUserIDs;
-			//
-			// FTeamData NewTeamData;
-			// NewTeamData.UniqueTeamID = CreateTeamChat.groupId;
-			// NewTeamData.TeamName = CreateTeamChat.groupName;
-			// NewTeamData.TeamMateList = CreateTeamChat.userIdList;
-			//
-			// for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
-			// {
-			// 	if (AMumulPlayerState* MPS = Cast<AMumulPlayerState>(PS))
-			// 	{
-			// 		MPS->PS_PlayerTeamList.Add(NewTeamData);
-			// 		if (CreateTeamChat.userIdList.Contains(MPS->PS_UserIndex))
-			// 		{
-			// 			FTeamUser NewUser;
-			// 			NewUser.UserId = MPS->PS_UserIndex;
-			// 			NewUser.UserName = MPS->PS_RealName;
-			// 			TeamUserIDs.Add(NewUser);
-			// 		}
-			// 	}
-			// }
+// void ACuteAlienController::Server_CreateGroupChatUI_Implementation(const TArray<int32>& UserIDs, const FString& TeamID,
+//                                                                    const FString& TeamName,
+//                                                                    const TArray<FTeamUser>& TeamUserIDs)
+// {
+// 	if (IMGManager)
+// 	{
+// 		UTexture2D* TeamIconIMG = IMGManager->GetImageByTeamID(TeamID);
+//
+// 		// Add GroupChatUI for each Client
+// 		for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
+// 		{
+// 			if (UserIDs.Contains(Cast<AMumulPlayerState>(PS)->PS_UserIndex))
+// 			{
+// 				if (ACuteAlienController* PC = Cast<ACuteAlienController>(PS->GetOwningController()))
+// 				{
+// 					PC->Client_CreateGroupChatUI(TeamID, TeamName, TeamUserIDs, TeamIconIMG);
+// 				}
+// 			}
+// 		}
+// 	}
+// }
 
-			if (IsLocalController())
-			{
-				Server_RequestTeamChatList();
-				// Server_CreateGroupChatUI(CreateTeamChat.userIdList, CreateTeamChat.groupId, CreateTeamChat.groupName, TeamUserIDs);
-			}
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("CreateTeamChat 파싱 실패"));
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("CreateTeamChat Response 실패 : %s"), *Message);
-	}
-}
+// void ACuteAlienController::Client_CreateGroupChatUI_Implementation(const FString& TeamID, const FString& TeamName,
+//                                                                    const TArray<FTeamUser>& TeamUserIDs,
+//                                                                    UTexture2D* IMG)
+// {
+// 	// Set Players in Group Icon
+// 	// UGroupIconUI* GroupIconUI = CreateWidget<UGroupIconUI>(GetWorld(), GroupIconUIClass);
+// 	// GroupChatUI->AddGroupIcon(GroupIconUI);
+// 	// GroupIconUI->InitParentUI(GroupChatUI);
+// 	// GroupIconUI->ChatBlockUI->SetTeamID(TeamID);
+// 	// GroupIconUI->ChatBlockUI->SetTeamName(TeamName);
+// 	// for (const FTeamUser& User : TeamUserIDs)
+// 	// {
+// 	// 	GroupIconUI->ChatBlockUI->AddTeamUser(User.UserId, User.UserName);
+// 	// }
+// 	// GroupIconUI->SetIconIMG(IMG);
+// }
 
 
-void ACuteAlienController::Server_RequestTeamChatList_Implementation()
-{
-	Multicast_RequestTeamChatList();
-}
+// void ACuteAlienController::Server_RequestChat_Implementation(const FString& TeamID, const TArray<int32>& UserIDs,
+//                                                              const FString& CurrentTime, const int32& UserID,
+//                                                              const FString& Name,
+//                                                              const FString& Text)
+// {
+// 	// Add GroupChatUI for each Client
+// 	for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
+// 	{
+// 		if (UserIDs.Contains(Cast<AMumulPlayerState>(PS)->PS_UserIndex))
+// 		{
+// 			if (ACuteAlienController* PC = Cast<ACuteAlienController>(PS->GetOwningController()))
+// 			{
+// 				PC->Client_SendChat(TeamID, CurrentTime, UserID, Name, Text);
+// 			}
+// 		}
+// 	}
+// }
 
-void ACuteAlienController::Multicast_RequestTeamChatList_Implementation()
-{
-	// Get TeamChatList
-	if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
-	{
-		AMumulPlayerState* PS = PC->GetPlayerState<AMumulPlayerState>();
-		HttpSystem->SendTeamChatListRequest(PS->PS_UserIndex);
-	}
-}
-
-void ACuteAlienController::Server_CreateGroupChatUI_Implementation(const TArray<int32>& UserIDs, const FString& TeamID,
-                                                                   const FString& TeamName,
-                                                                   const TArray<FTeamUser>& TeamUserIDs)
-{
-	if (IMGManager)
-	{
-		UTexture2D* TeamIconIMG = IMGManager->GetImageByTeamID(TeamID);
-
-		// Add GroupChatUI for each Client
-		for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
-		{
-			if (UserIDs.Contains(Cast<AMumulPlayerState>(PS)->PS_UserIndex))
-			{
-				if (ACuteAlienController* PC = Cast<ACuteAlienController>(PS->GetOwningController()))
-				{
-					PC->Client_CreateGroupChatUI(TeamID, TeamName, TeamUserIDs, TeamIconIMG);
-				}
-			}
-		}
-	}
-}
-
-void ACuteAlienController::Client_CreateGroupChatUI_Implementation(const FString& TeamID, const FString& TeamName,
-                                                                   const TArray<FTeamUser>& TeamUserIDs,
-                                                                   UTexture2D* IMG)
-{
-	// Set Players in Group Icon
-	UGroupIconUI* GroupIconUI = CreateWidget<UGroupIconUI>(GetWorld(), GroupIconUIClass);
-	GroupChatUI->AddGroupIcon(GroupIconUI);
-	GroupIconUI->InitParentUI(GroupChatUI);
-	GroupIconUI->ChatBlockUI->SetTeamID(TeamID);
-	GroupIconUI->ChatBlockUI->SetTeamName(TeamName);
-	for (const FTeamUser& User : TeamUserIDs)
-	{
-		GroupIconUI->ChatBlockUI->AddTeamUser(User.UserId, User.UserName);
-	}
-	GroupIconUI->SetIconIMG(IMG);
-}
-
-
-void ACuteAlienController::Server_RequestChat_Implementation(const FString& TeamID, const TArray<int32>& UserIDs,
-                                                             const FString& CurrentTime, const int32& UserID,
-                                                             const FString& Name,
-                                                             const FString& Text)
-{
-	// Add GroupChatUI for each Client
-	for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
-	{
-		if (UserIDs.Contains(Cast<AMumulPlayerState>(PS)->PS_UserIndex))
-		{
-			if (ACuteAlienController* PC = Cast<ACuteAlienController>(PS->GetOwningController()))
-			{
-				PC->Client_SendChat(TeamID, CurrentTime, UserID, Name, Text);
-			}
-		}
-	}
-}
-
-void ACuteAlienController::Client_SendChat_Implementation(const FString& TeamID, const FString& CurrentTime,
-                                                          const int32& UserID,
-                                                          const FString& Name, const FString& Text)
-{
-	GroupChatUI->AddChat(TeamID, CurrentTime, UserID, Name, Text);
-}
+// void ACuteAlienController::Client_SendChat_Implementation(const FString& TeamID, const FString& CurrentTime,
+//                                                           const int32& UserID,
+//                                                           const FString& Name, const FString& Text)
+// {
+// 	GroupChatUI->AddChat(TeamID, CurrentTime, UserID, Name, Text);
+// }
 
 void ACuteAlienController::Client_DisplayQuestion_Implementation(const int32& QuestionIdx, const FString& NewQuestion,
                                                                  const int32& QuestionTime)

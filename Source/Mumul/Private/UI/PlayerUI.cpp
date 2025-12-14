@@ -16,6 +16,8 @@
 #include "Player/CuteAlienController.h"
 #include "Player/CuteAlienPlayer.h"
 #include "Player/MumulPlayerState.h"
+#include "Player/Component/PlayerHousingSystemComponent.h"
+#include "Player/Component/PlayerMeetingManagerComponent.h"
 #include "UI/CustomItemEntryUI.h"
 #include "UI/GroupChatUI.h"
 #include "UI/BaseUI/BaseText.h"
@@ -291,7 +293,7 @@ void UPlayerUI::UpdateRecordButtonState(bool bActive)
 
 void UPlayerUI::OnTentClicked()
 {
-	PC->ShowPreviewTent();
+	PC->HousingComp->ShowPreviewTent();
 }
 
 void UPlayerUI::OnHousingBoxClick()
@@ -377,13 +379,13 @@ void UPlayerUI::OnHousingItemEntryChecked(FName ItemID, bool bIsChecked)
 		}
 
 		// 2. 컨트롤러에게 해당 아이템의 프리뷰 모드 시작 요청
-		PC->ShowPreviewHousingItem(ItemID);
+		PC->HousingComp->ShowPreviewHousingItem(ItemID);
 	}
 	else
 	{
 		// 3. 체크 해제 시 하우징 모드 종료 (프리뷰 제거)
 		// 만약 현재 프리뷰 중인 아이템과 동일하다면 취소
-		PC->StopPreviewHousingItem();
+		PC->HousingComp->StopPreviewHousingItem();
 	}
 }
 
@@ -416,12 +418,12 @@ void UPlayerUI::OnRecordClicked()
 			// 녹음 중이면 -> 종료 팝업 띄우기
 			if (VoiceComp->IsRecording())
 			{
-				PC->OpenEndMeetingPopup();
+				PC->MeetingComp->OpenEndMeetingPopup();
 			}
 			// 녹음 중 아니면 -> 시작 설정 UI 띄우기
 			else
 			{
-				PC->OpenMeetingSetupUI();
+				PC->MeetingComp->OpenMeetingSetupUI();
 			}
 		}
 	}

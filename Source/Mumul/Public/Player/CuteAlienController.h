@@ -32,7 +32,7 @@ class MUMUL_API ACuteAlienController : public APlayerController
 	GENERATED_BODY()
 	ACuteAlienController();
 	
-protected:
+public:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
 
@@ -44,8 +44,6 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void Server_InitPlayerInfo(int32 UID, const FString& Name, const FString& Type, int32 Tendency);
 
-	UFUNCTION(Server, Reliable)
-	void Server_PlaceHousingItem(class ATentActor* TargetTent, FName ItemID, FTransform RelativeTransform);
 
 	UPROPERTY()
 	TObjectPtr<class UInputMappingContext> IMC_Player;
@@ -54,16 +52,21 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 
 	// ESC 키에 바인딩할 함수
-
 	// 저장 후 로비로 가거나 게임 종료
 	void SaveAndExit();
-
-	UFUNCTION()
-	void OnHostRecordingStopped();
 	
-	void OnToggleMouse();
 
-protected:
+	
+	// Component
+public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<class UPlayerHousingSystemComponent> HousingComp;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<class UPlayerChatComponent> ChatComp;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<class UPlayerMeetingManagerComponent> MeetingComp;
+
+public:
 	UPROPERTY()
 	TObjectPtr<class UInputAction> IA_Radial;
 	UPROPERTY()
@@ -71,8 +74,7 @@ protected:
 	void OnCancelUI();
 	UPROPERTY()
 	TObjectPtr<class UInputAction> IA_ToggleMouse;
-
-	
+	void OnToggleMouse();
 	
 	UPROPERTY()
 	TObjectPtr<class UInputAction> IA_Click;
@@ -102,102 +104,15 @@ protected:
 
 	UPROPERTY()
 	TSubclassOf<class UPlayerUI> PlayerUIClass;
-	UPROPERTY()
-	TSubclassOf<class UGroupChatUI> GroupChatUIClass;
+	// UPROPERTY()
+	// TSubclassOf<class UGroupChatUI> GroupChatUIClass;
 public:
 	UPROPERTY()
 	TObjectPtr<UPlayerUI> PlayerUI;
+	// UPROPERTY()
+	// TObjectPtr<UGroupChatUI> GroupChatUI;
 	UPROPERTY()
-	TObjectPtr<UGroupChatUI> GroupChatUI;
-	
-protected:
-	UPROPERTY()
-	TSubclassOf<class APreviewTentActor> PreviewTentClass;
-	UPROPERTY()
-	TObjectPtr<class APreviewTentActor> PreviewTent;
-	UPROPERTY()
-	TSubclassOf<class ATentActor> TentClass;
-	UPROPERTY()
-	TObjectPtr<class ATentActor> Tent;
-
-	UPROPERTY()
-	TSubclassOf<class APreviewHousingItemActor> PreviewHousingItemClass;
-	UPROPERTY()
-	TObjectPtr<class APreviewHousingItemActor> PreviewHousingItem;
-	UPROPERTY()
-	TSubclassOf<class AHousingItemActor> HousingItemClass;
-	UPROPERTY()
-	TObjectPtr<class AHousingItemActor> HousingItem;
-
-	FName SelectedItemID = NAME_None;
-
-public:
-	void ShowPreviewTent();
-	void StopPreviewTent();
-	void ShowPreviewHousingItem(FName idx);
-	void StopPreviewHousingItem();
-	
-
-	UFUNCTION(Server, Reliable)
-	void Server_SpawnTent(const FTransform& TentTransform);
-
-
-	void RequestStartMeetingRecording(FString InMeetingTitle, FString InAgenda, FString InDesc);
-	void RequestStopMeetingRecording();
-
-	UFUNCTION(Server, Reliable)
-	void Server_StartChannelRecording(const FString& TargetChannelID);
-
-	UFUNCTION(Client, Reliable)
-	void Client_StartChannelRecording(const FString& TargetChannelID);
-
-	UFUNCTION(Server, Reliable)
-	void Server_StopChannelRecording(const FString& TargetChannelID);
-
-	UFUNCTION(Client, Reliable)
-	void Client_StopChannelRecording();
-
-
-	UFUNCTION(Server, Reliable)
-	void Server_BroadcastJoinMeeting(const FString& TargetChannelID, const FString& MeetingID);
-
-	UFUNCTION(Client, Reliable)
-	void Client_RequestJoinMeeting(const FString& MeetingID);
-	
-	// 녹음 버튼 클릭 시 호출 (UI 열기)
-	UFUNCTION(BlueprintCallable, Category = "Meeting")
-	void OpenMeetingSetupUI();
-
-	// 종료 버튼 클릭 시 호출 (팝업 열기)
-	UFUNCTION(BlueprintCallable, Category = "Meeting")
-	void OpenEndMeetingPopup();
-
-protected:
-	// [변수] 현재 진행 중인 회의 ID (서버에서 받아서 저장)
-	FString CurrentMeetingSessionID;
-
-	// [함수] HTTP 응답 핸들러 (바인딩용)
-	UFUNCTION()
-	void OnStartMeetingResponse(bool bSuccess, FString MeetingID);
-
-	UFUNCTION()
-	void OnJoinMeetingResponse(bool bSuccess);
-
-	UFUNCTION(Server, Reliable)
-	void Server_RegisterMeetingState(const FString& ChannelID, const FString& MeetingID);
-
-	// [신규] 서버의 GameState에서 회의 정보 삭제 요청
-	UFUNCTION(Server, Reliable)
-	void Server_UnregisterMeetingState(const FString& ChannelID);
-
-	UPROPERTY(EditDefaultsOnly, Category = "UI")
-	TSubclassOf<class UVoiceMeetingUI> VoiceMeetingUIClass;
-
-	UPROPERTY()
-	TObjectPtr<class UVoiceMeetingUI> VoiceMeetingUI;
-
-	UPROPERTY()
-	TMap<int32, class UVOIPTalker*> CachedTalkers;
+	TObjectPtr<class UIMGManager> IMGManager;
 
 protected:
 	// PlayerState 초기화 대기용 타이머 핸들
@@ -205,48 +120,35 @@ protected:
 
 	// 타이머에 의해 호출될 초기화 함수
 	void TryInitPlayerInfo();
+	
+// 	UPROPERTY()
+// 	TSubclassOf<class UGroupIconUI> GroupIconUIClass;
+// 	UFUNCTION()
+// 	void OnServerCreateTeamChatResponse(bool bSuccess, FString Message);
+//
+// public:
+// 	UFUNCTION(Server, Reliable)
+// 	void Server_AddTeamChatList(const FString& TeamID);
+//
 
-public:
-	UFUNCTION(BlueprintCallable, Category = "Voice")
-	void UpdateVoiceChannelMuting();
-
-protected:
-	// 무음 처리용 감쇠 설정
-	UPROPERTY(EditDefaultsOnly, Category = "Voice")
-	TObjectPtr<USoundAttenuation> SilentAttenuation;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Voice")
-	TObjectPtr<USoundAttenuation> NormalAttenuation;
-
-	UPROPERTY()
-	TSubclassOf<class UGroupIconUI> GroupIconUIClass;
-	UFUNCTION()
-	void OnServerCreateTeamChatResponse(bool bSuccess, FString Message);
-
-public:
-	UFUNCTION(Server, Reliable)
-	void Server_AddTeamChatList(const FString& TeamID);
-
-	UPROPERTY()
-	TObjectPtr<class UIMGManager> IMGManager;
-
-	UFUNCTION(Server, Reliable)
-	void Server_RequestTeamChatList();
-	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_RequestTeamChatList();
-
-	UFUNCTION(Server, Reliable)
-	void Server_CreateGroupChatUI(const TArray<int32>& UserIDs, const FString& TeamID, const FString& TeamName,
-	                              const TArray<FTeamUser>& TeamUserIDs);
-	UFUNCTION(Client, Reliable)
-	void Client_CreateGroupChatUI(const FString& TeamID, const FString& TeamName,
-	                              const TArray<FTeamUser>& TeamUserIDs, UTexture2D* IMG);
-
-	UFUNCTION(Server, Reliable)
-	void Server_RequestChat(const FString& TeamID, const TArray<int32>& UserIDs, const FString& CurrentTime,
-	                         const int32& UserID, const FString& Name, const FString& Text);
-	UFUNCTION(Client, Reliable)
-	void Client_SendChat(const FString& TeamID, const FString& CurrentTime, const int32& UserID, const FString& Name, const FString& Text);
+//
+// 	UFUNCTION(Server, Reliable)
+// 	void Server_RequestTeamChatList();
+// 	UFUNCTION(NetMulticast, Reliable)
+// 	void Multicast_RequestTeamChatList();
+//
+// 	UFUNCTION(Server, Reliable)
+// 	void Server_CreateGroupChatUI(const TArray<int32>& UserIDs, const FString& TeamID, const FString& TeamName,
+// 	                              const TArray<FTeamUser>& TeamUserIDs);
+// 	UFUNCTION(Client, Reliable)
+// 	void Client_CreateGroupChatUI(const FString& TeamID, const FString& TeamName,
+// 	                              const TArray<FTeamUser>& TeamUserIDs, UTexture2D* IMG);
+//
+// 	UFUNCTION(Server, Reliable)
+// 	void Server_RequestChat(const FString& TeamID, const TArray<int32>& UserIDs, const FString& CurrentTime,
+// 	                         const int32& UserID, const FString& Name, const FString& Text);
+// 	UFUNCTION(Client, Reliable)
+// 	void Client_SendChat(const FString& TeamID, const FString& CurrentTime, const int32& UserID, const FString& Name, const FString& Text);
 
 protected:
 	UPROPERTY()
