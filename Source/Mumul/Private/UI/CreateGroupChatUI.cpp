@@ -24,11 +24,6 @@ void UCreateGroupChatUI::NativeConstruct()
 
 	GS = GetWorld()->GetGameState<AMumulGameState>();
 	
-	ACuteAlienController* PS = Cast<ACuteAlienController>(GetOwningPlayer());
-	if (PS)
-	{
-		PS->OnPlayerArrayUpdated.AddDynamic(this, &UCreateGroupChatUI::RefreshJoinedPlayerList);
-	}
 	CreateGroupBtn->BaseButton->OnPressed.AddDynamic(this, &UCreateGroupChatUI::CreateGroupChat);
 	SearchBox->BaseTextBox->OnTextChanged.AddDynamic(this, &UCreateGroupChatUI::OnSearchTextChanged);
 	ExitBtn->BaseExitButton->OnPressed.AddDynamic(this, &UCreateGroupChatUI::OnExitUI);

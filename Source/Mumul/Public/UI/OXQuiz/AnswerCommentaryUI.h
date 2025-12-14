@@ -16,9 +16,17 @@ class MUMUL_API UAnswerCommentaryUI : public UUserWidget
 	
 protected:
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UBaseText> QuestionText;
+	TObjectPtr<class UBorder> CommentaryBorder;
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UBaseText> AnswerText;
+	TObjectPtr<class UTextBlock> QuestionText;
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UBaseText> CommentaryText;
+	TObjectPtr<class UTextBlock> AnswerText;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UTextBlock> CommentaryText;
+	
+public:
+	void SetCommentaryColor(bool TrueGreenOrFalseRed);
+	void SetQuestion(const FString& NewQuestion);
+	void SetAnswer(const bool& TrueCorrectOrFalseWrong);
+	void SetCommentary(const FString& NewCommentary);
 };

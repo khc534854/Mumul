@@ -2,3 +2,11 @@
 
 
 #include "UI/OXQuiz/QuizQuestionUI.h"
+
+#include "Components/TextBlock.h"
+
+
+void UQuizQuestionUI::SetQuestionText(const FString& Text)
+{
+	QuestionText->SetText(FText::FromString(Text));
+}

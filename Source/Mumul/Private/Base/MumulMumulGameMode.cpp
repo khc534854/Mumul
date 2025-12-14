@@ -2,12 +2,19 @@
 
 
 #include "Base/MumulMumulGameMode.h"
+
+#include "JsonObjectConverter.h"
 #include "Base/MumulGameState.h"
+#include "Components/BoxComponent.h"
 #include "Player/MumulPlayerState.h"
 #include "Save/MapDataSaveGame.h"
 #include "Kismet/GameplayStatics.h"
 #include "Object/HousingItemActor.h"
+#include "Network/HttpNetworkSubsystem.h"
+#include "Network/NetworkStructs.h"
+#include "Object/OXQuizActor.h"
 #include "Object/Tent/TentActor.h"
+#include "Player/CuteAlienController.h"
 
 AMumulMumulGameMode::AMumulMumulGameMode()
 {
@@ -23,6 +30,8 @@ void AMumulMumulGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
+	GS = GetGameState<AMumulGameState>();
+
 	for (int i = 0; i < PoolSize; i++)
 	{
 		ATentActor* Tent = GetWorld()->SpawnActor<ATentActor>(TentClass);
@@ -32,7 +41,7 @@ void AMumulMumulGameMode::BeginPlay()
 			UE_LOG(LogTemp, Error, TEXT("Tent Spawn FAILED at %d"), i);
 			continue;
 		}
-		
+
 		Tent->Deactivate();
 		TentPool.Add(Tent);
 	}
@@ -51,12 +60,19 @@ void AMumulMumulGameMode::BeginPlay()
 				// 주의: SpawnTent 함수 내부에서 또 저장을 호출하지 않도록 플래그 처리가 필요할 수 있음.
 				// 여기서는 단순히 '복구'만 하므로 SpawnTent를 직접 부르거나, 
 				// SpawnTent 로직을 분리하는 것이 좋습니다.
-                
+
 				// 일단 직접 배치 로직 (SpawnTent 함수 활용)
 				SpawnTent(Data.Transform, Data.OwnerUserIndex, false, Data.HousingItems); // false: 저장하지 마라 (불러오는 중이니까)
 			}
 		}
 	}
+
+	UHttpNetworkSubsystem* HttpSystem = GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>();
+	if (HttpSystem)
+	{
+		HttpSystem->OnLearningQuizResponse.AddDynamic(this, &AMumulMumulGameMode::OnServerLearningQuizResponse);
+	}
+	
 }
 
 void AMumulMumulGameMode::Logout(AController* Exiting)
@@ -90,15 +106,16 @@ void AMumulMumulGameMode::SaveUserData(AController* Controller)
 	if (PS && Pawn)
 	{
 		int32 UserIndex = PS->PS_UserIndex;
-        
+
 		// 유효한 유저라면 저장
 		if (UserIndex > 0)
 		{
-			if (AMumulGameState* GS = GetGameState<AMumulGameState>())
+			if (GS)
 			{
 				// 위치 저장
 				GS->Multicast_SavePlayerLocation(UserIndex, Pawn->GetActorTransform());
-				UE_LOG(LogTemp, Warning, TEXT("[GameMode] Saved User %d Location: %s"), UserIndex, *Pawn->GetActorTransform().GetLocation().ToString());
+				UE_LOG(LogTemp, Warning, TEXT("[GameMode] Saved User %d Location: %s"), UserIndex,
+				       *Pawn->GetActorTransform().GetLocation().ToString());
 			}
 		}
 	}
@@ -192,14 +209,160 @@ void AMumulMumulGameMode::SpawnTent(const FTransform& SpawnTransform, int32 User
 		}
 	}
 	
-    // 4. [핵심] 텐트 처리가 성공했고, 저장 옵션이 켜져있다면 저장 실행
-    // (리턴을 없앴기 때문에 이제 이 코드가 실행됩니다)
-    if (bTentProcessed && bSaveToDisk)
-    {
-        if (AMumulGameState* GS = GetGameState<AMumulGameState>())
-        {
-            GS->Multicast_SaveTentData(UserIndex, SpawnTransform);
-            UE_LOG(LogTemp, Log, TEXT("[GameMode] Requesting Multicast Save for User %d..."), UserIndex);
-        }
-    }
+	// 4. [핵심] 텐트 처리가 성공했고, 저장 옵션이 켜져있다면 저장 실행
+	// (리턴을 없앴기 때문에 이제 이 코드가 실행됩니다)
+	if (bTentProcessed && bSaveToDisk)
+	{
+		if (GS)
+		{
+			GS->Multicast_SaveTentData(UserIndex, SpawnTransform);
+			UE_LOG(LogTemp, Log, TEXT("[GameMode] Requesting Multicast Save for User %d..."), UserIndex);
+		}
+	}
+}
+
+void AMumulMumulGameMode::RegisterQuizActor(class AOXQuizActor* InActor)
+{
+	OXQuizActor = InActor;
+}
+
+void AMumulMumulGameMode::OnServerLearningQuizResponse(bool bSuccess, FString Message)
+{
+	if (bSuccess)
+	{
+		// 1. JSON 파싱 (Message에는 JSON 원본이 들어있음)
+		LearningQuiz = FLearningQuizResponse();
+		if (FJsonObjectConverter::JsonObjectStringToUStruct(Message, &LearningQuiz, 0, 0))
+		{
+			// JSON Parsing LOG
+			UE_LOG(LogTemp, Log, TEXT("isLearningQuestion: %s"),
+			       LearningQuiz.isLearningQuestion ? TEXT("true") : TEXT("false"));
+			UE_LOG(LogTemp, Log, TEXT("grade: %s"), *LearningQuiz.grade);
+
+			UE_LOG(LogTemp, Log, TEXT("Quiz Count: %d"), LearningQuiz.quiz.Num());
+			for (int32 i = 0; i < LearningQuiz.quiz.Num(); i++)
+			{
+				const FQuizContent& Content = LearningQuiz.quiz[i];
+				UE_LOG(LogTemp, Log, TEXT("---- Quiz %d ----"), i + 1);
+				UE_LOG(LogTemp, Log, TEXT("id: %d"), Content.id);
+				UE_LOG(LogTemp, Log, TEXT("type: %s"), *Content.type);
+				UE_LOG(LogTemp, Log, TEXT("question: %s"), *Content.question);
+				UE_LOG(LogTemp, Log, TEXT("answer: %s"), *Content.answer);
+				UE_LOG(LogTemp, Log, TEXT("explanation: %s"), *Content.explanation);
+			}
+
+			StartLearningQuiz();
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("LearningQuiz 파싱 실패"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("LearningQuiz Response 실패 : %s"), *Message);
+	}
+}
+
+void AMumulMumulGameMode::StartLearningQuiz()
+{
+	// Init Quiz
+	CurrentQuizIdx = 0;
+	MaxQuizCount = LearningQuiz.quiz.Num();
+	StartQuestionPhase();
+}
+
+void AMumulMumulGameMode::StartQuestionPhase()
+{
+	QuizPhase = EQuizPhase::Question;
+
+	UE_LOG(LogTemp, Warning, TEXT("문제 %d 표시"), CurrentQuizIdx);
+	// 문제 표시
+	for (TPair<TObjectPtr<ACuteAlienController>, TArray<bool>>& Elem : ParticipatingPlayers)
+	{
+		Elem.Key->Client_DisplayQuestion(LearningQuiz.quiz[CurrentQuizIdx].question, QuestionTime);
+	}
+
+
+	GetWorld()->GetTimerManager().SetTimer(
+		QuizTimer, this, &AMumulMumulGameMode::EnterNextStep, QuestionTime, false);
+}
+
+void AMumulMumulGameMode::EnterNextStep()
+{
+	if (QuizPhase == EQuizPhase::Question)
+	{
+		StartAnswerPhase();
+		return;
+	}
+
+	if (QuizPhase == EQuizPhase::Answer)
+	{
+		if (CurrentQuizIdx == MaxQuizCount - 1)
+		{
+			ShowResult();
+			return;
+		}
+		
+		CurrentQuizIdx++;
+		StartQuestionPhase();
+	}
+}
+
+void AMumulMumulGameMode::StartAnswerPhase()
+{
+	// 정답 판정
+	OXQuizActor->JudgePlayerAnswers();
+	
+	QuizPhase = EQuizPhase::Answer;
+	
+	UE_LOG(LogTemp, Warning, TEXT("해설 %d 표시"), CurrentQuizIdx);
+
+	bool Answer = false;
+	if (LearningQuiz.quiz[CurrentQuizIdx].answer == "O")
+	{
+		Answer = true;
+	}
+	else if (LearningQuiz.quiz[CurrentQuizIdx].answer == "X")
+	{
+		Answer = false;
+	}
+
+	// 해설 표시
+	for (TPair<TObjectPtr<ACuteAlienController>, TArray<bool>>& Elem : ParticipatingPlayers)
+	{
+		Elem.Key->Client_DisplayAnswer(Elem.Value[CurrentQuizIdx], Answer, LearningQuiz.quiz[CurrentQuizIdx].explanation, AnswerTime);
+	}
+
+	GetWorld()->GetTimerManager().SetTimer(
+		QuizTimer, this, &AMumulMumulGameMode::EnterNextStep, AnswerTime, false);
+}
+
+void AMumulMumulGameMode::ShowResult()
+{
+	// 정답 판정
+	OXQuizActor->JudgePlayerAnswers();
+	
+	// 전체 정답 표기
+	for (TPair<TObjectPtr<ACuteAlienController>, TArray<bool>>& Elem : ParticipatingPlayers)
+	{
+		for (int32 QuestionIdx = 0; QuestionIdx < MaxQuizCount; QuestionIdx++)
+		{
+			bool Answer = false;
+			if (LearningQuiz.quiz[QuestionIdx].answer == "O")
+			{
+				Answer = true;
+			}
+			else if (LearningQuiz.quiz[QuestionIdx].answer == "X")
+			{
+				Answer = false;
+			}
+			Elem.Key->Client_DisplayResult(Elem.Value[QuestionIdx], LearningQuiz.quiz[QuestionIdx].question, Answer, LearningQuiz.quiz[QuestionIdx].explanation);
+		}
+	}
+	
+	OXQuizActor->FrontBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	OXQuizActor->BackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	OXQuizActor->LeftBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	OXQuizActor->RightBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }

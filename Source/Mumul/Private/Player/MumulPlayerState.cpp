@@ -5,14 +5,26 @@
 
 #include "Base/MumulGameState.h"
 #include "Net/UnrealNetwork.h"
+#include "Network/HttpNetworkSubsystem.h"
 #include "Player/CuteAlienController.h"
 #include "Player/CuteAlienPlayer.h"
+#include "UI/CreateGroupChatUI.h"
+#include "UI/GroupChatUI.h"
+#include "UI/InvitationUI.h"
+
+
+void AMumulPlayerState::BeginPlay()
+{
+	Super::BeginPlay();
+
+	HttpSystem = GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>();
+}
 
 void AMumulPlayerState::Server_SetVoiceChannelID_Implementation(const FString& NewChannelID)
 {
 	VoiceChannelID = NewChannelID;
 
-	if (GetNetMode() != NM_Client) 
+	if (GetNetMode() != NM_Client)
 	{
 		OnRep_VoiceChannelID();
 	}
@@ -20,14 +32,15 @@ void AMumulPlayerState::Server_SetVoiceChannelID_Implementation(const FString& N
 	if (AMumulGameState* GS = GetWorld()->GetGameState<AMumulGameState>())
 	{
 		FString ActiveMeetingID = GS->GetActiveMeetingID(NewChannelID);
-        
+
 		// 회의 중인 방에 들어왔다면?
 		if (!ActiveMeetingID.IsEmpty())
 		{
 			if (ACuteAlienController* PC = Cast<ACuteAlienController>(GetOwner()))
 			{
-				UE_LOG(LogTemp, Warning, TEXT("[Server] User %s joined active meeting channel %s. Auto-joining..."), *GetPlayerName(), *NewChannelID);
-                
+				UE_LOG(LogTemp, Warning, TEXT("[Server] User %s joined active meeting channel %s. Auto-joining..."),
+				       *GetPlayerName(), *NewChannelID);
+
 				// 컨트롤러에게 "너도 빨리 참가해!" 명령 (기존 함수 재활용)
 				PC->Client_RequestJoinMeeting(ActiveMeetingID);
 			}
@@ -37,13 +50,38 @@ void AMumulPlayerState::Server_SetVoiceChannelID_Implementation(const FString& N
 
 void AMumulPlayerState::OnRep_UserIndex()
 {
-	// TeamList, UserProfileList 초기화
-	if (APlayerController* PC = Cast<APlayerController>(GetOwner()))
+	// TeamList, Player ProfileList 초기화
+
+	// Get TeamChatList
+	APlayerController* PC = GetWorld()->GetFirstPlayerController();
+	if (PC && PC->PlayerState == this)
 	{
-		ACuteAlienController* CAPC = Cast<ACuteAlienController>(PC);
-		if (CAPC)
+		if (HttpSystem)
 		{
-			CAPC->Server_InitPlayerArray();
+			HttpSystem->SendTeamChatListRequest(PS_UserIndex);
+		}
+	}
+
+	// Refresh Player ProfileList
+	Server_InitPlayerArray();
+}
+
+void AMumulPlayerState::Server_InitPlayerArray_Implementation()
+{
+	Multicast_InitPlayerArray();
+}
+
+void AMumulPlayerState::Multicast_InitPlayerArray_Implementation()
+{
+	if (HttpSystem)
+	{
+		if (ACuteAlienController* PC = Cast<ACuteAlienController>(GetWorld()->GetFirstPlayerController()))
+		{
+			if (PC->GroupChatUI && PC->GroupChatUI->CreateGroupChatUI && PC->GroupChatUI->InvitationUI)
+			{
+				PC->GroupChatUI->CreateGroupChatUI->RefreshJoinedPlayerList();
+				PC->GroupChatUI->InvitationUI->RefreshJoinedPlayerList();
+			}
 		}
 	}
 }

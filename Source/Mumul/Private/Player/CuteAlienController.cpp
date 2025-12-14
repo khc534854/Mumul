@@ -28,11 +28,13 @@
 #include "Kismet/GameplayStatics.h"
 #include "Data/IMGManager.h"
 #include "Object/PreviewHousingItemActor.h"
+#include "Object/OXQuizTriggerActor.h"
 #include "UI/ChatBlockUI.h"
 #include "UI/GroupChatUI.h"
 #include "UI/GroupIconUI.h"
 #include "UI/PlayerUI.h"
 #include "UI/VoiceMeetingUI.h"
+#include "UI/OXQuiz/OXQuizUI.h"
 #include "Kismet/KismetMathLibrary.h"
 
 static const FString HousingItemDataTablePath = TEXT("/Game/Khc/Blueprint/Object/HousingItemList.HousingItemList");
@@ -95,13 +97,6 @@ ACuteAlienController::ACuteAlienController()
 		IA_ToggleMouse = IA_ToggleMouseFinder.Object;
 	}
 
-	static ConstructorHelpers::FObjectFinder<UInputAction> IA_ClickFinder(
-		TEXT("/Game/Yeomin/Characters/Inputs/Actions/IA_Click.IA_Click"));
-	if (IA_ClickFinder.Succeeded())
-	{
-		IA_Click = IA_ClickFinder.Object;
-	}
-
 	// static ConstructorHelpers::FObjectFinder<UInputAction> IA_QuitGameFinder(
 	// 	TEXT("/Game/Yeomin/Characters/Inputs/Actions/IA_QuitGame.IA_QuitGame"));
 	// if (IA_QuitGameFinder.Succeeded())
@@ -149,6 +144,20 @@ ACuteAlienController::ACuteAlienController()
 	if (WidgetFinder.Succeeded())
 	{
 		VoiceMeetingUIClass = WidgetFinder.Class;
+	}
+
+	static ConstructorHelpers::FClassFinder<UOXQuizUI> OXQuizUIClassFinder(
+		TEXT("/Game/Yeomin/Characters/UI/BP/OXQuiz/WBP_OXQuiz.WBP_OXQuiz_C")); // 경로 확인 필수!
+	if (OXQuizUIClassFinder.Succeeded())
+	{
+		OXQuizUIClass = OXQuizUIClassFinder.Class;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UInputAction> IA_InteractFinder(
+		TEXT("/Game/Yeomin/Characters/Inputs/Actions/IA_Interact.IA_Interact"));
+	if (IA_InteractFinder.Succeeded())
+	{
+		IA_Interact = IA_InteractFinder.Object;
 	}
 }
 
@@ -224,6 +233,18 @@ void ACuteAlienController::BeginPlay()
 			VoiceMeetingUI->SetVisibility(ESlateVisibility::Hidden);
 		}
 	}
+
+	if (OXQuizUIClass)
+	{
+		OXQuizUI = CreateWidget<UOXQuizUI>(this, OXQuizUIClass);
+		if (OXQuizUI)
+		{
+			OXQuizUI->AddToViewport();
+			OXQuizUI->SetVisibility(ESlateVisibility::Collapsed);
+		}
+	}
+
+
 	TryInitPlayerInfo();
 
 	// [수정] PlayerState가 준비될 때까지 타이머로 확인 (0.5초 간격)
@@ -241,6 +262,7 @@ void ACuteAlienController::SetupInputComponent()
 	Input->BindAction(IA_Cancel, ETriggerEvent::Started, this, &ACuteAlienController::OnCancelUI);
 	Input->BindAction(IA_ToggleMouse, ETriggerEvent::Started, this, &ACuteAlienController::OnToggleMouse);
 	//Input->BindAction(IA_QuitGame, ETriggerEvent::Started, this, &ACuteAlienController::OnPressEsc);
+	Input->BindAction(IA_Interact, ETriggerEvent::Started, this, &ACuteAlienController::OnInteract);
 }
 
 void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const FString& Name, const FString& Type,
@@ -250,7 +272,10 @@ void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const
 	if (PS)
 	{
 		PS->PS_UserIndex = UID;
-		PS->OnRep_UserIndex();
+		if (IsLocalController())
+		{
+			PS->OnRep_UserIndex();
+		}
 		PS->SetPlayerName(Name);
 		PS->PS_RealName = Name;
 		PS->PS_UserType = Type;
@@ -535,6 +560,15 @@ void ACuteAlienController::OnHostRecordingStopped()
 void ACuteAlienController::OnPressEsc()
 {
 	SaveAndExit();
+}
+
+void ACuteAlienController::OnInteract()
+{
+}
+
+void ACuteAlienController::Server_RequestStartQuiz_Implementation(AOXQuizTriggerActor* QuizTrigger)
+{
+	QuizTrigger->OnTriggerQuiz(Cast<AMumulPlayerState>(PlayerState)->PS_UserIndex);
 }
 
 void ACuteAlienController::SaveAndExit()
@@ -1340,6 +1374,7 @@ void ACuteAlienController::OnServerCreateTeamChatResponse(bool bSuccess, FString
 	}
 }
 
+
 void ACuteAlienController::Server_RequestTeamChatList_Implementation()
 {
 	Multicast_RequestTeamChatList();
@@ -1348,7 +1383,7 @@ void ACuteAlienController::Server_RequestTeamChatList_Implementation()
 void ACuteAlienController::Multicast_RequestTeamChatList_Implementation()
 {
 	// Get TeamChatList
-	if (APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+	if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
 	{
 		AMumulPlayerState* PS = PC->GetPlayerState<AMumulPlayerState>();
 		HttpSystem->SendTeamChatListRequest(PS->PS_UserIndex);
@@ -1416,4 +1451,42 @@ void ACuteAlienController::Client_SendChat_Implementation(const FString& TeamID,
                                                           const FString& Name, const FString& Text)
 {
 	GroupChatUI->AddChat(TeamID, CurrentTime, Name, Text);
+}
+
+void ACuteAlienController::Client_DisplayQuestion_Implementation(const FString& NewQuestion, const int32& QuestionTime)
+{
+	if (OXQuizUI)
+	{
+		OXQuizUI->SwitchQuizState(true);
+		OXQuizUI->SetVisibility(ESlateVisibility::HitTestInvisible);
+		OXQuizUI->SetQuizQuestion(NewQuestion);
+		OXQuizUI->StartQuestionTimer(QuestionTime);
+	}
+}
+
+void ACuteAlienController::Client_DisplayAnswer_Implementation(bool AnswerResult, bool NewAnswer,
+                                                               const FString& NewCommentary, const int32& AnswerTime)
+{
+	bool CheckAnswer = false;
+	if (AnswerResult == NewAnswer)
+	{
+		CheckAnswer = true;
+	}
+
+	OXQuizUI->SetQuizAnswer(CheckAnswer, NewAnswer, NewCommentary);
+	OXQuizUI->StartAnswerTimer(AnswerTime);
+}
+
+void ACuteAlienController::Client_DisplayResult_Implementation(bool AnswerResult, const FString& QuestionText,
+                                                               bool AnswerText, const FString& CommentaryText)
+{
+	bool CheckAnswer = false;
+	if (AnswerResult == AnswerText)
+	{
+		CheckAnswer = true;
+	}
+
+	OXQuizUI->SwitchQuizState(false);
+	OXQuizUI->SetVisibility(ESlateVisibility::Visible);
+	OXQuizUI->SetQuizResult(CheckAnswer, QuestionText, AnswerText, CommentaryText);
 }

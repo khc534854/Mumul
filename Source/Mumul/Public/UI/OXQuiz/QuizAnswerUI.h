@@ -18,9 +18,15 @@ protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UBorder> AnswerBorder;
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UBaseText> JudgingAnswerText;
+	TObjectPtr<class UTextBlock> JudgingAnswerText;
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UBaseText> AnswerText;
+	TObjectPtr<class UTextBlock> AnswerText;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UTextBlock> CommentaryText;
+	
+public:
+	void SetAnswerColor(bool TrueGreenOrFalseRed);
+	void SetAnswerResult(bool TrueCorrectOrFalseWrong);
+	void SetQuizAnswer(bool TrueCorrectOrFalseWrong);
+	void SetAnswerCommentary(const FString& NewCommentary);
 };

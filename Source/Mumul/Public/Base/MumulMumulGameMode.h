@@ -4,12 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
+#include "Network/NetworkStructs.h"
 #include "MumulMumulGameMode.generated.h"
 
-/**
- * 
- */
 struct FHousingSaveData;
+
+UENUM()
+enum class EQuizPhase : uint8
+{
+	Question,
+	Answer,
+};
+
 UCLASS()
 class MUMUL_API AMumulMumulGameMode : public AGameMode
 {
@@ -22,6 +28,9 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	UPROPERTY()
+	TObjectPtr<class AMumulGameState> GS;
+		
+	UPROPERTY()
 	TSubclassOf<class ATentActor> TentClass;
 	UPROPERTY(EditDefaultsOnly)
 	int32 PoolSize = 6;
@@ -31,5 +40,32 @@ protected:
 	// 저장 로직이 중복되므로 함수로 분리
 	void SaveUserData(AController* Controller);
 public:
+	void SpawnTent(const FTransform& SpawnTransform, int32 UserIndex, bool bSaveToDisk);
+	
+	TMap<TObjectPtr<class ACuteAlienController>, TArray<bool>> ParticipatingPlayers;
+	void RegisterQuizActor(class AOXQuizActor* InActor);
+protected:
+	UPROPERTY()
+	TObjectPtr<class AOXQuizActor> OXQuizActor;
+	FLearningQuizResponse LearningQuiz;
+	
+	UFUNCTION()
+	void OnServerLearningQuizResponse(bool bSuccess, FString Message);
+	
+	EQuizPhase QuizPhase = EQuizPhase::Question;
+	
+	UPROPERTY(EditDefaultsOnly, Category="OXQuiz Time")
+	int32 QuestionTime = 10;
+	UPROPERTY(EditDefaultsOnly, Category="OXQuiz Time")
+	int32 AnswerTime = 5;
+	
+	int32 CurrentQuizIdx;
+	int32 MaxQuizCount;
+	FTimerHandle QuizTimer;
+	void StartLearningQuiz();
+	void StartQuestionPhase();
+	void EnterNextStep();
+	void StartAnswerPhase();
+	void ShowResult();
 	void SpawnTent(const FTransform& SpawnTransform, int32 UserIndex, bool bSaveToDisk, const TArray<FHousingSaveData>& LoadedItems = TArray<FHousingSaveData>());
 };
