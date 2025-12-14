@@ -19,5 +19,5 @@ protected:
 	TObjectPtr<class UTextBlock> QuestionText;
 	
 public:
-	void SetQuestionText(const FString& Text);
+	void SetQuestionText(const int32& QuestionIdx, const FString& Text);
 };

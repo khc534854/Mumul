@@ -4,6 +4,7 @@
 #include "Player/MumulPlayerState.h"
 
 #include "Base/MumulGameState.h"
+#include "Data/IMGManager.h"
 #include "Net/UnrealNetwork.h"
 #include "Network/HttpNetworkSubsystem.h"
 #include "Player/CuteAlienController.h"
@@ -11,11 +12,14 @@
 #include "UI/CreateGroupChatUI.h"
 #include "UI/GroupChatUI.h"
 #include "UI/InvitationUI.h"
+#include "UI/PlayerUI.h"
 
 
 void AMumulPlayerState::BeginPlay()
 {
 	Super::BeginPlay();
+
+	IMGManager = NewObject<UIMGManager>(this, UIMGManager::StaticClass());
 
 	HttpSystem = GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>();
 }
@@ -50,15 +54,26 @@ void AMumulPlayerState::Server_SetVoiceChannelID_Implementation(const FString& N
 
 void AMumulPlayerState::OnRep_UserIndex()
 {
-	// TeamList, Player ProfileList 초기화
+	// PlayerProfile, TeamList, Player ProfileList 초기화
 
 	// Get TeamChatList
-	APlayerController* PC = GetWorld()->GetFirstPlayerController();
+	ACuteAlienController* PC = Cast<ACuteAlienController>(GetWorld()->GetFirstPlayerController());
 	if (PC && PC->PlayerState == this)
 	{
 		if (HttpSystem)
 		{
 			HttpSystem->SendTeamChatListRequest(PS_UserIndex);
+		}
+		// Set PlayerProfile
+		if (PC->IsLocalController())
+		{
+			if (PC->PlayerUI)
+			{
+				if (IMGManager)
+				{
+					PC->PlayerUI->SetProfileBtnIMG(IMGManager->GetImageByUserID(PS_UserIndex));
+				}
+			}
 		}
 	}
 

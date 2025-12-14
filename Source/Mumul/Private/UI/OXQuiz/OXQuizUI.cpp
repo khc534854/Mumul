@@ -4,9 +4,12 @@
 #include "UI/OXQuiz/OXQuizUI.h"
 
 #include "Components/Button.h"
+#include "Components/Image.h"
 #include "Components/ScrollBox.h"
 #include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
+#include "Components/VerticalBox.h"
+#include "Components/VerticalBoxSlot.h"
 #include "Components/WidgetSwitcher.h"
 #include "UI/BaseUI/BaseText.h"
 #include "UI/OXQuiz/AnswerCommentaryUI.h"
@@ -17,7 +20,7 @@
 void UOXQuizUI::NativeConstruct()
 {
 	Super::NativeConstruct();
-	
+
 	ConfirmBtn->OnPressed.AddDynamic(this, &UOXQuizUI::OnConfirmResult);
 }
 
@@ -36,7 +39,7 @@ void UOXQuizUI::UpdateTimer()
 	if (RemainingTime <= 0)
 	{
 		SetTimerText(0);
-		
+
 		GetWorld()->GetTimerManager().ClearTimer(QuizRemainingTimeHandler);
 		return;
 	}
@@ -54,43 +57,43 @@ void UOXQuizUI::SwitchQuizState(const bool& QuizOrResult)
 	if (QuizOrResult)
 	{
 		OXQuizWS->SetActiveWidgetIndex(0);
-		AnswerListScrollBox->ClearChildren();
+		AnswerListVBox->ClearChildren();
 		return;
 	}
 	StopAnimation(TimerAnimation);
 	OXQuizWS->SetActiveWidgetIndex(1);
 }
 
-void UOXQuizUI::SetQuizQuestion(const FString& NewQuiz)
+void UOXQuizUI::SetQuizQuestion(const int32& QuestionIdx, const FString& NewQuiz)
 {
 	QuizSizeBox->ClearChildren();
-	
+
 	UQuizQuestionUI* QuizQuestionUI = CreateWidget<UQuizQuestionUI>(GetWorld(), QuizQuestionUIClass);
-	QuizQuestionUI->SetQuestionText(NewQuiz);
+	QuizQuestionUI->SetQuestionText(QuestionIdx, NewQuiz);
 	QuizSizeBox->AddChild(QuizQuestionUI);
 }
 
 void UOXQuizUI::SetQuizAnswer(const bool& AnswerResult, const bool& NewAnswer, const FString& NewCommentary)
 {
-	StopAnimation(TimerAnimation);
-	
 	QuizSizeBox->ClearChildren();
-	
+
 	UQuizAnswerUI* QuizAnswerUI = CreateWidget<UQuizAnswerUI>(GetWorld(), QuizAnswerUIClass);
 	QuizAnswerUI->SetAnswerColor(AnswerResult);
 	QuizAnswerUI->SetAnswerResult(AnswerResult);
-	
+
 	QuizAnswerUI->SetQuizAnswer(NewAnswer);
-	
+
 	QuizAnswerUI->SetAnswerCommentary(NewCommentary);
-	
+
 	QuizSizeBox->AddChild(QuizAnswerUI);
 }
 
 void UOXQuizUI::StartQuestionTimer(const int32& QuestionTime)
 {
 	PlayAnimation(TimerAnimation, 0.f, 0);
-	
+	TimerIMG->SetColorAndOpacity(FLinearColor::Red);
+	QuizTimerText->SetColorAndOpacity(FLinearColor::Red);
+
 	RemainingTime = QuestionTime;
 
 	SetTimerText(RemainingTime);
@@ -106,7 +109,11 @@ void UOXQuizUI::StartQuestionTimer(const int32& QuestionTime)
 }
 
 void UOXQuizUI::StartAnswerTimer(const int32& AnswerTime)
-{	
+{
+	StopAnimation(TimerAnimation);
+	TimerIMG->SetColorAndOpacity(FLinearColor::Gray);
+	QuizTimerText->SetColorAndOpacity(FLinearColor::Gray);
+
 	RemainingTime = AnswerTime;
 
 	SetTimerText(RemainingTime);
@@ -121,12 +128,17 @@ void UOXQuizUI::StartAnswerTimer(const int32& AnswerTime)
 	);
 }
 
-void UOXQuizUI::SetQuizResult(const bool& AnswerResult, const FString& QuestionText, const bool& AnswerText, const FString& CommentaryText)
+void UOXQuizUI::SetQuizResult(const int32& QuestionIdx, const bool& AnswerResult, const FString& QuestionText,
+                              const bool& AnswerText, const FString& CommentaryText)
 {
-		UAnswerCommentaryUI* AnswerCommentaryUI = CreateWidget<UAnswerCommentaryUI>(GetWorld(), AnswerCommentaryUIClass);
-		AnswerCommentaryUI->SetCommentaryColor(AnswerResult);
-		AnswerCommentaryUI->SetQuestion(QuestionText);
-		AnswerCommentaryUI->SetAnswer(AnswerText);
-		AnswerCommentaryUI->SetCommentary(CommentaryText);
-		AnswerListScrollBox->AddChild(AnswerCommentaryUI);
+	UAnswerCommentaryUI* AnswerCommentaryUI = CreateWidget<UAnswerCommentaryUI>(GetWorld(), AnswerCommentaryUIClass);
+	AnswerCommentaryUI->SetCommentaryColor(AnswerResult);
+	AnswerCommentaryUI->SetQuestion(QuestionIdx, QuestionText);
+	AnswerCommentaryUI->SetAnswer(AnswerText);
+	AnswerCommentaryUI->SetCommentary(CommentaryText);
+	
+	if (UVerticalBoxSlot* VSlot = AnswerListVBox->AddChildToVerticalBox(AnswerCommentaryUI))
+	{
+		VSlot->SetPadding(FMargin(0.f, 5.7f));
+	}
 }

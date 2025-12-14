@@ -18,6 +18,8 @@ protected:
 	virtual void NativeConstruct() override;
 	UPROPERTY()
 	TObjectPtr<class UHttpNetworkSubsystem> HttpSystem;
+	UPROPERTY()
+	TObjectPtr<class UIMGManager> IMGManager;
 	
 public:
 	UFUNCTION()
@@ -38,6 +40,8 @@ protected:
 	void RefreshFilteredPlayerList(const FText& Text);
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UScrollBox> PlayerScrollBox;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UVerticalBox> PlayerVBox;
 	
 	UPROPERTY()
 	TObjectPtr<class UGroupChatUI> ParentUI;

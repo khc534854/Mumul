@@ -103,11 +103,10 @@ protected:
 	UPROPERTY()
 	TSubclassOf<class UPlayerUI> PlayerUIClass;
 	UPROPERTY()
-	TObjectPtr<UPlayerUI> PlayerUI;
-
-	UPROPERTY()
 	TSubclassOf<class UGroupChatUI> GroupChatUIClass;
 public:
+	UPROPERTY()
+	TObjectPtr<UPlayerUI> PlayerUI;
 	UPROPERTY()
 	TObjectPtr<UGroupChatUI> GroupChatUI;
 	
@@ -245,9 +244,9 @@ public:
 
 	UFUNCTION(Server, Reliable)
 	void Server_RequestChat(const FString& TeamID, const TArray<int32>& UserIDs, const FString& CurrentTime,
-	                        const FString& Name, const FString& Text);
+	                         const int32& UserID, const FString& Name, const FString& Text);
 	UFUNCTION(Client, Reliable)
-	void Client_SendChat(const FString& TeamID, const FString& CurrentTime, const FString& Name, const FString& Text);
+	void Client_SendChat(const FString& TeamID, const FString& CurrentTime, const int32& UserID, const FString& Name, const FString& Text);
 
 protected:
 	UPROPERTY()
@@ -256,9 +255,9 @@ protected:
 	TObjectPtr<class UOXQuizUI> OXQuizUI;
 public:
 	UFUNCTION(Client, Reliable)
-	void Client_DisplayQuestion(const FString& NewQuestion, const int32& QuestionTime);
+	void Client_DisplayQuestion(const int32& QuestionIdx, const FString& NewQuestion, const int32& QuestionTime);
 	UFUNCTION(Client, Reliable)
 	void Client_DisplayAnswer(bool AnswerResult, bool NewAnswer, const FString& NewCommentary, const int32& AnswerTime);
 	UFUNCTION(Client, Reliable)
-	void Client_DisplayResult(bool AnswerResult, const FString& QuestionText, bool AnswerText, const FString& CommentaryText);
+	void Client_DisplayResult(const int32& QuestionIdx, bool AnswerResult, const FString& QuestionText, bool AnswerText, const FString& CommentaryText);
 };

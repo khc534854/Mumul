@@ -24,7 +24,6 @@
 #include "UI/BaseUI/BaseText.h"
 #include "Base/MumulGameInstance.h" // 필수
 #include "Components/Image.h"
-#include "Components/ScaleBox.h"
 #include "Components/VerticalBoxSlot.h"
 #include "Library/MathLibrary.h"
 #include "Data/IMGManager.h"
@@ -427,7 +426,8 @@ void UGroupChatUI::OnServerChatHistoryResponse(bool bSuccess, FString Message)
 
 			UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
 			FString MyName = GI ? GI->PlayerName : TEXT("Me");
-
+			int32 MyID = GI ? GI->PlayerUniqueID : 0;
+			
 			// 메시지 순회하며 UI 추가
 			for (const FChatHistoryMessage& Msg : HistoryData.messages)
 			{
@@ -437,7 +437,7 @@ void UGroupChatUI::OnServerChatHistoryResponse(bool bSuccess, FString Message)
 				{
 					// 내 질문 -> 일반 말풍선 (AddChat)
 					// (TeamID는 현재 챗봇방 ID 사용)
-					AddChat(CurrentSelectedGroup->ChatBlockUI->GetTeamID(), ParsedTime, MyName, Msg.content);
+					AddChat(CurrentSelectedGroup->ChatBlockUI->GetTeamID(), ParsedTime, MyID, MyName, Msg.content);
 				}
 				else if (Msg.role == TEXT("assistant"))
 				{
@@ -566,7 +566,7 @@ void UGroupChatUI::OnTextBoxCommitted()
 	// [전송 로직 분기]
 	if (CurrentSelectedGroup->bIsChatbotRoom)
 	{
-		AddChat(CurrentSelectedGroup->ChatBlockUI->GetTeamID(), TimeStamp, MyName, Content);
+		AddChat(CurrentSelectedGroup->ChatBlockUI->GetTeamID(), TimeStamp, MyID, MyName, Content);
 		// === Case A: 학습 챗봇 방 (개인용) ===
 		if (WebSocketSystem && WebSocketSystem->IsConnected())
 		{
@@ -601,7 +601,7 @@ void UGroupChatUI::OnTextBoxCommitted()
 
 			if (ACuteAlienController* PC = Cast<ACuteAlienController>(GetOwningPlayer()))
 			{
-				PC->Server_RequestChat(TeamID, UserIDs, TimeStamp, MyName, Content);
+				PC->Server_RequestChat(TeamID, UserIDs, TimeStamp, MyID, MyName, Content);
 			}
 
 			// 3. [AI 질문] 도우미가 켜져 있다면 웹소켓으로도 전송
@@ -647,7 +647,7 @@ void UGroupChatUI::OnServerChatMessageResponse(bool bSuccess, FString Message)
 	}
 }
 
-void UGroupChatUI::AddChat(const FString& TeamID, const FString& CurrentTime, const FString& Name,
+void UGroupChatUI::AddChat(const FString& TeamID, const FString& CurrentTime, const int32& UserID, const FString& Name,
                            const FString& Text) const
 {
 	if (UChatBlockUI* ChatChunk = Cast<UChatBlockUI>(ChatSizeBox->GetChildAt(0)))
@@ -665,6 +665,7 @@ void UGroupChatUI::AddChat(const FString& TeamID, const FString& CurrentTime, co
 		UChatMessageBlockUI* Chat = CreateWidget<UChatMessageBlockUI>(GetWorld(), ChatMessageBlockUIClass);
 		ChatChunk->ChatScrollBox->AddChild(Chat);
 		Chat->SetContent(CurrentTime, Name, Text);
+		Chat->SetProfileIMG(IMGManager->GetImageByUserID(UserID));
 
 		// If Scroll is at End
 		if (ScrollOffset == EndOfScrollOffset)

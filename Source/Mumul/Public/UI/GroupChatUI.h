@@ -103,7 +103,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
 	TSubclassOf<class UChatMessageBlockUI> ChatMessageBlockUIClass;
 public:
-	void AddChat(const FString& TeamID, const FString& CurrentTime, const FString& Name, const FString& Text) const;
+	void AddChat(const FString& TeamID, const FString& CurrentTime, const int32& UserID, const FString& Name, const FString& Text) const;
 		
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class USizeBox> ChatSizeBox;
