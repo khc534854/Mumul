@@ -66,6 +66,8 @@ public:
 
 	UFUNCTION()
 	void OnHostRecordingStopped();
+	
+	void OnToggleMouse();
 
 protected:
 	UPROPERTY()
@@ -75,7 +77,7 @@ protected:
 	void OnCancelUI();
 	UPROPERTY()
 	TObjectPtr<class UInputAction> IA_ToggleMouse;
-	void OnToggleMouse();
+
 	
 	
 	UPROPERTY()

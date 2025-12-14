@@ -331,7 +331,6 @@ void ACuteAlienController::Server_InitPlayerArray_Implementation()
 
 void ACuteAlienController::Multicast_InitPlayerArray_Implementation()
 {
-	OnPlayerArrayUpdated.Broadcast();
 	
 	// Get TeamChatList
 	if (HttpSystem)
