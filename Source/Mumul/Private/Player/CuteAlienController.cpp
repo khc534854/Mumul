@@ -1161,7 +1161,8 @@ void ACuteAlienController::Client_CreateGroupChatUI_Implementation(const FString
 
 
 void ACuteAlienController::Server_RequestChat_Implementation(const FString& TeamID, const TArray<int32>& UserIDs,
-                                                             const FString& CurrentTime, const FString& Name,
+                                                             const FString& CurrentTime, const int32& UserID,
+                                                             const FString& Name,
                                                              const FString& Text)
 {
 	// Add GroupChatUI for each Client
@@ -1171,25 +1172,27 @@ void ACuteAlienController::Server_RequestChat_Implementation(const FString& Team
 		{
 			if (ACuteAlienController* PC = Cast<ACuteAlienController>(PS->GetOwningController()))
 			{
-				PC->Client_SendChat(TeamID, CurrentTime, Name, Text);
+				PC->Client_SendChat(TeamID, CurrentTime, UserID, Name, Text);
 			}
 		}
 	}
 }
 
 void ACuteAlienController::Client_SendChat_Implementation(const FString& TeamID, const FString& CurrentTime,
+                                                          const int32& UserID,
                                                           const FString& Name, const FString& Text)
 {
-	GroupChatUI->AddChat(TeamID, CurrentTime, Name, Text);
+	GroupChatUI->AddChat(TeamID, CurrentTime, UserID, Name, Text);
 }
 
-void ACuteAlienController::Client_DisplayQuestion_Implementation(const FString& NewQuestion, const int32& QuestionTime)
+void ACuteAlienController::Client_DisplayQuestion_Implementation(const int32& QuestionIdx, const FString& NewQuestion,
+                                                                 const int32& QuestionTime)
 {
 	if (OXQuizUI)
 	{
 		OXQuizUI->SwitchQuizState(true);
 		OXQuizUI->SetVisibility(ESlateVisibility::HitTestInvisible);
-		OXQuizUI->SetQuizQuestion(NewQuestion);
+		OXQuizUI->SetQuizQuestion(QuestionIdx, NewQuestion);
 		OXQuizUI->StartQuestionTimer(QuestionTime);
 	}
 }
@@ -1207,7 +1210,8 @@ void ACuteAlienController::Client_DisplayAnswer_Implementation(bool AnswerResult
 	OXQuizUI->StartAnswerTimer(AnswerTime);
 }
 
-void ACuteAlienController::Client_DisplayResult_Implementation(bool AnswerResult, const FString& QuestionText,
+void ACuteAlienController::Client_DisplayResult_Implementation(const int32& QuestionIdx, bool AnswerResult,
+                                                               const FString& QuestionText,
                                                                bool AnswerText, const FString& CommentaryText)
 {
 	bool CheckAnswer = false;
@@ -1218,5 +1222,5 @@ void ACuteAlienController::Client_DisplayResult_Implementation(bool AnswerResult
 
 	OXQuizUI->SwitchQuizState(false);
 	OXQuizUI->SetVisibility(ESlateVisibility::Visible);
-	OXQuizUI->SetQuizResult(CheckAnswer, QuestionText, AnswerText, CommentaryText);
+	OXQuizUI->SetQuizResult(QuestionIdx, CheckAnswer, QuestionText, AnswerText, CommentaryText);
 }

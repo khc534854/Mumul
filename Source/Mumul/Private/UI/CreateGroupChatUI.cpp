@@ -9,9 +9,11 @@
 #include "Components/EditableTextBox.h"
 #include "Components/MultiLineEditableTextBox.h"
 #include "Components/ScrollBox.h"
+#include "Components/VerticalBox.h"
+#include "Components/VerticalBoxSlot.h"
+#include "Data/IMGManager.h"
 #include "GameFramework/PlayerState.h"
 #include "Player/MumulPlayerState.h"
-#include "Player/CuteAlienController.h"
 #include "UI/GroupChatUI.h"
 #include "UI/GroupProfileUI.h"
 #include "UI/BaseUI/BaseButton.h"
@@ -29,21 +31,28 @@ void UCreateGroupChatUI::NativeConstruct()
 	ExitBtn->BaseExitButton->OnPressed.AddDynamic(this, &UCreateGroupChatUI::OnExitUI);
 
 	HttpSystem = GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>();
+	
+	IMGManager = NewObject<UIMGManager>(this, UIMGManager::StaticClass());
 }
 
 void UCreateGroupChatUI::RefreshJoinedPlayerList()
 {
 	if (GS)
 	{
-		PlayerScrollBox->ClearChildren();
+		PlayerVBox->ClearChildren();
 		for (APlayerState* PS : GS->PlayerArray)
 		{
 			AMumulPlayerState* MPS = Cast<AMumulPlayerState>(PS);
 
 			UGroupProfileUI* ProfileUI = CreateWidget<UGroupProfileUI>(GetWorld(), GroupProfileUIClass);
-			PlayerScrollBox->AddChild(ProfileUI);
+			ProfileUI->SetProfileIMG(IMGManager->GetImageByUserID(MPS->PS_UserIndex));
 			ProfileUI->SetPlayerName(MPS->PS_RealName);
 			ProfileUI->SetUserIndex(MPS->PS_UserIndex);
+			
+			if (UVerticalBoxSlot* ProfileSlot = PlayerVBox->AddChildToVerticalBox(ProfileUI))
+			{
+				ProfileSlot->SetPadding(FMargin(7.2f, 5.9f));
+			}
 		}
 	}
 }
@@ -65,7 +74,7 @@ void UCreateGroupChatUI::OnSearchTextChanged(const FText& Text)
 
 void UCreateGroupChatUI::RefreshFilteredPlayerList(const FText& Text)
 {
-	TArray<UWidget*> Children = PlayerScrollBox->GetAllChildren();
+	TArray<UWidget*> Children = PlayerVBox->GetAllChildren();
 
 	for (UWidget* Child : Children)
 	{
@@ -92,7 +101,7 @@ void UCreateGroupChatUI::InitParentUI(UGroupChatUI* Parent)
 void UCreateGroupChatUI::CreateGroupChat()
 {
 	// Check Players
-	TArray<UWidget*> Children = PlayerScrollBox->GetAllChildren();
+	TArray<UWidget*> Children = PlayerVBox->GetAllChildren();
 	TArray<int32> CheckedUserIDs;
 
 	for (UWidget* Child : Children)

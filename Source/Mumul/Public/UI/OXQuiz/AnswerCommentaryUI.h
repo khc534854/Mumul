@@ -26,7 +26,7 @@ protected:
 	
 public:
 	void SetCommentaryColor(bool TrueGreenOrFalseRed);
-	void SetQuestion(const FString& NewQuestion);
+	void SetQuestion(const int32& QuestionIdx, const FString& NewQuestion);
 	void SetAnswer(const bool& TrueCorrectOrFalseWrong);
 	void SetCommentary(const FString& NewCommentary);
 };

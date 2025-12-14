@@ -37,7 +37,7 @@ protected:
 	void UpdateTimer();
 	
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UScrollBox> AnswerListScrollBox;
+	TObjectPtr<class UVerticalBox> AnswerListVBox;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> ConfirmBtn;
 	UFUNCTION()
@@ -48,12 +48,12 @@ protected:
 public:
 	void SwitchQuizState(const bool& QuizOrResult);
 	
-	void SetQuizQuestion(const FString& NewQuiz);
+	void SetQuizQuestion(const int32& QuestionIdx, const FString& NewQuiz);
 	
 	void SetQuizAnswer(const bool& AnswerResult, const bool& NewAnswer, const FString& NewCommentary);
 	
 	void StartQuestionTimer(const int32& QuestionTime);
 	void StartAnswerTimer(const int32& QuestionTime);
 	
-	void SetQuizResult(const bool& AnswerResult, const FString& QuestionText, const bool& AnswerText, const FString& CommentaryText);
+	void SetQuizResult(const int32& QuestionIdx, const bool& AnswerResult, const FString& QuestionText, const bool& AnswerText, const FString& CommentaryText);
 };

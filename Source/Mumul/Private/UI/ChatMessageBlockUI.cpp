@@ -2,8 +2,15 @@
 
 
 #include "UI/ChatMessageBlockUI.h"
+
+#include "Components/Image.h"
 #include "Components/TextBlock.h"
 
+
+void UChatMessageBlockUI::SetProfileIMG(UTexture2D* IMG)
+{
+	ProfileIMG->SetBrushFromTexture(IMG);
+}
 
 void UChatMessageBlockUI::SetContent(const FString& CurrentTime, const FString& Name, const FString& Content) const
 {

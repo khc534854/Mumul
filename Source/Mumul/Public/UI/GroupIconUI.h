@@ -18,6 +18,8 @@ class MUMUL_API UGroupIconUI : public UUserWidget
 	
 protected:
 	UPROPERTY()
+	TObjectPtr<class UIMGManager> IMGManager;
+	UPROPERTY()
 	TObjectPtr<class UHttpNetworkSubsystem> HttpSystem;
 	UFUNCTION()
 	void OnServerTeamChatMessageResponse(bool bSuccess, FString Message);

@@ -4,7 +4,13 @@
 #include "UI/GroupProfileUI.h"
 
 #include "Components/CheckBox.h"
+#include "Components/Image.h"
 #include "Components/TextBlock.h"
+
+void UGroupProfileUI::SetProfileIMG(UTexture2D* IMG)
+{
+	ProfileIMG->SetBrushFromTexture(IMG);
+}
 
 void UGroupProfileUI::SetPlayerName(FString Name)
 {

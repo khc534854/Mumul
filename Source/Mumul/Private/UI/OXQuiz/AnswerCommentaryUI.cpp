@@ -13,22 +13,22 @@ void UAnswerCommentaryUI::SetCommentaryColor(bool TrueGreenOrFalseRed)
 		CommentaryBorder->SetBrushColor(FLinearColor(0.013702f, 0.015209f, 0.029557f));
 		return;
 	}
-	CommentaryBorder->SetBrushColor(FLinearColor(0.964686f, 0.102242f, 0.102242f));
+	CommentaryBorder->SetBrushColor(FLinearColor(0.752942f, 0.056128f, 0.051269f));
 }
 
-void UAnswerCommentaryUI::SetQuestion(const FString& NewQuestion)
+void UAnswerCommentaryUI::SetQuestion(const int32& QuestionIdx, const FString& NewQuestion)
 {
-	QuestionText->SetText(FText::FromString(NewQuestion));
+	QuestionText->SetText(FText::FromString(FString::Printf(TEXT("Q%d. %s"), QuestionIdx + 1, *NewQuestion)));
 }
 
 void UAnswerCommentaryUI::SetAnswer(const bool& TrueCorrectOrFalseWrong)
 {
 	if (TrueCorrectOrFalseWrong)
 	{
-		AnswerText->SetText(FText::FromString(TEXT("정답: O)")));
+		AnswerText->SetText(FText::FromString(TEXT("정답: O")));
 		return;
 	}
-	AnswerText->SetText(FText::FromString(TEXT("정답: X)")));
+	AnswerText->SetText(FText::FromString(TEXT("정답: X")));
 }
 
 void UAnswerCommentaryUI::SetCommentary(const FString& NewCommentary)

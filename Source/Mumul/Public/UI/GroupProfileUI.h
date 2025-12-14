@@ -16,6 +16,8 @@ class MUMUL_API UGroupProfileUI : public UUserWidget
 	
 	
 protected:
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UImage> ProfileIMG;
 	int32 UserIndex;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UTextBlock> PlayerNameText;
@@ -23,6 +25,7 @@ protected:
 	TObjectPtr<class UCheckBox> JoinedStateBox;
 	
 public:
+	void SetProfileIMG(UTexture2D* IMG);
 	void SetUserIndex(const int32 Index) { UserIndex = Index; }
 	int32 GetUserIndex() const { return UserIndex; }
 	void SetPlayerName(FString Name);

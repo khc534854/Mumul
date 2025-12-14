@@ -250,7 +250,7 @@ void AMumulMumulGameMode::StartQuestionPhase()
 	// 문제 표시
 	for (TPair<TObjectPtr<ACuteAlienController>, TArray<bool>>& Elem : ParticipatingPlayers)
 	{
-		Elem.Key->Client_DisplayQuestion(LearningQuiz.quiz[CurrentQuizIdx].question, QuestionTime);
+		Elem.Key->Client_DisplayQuestion(CurrentQuizIdx, LearningQuiz.quiz[CurrentQuizIdx].question, QuestionTime);
 	}
 
 
@@ -327,7 +327,7 @@ void AMumulMumulGameMode::ShowResult()
 			{
 				Answer = false;
 			}
-			Elem.Key->Client_DisplayResult(Elem.Value[QuestionIdx], LearningQuiz.quiz[QuestionIdx].question, Answer, LearningQuiz.quiz[QuestionIdx].explanation);
+			Elem.Key->Client_DisplayResult(QuestionIdx, Elem.Value[QuestionIdx], LearningQuiz.quiz[QuestionIdx].question, Answer, LearningQuiz.quiz[QuestionIdx].explanation);
 		}
 	}
 	

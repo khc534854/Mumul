@@ -11,10 +11,10 @@ void UQuizAnswerUI::SetAnswerColor(bool TrueGreenOrFalseRed)
 {
 	if (TrueGreenOrFalseRed)
 	{
-		AnswerBorder->SetBrushColor(FLinearColor(0.025187f, 0.48515f, 0.116971f));
+		AnswerBorder->SetBrushColor(FLinearColor(0.025187f, 0.48515f, 0.116971f, 0.89f));
 		return;
 	}
-	AnswerBorder->SetBrushColor(FLinearColor(0.964686f, 0.102242f, 0.102242f));
+	AnswerBorder->SetBrushColor(FLinearColor(0.964686f, 0.102242f, 0.102242f, 0.89f));
 }
 
 void UQuizAnswerUI::SetAnswerResult(bool TrueCorrectOrFalseWrong)

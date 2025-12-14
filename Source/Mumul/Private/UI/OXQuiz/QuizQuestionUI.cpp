@@ -6,7 +6,8 @@
 #include "Components/TextBlock.h"
 
 
-void UQuizQuestionUI::SetQuestionText(const FString& Text)
+void UQuizQuestionUI::SetQuestionText(const int32& QuestionIdx, const FString& Text)
 {
-	QuestionText->SetText(FText::FromString(Text));
+	
+	QuestionText->SetText(FText::FromString(FString::Printf(TEXT("Q%d. %s"), QuestionIdx + 1, *Text)));
 }

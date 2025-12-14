@@ -338,6 +338,27 @@ void UPlayerUI::OnRecordClicked()
 	}
 }
 
+void UPlayerUI::SetProfileBtnIMG(UTexture2D* IMG)
+{
+	FSlateBrush NormalBrush;
+	NormalBrush.SetResourceObject(IMG);
+	NormalBrush.ImageSize = FVector2D(30.f);
+	NormalBrush.TintColor = FSlateColor(FLinearColor(1.f, 1.f, 1.f, 1.f));
+
+	FSlateBrush HoveredBrush = NormalBrush;
+	HoveredBrush.TintColor = FSlateColor(FLinearColor(0.9f, 0.9f, 0.9f, 1.f));
+
+	FSlateBrush PressedBrush = NormalBrush;
+	PressedBrush.TintColor = FSlateColor(FLinearColor(0.75f, 0.75f, 0.75f, 1.f));
+
+	FButtonStyle Style;
+	Style.Normal = NormalBrush;
+	Style.Hovered = HoveredBrush;
+	Style.Pressed = PressedBrush;
+
+	ProfileBtn->SetStyle(Style);
+}
+
 void UPlayerUI::OnProfileBtnHovered()
 {
 	bIsMainHovered = true;

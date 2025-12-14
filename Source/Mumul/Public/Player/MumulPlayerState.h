@@ -34,6 +34,8 @@ protected:
 	virtual void BeginPlay() override;
 	
 	UPROPERTY()
+	TObjectPtr<class UIMGManager> IMGManager;
+	UPROPERTY()
 	TObjectPtr<class UHttpNetworkSubsystem> HttpSystem;
 	
 	// Player Information

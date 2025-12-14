@@ -16,6 +16,8 @@ class MUMUL_API UChatMessageBlockUI : public UUserWidget
 
 protected:
 	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UImage> ProfileIMG;
+	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UTextBlock> TextContent;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UTextBlock> PlayerName;
@@ -25,6 +27,7 @@ protected:
 	int32 UserID;
 	
 public:
+	void SetProfileIMG(UTexture2D* IMG);
 	void SetContent(const FString& CurrentTime, const FString& Name, const FString& Content) const;
 	void SetChatID(const FString& ID) { ChatID = ID; }
 	void SetUserID(const int32& ID) { UserID = ID; }

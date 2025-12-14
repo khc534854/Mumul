@@ -114,6 +114,9 @@ protected:
 
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton > ProfileBtn;
+public:
+	void SetProfileBtnIMG(UTexture2D* IMG);
+protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton > LogOutBtn;
 	bool bIsMainHovered = false;

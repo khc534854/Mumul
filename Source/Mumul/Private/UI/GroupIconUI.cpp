@@ -8,6 +8,7 @@
 #include "Components/Button.h"
 #include "Components/ScrollBox.h"
 #include "Components/SizeBox.h"
+#include "Data/IMGManager.h"
 #include "Network/NetworkStructs.h"
 #include "UI/ChatMessageBlockUI.h"
 #include "UI/GroupChatUI.h"
@@ -16,6 +17,8 @@ void UGroupIconUI::NativeConstruct()
 {
 	Super::NativeConstruct();
 
+	IMGManager = NewObject<UIMGManager>(this, UIMGManager::StaticClass());
+	
 	HttpSystem = GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>();
 	if (HttpSystem)
 	{
@@ -126,6 +129,7 @@ void UGroupIconUI::OnServerTeamChatMessageResponse(bool bSuccess, FString Messag
 				UChatMessageBlockUI* Chat = CreateWidget<UChatMessageBlockUI>(GetWorld(), ChatMessageBlockUIClass);
 				ChatBlockUI->ChatScrollBox->AddChild(Chat);
 				Chat->SetContent(*Msg.createdAt, *Msg.userName, *Msg.message);
+				Chat->SetProfileIMG(IMGManager->GetImageByUserID(Msg.userId));
 				Chat->SetChatID(Msg.chatId);
 				Chat->SetUserID(Msg.userId);
 			}
