@@ -150,7 +150,7 @@ void ACuteAlienController::BeginPlay()
 		PlayerUI = CreateWidget<UPlayerUI>(this, PlayerUIClass);
 		if (PlayerUI)
 		{
-			PlayerUI->AddToViewport();
+			PlayerUI->AddToViewport(-1);
 		}
 	}
 
