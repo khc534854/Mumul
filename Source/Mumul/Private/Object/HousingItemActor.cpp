@@ -12,7 +12,7 @@ static const FString HousingItemDataTablePath = TEXT("/Game/Khc/Blueprint/Object
 AHousingItemActor::AHousingItemActor()
 {
 	PrimaryActorTick.bCanEverTick = false;
-	bReplicates = true; // 서버에서 생성되어 클라이언트로 복제됨
+	//bReplicates = true; // 서버에서 생성되어 클라이언트로 복제됨
 
 	// 충돌 박스 루트 설정
 	CollisionComp = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionComp"));
@@ -56,51 +56,55 @@ void AHousingItemActor::InitHousingItem(FName NewItemID, int32 NewOwnerIndex, US
 
 	if (NewMesh)
 	{
+		// 1. 메쉬 교체 (이때 머티리얼이 초기화됨)
 		MeshComp->SetStaticMesh(NewMesh);
 
-		// [중요] 충돌 설정 재확인 (클라이언트에서도 확실하게)
 		MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		MeshComp->SetCollisionResponseToAllChannels(ECR_Ignore);
 		MeshComp->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 
-		// [중요] 메쉬 크기에 맞춰 콜리전 박스 크기 및 위치 정렬
-		// 이 로직이 클라이언트에서도 실행되어야 라인트레이스가 정확히 맞습니다.
 		FVector MinBounds, MaxBounds;
 		NewMesh->GetBoundingBox().GetCenterAndExtents(MinBounds, MaxBounds);
-
 		CollisionComp->SetBoxExtent(MaxBounds);
 		MeshComp->SetRelativeLocation(-NewMesh->GetBoundingBox().GetCenter());
+
+		// 2. [핵심 수정] 하이라이트 상태였다면, 메쉬 교체 후 즉시 다시 빨간색 적용
+		if (bIsHighlighted)
+		{
+			// 강제로 다시 칠하기 (true를 넣어 재호출)
+			SetHighlightState(true); 
+		}
 	}
 }
 
 void AHousingItemActor::SetHighlightState(bool bIsTargeted)
 {
-	TArray<UStaticMeshComponent*> AllMeshes;
-	GetComponents<UStaticMeshComponent>(AllMeshes);
+	// [수정] 방어 코드: 메쉬가 없으면 중단
+	if (!MeshComp || !MeshComp->GetStaticMesh()) return;
+
+	// 상태 저장 (InitHousingItem에서 복구하기 위함)
+	bIsHighlighted = bIsTargeted;
 
 	if (bIsTargeted)
 	{
+		// [빨강 모드 ON]
+        
+		// 1. 원본 머티리얼 캐싱 (비어있을 때만)
 		if (CachedOriginalMaterials.Num() == 0)
 		{
-			for (UStaticMeshComponent* Comp : AllMeshes)
-			{
-				for(UMaterialInterface* Mat : Comp->GetMaterials())
-				{
-					CachedOriginalMaterials.Add(Mat);
-				}
-			}
+			CachedOriginalMaterials = MeshComp->GetMaterials();
 		}
 
-		// 2. 모든 컴포넌트의 머티리얼을 빨간색으로 덮어씌움
+		// 2. [수정] GetComponents 루프 제거 -> MeshComp만 확실하게 처리
+		// 다른 더미 컴포넌트가 영향을 주지 않도록 함
 		if (DeletePreviewMaterial)
 		{
-			for (UStaticMeshComponent* Comp : AllMeshes)
+			// 원본 메쉬 에셋의 슬롯 개수만큼 루프
+			int32 NumMaterials = MeshComp->GetStaticMesh()->GetStaticMaterials().Num();
+          
+			for (int32 i = 0; i < NumMaterials; i++)
 			{
-				int32 NumMaterials = Comp->GetNumMaterials();
-				for (int32 i = 0; i < NumMaterials; i++)
-				{
-					Comp->SetMaterial(i, DeletePreviewMaterial);
-				}
+				MeshComp->SetMaterial(i, DeletePreviewMaterial);
 			}
 		}
 	}
@@ -109,17 +113,12 @@ void AHousingItemActor::SetHighlightState(bool bIsTargeted)
 		// [빨강 모드 OFF -> 원상복구]
 		if (CachedOriginalMaterials.Num() > 0)
 		{
-			int32 CachedIndex = 0;
-			for (UStaticMeshComponent* Comp : AllMeshes)
+			for (int32 i = 0; i < CachedOriginalMaterials.Num(); i++)
 			{
-				int32 NumMaterials = Comp->GetNumMaterials();
-				for (int32 i = 0; i < NumMaterials; i++)
+				// 유효성 체크 후 복구
+				if (CachedOriginalMaterials.IsValidIndex(i) && CachedOriginalMaterials[i])
 				{
-					if (CachedOriginalMaterials.IsValidIndex(CachedIndex))
-					{
-						Comp->SetMaterial(i, CachedOriginalMaterials[CachedIndex]);
-						CachedIndex++;
-					}
+					MeshComp->SetMaterial(i, CachedOriginalMaterials[i]);
 				}
 			}
 			CachedOriginalMaterials.Empty();

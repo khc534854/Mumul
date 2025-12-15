@@ -48,7 +48,7 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category = "Visual")
     TObjectPtr<UMaterialInterface> DeletePreviewMaterial;
 
-
+	bool bIsHighlighted = false;
 
 	// [신규] RepNotify 함수
 	UFUNCTION()

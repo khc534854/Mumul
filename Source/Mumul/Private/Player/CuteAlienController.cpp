@@ -85,16 +85,9 @@ ACuteAlienController::ACuteAlienController()
 	
 	// Component
 	HousingComp = CreateDefaultSubobject<UPlayerHousingSystemComponent>(TEXT("HousingComp"));
-	HousingComp->SetIsReplicated(true); // RPC 사용 시 필수
-
 	MeetingComp = CreateDefaultSubobject<UPlayerMeetingManagerComponent>(TEXT("MeetingComp"));
-	MeetingComp->SetIsReplicated(true);
-
 	ChatComp = CreateDefaultSubobject<UPlayerChatComponent>(TEXT("SocialComp"));
-	ChatComp->SetIsReplicated(true);
-	
 	OXQuizComp = CreateDefaultSubobject<UPlayerOXQuizComponent>(TEXT("OXQuizComp"));
-	OXQuizComp->SetIsReplicated(true);
 
 	static ConstructorHelpers::FClassFinder<UFeedbackUI> FeedbackUIFinder(
 	   TEXT("/Game/Khc/Blueprint/UI/WBP_FeedbackUI.WBP_FeedbackUI_C")); // 경로 확인 필수!

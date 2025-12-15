@@ -42,6 +42,9 @@ void ULogoutUI::OnClickedLogoutYesBtn()
 			Http->OnLogoutResponse.RemoveDynamic(this, &ULogoutUI::OnLogoutResponseReceived);
 			Http->OnLogoutResponse.AddDynamic(this, &ULogoutUI::OnLogoutResponseReceived);
 
+			LogOutYesBtn->SetIsEnabled(false);
+			LogOutNoBtn->SetIsEnabled(false);
+
 			Http->SendLogoutRequest(GI->PlayerUniqueID);
             
 			// (선택) 버튼 비활성화 등 중복 전송 방지 처리

@@ -229,6 +229,13 @@ void UHttpNetworkSubsystem::OnLoginComplete(FHttpRequestPtr Request, FHttpRespon
 
 void UHttpNetworkSubsystem::OnLogoutComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
+	if (!bWasSuccessful || !Response.IsValid())
+	{
+		OnLogoutResponse.Broadcast(true, TEXT("Network Error (No Response)"));
+		UE_LOG(LogTemp, Warning, TEXT("[HTTP] Logout Request Failed (No Connection), force quit."));
+		return;
+	}
+	
 	int32 Code = Response->GetResponseCode();
 	FString Content = Response->GetContentAsString();
 

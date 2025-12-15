@@ -23,7 +23,7 @@ class UMumulGameInstance;
 UPlayerMeetingManagerComponent::UPlayerMeetingManagerComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-	SetIsReplicated(true);
+	SetIsReplicatedByDefault(true);
 
 	static ConstructorHelpers::FObjectFinder<USoundAttenuation> SilentAttFinder(
 		TEXT("/Game/Khc/Audio/SA_Silent.SA_Silent")); // 예시 경로
