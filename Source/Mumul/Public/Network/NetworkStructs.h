@@ -516,6 +516,9 @@ struct FTeamChatMessageResponse
 	
 	UPROPERTY()
 	FString createdAt;
+	
+	UPROPERTY()
+	FString formattedCreatedAt;
 };
 
 

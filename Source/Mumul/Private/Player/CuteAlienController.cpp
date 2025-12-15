@@ -31,6 +31,7 @@
 #include "Player/Component/PlayerChatComponent.h"
 #include "Player/Component/PlayerHousingSystemComponent.h"
 #include "Player/Component/PlayerMeetingManagerComponent.h"
+#include "Player/Component/PlayerOXQuizComponent.h"
 
 ACuteAlienController::ACuteAlienController()
 {
@@ -90,13 +91,6 @@ ACuteAlienController::ACuteAlienController()
 		IA_ToggleMouse = IA_ToggleMouseFinder.Object;
 	}
 
-	static ConstructorHelpers::FClassFinder<UOXQuizUI> OXQuizUIClassFinder(
-		TEXT("/Game/Yeomin/Characters/UI/BP/OXQuiz/WBP_OXQuiz.WBP_OXQuiz_C")); // 경로 확인 필수!
-	if (OXQuizUIClassFinder.Succeeded())
-	{
-		OXQuizUIClass = OXQuizUIClassFinder.Class;
-	}
-
 	static ConstructorHelpers::FObjectFinder<UInputAction> IA_InteractFinder(
 		TEXT("/Game/Yeomin/Characters/Inputs/Actions/IA_Interact.IA_Interact"));
 	if (IA_InteractFinder.Succeeded())
@@ -113,6 +107,9 @@ ACuteAlienController::ACuteAlienController()
 
 	ChatComp = CreateDefaultSubobject<UPlayerChatComponent>(TEXT("SocialComp"));
 	ChatComp->SetIsReplicated(true);
+	
+	OXQuizComp = CreateDefaultSubobject<UPlayerOXQuizComponent>(TEXT("OXQuizComp"));
+	OXQuizComp->SetIsReplicated(true);
 }
 
 void ACuteAlienController::BeginPlay()
@@ -168,17 +165,6 @@ void ACuteAlienController::BeginPlay()
 		PlayerUI->InitGroupChatUI(ChatComp->GroupChatUI);
 		RadialUI->SetVisibility(ESlateVisibility::Hidden);
 	}
-
-	if (OXQuizUIClass)
-	{
-		OXQuizUI = CreateWidget<UOXQuizUI>(this, OXQuizUIClass);
-		if (OXQuizUI)
-		{
-			OXQuizUI->AddToViewport();
-			OXQuizUI->SetVisibility(ESlateVisibility::Collapsed);
-		}
-	}
-
 
 	TryInitPlayerInfo();
 
@@ -601,42 +587,3 @@ void ACuteAlienController::TryInitPlayerInfo()
 // 	GroupChatUI->AddChat(TeamID, CurrentTime, UserID, Name, Text);
 // }
 
-void ACuteAlienController::Client_DisplayQuestion_Implementation(const int32& QuestionIdx, const FString& NewQuestion,
-                                                                 const int32& QuestionTime)
-{
-	if (OXQuizUI)
-	{
-		OXQuizUI->SwitchQuizState(true);
-		OXQuizUI->SetVisibility(ESlateVisibility::HitTestInvisible);
-		OXQuizUI->SetQuizQuestion(QuestionIdx, NewQuestion);
-		OXQuizUI->StartQuestionTimer(QuestionTime);
-	}
-}
-
-void ACuteAlienController::Client_DisplayAnswer_Implementation(bool AnswerResult, bool NewAnswer,
-                                                               const FString& NewCommentary, const int32& AnswerTime)
-{
-	bool CheckAnswer = false;
-	if (AnswerResult == NewAnswer)
-	{
-		CheckAnswer = true;
-	}
-
-	OXQuizUI->SetQuizAnswer(CheckAnswer, NewAnswer, NewCommentary);
-	OXQuizUI->StartAnswerTimer(AnswerTime);
-}
-
-void ACuteAlienController::Client_DisplayResult_Implementation(const int32& QuestionIdx, bool AnswerResult,
-                                                               const FString& QuestionText,
-                                                               bool AnswerText, const FString& CommentaryText)
-{
-	bool CheckAnswer = false;
-	if (AnswerResult == AnswerText)
-	{
-		CheckAnswer = true;
-	}
-
-	OXQuizUI->SwitchQuizState(false);
-	OXQuizUI->SetVisibility(ESlateVisibility::Visible);
-	OXQuizUI->SetQuizResult(QuestionIdx, CheckAnswer, QuestionText, AnswerText, CommentaryText);
-}

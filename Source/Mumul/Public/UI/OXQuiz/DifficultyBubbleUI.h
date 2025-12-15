@@ -16,10 +16,15 @@ class MUMUL_API UDifficultyBubbleUI : public UUserWidget
 	
 protected:
 	virtual void NativeConstruct() override;
+	
+	bool bIsHovered = false;
+	FTimerHandle UnhoverTimer;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> InteractionBtn;
+	void UpdateBorderColor();
 	UFUNCTION()
 	void OnHoveredBorderColor();
+	void ApplyUnhover();
 	UFUNCTION()
 	void OnUnhoveredBorderColor();
 	UPROPERTY(meta=(BindWidget))

@@ -13,11 +13,17 @@ UCLASS()
 class MUMUL_API UOXQuizUI : public UUserWidget
 {
 	GENERATED_BODY()
-	
+
 protected:
 	virtual void NativeConstruct() override;
-	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UWidgetSwitcher> OXQuizWS;
+
+public:
+	UPROPERTY()
+	TObjectPtr<class UAskOXQuizUI> AskOXQuizUI;
+	UFUNCTION()
+	void OnCancelClicked();
+
+protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class USizeBox> QuizSizeBox;
 	UPROPERTY(meta=(BindWidget))
@@ -30,12 +36,12 @@ protected:
 	TSubclassOf<class UQuizQuestionUI> QuizQuestionUIClass;
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
 	TSubclassOf<class UQuizAnswerUI> QuizAnswerUIClass;
-	
+
 	FTimerHandle QuizRemainingTimeHandler;
 	int32 RemainingTime;
 	void SetTimerText(const int32& NewTime);
 	void UpdateTimer();
-	
+
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UVerticalBox> AnswerListVBox;
 	UPROPERTY(meta=(BindWidget))
@@ -44,16 +50,22 @@ protected:
 	void OnConfirmResult();
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
 	TSubclassOf<class UAnswerCommentaryUI> AnswerCommentaryUIClass;
-	
+
 public:
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UWidgetSwitcher> OXQuizWS;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class USizeBox> QuizConfirmBox;
+
 	void SwitchQuizState(const bool& QuizOrResult);
-	
+
 	void SetQuizQuestion(const int32& QuestionIdx, const FString& NewQuiz);
-	
+
 	void SetQuizAnswer(const bool& AnswerResult, const bool& NewAnswer, const FString& NewCommentary);
-	
+
 	void StartQuestionTimer(const int32& QuestionTime);
 	void StartAnswerTimer(const int32& QuestionTime);
-	
-	void SetQuizResult(const int32& QuestionIdx, const bool& AnswerResult, const FString& QuestionText, const bool& AnswerText, const FString& CommentaryText);
+
+	void SetQuizResult(const int32& QuestionIdx, const bool& AnswerResult, const FString& QuestionText,
+	                   const bool& AnswerText, const FString& CommentaryText);
 };

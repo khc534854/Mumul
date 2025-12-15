@@ -15,6 +15,7 @@
 #include "Object/OXQuizActor.h"
 #include "Object/Tent/TentActor.h"
 #include "Player/CuteAlienController.h"
+#include "Player/Component/PlayerOXQuizComponent.h"
 
 AMumulMumulGameMode::AMumulMumulGameMode()
 {
@@ -280,7 +281,7 @@ void AMumulMumulGameMode::StartQuestionPhase()
 	// 문제 표시
 	for (TPair<TObjectPtr<ACuteAlienController>, TArray<bool>>& Elem : ParticipatingPlayers)
 	{
-		Elem.Key->Client_DisplayQuestion(CurrentQuizIdx, LearningQuiz.quiz[CurrentQuizIdx].question, QuestionTime);
+		Elem.Key->OXQuizComp->Client_DisplayQuestion(CurrentQuizIdx, LearningQuiz.quiz[CurrentQuizIdx].question, QuestionTime);
 	}
 
 
@@ -331,7 +332,7 @@ void AMumulMumulGameMode::StartAnswerPhase()
 	// 해설 표시
 	for (TPair<TObjectPtr<ACuteAlienController>, TArray<bool>>& Elem : ParticipatingPlayers)
 	{
-		Elem.Key->Client_DisplayAnswer(Elem.Value[CurrentQuizIdx], Answer, LearningQuiz.quiz[CurrentQuizIdx].explanation, AnswerTime);
+		Elem.Key->OXQuizComp->Client_DisplayAnswer(Elem.Value[CurrentQuizIdx], Answer, LearningQuiz.quiz[CurrentQuizIdx].explanation, AnswerTime);
 	}
 
 	GetWorld()->GetTimerManager().SetTimer(
@@ -357,7 +358,7 @@ void AMumulMumulGameMode::ShowResult()
 			{
 				Answer = false;
 			}
-			Elem.Key->Client_DisplayResult(QuestionIdx, Elem.Value[QuestionIdx], LearningQuiz.quiz[QuestionIdx].question, Answer, LearningQuiz.quiz[QuestionIdx].explanation);
+			Elem.Key->OXQuizComp->Client_DisplayResult(QuestionIdx, Elem.Value[QuestionIdx], LearningQuiz.quiz[QuestionIdx].question, Answer, LearningQuiz.quiz[QuestionIdx].explanation);
 		}
 	}
 	

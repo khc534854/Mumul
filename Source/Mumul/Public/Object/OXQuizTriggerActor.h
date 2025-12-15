@@ -58,5 +58,6 @@ protected:
 	TObjectPtr<class AOXQuizActor> OXQuizActor;
 
 public:
+	FText GetDifficultyText();
 	void OnTriggerQuiz(const int32 UserID);
 };

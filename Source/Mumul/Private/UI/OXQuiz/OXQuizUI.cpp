@@ -11,8 +11,9 @@
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
 #include "Components/WidgetSwitcher.h"
-#include "UI/BaseUI/BaseText.h"
+#include "Data/ObjectAndClassFinder.h"
 #include "UI/OXQuiz/AnswerCommentaryUI.h"
+#include "UI/OXQuiz/AskOXQuizUI.h"
 #include "UI/OXQuiz/QuizAnswerUI.h"
 #include "UI/OXQuiz/QuizQuestionUI.h"
 
@@ -22,6 +23,23 @@ void UOXQuizUI::NativeConstruct()
 	Super::NativeConstruct();
 
 	ConfirmBtn->OnPressed.AddDynamic(this, &UOXQuizUI::OnConfirmResult);
+
+	if (TSubclassOf<UAskOXQuizUI> AskOXQuizUIClass = UObjectAndClassFinder::Get()->GetWidgetClass<UAskOXQuizUI>(
+		"WBP_AskOXQuiz"))
+	{
+		AskOXQuizUI = CreateWidget<UAskOXQuizUI>(this, AskOXQuizUIClass);
+		if (AskOXQuizUI)
+		{
+			QuizConfirmBox->AddChild(AskOXQuizUI);
+			AskOXQuizUI->InitParentUI(this);
+			AskOXQuizUI->OnCancelClicked.AddUObject(this, &UOXQuizUI::OnCancelClicked);
+		}
+	}
+}
+
+void UOXQuizUI::OnCancelClicked()
+{
+	SetVisibility(ESlateVisibility::Collapsed);
 }
 
 void UOXQuizUI::SetTimerText(const int32& NewTime)
@@ -49,7 +67,7 @@ void UOXQuizUI::UpdateTimer()
 
 void UOXQuizUI::OnConfirmResult()
 {
-	this->SetVisibility(ESlateVisibility::Collapsed);
+	this->SetVisibility(ESlateVisibility::Hidden);
 }
 
 void UOXQuizUI::SwitchQuizState(const bool& QuizOrResult)
@@ -136,7 +154,7 @@ void UOXQuizUI::SetQuizResult(const int32& QuestionIdx, const bool& AnswerResult
 	AnswerCommentaryUI->SetQuestion(QuestionIdx, QuestionText);
 	AnswerCommentaryUI->SetAnswer(AnswerText);
 	AnswerCommentaryUI->SetCommentary(CommentaryText);
-	
+
 	if (UVerticalBoxSlot* VSlot = AnswerListVBox->AddChildToVerticalBox(AnswerCommentaryUI))
 	{
 		VSlot->SetPadding(FMargin(0.f, 5.7f));

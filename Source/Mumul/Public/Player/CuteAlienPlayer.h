@@ -20,7 +20,7 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<class UWidgetInteractionComponent> UIInteractionComp;
 	UPROPERTY()
 	TObjectPtr<class UInputAction> IA_Click;

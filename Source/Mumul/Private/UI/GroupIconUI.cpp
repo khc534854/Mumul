@@ -121,6 +121,7 @@ void UGroupIconUI::OnServerTeamChatMessageResponse(bool bSuccess, FString Messag
 				UE_LOG(LogTemp, Warning, TEXT("userName   : %s"), *Msg.userName);
 				UE_LOG(LogTemp, Warning, TEXT("message    : %s"), *Msg.message);
 				UE_LOG(LogTemp, Warning, TEXT("createdAt  : %s"), *Msg.createdAt);
+				UE_LOG(LogTemp, Warning, TEXT("createdAt  : %s"), *Msg.formattedCreatedAt);
 			}
 
 			for (const FTeamChatMessageResponse& Msg : TeamChatMessage)
@@ -128,7 +129,7 @@ void UGroupIconUI::OnServerTeamChatMessageResponse(bool bSuccess, FString Messag
 				// Add Chat Chunk to ScrollBox
 				UChatMessageBlockUI* Chat = CreateWidget<UChatMessageBlockUI>(GetWorld(), ChatMessageBlockUIClass);
 				ChatBlockUI->ChatScrollBox->AddChild(Chat);
-				Chat->SetContent(*Msg.createdAt, *Msg.userName, *Msg.message);
+				Chat->SetContent(*Msg.formattedCreatedAt, *Msg.userName, *Msg.message);
 				Chat->SetProfileIMG(IMGManager->GetImageByUserID(Msg.userId));
 				Chat->SetChatID(Msg.chatId);
 				Chat->SetUserID(Msg.userId);
