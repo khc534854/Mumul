@@ -65,6 +65,8 @@ public:
 	TObjectPtr<class UPlayerChatComponent> ChatComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<class UPlayerMeetingManagerComponent> MeetingComp;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<class UPlayerOXQuizComponent> OXQuizComp;
 
 public:
 	UPROPERTY()
@@ -168,16 +170,5 @@ protected:
 // 	UFUNCTION(Client, Reliable)
 // 	void Client_SendChat(const FString& TeamID, const FString& CurrentTime, const int32& UserID, const FString& Name, const FString& Text);
 
-protected:
-	UPROPERTY()
-	TSubclassOf<class UOXQuizUI> OXQuizUIClass;
-	UPROPERTY()
-	TObjectPtr<class UOXQuizUI> OXQuizUI;
-public:
-	UFUNCTION(Client, Reliable)
-	void Client_DisplayQuestion(const int32& QuestionIdx, const FString& NewQuestion, const int32& QuestionTime);
-	UFUNCTION(Client, Reliable)
-	void Client_DisplayAnswer(bool AnswerResult, bool NewAnswer, const FString& NewCommentary, const int32& AnswerTime);
-	UFUNCTION(Client, Reliable)
-	void Client_DisplayResult(const int32& QuestionIdx, bool AnswerResult, const FString& QuestionText, bool AnswerText, const FString& CommentaryText);
+
 };

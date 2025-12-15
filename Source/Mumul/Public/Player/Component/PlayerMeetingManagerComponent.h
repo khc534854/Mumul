@@ -94,6 +94,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Voice")
 	TObjectPtr<USoundAttenuation> NormalAttenuation;
 	
-	class ACuteAlienController* owner;
-	class ACuteAlienPlayer* player;
+	UPROPERTY()
+	TObjectPtr<class ACuteAlienController> owner;
+	UPROPERTY()
+	TObjectPtr<class ACuteAlienPlayer> player;
 };

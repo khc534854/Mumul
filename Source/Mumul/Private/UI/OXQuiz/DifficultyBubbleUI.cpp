@@ -10,19 +10,48 @@
 void UDifficultyBubbleUI::NativeConstruct()
 {
 	Super::NativeConstruct();
-	
+
+	bIsHovered = false;
+	UpdateBorderColor();
+
 	InteractionBtn->OnHovered.AddDynamic(this, &UDifficultyBubbleUI::OnHoveredBorderColor);
 	InteractionBtn->OnUnhovered.AddDynamic(this, &UDifficultyBubbleUI::OnUnhoveredBorderColor);
 }
 
+void UDifficultyBubbleUI::UpdateBorderColor()
+{
+	DifficultyBorder->SetBrushColor(bIsHovered ? FLinearColor::Green : FLinearColor::White);
+}
+
 void UDifficultyBubbleUI::OnHoveredBorderColor()
 {
-	DifficultyBorder->SetBrushColor(FLinearColor::Green);
+	if (GetWorld())
+	{
+		GetWorld()->GetTimerManager().ClearTimer(UnhoverTimer);
+	}
+	bIsHovered = true;
+	UpdateBorderColor();
+}
+
+void UDifficultyBubbleUI::ApplyUnhover()
+{
+	if (bIsHovered)
+	{
+		bIsHovered = false;
+		UpdateBorderColor();
+	}
 }
 
 void UDifficultyBubbleUI::OnUnhoveredBorderColor()
 {
-	DifficultyBorder->SetBrushColor(FLinearColor::White);
+	GetWorld()->GetTimerManager().SetTimer(
+		UnhoverTimer,
+		this,
+		&UDifficultyBubbleUI::ApplyUnhover,
+		0.1f,
+		false
+	);
+	
 }
 
 void UDifficultyBubbleUI::SetDifficultyText(const FText& Text)

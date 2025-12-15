@@ -7,7 +7,6 @@
 #include "Components/WidgetComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Object/OXQuizActor.h"
-#include "Player/CuteAlienController.h"
 #include "Player/CuteAlienPlayer.h"
 #include "UI/OXQuiz/DifficultyBubbleUI.h"
 
@@ -26,10 +25,10 @@ AOXQuizTriggerActor::AOXQuizTriggerActor()
 
 	SceneComp = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComp"));
 	SceneComp->SetupAttachment(TriggerSphere);
-	
-	DifficultyBubble = CreateDefaultSubobject<UWidgetComponent>(TEXT("DifficultyBubble"));
-	DifficultyBubble->SetupAttachment(SceneComp);
-	DifficultyBubble->SetVisibility(false);
+
+	// DifficultyBubble = CreateDefaultSubobject<UWidgetComponent>(TEXT("DifficultyBubble"));
+	// DifficultyBubble->SetupAttachment(SceneComp);
+	// DifficultyBubble->SetVisibility(false);
 }
 
 // Called when the game starts or when spawned
@@ -42,11 +41,27 @@ void AOXQuizTriggerActor::BeginPlay()
 	OriginalLocation = GetActorLocation();
 	Time = 0.f;
 
-	if (UDifficultyBubbleUI* Widget = Cast<UDifficultyBubbleUI>(DifficultyBubble->GetUserWidgetObject()))
+	if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
 	{
-		const FText DifficultyText = StaticEnum<EQuizDifficulty>()->GetDisplayNameTextByValue(
-			static_cast<int32>(QuizDifficulty));
-		Widget->SetDifficultyText(DifficultyText);
+		if (PC->IsLocalController())
+		{
+			DifficultyBubble = NewObject<UWidgetComponent>(this, TEXT("DifficultyBubble"));
+			DifficultyBubble->RegisterComponent();
+			DifficultyBubble->AttachToComponent(
+				SceneComp,
+				FAttachmentTransformRules::KeepRelativeTransform
+			);
+
+			DifficultyBubble->SetWidgetSpace(EWidgetSpace::World);
+			DifficultyBubble->SetDrawSize(FVector2D(350.f, 400.f));
+			DifficultyBubble->SetVisibility(false);
+			
+			if (UDifficultyBubbleUI* Widget = Cast<UDifficultyBubbleUI>(DifficultyBubble->GetUserWidgetObject()))
+			{
+				const FText DifficultyText = GetDifficultyText();
+				Widget->SetDifficultyText(DifficultyText);
+			}
+		}
 	}
 }
 
@@ -122,6 +137,12 @@ void AOXQuizTriggerActor::OnEndOverlapPlayer(UPrimitiveComponent* OverlappedComp
 			DifficultyBubble->SetVisibility(false);
 		}
 	}
+}
+
+FText AOXQuizTriggerActor::GetDifficultyText()
+{
+	return StaticEnum<EQuizDifficulty>()->GetDisplayNameTextByValue(
+					static_cast<int32>(QuizDifficulty));
 }
 
 void AOXQuizTriggerActor::OnTriggerQuiz(const int32 UserID)

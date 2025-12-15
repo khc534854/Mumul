@@ -7,8 +7,10 @@
 #include "Base/MumulGameState.h"
 #include "Camera/CameraComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
+#include "Components/SizeBox.h"
 #include "Components/WidgetComponent.h"
 #include "Components/WidgetInteractionComponent.h"
+#include "Components/WidgetSwitcher.h"
 #include "Data/FCustomItemData.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Player/MumulPlayerState.h"
@@ -17,6 +19,9 @@
 #include "Object/OXQuizTriggerActor.h"
 #include "Player/CuteAlienAnim.h"
 #include "Player/CuteAlienController.h"
+#include "Player/Component/PlayerOXQuizComponent.h"
+#include "UI/OXQuiz/AskOXQuizUI.h"
+#include "UI/OXQuiz/OXQuizUI.h"
 
 static const FString ItemDataTablePath = TEXT("/Game/Khc/Blueprint/Object/CustomItemList.CustomItemList");
 // Sets default values
@@ -73,7 +78,7 @@ ACuteAlienPlayer::ACuteAlienPlayer()
 	{
 		IA_Click = IA_ClickFinder.Object;
 	}
-
+	
 	UIInteractionComp = CreateDefaultSubobject<UWidgetInteractionComponent>(TEXT("UI InteractionComp"));
 	UIInteractionComp->SetupAttachment(GetFollowCamera());
 	UIInteractionComp->InteractionDistance = 800.f;
@@ -97,6 +102,12 @@ void ACuteAlienPlayer::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (!IsLocallyControlled())
+	{
+		UIInteractionComp->Deactivate();
+		UIInteractionComp->SetComponentTickEnabled(false);
+	}
+	
 	if (IsLocallyControlled())
 	{
 		if (MinimapCapture)
@@ -176,8 +187,25 @@ void ACuteAlienPlayer::OnClickInteraction()
 		if (WidgetComp)
 		{
 			AOXQuizTriggerActor* QuizTriggerActor = Cast<AOXQuizTriggerActor>(WidgetComp->GetOwner());
-
-			Cast<ACuteAlienController>(GetController())->Server_RequestStartQuiz(QuizTriggerActor);
+			ACuteAlienController* PC = Cast<ACuteAlienController>(GetController());
+			
+			// Set Mouse
+			int32 SizeX, SizeY;
+			PC->GetViewportSize(SizeX, SizeY);
+			PC->SetMouseLocation(SizeX / 2, SizeY / 2);
+			PC->OnCancelUI();
+			FInputModeGameAndUI InputMode;
+			InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
+			PC->SetIgnoreLookInput(true);
+			PC->SetShowMouseCursor(true);
+			PC->SetInputMode(InputMode);
+			
+			// Set OXQuiz
+			PC->OXQuizComp->OXQuizUI->AskOXQuizUI->SetQuizTriggerActor(QuizTriggerActor);
+			PC->OXQuizComp->OXQuizUI->AskOXQuizUI->SetPlayerController(PC);
+			PC->OXQuizComp->OXQuizUI->OXQuizWS->SetActiveWidgetIndex(2);
+			PC->OXQuizComp->OXQuizUI->AskOXQuizUI->SetAskQuizText(QuizTriggerActor->GetDifficultyText());
+			PC->OXQuizComp->OXQuizUI->SetVisibility(ESlateVisibility::Visible);
 		}
 	}
 }

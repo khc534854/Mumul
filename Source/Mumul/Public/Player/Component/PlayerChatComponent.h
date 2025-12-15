@@ -58,6 +58,8 @@ public:
 	UFUNCTION(Client, Reliable)
 	void Client_SendChat(const FString& TeamID, const FString& CurrentTime, const int32& UserID, const FString& Name, const FString& Text);
 	
-	class ACuteAlienController* owner;
-	class ACuteAlienPlayer* player;
+	UPROPERTY()
+	TObjectPtr<class ACuteAlienController> owner;
+	UPROPERTY()
+	TObjectPtr<class ACuteAlienPlayer> player;
 };

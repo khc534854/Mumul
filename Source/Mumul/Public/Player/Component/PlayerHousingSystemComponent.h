@@ -75,6 +75,8 @@ protected:
 	UPROPERTY()
 	TObjectPtr<class AHousingItemActor> CurrentTargetItem;
 	
-	class ACuteAlienController* owner;
-	class ACuteAlienPlayer* player;
+	UPROPERTY()
+	TObjectPtr<class ACuteAlienController> owner;
+	UPROPERTY()
+	TObjectPtr<class ACuteAlienPlayer> player;
 };
