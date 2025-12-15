@@ -104,9 +104,24 @@ protected:
 
 	UPROPERTY()
 	TSubclassOf<class UPlayerUI> PlayerUIClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<class UFeedbackUI> FeedbackUIClass;
+
+	UPROPERTY()
+	TObjectPtr<UFeedbackUI> FeedbackUI;
+
 	// UPROPERTY()
 	// TSubclassOf<class UGroupChatUI> GroupChatUIClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<class ULogoutUI> LogoutUIClass;
+
+	UPROPERTY()
+	TObjectPtr<ULogoutUI> LogoutUI;
 public:
+	bool bCanInteract = false;
+	
 	UPROPERTY()
 	TObjectPtr<UPlayerUI> PlayerUI;
 	// UPROPERTY()
@@ -114,6 +129,9 @@ public:
 	UPROPERTY()
 	TObjectPtr<class UIMGManager> IMGManager;
 
+	void TryInteractWithFeedbackActor();
+	
+	void OpenLogoutUI();
 protected:
 	// PlayerState 초기화 대기용 타이머 핸들
 	FTimerHandle InitPlayerStateTimerHandle;

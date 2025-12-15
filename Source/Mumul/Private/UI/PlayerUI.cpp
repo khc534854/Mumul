@@ -91,7 +91,8 @@ void UPlayerUI::NativeConstruct()
 
 void UPlayerUI::OnLogOutBtnClicked()
 {
-	PC->SaveAndExit();	
+	//PC->SaveAndExit();
+	PC->OpenLogoutUI();
 }
 
 void UPlayerUI::TryBindMinimap()

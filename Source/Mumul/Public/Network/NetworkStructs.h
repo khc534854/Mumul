@@ -183,6 +183,15 @@ struct FLoginRequest
 	FString password;
 };
 
+USTRUCT()
+struct FLogoutRequest
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	int32 logoutIdx = 0;
+};
+
 // [응답] 로그인 성공 (200 OK)
 USTRUCT()
 struct FLoginSuccessResponse
@@ -293,7 +302,7 @@ struct FSurveyResultRequest
 	GENERATED_BODY()
 
 	UPROPERTY()
-	uint32 userId = 0;
+	int32 userId = 0;
 	
 	UPROPERTY()
 	TArray<int32> result;
@@ -305,7 +314,7 @@ struct FSurveyResultResponse
 	GENERATED_BODY()
 
 	UPROPERTY()
-	uint32 userId = 0;
+	int32 userId = 0;
 	
 	UPROPERTY()
 	FString typeCode;
@@ -642,5 +651,27 @@ struct FWSResponse_MeetingAnswer
 	UPROPERTY() FString event;
 	UPROPERTY() FString groupId;
 	UPROPERTY() FString answer;
+};
+
+USTRUCT()
+struct FFeedbackRequest
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	int32 userId = 0;
+
+	UPROPERTY()
+	FString content;
+};
+
+// [신규] 피드백 성공 응답
+USTRUCT()
+struct FFeedbackSuccessResponse
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FString message;
 };
 

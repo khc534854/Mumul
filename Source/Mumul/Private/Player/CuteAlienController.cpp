@@ -22,6 +22,7 @@
 #include "Network/NetworkStructs.h"
 #include "Kismet/GameplayStatics.h"
 #include "Data/IMGManager.h"
+#include "Object/FeedbackObjectActor.h"
 #include "Object/OXQuizTriggerActor.h"
 #include "UI/ChatBlockUI.h"
 #include "UI/GroupChatUI.h"
@@ -31,6 +32,8 @@
 #include "Player/Component/PlayerChatComponent.h"
 #include "Player/Component/PlayerHousingSystemComponent.h"
 #include "Player/Component/PlayerMeetingManagerComponent.h"
+#include "UI/FeedbackUI.h"
+#include "UI/LogoutUI.h"
 
 ACuteAlienController::ACuteAlienController()
 {
@@ -113,6 +116,20 @@ ACuteAlienController::ACuteAlienController()
 
 	ChatComp = CreateDefaultSubobject<UPlayerChatComponent>(TEXT("SocialComp"));
 	ChatComp->SetIsReplicated(true);
+
+	static ConstructorHelpers::FClassFinder<UFeedbackUI> FeedbackUIFinder(
+	   TEXT("/Game/Khc/Blueprint/UI/WBP_FeedbackUI.WBP_FeedbackUI_C")); // 경로 확인 필수!
+	if (FeedbackUIFinder.Succeeded())
+	{
+		FeedbackUIClass = FeedbackUIFinder.Class;
+	}
+
+	static ConstructorHelpers::FClassFinder<ULogoutUI> LogoutUIFinder(
+   TEXT("/Game/Khc/Blueprint/UI/WBP_LogoutUI.WBP_LogoutUI_C")); // 경로 확인 필수!
+	if (LogoutUIFinder.Succeeded())
+	{
+		LogoutUIClass = LogoutUIFinder.Class;
+	}
 }
 
 void ACuteAlienController::BeginPlay()
@@ -263,8 +280,13 @@ void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const
 void ACuteAlienController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-}
 
+	if (bCanInteract)
+	{
+		if (WasInputKeyJustPressed(EKeys::LeftMouseButton))
+			TryInteractWithFeedbackActor();
+	}
+}
 
 void ACuteAlienController::OnPressEsc()
 {
@@ -295,8 +317,6 @@ void ACuteAlienController::SaveAndExit()
 		}
 	}
 	UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, false);
-
-
 }
 
 void ACuteAlienController::OnCancelUI()
@@ -402,6 +422,81 @@ void ACuteAlienController::CancelRadialUI()
 
 	RadialUI->SetVisibility(ESlateVisibility::Hidden);
 	bIsRadialVisible = false;
+}
+
+void ACuteAlienController::TryInteractWithFeedbackActor()
+{
+	FHitResult HitResult;
+	FVector Start, End;
+	FRotator CamRot;
+    
+	// 카메라 위치에서 시선 방향으로 레이저 발사
+	GetPlayerViewPoint(Start, CamRot);
+	float InteractionDistance = 800.0f; // 상호작용 가능 거리 (충분히 길게)
+	End = Start + CamRot.Vector() * InteractionDistance;
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+	if (GetPawn()) Params.AddIgnoredActor(GetPawn());
+
+	// ECC_Visibility 채널로 검사 (FeedbackActor의 Mesh가 이 채널을 Block해야 함)
+	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params);
+
+	if (bHit)
+	{
+		FlushPressedKeys();
+		// 맞은 물체가 피드백 액터인지 확인
+		AFeedbackObjectActor* HitActor = Cast<AFeedbackObjectActor>(HitResult.GetActor());
+		if (HitActor)
+		{
+			// UI가 아직 없으면 생성
+			if (!FeedbackUI && FeedbackUIClass)
+			{
+				FeedbackUI = CreateWidget<UFeedbackUI>(this, FeedbackUIClass);
+				FeedbackUI->AddToViewport(10); // 다른 UI보다 위에 오도록 Z-Order 설정
+			}
+
+			// UI 표시 및 입력 모드 전환
+			if (FeedbackUI)
+			{
+				FeedbackUI->OpenFeedbackUI(); // UI 내부 초기화 함수 호출
+                
+				SetShowMouseCursor(true);
+				FInputModeUIOnly InputMode;
+				InputMode.SetWidgetToFocus(FeedbackUI->TakeWidget());
+				SetInputMode(InputMode);
+			}
+		}
+	}
+}
+
+void ACuteAlienController::OpenLogoutUI()
+{
+	FlushPressedKeys();
+	// UI가 아직 없으면 생성
+	if (!LogoutUI && LogoutUIClass)
+	{
+		LogoutUI = CreateWidget<ULogoutUI>(this, LogoutUIClass);
+		if (LogoutUI)
+		{
+			LogoutUI->AddToViewport(20); // Z-Order를 높게 설정 (최상단)
+		}
+	}
+
+	// UI 표시 및 입력 모드 전환
+	if (LogoutUI)
+	{
+		// [핵심 수정] 숨겨져 있던 위젯을 다시 보이게 설정
+		LogoutUI->SetVisibility(ESlateVisibility::Visible);
+
+		SetShowMouseCursor(true);
+       
+		FInputModeUIOnly InputMode;
+		// 위젯 포커스를 강제로 잡아서 ESC키 등이 UI에서 처리되도록 함
+		InputMode.SetWidgetToFocus(LogoutUI->TakeWidget());
+		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+		SetInputMode(InputMode);
+	}
 }
 
 void ACuteAlienController::TryInitPlayerInfo()

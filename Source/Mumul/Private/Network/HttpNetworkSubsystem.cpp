@@ -114,6 +114,18 @@ void UHttpNetworkSubsystem::SendLoginRequest(FString ID, FString PW)
 	Request->ProcessRequest();
 }
 
+void UHttpNetworkSubsystem::SendLogoutRequest(uint8 Idx)
+{
+	FLogoutRequest LogoutData;
+	LogoutData.logoutIdx = Idx;
+
+	SendJsonRequest(
+		LogoutData,
+		TEXT("user/logout"),
+		&UHttpNetworkSubsystem::OnLogoutComplete
+	);
+}
+
 void UHttpNetworkSubsystem::StartMeetingRequest(FString MeetingTitle, FString TeamId, int32 OrganizerID, FString Agenda, FString Desc)
 {
 	FVoiceMeetingStartRequest MeetingStartData;
@@ -213,6 +225,25 @@ void UHttpNetworkSubsystem::OnLoginComplete(FHttpRequestPtr Request, FHttpRespon
 	{
 		OnLoginResponse.Broadcast(false, FString::Printf(TEXT("서버 오류: %d"), Code));
 	}
+}
+
+void UHttpNetworkSubsystem::OnLogoutComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	int32 Code = Response->GetResponseCode();
+	FString Content = Response->GetContentAsString();
+
+	if (Code == 200) // 성공
+	{
+		// 로그아웃 완료, 만약 처리해야 할 문제 있으면 델리게이트로 브로드캐스트
+		OnLogoutResponse.Broadcast(true, Content);
+		UE_LOG(LogTemp, Log, TEXT("[HTTP] Logout Complete, Quit Game"));
+	}
+	else // 실패해도 로그아웃은 해야함
+	{
+		OnLogoutResponse.Broadcast(true, Content);
+		UE_LOG(LogTemp, Log, TEXT("[HTTP] Logout Fail, Quit Game"));
+	}
+
 }
 
 void UHttpNetworkSubsystem::OnStartMeetingComplete(FHttpRequestPtr Request, FHttpResponsePtr Response,
@@ -647,6 +678,22 @@ void UHttpNetworkSubsystem::StartLearningQuizRequest(const int32& UserID, const 
 	);
 }
 
+void UHttpNetworkSubsystem::SendFeedbackRequest(int32 UserID, const FString& Content)
+{
+	FFeedbackRequest RequestData;
+	RequestData.userId = UserID;
+	RequestData.content = Content;
+
+	// SendJsonRequest 템플릿 사용 (Method: POST, Content-Type: application/json 자동 설정됨)
+	SendJsonRequest(
+	   RequestData,
+	   TEXT("feedback/upload"),
+	   &UHttpNetworkSubsystem::OnFeedbackComplete
+	);
+
+	UE_LOG(LogTemp, Log, TEXT("[HTTP] Sending Feedback Request - User: %d"), UserID);
+}
+
 void UHttpNetworkSubsystem::OnCreateTeamChatComplete(TSharedPtr<IHttpRequest> HttpRequest,
                                                      TSharedPtr<IHttpResponse> HttpResponse, bool bArg) const
 {
@@ -732,7 +779,6 @@ void UHttpNetworkSubsystem::OnSurveyResultComplete(FHttpRequestPtr Request, FHtt
 
 	if (Code == 200) // 성공
 	{
-		// 응답 JSON(typeCode 포함)을 위젯으로 전달
 		OnSurveyResultResponse.Broadcast(true, Content);
 	}
 	else // 실패 (4xx, 5xx)
@@ -777,5 +823,50 @@ void UHttpNetworkSubsystem::OnSurveyListComplete(FHttpRequestPtr Request, FHttpR
 		{
 			OnSurveyListResponse.Broadcast(false, FString::Printf(TEXT("설문 리스트 요청 실패. 서버 코드: %d"), Code));
 		}
+	}
+}
+
+void UHttpNetworkSubsystem::OnFeedbackComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	if (!bWasSuccessful || !Response.IsValid())
+	{
+		OnFeedbackResponse.Broadcast(false, TEXT("네트워크 연결 실패"));
+		return;
+	}
+
+	int32 Code = Response->GetResponseCode();
+	FString Content = Response->GetContentAsString();
+
+	if (Code == 200) // 성공
+	{
+		FFeedbackSuccessResponse SuccessData;
+		if (FJsonObjectConverter::JsonObjectStringToUStruct(Content, &SuccessData, 0, 0))
+		{
+			// 성공 메시지 전달 ("Feedback uploaded successfully")
+			OnFeedbackResponse.Broadcast(true, SuccessData.message);
+		}
+		else
+		{
+			// JSON 파싱 실패 시 원본 문자열이라도 전달
+			OnFeedbackResponse.Broadcast(true, TEXT("피드백 전송 성공 (파싱 실패)"));
+		}
+	}
+	else // 에러 (4xx, 5xx)
+	{
+		// 에러 응답 포맷: {"detail": {"errorCode": "...", "message": "..."}}
+		// 기존에 사용하시던 FFailResponse 구조체와 호환된다면 그것을 사용해도 됩니다.
+		// 여기서는 범용적으로 FailResponse 구조를 따른다고 가정하고 파싱합니다.
+       
+		FFailResponse FailData;
+		if (FJsonObjectConverter::JsonObjectStringToUStruct(Content, &FailData, 0, 0))
+		{
+			OnFeedbackResponse.Broadcast(false, FailData.detail.message);
+		}
+		else
+		{
+			OnFeedbackResponse.Broadcast(false, FString::Printf(TEXT("피드백 전송 실패. 서버 코드: %d"), Code));
+		}
+       
+		UE_LOG(LogTemp, Error, TEXT("[HTTP] Feedback Upload Failed: %d / %s"), Code, *Content);
 	}
 }

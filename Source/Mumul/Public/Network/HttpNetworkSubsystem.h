@@ -13,6 +13,7 @@
  */
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnLoginResponseReceived, bool, bSuccess, FString, Message);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnLogoutResponseReceived, bool, bSuccess, FString, Message);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTeamChatListResponseReceived, bool, bSuccess, FString, Message);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnChatMessageResponseReceived, bool, bSuccess, FString, Message);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTeamChatMessageResponseReceived, bool, bSuccess, FString, Message);
@@ -25,6 +26,7 @@ DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnHttpCompleteLowLevel, FHttpRequestPtr,
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnLearningQuizResponseReceived, bool, bSuccess, FString, Message);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSurveyResultResponse, bool, bSuccess, FString, Message);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSurveyListResponse, bool, bSuccess, FString, Message);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnFeedbackResponse, bool, bSuccess, FString, Message);
 
 UCLASS()
 class MUMUL_API UHttpNetworkSubsystem : public UGameInstanceSubsystem
@@ -44,6 +46,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Network")
 	void SendLoginRequest(FString ID, FString PW);
+
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void SendLogoutRequest(uint8 Idx);
 
 	UFUNCTION(BlueprintCallable, Category = "Network")
 	void StartMeetingRequest(FString MeetingTitle, FString TeamId, int32 OrganizerID, FString Agenda, FString Desc);
@@ -72,9 +77,17 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Network")
 	void StartLearningQuizRequest(const int32& UserID, const FString& Difficulty);
+
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void RequestSurveyData();
+		
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void SendFeedbackRequest(int32 UserID, const FString& Content);
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnLoginResponseReceived OnLoginResponse;
+	UPROPERTY(BlueprintAssignable)
+	FOnLogoutResponseReceived OnLogoutResponse;
 	UPROPERTY(BlueprintAssignable)
 	FOnStartMeetingResponse OnStartMeeting;
 	UPROPERTY(BlueprintAssignable)
@@ -95,19 +108,20 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnChatMessageResponseReceived OnChatMessageResponse;
 	
-	UFUNCTION(BlueprintCallable, Category = "Network")
-	void RequestSurveyData();
-	
 	UPROPERTY(BlueprintAssignable)
 	FOnCreateTeamChatResponseReceived OnCreateTeamChatResponse;
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnLearningQuizResponseReceived OnLearningQuizResponse;
 
+	UPROPERTY(BlueprintAssignable)
+	FOnFeedbackResponse OnFeedbackResponse;
+
 private:
 	// 통신이 끝났을 때(응답 왔을 때) 호출될 콜백 함수
 	void OnSendVoiceComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void OnLoginComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnLogoutComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void OnStartMeetingComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void OnJoinMeetingComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void OnEndMeetingComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
@@ -118,7 +132,7 @@ private:
 	void OnCreateTeamChatComplete(TSharedPtr<IHttpRequest> HttpRequest, TSharedPtr<IHttpResponse> HttpResponse, bool bArg) const;
 	void OnSurveyResultComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void OnSurveyListComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-
+	void OnFeedbackComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	
 	
 	void AddString(TArray<uint8>& OutPayload, const FString& InString);
