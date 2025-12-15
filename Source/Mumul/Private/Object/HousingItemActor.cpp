@@ -75,42 +75,53 @@ void AHousingItemActor::InitHousingItem(FName NewItemID, int32 NewOwnerIndex, US
 
 void AHousingItemActor::SetHighlightState(bool bIsTargeted)
 {
-	if (!MeshComp) return;
+	TArray<UStaticMeshComponent*> AllMeshes;
+	GetComponents<UStaticMeshComponent>(AllMeshes);
 
 	if (bIsTargeted)
 	{
-		// 1. [빨강 모드 ON]
-        
-		// 아직 캐싱된 원본이 없다면 현재 상태를 저장 (최초 1회)
 		if (CachedOriginalMaterials.Num() == 0)
 		{
-			CachedOriginalMaterials = MeshComp->GetMaterials();
+			for (UStaticMeshComponent* Comp : AllMeshes)
+			{
+				for(UMaterialInterface* Mat : Comp->GetMaterials())
+				{
+					CachedOriginalMaterials.Add(Mat);
+				}
+			}
 		}
 
-		// 빨간색 머티리얼이 있다면, 모든 슬롯을 이걸로 덮어씌움
+		// 2. 모든 컴포넌트의 머티리얼을 빨간색으로 덮어씌움
 		if (DeletePreviewMaterial)
 		{
-			int32 NumMaterials = MeshComp->GetNumMaterials();
-			for (int32 i = 0; i < NumMaterials; i++)
+			for (UStaticMeshComponent* Comp : AllMeshes)
 			{
-				MeshComp->SetMaterial(i, DeletePreviewMaterial);
+				int32 NumMaterials = Comp->GetNumMaterials();
+				for (int32 i = 0; i < NumMaterials; i++)
+				{
+					Comp->SetMaterial(i, DeletePreviewMaterial);
+				}
 			}
 		}
 	}
 	else
 	{
-		// 2. [빨강 모드 OFF -> 원상복구]
-        
-		// 저장해둔 원본 머티리얼이 있다면 다시 복구
+		// [빨강 모드 OFF -> 원상복구]
 		if (CachedOriginalMaterials.Num() > 0)
 		{
-			for (int32 i = 0; i < CachedOriginalMaterials.Num(); i++)
+			int32 CachedIndex = 0;
+			for (UStaticMeshComponent* Comp : AllMeshes)
 			{
-				// 슬롯 인덱스에 맞춰 원본 머티리얼 할당
-				MeshComp->SetMaterial(i, CachedOriginalMaterials[i]);
+				int32 NumMaterials = Comp->GetNumMaterials();
+				for (int32 i = 0; i < NumMaterials; i++)
+				{
+					if (CachedOriginalMaterials.IsValidIndex(CachedIndex))
+					{
+						Comp->SetMaterial(i, CachedOriginalMaterials[CachedIndex]);
+						CachedIndex++;
+					}
+				}
 			}
-            
-			// 복구 후 캐시 비우기 (다음에 다시 저장하기 위해)
 			CachedOriginalMaterials.Empty();
 		}
 	}

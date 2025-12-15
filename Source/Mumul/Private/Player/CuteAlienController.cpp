@@ -24,11 +24,7 @@
 #include "Data/IMGManager.h"
 #include "Object/FeedbackObjectActor.h"
 #include "Object/OXQuizTriggerActor.h"
-#include "UI/ChatBlockUI.h"
-#include "UI/GroupChatUI.h"
-#include "UI/GroupIconUI.h"
 #include "UI/PlayerUI.h"
-#include "UI/OXQuiz/OXQuizUI.h"
 #include "Player/Component/PlayerChatComponent.h"
 #include "Player/Component/PlayerHousingSystemComponent.h"
 #include "Player/Component/PlayerMeetingManagerComponent.h"
@@ -51,20 +47,6 @@ ACuteAlienController::ACuteAlienController()
 	{
 		PlayerUIClass = PlayerUIFinder.Class;
 	}
-
-	// static ConstructorHelpers::FClassFinder<UGroupChatUI> GroupChatUIFinder(
-	// 	TEXT("/Game/Yeomin/Characters/UI/BP/WBP_GroupChatUI.WBP_GroupChatUI_C"));
-	// if (GroupChatUIFinder.Succeeded())
-	// {
-	// 	GroupChatUIClass = GroupChatUIFinder.Class;
-	// }
-	//
-	// static ConstructorHelpers::FClassFinder<UGroupIconUI> GroupIconUIFinder(
-	// 	TEXT("/Game/Yeomin/Characters/UI/BP/WBP_GroupProfileUI.WBP_GroupProfileUI_C"));
-	// if (GroupIconUIFinder.Succeeded())
-	// {
-	// 	GroupIconUIClass = GroupIconUIFinder.Class;
-	// }
 
 	static ConstructorHelpers::FObjectFinder<UInputMappingContext> IMCFinder(
 		TEXT("/Game/Yeomin/Characters/Inputs/IMC_Player.IMC_Player"));
@@ -167,15 +149,6 @@ void ACuteAlienController::BeginPlay()
 			PlayerUI->AddToViewport(-1);
 		}
 	}
-
-	// if (GroupChatUIClass)
-	// {
-	// 	GroupChatUI = CreateWidget<UGroupChatUI>(this, GroupChatUIClass);
-	// 	if (GroupChatUI)
-	// 	{
-	// 		GroupChatUI->AddToViewport();
-	// 	}
-	// }
 
 	if (PlayerUI && ChatComp->GroupChatUI)
 	{
@@ -532,153 +505,3 @@ void ACuteAlienController::TryInitPlayerInfo()
 		UE_LOG(LogTemp, Log, TEXT("[Client] Sent Init Info: %s (ID: %d)"), *GI->PlayerName, GI->PlayerUniqueID);
 	}
 }
-
-
-// void ACuteAlienController::Server_AddTeamChatList_Implementation(const FString& TeamID)
-// {
-// 	if (GS)
-// 	{
-// 		GS->AddTeamChatList(TeamID);
-// 	}
-// }
-//
-// void ACuteAlienController::OnServerCreateTeamChatResponse(bool bSuccess, FString Message)
-// {
-// 	if (bSuccess)
-// 	{
-// 		// 1. JSON 파싱 (Message에는 JSON 원본이 들어있음)
-// 		FCreateTeamChatResponse CreateTeamChat;
-//
-// 		if (FJsonObjectConverter::JsonObjectStringToUStruct(Message, &CreateTeamChat, 0, 0))
-// 		{
-// 			// // JSON Parsing LOG
-// 			// UE_LOG(LogTemp, Warning, TEXT("===== CreateTeamChat Response ====="));
-// 			// UE_LOG(LogTemp, Warning, TEXT("groupId: %s"), *CreateTeamChat.groupId);
-// 			// UE_LOG(LogTemp, Warning, TEXT("groupName: %s"), *CreateTeamChat.groupName);
-// 			//
-// 			// UE_LOG(LogTemp, Warning, TEXT("userIdList (%d명):"), CreateTeamChat.userIdList.Num());
-// 			// for (int32 UserID : CreateTeamChat.userIdList)
-// 			// {
-// 			// 	UE_LOG(LogTemp, Warning, TEXT(" - userId: %d"), UserID);
-// 			// }
-// 			//
-// 			// TArray<FTeamUser> TeamUserIDs;
-// 			//
-// 			// FTeamData NewTeamData;
-// 			// NewTeamData.UniqueTeamID = CreateTeamChat.groupId;
-// 			// NewTeamData.TeamName = CreateTeamChat.groupName;
-// 			// NewTeamData.TeamMateList = CreateTeamChat.userIdList;
-// 			//
-// 			// for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
-// 			// {
-// 			// 	if (AMumulPlayerState* MPS = Cast<AMumulPlayerState>(PS))
-// 			// 	{
-// 			// 		MPS->PS_PlayerTeamList.Add(NewTeamData);
-// 			// 		if (CreateTeamChat.userIdList.Contains(MPS->PS_UserIndex))
-// 			// 		{
-// 			// 			FTeamUser NewUser;
-// 			// 			NewUser.UserId = MPS->PS_UserIndex;
-// 			// 			NewUser.UserName = MPS->PS_RealName;
-// 			// 			TeamUserIDs.Add(NewUser);
-// 			// 		}
-// 			// 	}
-// 			// }
-//
-// 			if (IsLocalController())
-// 			{
-// 				Server_RequestTeamChatList();
-// 				// Server_CreateGroupChatUI(CreateTeamChat.userIdList, CreateTeamChat.groupId, CreateTeamChat.groupName, TeamUserIDs);
-// 			}
-// 		}
-// 		else
-// 		{
-// 			UE_LOG(LogTemp, Error, TEXT("CreateTeamChat 파싱 실패"));
-// 		}
-// 	}
-// 	else
-// 	{
-// 		UE_LOG(LogTemp, Error, TEXT("CreateTeamChat Response 실패 : %s"), *Message);
-// 	}
-// }
-
-
-// void ACuteAlienController::Server_RequestTeamChatList_Implementation()
-// {
-// 	Multicast_RequestTeamChatList();
-// }
-
-// void ACuteAlienController::Multicast_RequestTeamChatList_Implementation()
-// {
-// 	// Get TeamChatList
-// 	if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
-// 	{
-// 		AMumulPlayerState* PS = PC->GetPlayerState<AMumulPlayerState>();
-// 		HttpSystem->SendTeamChatListRequest(PS->PS_UserIndex);
-// 	}
-// }
-
-// void ACuteAlienController::Server_CreateGroupChatUI_Implementation(const TArray<int32>& UserIDs, const FString& TeamID,
-//                                                                    const FString& TeamName,
-//                                                                    const TArray<FTeamUser>& TeamUserIDs)
-// {
-// 	if (IMGManager)
-// 	{
-// 		UTexture2D* TeamIconIMG = IMGManager->GetImageByTeamID(TeamID);
-//
-// 		// Add GroupChatUI for each Client
-// 		for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
-// 		{
-// 			if (UserIDs.Contains(Cast<AMumulPlayerState>(PS)->PS_UserIndex))
-// 			{
-// 				if (ACuteAlienController* PC = Cast<ACuteAlienController>(PS->GetOwningController()))
-// 				{
-// 					PC->Client_CreateGroupChatUI(TeamID, TeamName, TeamUserIDs, TeamIconIMG);
-// 				}
-// 			}
-// 		}
-// 	}
-// }
-
-// void ACuteAlienController::Client_CreateGroupChatUI_Implementation(const FString& TeamID, const FString& TeamName,
-//                                                                    const TArray<FTeamUser>& TeamUserIDs,
-//                                                                    UTexture2D* IMG)
-// {
-// 	// Set Players in Group Icon
-// 	// UGroupIconUI* GroupIconUI = CreateWidget<UGroupIconUI>(GetWorld(), GroupIconUIClass);
-// 	// GroupChatUI->AddGroupIcon(GroupIconUI);
-// 	// GroupIconUI->InitParentUI(GroupChatUI);
-// 	// GroupIconUI->ChatBlockUI->SetTeamID(TeamID);
-// 	// GroupIconUI->ChatBlockUI->SetTeamName(TeamName);
-// 	// for (const FTeamUser& User : TeamUserIDs)
-// 	// {
-// 	// 	GroupIconUI->ChatBlockUI->AddTeamUser(User.UserId, User.UserName);
-// 	// }
-// 	// GroupIconUI->SetIconIMG(IMG);
-// }
-
-
-// void ACuteAlienController::Server_RequestChat_Implementation(const FString& TeamID, const TArray<int32>& UserIDs,
-//                                                              const FString& CurrentTime, const int32& UserID,
-//                                                              const FString& Name,
-//                                                              const FString& Text)
-// {
-// 	// Add GroupChatUI for each Client
-// 	for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
-// 	{
-// 		if (UserIDs.Contains(Cast<AMumulPlayerState>(PS)->PS_UserIndex))
-// 		{
-// 			if (ACuteAlienController* PC = Cast<ACuteAlienController>(PS->GetOwningController()))
-// 			{
-// 				PC->Client_SendChat(TeamID, CurrentTime, UserID, Name, Text);
-// 			}
-// 		}
-// 	}
-// }
-
-// void ACuteAlienController::Client_SendChat_Implementation(const FString& TeamID, const FString& CurrentTime,
-//                                                           const int32& UserID,
-//                                                           const FString& Name, const FString& Text)
-// {
-// 	GroupChatUI->AddChat(TeamID, CurrentTime, UserID, Name, Text);
-// }
-

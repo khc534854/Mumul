@@ -51,10 +51,10 @@ public:
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "User Info")
 	FString PS_UserType; // userType
 
-	UPROPERTY(Replicated, BlueprintReadOnly, Category = "User Info")
+	UPROPERTY(ReplicatedUsing = OnRep_TendencyID, BlueprintReadOnly, Category = "User Info")
 	int32 PS_TendencyID = 0;
 
-	UPROPERTY(ReplicatedUsing = OnRep_TendencyID, BlueprintReadOnly, Category = "User Info")
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "User Info")
 	TArray<FTeamData> PS_PlayerTeamList;
 	
 	UFUNCTION(Server, Reliable)

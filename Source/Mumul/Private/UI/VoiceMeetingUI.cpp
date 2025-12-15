@@ -4,6 +4,7 @@
 #include "Components/EditableTextBox.h"
 #include "Components/MultiLineEditableTextBox.h"
 #include "Components/WidgetSwitcher.h"
+#include "Player/MumulPlayerState.h"
 #include "Player/Component/PlayerMeetingManagerComponent.h"
 #include "UI/BaseUI/BaseButton.h"
 #include "UI/BaseUI/BaseExitButton.h"
@@ -56,10 +57,17 @@ void UVoiceMeetingUI::OnClickStartMeeting()
     ACuteAlienController* PC = GetMyController();
     if (PC)
     {
-        FString Title = MeetingTitleText->BaseTextBox->GetText().ToString();
-        if (Title.IsEmpty()) return; // 제목 필수
+        AMumulPlayerState* PS = PC->GetPlayerState<AMumulPlayerState>();
+        if (PS && !PS->bIsNearByCampFire)
+        {
+            // 예: 경고 메시지 출력 (화면 중앙 텍스트 등)
+            UE_LOG(LogTemp, Warning, TEXT("모닥불 근처에서만 회의를 시작할 수 있습니다."));
+            return;
+        }
 
-        // 컨트롤러에게 시작 요청 (API 전송)
+        FString Title = MeetingTitleText->BaseTextBox->GetText().ToString();
+        if (Title.IsEmpty()) return;
+
         PC->MeetingComp->RequestStartMeetingRecording(Title, MeetingAgendaText->BaseTextBox->GetText().ToString(), MeetingDescText->BaseTextBox->GetText().ToString());
     }
 }

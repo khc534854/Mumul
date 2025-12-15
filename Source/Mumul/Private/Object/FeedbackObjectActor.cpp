@@ -38,6 +38,10 @@ AFeedbackObjectActor::AFeedbackObjectActor()
 	InteractionUI->SetupAttachment(RootComponent);
 	InteractionUI->SetWidgetSpace(EWidgetSpace::Screen);
 	InteractionUI->SetVisibility(false);
+
+	InteractionUI->SetIsReplicated(false); 
+    
+	InteractionUI->SetVisibility(false);
 }
 
 // Called when the game starts or when spawned
@@ -67,13 +71,17 @@ void AFeedbackObjectActor::Tick(float DeltaTime)
 void AFeedbackObjectActor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	ACuteAlienController* PC = Cast<ACuteAlienController>(GetWorld()->GetFirstPlayerController());
-	if (PC && PC->GetPawn() == OtherActor)
+	if (APawn* Pawn = Cast<APawn>(OtherActor))
 	{
-		if (InteractionUI)
+		if (Pawn->IsLocallyControlled())
 		{
-			InteractionUI->SetVisibility(true);
-			PC->bCanInteract = true;
+			if (InteractionUI) InteractionUI->SetVisibility(true);
+            
+			// 컨트롤러 플래그 설정 (로컬 컨트롤러만 가져옴)
+			if (ACuteAlienController* PC = Cast<ACuteAlienController>(Pawn->GetController()))
+			{
+				PC->bCanInteract = true;
+			}
 		}
 	}
 }
@@ -81,13 +89,16 @@ void AFeedbackObjectActor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, A
 void AFeedbackObjectActor::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	ACuteAlienController* PC = Cast<ACuteAlienController>(GetWorld()->GetFirstPlayerController());
-	if (PC && PC->GetPawn() == OtherActor)
+	if (APawn* Pawn = Cast<APawn>(OtherActor))
 	{
-		if (InteractionUI)
+		if (Pawn->IsLocallyControlled())
 		{
-			InteractionUI->SetVisibility(false);
-			PC->bCanInteract = false;
+			if (InteractionUI) InteractionUI->SetVisibility(false);
+
+			if (ACuteAlienController* PC = Cast<ACuteAlienController>(Pawn->GetController()))
+			{
+				PC->bCanInteract = false;
+			}
 		}
 	}
 }
