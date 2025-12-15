@@ -25,12 +25,13 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	
-	float UIRotDistance = 500.f;
-	float LookAtDistance = 370.f;
+	float UIRotDistance = 750.f;
+	float LookAtDistance = 555.f;
 	
+	float PhaseOffset;        // 위상 차이
+	float AmplitudeScale;     // 진폭 미세 차이
 	UPROPERTY(EditAnywhere, Category="Hover")
 	float HoverAmplitude = 25.f;
-
 	UPROPERTY(EditAnywhere, Category="Hover")
 	float HoverSpeed = 0.95f;
 	FVector OriginalLocation;

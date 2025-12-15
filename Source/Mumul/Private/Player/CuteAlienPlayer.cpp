@@ -7,7 +7,6 @@
 #include "Base/MumulGameState.h"
 #include "Camera/CameraComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
-#include "Components/SizeBox.h"
 #include "Components/WidgetComponent.h"
 #include "Components/WidgetInteractionComponent.h"
 #include "Components/WidgetSwitcher.h"
@@ -81,7 +80,7 @@ ACuteAlienPlayer::ACuteAlienPlayer()
 	
 	UIInteractionComp = CreateDefaultSubobject<UWidgetInteractionComponent>(TEXT("UI InteractionComp"));
 	UIInteractionComp->SetupAttachment(GetFollowCamera());
-	UIInteractionComp->InteractionDistance = 800.f;
+	UIInteractionComp->InteractionDistance = 1200.f;
 
 	VoiceComponent = CreateDefaultSubobject<UVoiceChatComponent>(TEXT("VoiceComponent"));
 
