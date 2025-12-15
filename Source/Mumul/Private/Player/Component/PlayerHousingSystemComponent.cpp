@@ -20,7 +20,7 @@
 #include "UI/PlayerUI.h"
 #include "save/MapDataSaveGame.h"
 
-static const FString HousingItemDataTablePath = TEXT("/Game/Khc/Blueprint/Object/HousingItemList.HousingItemList");
+static const FString HousingDataTablePath = TEXT("/Game/Khc/Blueprint/Object/HousingItemList.HousingItemList");
 
 // Sets default values for this component's properties
 UPlayerHousingSystemComponent::UPlayerHousingSystemComponent()
@@ -338,7 +338,7 @@ void UPlayerHousingSystemComponent::ShowPreviewHousingItem(FName idx)
 	owner->SetInputMode(FInputModeGameOnly());
 	
 	// Spawn Preview Tent
-	UDataTable* HousingTable = LoadObject<UDataTable>(nullptr, *HousingItemDataTablePath);
+	UDataTable* HousingTable = LoadObject<UDataTable>(nullptr, *HousingDataTablePath);
 	if (HousingTable)
 	{
 		FHousingItemData* ItemData = HousingTable->FindRow<FHousingItemData>(idx, TEXT("Housing Preview"));
