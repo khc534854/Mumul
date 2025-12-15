@@ -58,7 +58,7 @@ void URadialUI::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	float DeltaSize = RawDelta.Size();
 	FVector2D RawDir = RawDelta.GetSafeNormal();
 
-	float Strength = FMath::Clamp(DeltaSize * 0.00757f, 0.f, 1.f);
+	float Strength = FMath::Clamp(DeltaSize * 0.00776f, 0.f, 1.f);
 
 	StableDir = FMath::Lerp(StableDir, RawDir, Strength);
 
@@ -68,7 +68,7 @@ void URadialUI::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	if (Dot)
 	{
 		FVector2D Dir = StableDir.GetSafeNormal();
-		constexpr float Radius = 60.f;
+		constexpr float Radius = 100.f;
 		Dot->SetRenderTranslation(Dir * Radius);
 
 		float Angle = FMath::RadiansToDegrees(FMath::Atan2(Dir.Y, Dir.X));
@@ -131,7 +131,7 @@ void URadialUI::UpdateSelectedSlot(int32 NewIndex)
 		{
 			// 기본 색
 			Border->SetBrushColor(
-				Idx == NewIndex ? FLinearColor(1, 1, 0, 1)
+				Idx == NewIndex ? FLinearColor(1, 0.4, 0.8, 1)
 								: FLinearColor(1, 1, 1, 1)
 			);
 
@@ -154,10 +154,10 @@ void URadialUI::ApplyHighlightEffect(int32 Idx, float DeltaTime)
 	HighlightTime += DeltaTime;
 
 	// Scale: 1.0 ~ 1.1 사이 펄스
-	const float Scale = 1.07f + 0.04f * FMath::Sin(HighlightTime * 1.74f);
+	const float Scale = 1.09f + 0.05f * FMath::Sin(HighlightTime * 1.74f);
 
 	// Rotation: 작은 offset으로 흔들기
-	const float Shake = FMath::PerlinNoise1D(HighlightTime * 4.6f) * 3.9f;
+	const float Shake = FMath::PerlinNoise1D(HighlightTime * 4.7f) * 3.9f;
 
 	FWidgetTransform Transform;
 	Transform.Scale = FVector2D(Scale, Scale);
@@ -170,7 +170,7 @@ void URadialUI::PlaySlotSequence()
 {
 	for (int32 Idx = 0; Idx < SlotAnims.Num(); Idx++)
 	{
-		constexpr float DelayTime = 0.016f;
+		constexpr float DelayTime = 0.017f;
 		const float StartDelay = Idx * DelayTime;
 		PlayAnimation(SlotAnims[Idx], StartDelay);
 	}
