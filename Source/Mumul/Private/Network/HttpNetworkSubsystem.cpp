@@ -114,10 +114,10 @@ void UHttpNetworkSubsystem::SendLoginRequest(FString ID, FString PW)
 	Request->ProcessRequest();
 }
 
-void UHttpNetworkSubsystem::SendLogoutRequest(uint8 Idx)
+void UHttpNetworkSubsystem::SendLogoutRequest(int32 Idx)
 {
 	FLogoutRequest LogoutData;
-	LogoutData.logoutIdx = Idx;
+	LogoutData.userId = Idx;
 
 	SendJsonRequest(
 		LogoutData,

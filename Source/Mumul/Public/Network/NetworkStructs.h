@@ -189,7 +189,7 @@ struct FLogoutRequest
 	GENERATED_BODY()
 
 	UPROPERTY()
-	int32 logoutIdx = 0;
+	int32 userId = 0;
 };
 
 // [응답] 로그인 성공 (200 OK)

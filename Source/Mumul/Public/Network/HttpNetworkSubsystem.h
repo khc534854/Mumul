@@ -48,7 +48,7 @@ public:
 	void SendLoginRequest(FString ID, FString PW);
 
 	UFUNCTION(BlueprintCallable, Category = "Network")
-	void SendLogoutRequest(uint8 Idx);
+	void SendLogoutRequest(int32 Idx);
 
 	UFUNCTION(BlueprintCallable, Category = "Network")
 	void StartMeetingRequest(FString MeetingTitle, FString TeamId, int32 OrganizerID, FString Agenda, FString Desc);

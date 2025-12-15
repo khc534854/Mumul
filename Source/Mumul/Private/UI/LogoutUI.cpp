@@ -71,5 +71,7 @@ void ULogoutUI::OnLogoutResponseReceived(bool bSuccess, FString Message)
 			Http->OnLogoutResponse.RemoveDynamic(this, &ULogoutUI::OnLogoutResponseReceived);
 		}
 	}
+	UE_LOG(LogTemp, Warning, TEXT("[Logout] %s : %s"), bSuccess ? TEXT("Success" : TEXT("Failed")), *Message);
+	
 	PC->SaveAndExit();
 }
