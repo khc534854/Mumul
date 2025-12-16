@@ -188,7 +188,13 @@ void UPlayerHousingSystemComponent::TickComponent(float DeltaTime, ELevelTick Ti
                 FTransform RelativeTransform = WorldTransform.GetRelativeTransform(TentTransform);
 
                 Server_PlaceHousingItem(PreviewHousingItem->CurrentTargetTent, SelectedItemID, RelativeTransform);
-                
+
+            	if (owner->PlayerUI)
+            	{
+            		owner->PlayerUI->MarkHousingItemAsPlaced(SelectedItemID, true);
+            		owner->PlayerUI->ResetHousingSelection(); // 체크 해제 -> "배치됨" 텍스트 표시
+            	}
+            	
                 StopPreviewHousingItem();
                 
                 if (AMumulCharacter* MyChar = Cast<AMumulCharacter>(player))
@@ -465,6 +471,12 @@ void UPlayerHousingSystemComponent::TryDeleteHousingItem()
 
     // 4. 서버에 삭제 요청 (텐트와 아이템 ID만 전달 - 위치 비교 X)
     Server_DestroyHousingItem(ParentTent, CurrentTargetItem->ItemID);
+
+	if (owner->PlayerUI)
+	{
+		owner->PlayerUI->MarkHousingItemAsPlaced(CurrentTargetItem->ItemID, false);
+	}
+	
 
     // 5. [핵심 수정] 클라이언트 측 '즉시 파괴'
     // 서버가 지우기 전에 클라이언트 눈앞에 있는 이 아이템(CurrentTargetItem)을 바로 없앱니다.

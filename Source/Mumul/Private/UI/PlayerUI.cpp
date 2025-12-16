@@ -3,6 +3,7 @@
 
 #include "UI/PlayerUI.h"
 
+#include "EngineUtils.h"
 #include "Animation/WidgetAnimation.h"
 #include "Components/Button.h"
 #include "Components/CheckBox.h"
@@ -12,12 +13,14 @@
 #include "Data/FCustomItemData.h"
 #include "Data/FHousingItemData.h"
 #include "Engine/TextureRenderTarget2D.h"
+#include "Object/Tent/TentActor.h"
 #include "Player/VoiceChatComponent.h"
 #include "Player/CuteAlienController.h"
 #include "Player/CuteAlienPlayer.h"
 #include "Player/MumulPlayerState.h"
 #include "Player/Component/PlayerHousingSystemComponent.h"
 #include "Player/Component/PlayerMeetingManagerComponent.h"
+#include "save/MapDataSaveGame.h"
 #include "UI/CustomItemEntryUI.h"
 #include "UI/GroupChatUI.h"
 #include "UI/BaseUI/BaseButton.h"
@@ -178,6 +181,69 @@ void UPlayerUI::InitGroupChatUI(UGroupChatUI* UI)
 	GroupChatUI = UI;
 }
 
+void UPlayerUI::MarkHousingItemAsPlaced(FName ItemID, bool bPlaced)
+{
+	if (TObjectPtr<UCustomItemEntryUI>* FoundWidget = HousingWidgetMap.Find(ItemID))
+	{
+		if (*FoundWidget)
+		{
+			(*FoundWidget)->SetPlacedState(bPlaced);
+		}
+	}
+}
+
+void UPlayerUI::CheckEquippedCustomItem()
+{
+	AMumulPlayerState* PS = GetOwningPlayerState<AMumulPlayerState>();
+	if (!PS) return;
+
+	FName EquippedID = PS->EquippedCustomID;
+
+	// 모든 커스텀 아이템 위젯 순회
+	for (const TPair<FName, TObjectPtr<UCustomItemEntryUI>>& Pair : ItemWidgetMap)
+	{
+		if (Pair.Value)
+		{
+			// 현재 장착된 아이템이면 체크 켜기, 아니면 끄기
+			// SetItemCheckState는 내부적으로 UpdateVisualState를 호출하므로 텍스트/색상도 자동 갱신됨
+			bool bIsEquipped = (Pair.Key == EquippedID);
+			Pair.Value->SetItemCheckState(bIsEquipped);
+		}
+	}
+}
+
+void UPlayerUI::CheckPlacedHousingItems()
+{
+	// 1. 내 UserIndex 가져오기
+	int32 MyUserIndex = -1;
+	if (AMumulPlayerState* PS = GetOwningPlayerState<AMumulPlayerState>())
+	{
+		MyUserIndex = PS->PS_UserIndex;
+	}
+
+	// 2. 월드에서 내 텐트 찾기
+	ATentActor* MyTent = nullptr;
+	for (TActorIterator<ATentActor> It(GetWorld()); It; ++It)
+	{
+		ATentActor* Tent = *It;
+		if (Tent && Tent->OwnerUserIndex == MyUserIndex)
+		{
+			MyTent = Tent;
+			break;
+		}
+	}
+
+	// 3. 텐트에 저장된 아이템 목록을 순회하며 UI 업데이트
+	if (MyTent)
+	{
+		for (const FHousingSaveData& Data : MyTent->HousingItems)
+		{
+			// 위젯 맵에 해당 아이템이 있다면 '배치됨'으로 설정
+			MarkHousingItemAsPlaced(Data.ItemID, true);
+		}
+	}
+}
+
 void UPlayerUI::OnCustomizeBoxClick()
 {
 	bIsOpenCustomizeUI = !bIsOpenCustomizeUI;
@@ -190,6 +256,8 @@ void UPlayerUI::OnCustomizeBoxClick()
 			bIsOpenHousingUI = false;
 		}
 		PlayAnimation(CustomizeBoxAnim, 0, 1, EUMGSequencePlayMode::Forward);
+
+		CheckEquippedCustomItem();
 	}
 	else
 	{
@@ -224,10 +292,11 @@ void UPlayerUI::LoadAndGenerateItemList()
 		{
 			// 3. UI 초기화 및 데이터 전달
 			ItemUI->InitItem(
-				ItemData->ItemID, 
-				ItemData->ItemThumbnail.LoadSynchronous(), 
-				ItemData->ItemName.ToString(), 
-				MyPawn // 캐릭터 전달
+			 	ItemData->ItemID, 
+			 	ItemData->ItemThumbnail.LoadSynchronous(), 
+			 	ItemData->ItemName.ToString(), 
+			 	MyPawn,
+			 	EItemEntryType::Custom 
 			);
             
 			// 4. 이벤트 바인딩
@@ -262,7 +331,7 @@ void UPlayerUI::OnCustomItemEntryChecked(FName ItemID, bool bIsChecked)
 				if (Pair.Value->ItemCheckBox && Pair.Value->ItemCheckBox->IsChecked())
 				{
 					// 다른 위젯의 체크박스 상태를 강제로 변경
-					Pair.Value->ItemCheckBox->SetIsChecked(false);
+					Pair.Value->SetItemCheckState(false);
 				}
 			}
 		}
@@ -322,6 +391,8 @@ void UPlayerUI::OnHousingBoxClick()
 			bIsOpenCustomizeUI = false;
 		}
 		PlayAnimation(HousingBoxAnim, 0, 1, EUMGSequencePlayMode::Forward);
+
+		CheckPlacedHousingItems();
 	}
 	else
 	{
@@ -359,7 +430,8 @@ void UPlayerUI::LoadAndGenerateHousingItemList()
 				HousingItemData->ItemID, 
 				HousingItemData->ItemThumbnail.LoadSynchronous(), 
 				HousingItemData->ItemName.ToString(), 
-				MyPawn // 캐릭터 전달
+				MyPawn,
+				EItemEntryType::Housing
 			);
             
 			// 4. 이벤트 바인딩
@@ -368,6 +440,7 @@ void UPlayerUI::LoadAndGenerateHousingItemList()
 			// 5. ScrollBox에 추가
 			HousingItemBox->AddChild(ItemUI);
 			HousingWidgetMap.Add(HousingItemData->ItemID, ItemUI);
+
 		}
 	}
 }
@@ -386,7 +459,7 @@ void UPlayerUI::OnHousingItemEntryChecked(FName ItemID, bool bIsChecked)
 				if (Pair.Value->ItemCheckBox && Pair.Value->ItemCheckBox->IsChecked())
 				{
 					// 이벤트 전파 없이 상태만 변경 (무한 루프 방지)
-					Pair.Value->ItemCheckBox->SetIsChecked(false);
+					Pair.Value->SetItemCheckState(false);
 				}
 			}
 		}
@@ -400,6 +473,8 @@ void UPlayerUI::OnHousingItemEntryChecked(FName ItemID, bool bIsChecked)
 		// 만약 현재 프리뷰 중인 아이템과 동일하다면 취소
 		PC->HousingComp->StopPreviewHousingItem();
 	}
+
+	CheckPlacedHousingItems();
 }
 
 void UPlayerUI::ResetHousingSelection()
@@ -408,8 +483,7 @@ void UPlayerUI::ResetHousingSelection()
 	{
 		if (Pair.Value && Pair.Value->ItemCheckBox)
 		{
-			// 이벤트 트리거 없이 체크 해제 (SetIsChecked는 이벤트를 발생시키지 않음)
-			Pair.Value->ItemCheckBox->SetIsChecked(false);
+			Pair.Value->SetItemCheckState(false);
 		}
 	}
 }

@@ -168,4 +168,9 @@ public :
 	void CheckGroupChatUI();
 	void ResetHousingSelection();
 	void InitGroupChatUI(UGroupChatUI* UI);
+
+	void MarkHousingItemAsPlaced(FName ItemID, bool bPlaced);
+
+	void CheckEquippedCustomItem();
+	void CheckPlacedHousingItems();
 };
