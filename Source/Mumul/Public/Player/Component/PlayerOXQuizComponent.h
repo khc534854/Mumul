@@ -32,6 +32,8 @@ public:
 	UFUNCTION(Client, Reliable)
 	void Client_DisplayResult(const int32& QuestionIdx, bool AnswerResult, const FString& QuestionText, bool AnswerText, const FString& CommentaryText);
 	
+	UFUNCTION(Server, Reliable)
+	void Server_SpawnCloud(class ACuteAlienPlayer* OwnerPlayer);
 	
 	UPROPERTY()
 	TObjectPtr<class ACuteAlienController> owner;
