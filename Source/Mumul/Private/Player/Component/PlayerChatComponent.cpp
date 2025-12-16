@@ -22,9 +22,9 @@ UPlayerChatComponent::UPlayerChatComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	SetIsReplicatedByDefault(true);
-	
+
 	static ConstructorHelpers::FClassFinder<UGroupChatUI> GroupChatUIFinder(
-	TEXT("/Game/Yeomin/Characters/UI/BP/WBP_GroupChatUI.WBP_GroupChatUI_C"));
+		TEXT("/Game/Yeomin/Characters/UI/BP/WBP_GroupChatUI.WBP_GroupChatUI_C"));
 	if (GroupChatUIFinder.Succeeded())
 	{
 		GroupChatUIClass = GroupChatUIFinder.Class;
@@ -43,20 +43,21 @@ UPlayerChatComponent::UPlayerChatComponent()
 void UPlayerChatComponent::BeginPlay()
 {
 	Super::BeginPlay();
-    
+
 	owner = Cast<ACuteAlienController>(GetOwner());
 	if (owner)
-		player = Cast<ACuteAlienPlayer>(owner->GetPawn()); 
+		player = Cast<ACuteAlienPlayer>(owner->GetPawn());
 
 	// [중요] 내 컨트롤러일 때만 UI와 서브시스템을 초기화해야 합니다.
-	if (owner && owner->IsLocalController()) 
+	if (owner && owner->IsLocalController())
 	{
 		// 1. 서브시스템 바인딩
 		if (UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetWorld()->GetGameInstance()))
 		{
 			if (UHttpNetworkSubsystem* HttpSystem = GI->GetSubsystem<UHttpNetworkSubsystem>())
 			{
-				HttpSystem->OnCreateTeamChatResponse.AddDynamic(this, &UPlayerChatComponent::OnServerCreateTeamChatResponse);
+				HttpSystem->OnCreateTeamChatResponse.AddDynamic(
+					this, &UPlayerChatComponent::OnServerCreateTeamChatResponse);
 			}
 		}
 
@@ -67,7 +68,7 @@ void UPlayerChatComponent::BeginPlay()
 			if (GroupChatUI)
 			{
 				GroupChatUI->AddToViewport(1);
-              
+
 				if (owner->PlayerUI)
 				{
 					owner->PlayerUI->InitGroupChatUI(GroupChatUI);
@@ -96,43 +97,18 @@ void UPlayerChatComponent::OnServerCreateTeamChatResponse(bool bSuccess, FString
 
 		if (FJsonObjectConverter::JsonObjectStringToUStruct(Message, &CreateTeamChat, 0, 0))
 		{
-			// // JSON Parsing LOG
-			// UE_LOG(LogTemp, Warning, TEXT("===== CreateTeamChat Response ====="));
-			// UE_LOG(LogTemp, Warning, TEXT("groupId: %s"), *CreateTeamChat.groupId);
-			// UE_LOG(LogTemp, Warning, TEXT("groupName: %s"), *CreateTeamChat.groupName);
-			//
-			// UE_LOG(LogTemp, Warning, TEXT("userIdList (%d명):"), CreateTeamChat.userIdList.Num());
-			// for (int32 UserID : CreateTeamChat.userIdList)
-			// {
-			// 	UE_LOG(LogTemp, Warning, TEXT(" - userId: %d"), UserID);
-			// }
-			//
-			// TArray<FTeamUser> TeamUserIDs;
-			//
-			// FTeamData NewTeamData;
-			// NewTeamData.UniqueTeamID = CreateTeamChat.groupId;
-			// NewTeamData.TeamName = CreateTeamChat.groupName;
-			// NewTeamData.TeamMateList = CreateTeamChat.userIdList;
-			//
-			// for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
-			// {
-			// 	if (AMumulPlayerState* MPS = Cast<AMumulPlayerState>(PS))
-			// 	{
-			// 		MPS->PS_PlayerTeamList.Add(NewTeamData);
-			// 		if (CreateTeamChat.userIdList.Contains(MPS->PS_UserIndex))
-			// 		{
-			// 			FTeamUser NewUser;
-			// 			NewUser.UserId = MPS->PS_UserIndex;
-			// 			NewUser.UserName = MPS->PS_RealName;
-			// 			TeamUserIDs.Add(NewUser);
-			// 		}
-			// 	}
-			// }
+			// JSON Parsing LOG
+			UE_LOG(LogTemp, Warning, TEXT("===== CreateTeamChat Response ====="));
+			UE_LOG(LogTemp, Warning, TEXT("groupId: %s"), *CreateTeamChat.groupId);
+			UE_LOG(LogTemp, Warning, TEXT("groupName: %s"), *CreateTeamChat.groupName);
 
-			if (owner->IsLocalController())
+			UE_LOG(LogTemp, Warning, TEXT("userIdList (%d명):"), CreateTeamChat.userIdList.Num());
+			for (int32 UserID : CreateTeamChat.userIdList)
 			{
-				Server_RequestTeamChatList();
+				UE_LOG(LogTemp, Warning, TEXT(" - userId: %d"), UserID);
 			}
+
+			Server_RequestTeamChatList(CreateTeamChat.userIdList);
 		}
 		else
 		{
@@ -153,12 +129,25 @@ void UPlayerChatComponent::Server_AddTeamChatList_Implementation(const FString& 
 	}
 }
 
-void UPlayerChatComponent::Server_RequestTeamChatList_Implementation()
+void UPlayerChatComponent::Server_RequestTeamChatList_Implementation(const TArray<int32>& UserIDList)
 {
-	Multicast_RequestTeamChatList();
+	for (int32 UserID : UserIDList)
+	{
+		for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
+		{
+			if (AMumulPlayerState* MPS = Cast<AMumulPlayerState>(PS))
+			{
+				if (MPS->PS_UserIndex == UserID)
+				{
+					ACuteAlienController* PC = Cast<ACuteAlienController>(MPS->GetOwningController());
+					PC->ChatComp->Client_RequestTeamChatList();
+				}
+			}
+		}
+	}
 }
 
-void UPlayerChatComponent::Multicast_RequestTeamChatList_Implementation()
+void UPlayerChatComponent::Client_RequestTeamChatList_Implementation()
 {
 	// Get TeamChatList
 	if (UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetWorld()->GetGameInstance()))
@@ -174,7 +163,8 @@ void UPlayerChatComponent::Multicast_RequestTeamChatList_Implementation()
 }
 
 void UPlayerChatComponent::Server_CreateGroupChatUI_Implementation(const TArray<int32>& UserIDs, const FString& TeamID,
-	const FString& TeamName, const TArray<FTeamUser>& TeamUserIDs)
+                                                                   const FString& TeamName,
+                                                                   const TArray<FTeamUser>& TeamUserIDs)
 {
 	if (owner->IMGManager)
 	{
@@ -195,10 +185,11 @@ void UPlayerChatComponent::Server_CreateGroupChatUI_Implementation(const TArray<
 }
 
 void UPlayerChatComponent::Client_CreateGroupChatUI_Implementation(const FString& TeamID, const FString& TeamName,
-	const TArray<FTeamUser>& TeamUserIDs, UTexture2D* IMG)
+                                                                   const TArray<FTeamUser>& TeamUserIDs,
+                                                                   UTexture2D* IMG)
 {
 	if (!owner || !GroupIconUIClass || !GroupChatUI) return;
-	
+
 	// Set Players in Group Icon
 	UGroupIconUI* GroupIconUI = CreateWidget<UGroupIconUI>(GetWorld(), GroupIconUIClass);
 	if (GroupIconUI)
@@ -207,7 +198,7 @@ void UPlayerChatComponent::Client_CreateGroupChatUI_Implementation(const FString
 		GroupIconUI->InitParentUI(GroupChatUI);
 		GroupIconUI->ChatBlockUI->SetTeamID(TeamID);
 		GroupIconUI->ChatBlockUI->SetTeamName(TeamName);
-        
+
 		for (const FTeamUser& User : TeamUserIDs)
 		{
 			GroupIconUI->ChatBlockUI->AddTeamUser(User.UserId, User.UserName);
@@ -217,7 +208,8 @@ void UPlayerChatComponent::Client_CreateGroupChatUI_Implementation(const FString
 }
 
 void UPlayerChatComponent::Server_RequestChat_Implementation(const FString& TeamID, const TArray<int32>& UserIDs,
-	const FString& CurrentTime, const int32& UserID, const FString& Name, const FString& Text)
+                                                             const FString& CurrentTime, const int32& UserID,
+                                                             const FString& Name, const FString& Text)
 {
 	// Add GroupChatUI for each Client
 	for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
@@ -233,8 +225,7 @@ void UPlayerChatComponent::Server_RequestChat_Implementation(const FString& Team
 }
 
 void UPlayerChatComponent::Client_SendChat_Implementation(const FString& TeamID, const FString& CurrentTime,
-	const int32& UserID, const FString& Name, const FString& Text)
+                                                          const int32& UserID, const FString& Name, const FString& Text)
 {
 	GroupChatUI->AddChat(TeamID, CurrentTime, UserID, Name, Text);
 }
-

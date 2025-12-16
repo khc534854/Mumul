@@ -41,9 +41,9 @@ public:
 
 
 	UFUNCTION(Server, Reliable)
-	void Server_RequestTeamChatList();
-	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_RequestTeamChatList();
+	void Server_RequestTeamChatList(const TArray<int32>& UserIDList);
+	UFUNCTION(Client, Reliable)
+	void Client_RequestTeamChatList();
 
 	UFUNCTION(Server, Reliable)
 	void Server_CreateGroupChatUI(const TArray<int32>& UserIDs, const FString& TeamID, const FString& TeamName,

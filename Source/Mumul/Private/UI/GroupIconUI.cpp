@@ -121,7 +121,7 @@ void UGroupIconUI::OnServerTeamChatMessageResponse(bool bSuccess, FString Messag
 				UE_LOG(LogTemp, Warning, TEXT("userName   : %s"), *Msg.userName);
 				UE_LOG(LogTemp, Warning, TEXT("message    : %s"), *Msg.message);
 				UE_LOG(LogTemp, Warning, TEXT("createdAt  : %s"), *Msg.createdAt);
-				UE_LOG(LogTemp, Warning, TEXT("createdAt  : %s"), *Msg.formattedCreatedAt);
+				UE_LOG(LogTemp, Warning, TEXT("formattedCreatedAt  : %s"), *Msg.formattedCreatedAt);
 			}
 
 			for (const FTeamChatMessageResponse& Msg : TeamChatMessage)

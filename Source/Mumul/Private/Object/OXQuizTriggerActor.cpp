@@ -63,6 +63,10 @@ void AOXQuizTriggerActor::BeginPlay()
 			}
 		}
 	}
+	
+	// Give difference to each
+	PhaseOffset = FMath::FRandRange(0.f, PI * 0.3f);
+	AmplitudeScale = FMath::FRandRange(0.97f, 1.03f);
 }
 
 void AOXQuizTriggerActor::Tick(float DeltaTime)
@@ -71,7 +75,7 @@ void AOXQuizTriggerActor::Tick(float DeltaTime)
 
 	// Hover
 	Time += DeltaTime;
-	float OffsetZ = FMath::Sin(Time * HoverSpeed) * HoverAmplitude;
+	float OffsetZ =	FMath::Sin(Time * HoverSpeed + PhaseOffset) * HoverAmplitude * AmplitudeScale;
 
 	FVector NewLocation = OriginalLocation;
 	NewLocation.Z += OffsetZ;
