@@ -60,9 +60,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Voice")
 	void UpdateVoiceChannelMuting();
 
-protected:
 	// [변수] 현재 진행 중인 회의 ID (서버에서 받아서 저장)
 	FString CurrentMeetingSessionID;
+protected:
 
 	// [함수] HTTP 응답 핸들러 (바인딩용)
 	UFUNCTION()

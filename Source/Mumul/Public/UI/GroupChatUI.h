@@ -76,7 +76,10 @@ protected:
 	TSubclassOf<class UChatBlockUI> ChatBlockUIClass;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="UI Class")
-	TSubclassOf<class UChatMessageBlockUI> BotChatMessageBlockUIClass;
+	TSubclassOf<class UBotChatMessageBlockUI> BotChatMessageBlockUIClass;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="UI Class")
+	TSubclassOf<class UBotChatMessageBlockUI> MeetingBotChatMessageBlockUIClass;
 
 	UFUNCTION()
 	void OnServerChatHistoryResponse(bool bSuccess, FString Message);
@@ -190,11 +193,10 @@ public:
 	UFUNCTION()
 	void OnClickQuestionBtn();
 
-private:
 	void UpdateQuestionButtonState();
 	// 현재 AI 도우미가 켜져 있는지 확인하는 플래그
 	bool bIsMeetingChatbotActive = false;
-
+private:
 	// 헬퍼: 현재 방 정보 가져오기
 	FString GetCurrentTeamID() const;
 	FString GetCurrentTeamName() const;

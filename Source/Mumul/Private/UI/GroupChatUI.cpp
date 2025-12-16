@@ -28,6 +28,8 @@
 #include "Library/MathLibrary.h"
 #include "Data/IMGManager.h"
 #include "Player/Component/PlayerChatComponent.h"
+#include "Player/Component/PlayerMeetingManagerComponent.h"
+#include "UI/BotChatMessageBlockUI.h"
 
 void UGroupChatUI::NativeConstruct()
 {
@@ -448,8 +450,7 @@ void UGroupChatUI::OnServerChatHistoryResponse(bool bSuccess, FString Message)
 					// 여기서는 직접 구현 예시 (AddBotChat 로직 활용)
 					if (BotChatMessageBlockUIClass && CurrentSelectedGroup->ChatBlockUI)
 					{
-						UChatMessageBlockUI* BotChat = CreateWidget<UChatMessageBlockUI>(
-							GetWorld(), BotChatMessageBlockUIClass);
+						UBotChatMessageBlockUI* BotChat = CreateWidget<UBotChatMessageBlockUI>(GetWorld(), BotChatMessageBlockUIClass);
 						if (BotChat)
 						{
 							CurrentSelectedGroup->ChatBlockUI->ChatScrollBox->AddChild(BotChat);
@@ -490,26 +491,47 @@ void UGroupChatUI::AddBotChat(const FString& Message)
 	UChatBlockUI* ChatChunk = Cast<UChatBlockUI>(ChatSizeBox->GetChildAt(0));
 	if (!ChatChunk) return;
 
-	// 2. 챗봇용 말풍선 생성
-	if (BotChatMessageBlockUIClass)
+	// 현재 선택된 그룹이 없으면 중단 (방어 코드)
+	if (!CurrentSelectedGroup) return;
+
+	// [핵심 로직] 현재 보고 있는 방의 종류에 따라 클래스와 이름 결정
+	TSubclassOf<UChatMessageBlockUI> TargetWidgetClass = nullptr;
+	FString BotName = TEXT("");
+
+	// 1. 학습 챗봇 방인 경우 ("무물이")
+	if (CurrentSelectedGroup->bIsChatbotRoom)
 	{
-		UChatMessageBlockUI* BotChat = CreateWidget<UChatMessageBlockUI>(GetWorld(), BotChatMessageBlockUIClass);
+		TargetWidgetClass = BotChatMessageBlockUIClass;
+		BotName = TEXT("무물이");
+	}
+	// 2. 일반 그룹 채팅방인 경우 ("나눔이")
+	else
+	{
+		TargetWidgetClass = MeetingBotChatMessageBlockUIClass;
+		BotName = TEXT("나눔이");
+	}
+
+	// 위젯 생성 및 추가
+	if (TargetWidgetClass)
+	{
+		UChatMessageBlockUI* BotChat = CreateWidget<UChatMessageBlockUI>(GetWorld(), TargetWidgetClass);
 		if (BotChat)
 		{
 			ChatChunk->ChatScrollBox->AddChild(BotChat);
 
 			FString TimeStamp = FDateTime::Now().ToString(TEXT("%H:%M"));
-			if (WebSocketSystem->CurrentChatbotType == EWebSocketChatbotType::Learning)
-				BotChat->SetContent(TimeStamp, TEXT("무물이"), Message);
-			else if (WebSocketSystem->CurrentChatbotType == EWebSocketChatbotType::Meeting)
-				BotChat->SetContent(TimeStamp, TEXT("나눔이"), Message);
-
+          
+			// 내용 설정
+			BotChat->SetContent(TimeStamp, BotName, Message);
 
 			// 스크롤 내리기
 			FTimerHandle Handle;
 			GetWorld()->GetTimerManager().SetTimer(Handle, [ChatChunk]()
 			{
-				ChatChunk->ChatScrollBox->ScrollToEnd();
+			   if (IsValid(ChatChunk) && IsValid(ChatChunk->ChatScrollBox))
+			   {
+				  ChatChunk->ChatScrollBox->ScrollToEnd();
+			   }
 			}, 0.01f, false);
 		}
 	}
@@ -860,6 +882,16 @@ void UGroupChatUI::OnAICheckStateChanged(bool bIsChecked)
 
 void UGroupChatUI::OnClickQuestionBtn()
 {
+	if (ACuteAlienController* PC = Cast<ACuteAlienController>(GetOwningPlayer()))
+	{
+		// MeetingComp가 있고, 세션 ID가 비어있지 않다면 회의 중임
+		if (PC->MeetingComp && !PC->MeetingComp->CurrentMeetingSessionID.IsEmpty())
+		{
+			AddBotChat(TEXT("회의 중에는 나눔이를 사용할 수 없습니다."));
+			return; // 함수 종료 (연결 시도 차단)
+		}
+	}
+	
 	// 토글 로직: 현재 상태 반전
 	bool bNewState = !bIsMeetingChatbotActive;
 
@@ -867,7 +899,6 @@ void UGroupChatUI::OnClickQuestionBtn()
 
 	// 기존 로직 재활용 (OnAICheckStateChanged 내용을 그대로 쓰거나 호출)
 	OnAICheckStateChanged(bNewState);
-
 	// 버튼 스타일 업데이트 (OnAICheckStateChanged 내부에서 호출해도 됨)
 	UpdateQuestionButtonState();
 }

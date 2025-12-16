@@ -484,10 +484,32 @@ void UPlayerMeetingManagerComponent::OnStartMeetingResponse(bool bSuccess, FStri
 				VoiceComp->SetCurrentMeetingID(CurrentMeetingSessionID);
 				VoiceComp->StartRecording();
 
+				if (owner && owner->ChatComp && owner->ChatComp->GroupChatUI)
+				{
+					owner->ChatComp->GroupChatUI->OnRecordBtnState(true);
+				}
+
 				UE_LOG(LogTemp, Warning, TEXT(">>> [HOST] Start Recording Immediately (Skip Join)"));
 			}
 		}
+		
+		if (owner && owner->ChatComp && owner->ChatComp->GroupChatUI)
+		{
+			UGroupChatUI* ChatUI = owner->ChatComp->GroupChatUI;
 
+			// 1. "회의 시작" 알림 메시지 (나눔이가 말함)
+			ChatUI->AddBotChat(TEXT("회의가 시작되었습니다. 회의 내용은 자동으로 기록됩니다."));
+
+			// 2. 만약 AI 도우미가 켜져 있었다면 강제로 끔 (회의 중 충돌 방지)
+			if (ChatUI->bIsMeetingChatbotActive)
+			{
+				ChatUI->OnAICheckStateChanged(false); // 웹소켓 종료 및 상태 false
+				ChatUI->UpdateQuestionButtonState();  // 버튼 색상 원래대로
+			}
+            
+			// 3. 녹음 버튼 UI 켜기 (이전 질문에서 추가한 부분)
+			ChatUI->OnRecordBtnState(true);
+		}
 		// 3. 다른 팀원들에게만 Join 명령 내리기 위해 RPC 호출
 		AMumulPlayerState* PS = owner->GetPlayerState<AMumulPlayerState>();
 		if (PS)
@@ -521,6 +543,21 @@ void UPlayerMeetingManagerComponent::OnJoinMeetingResponse(bool bSuccess)
 				{
 					owner->ChatComp->GroupChatUI->OnRecordBtnState(true);
 				}
+			}
+		}
+
+		if (owner && owner->ChatComp && owner->ChatComp->GroupChatUI)
+		{
+			UGroupChatUI* ChatUI = owner->ChatComp->GroupChatUI;
+
+			// 1. 알림 메시지
+			ChatUI->AddBotChat(TEXT("회의에 참여했습니다. 회의 내용은 자동으로 기록됩니다."));
+
+			// 2. AI 도우미 강제 종료
+			if (ChatUI->bIsMeetingChatbotActive)
+			{
+				ChatUI->OnAICheckStateChanged(false);
+				ChatUI->UpdateQuestionButtonState();
 			}
 		}
 	}
