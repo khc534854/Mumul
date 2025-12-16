@@ -116,14 +116,33 @@ void UHttpNetworkSubsystem::SendLoginRequest(FString ID, FString PW)
 
 void UHttpNetworkSubsystem::SendLogoutRequest(int32 Idx)
 {
+	bLogoutProcessed = false;
+
+	// 2. 요청 데이터 준비
 	FLogoutRequest LogoutData;
 	LogoutData.userId = Idx;
 
+	// 3. [핵심] 타임아웃 타이머 시작 (예: 2.0초)
+	// 2초 안에 응답 안 오면 OnLogoutTimeout 실행
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().SetTimer(
+			LogoutTimerHandle, 
+			this, 
+			&UHttpNetworkSubsystem::OnLogoutTimeout, 
+			2.0f, // 2초 대기 (원하는 시간으로 조절 가능)
+			false
+		);
+	}
+
+	// 4. 요청 전송
 	SendJsonRequest(
-		LogoutData,
-		TEXT("user/logout"),
-		&UHttpNetworkSubsystem::OnLogoutComplete
+	   LogoutData,
+	   TEXT("user/logout"),
+	   &UHttpNetworkSubsystem::OnLogoutComplete
 	);
+    
+	UE_LOG(LogTemp, Log, TEXT("[HTTP] Sending Logout Request with 2.0s Timeout..."));
 }
 
 void UHttpNetworkSubsystem::StartMeetingRequest(FString MeetingTitle, FString TeamId, int32 OrganizerID, FString Agenda, FString Desc)
@@ -229,28 +248,44 @@ void UHttpNetworkSubsystem::OnLoginComplete(FHttpRequestPtr Request, FHttpRespon
 
 void UHttpNetworkSubsystem::OnLogoutComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-	if (!bWasSuccessful || !Response.IsValid())
+	// 1. [핵심] 타이머 제거 (응답이 왔으므로 타임아웃 불필요)
+	if (UWorld* World = GetWorld())
 	{
-		OnLogoutResponse.Broadcast(true, TEXT("Network Error (No Response)"));
-		UE_LOG(LogTemp, Warning, TEXT("[HTTP] Logout Request Failed (No Connection), force quit."));
+		World->GetTimerManager().ClearTimer(LogoutTimerHandle);
+	}
+
+	// 2. [핵심] 이미 타임아웃으로 처리되었다면 여기서 중단 (중복 실행 방지)
+	if (bLogoutProcessed) 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[HTTP] Logout Response arrived too late. Already handled by timeout."));
 		return;
 	}
-	
+    
+	// 처리됨 표시
+	bLogoutProcessed = true;
+
+	// 3. 기존 응답 처리 로직 (그대로 유지하되 안전장치 추가)
+	if (!bWasSuccessful || !Response.IsValid())
+	{
+		// 응답 실패여도 일단 로그아웃 진행
+		OnLogoutResponse.Broadcast(true, TEXT("Network Error (Logout Anyway)"));
+		return;
+	}
+
 	int32 Code = Response->GetResponseCode();
 	FString Content = Response->GetContentAsString();
 
-	if (Code == 200) // 성공
-	{
-		// 로그아웃 완료, 만약 처리해야 할 문제 있으면 델리게이트로 브로드캐스트
-		OnLogoutResponse.Broadcast(true, Content);
-		UE_LOG(LogTemp, Log, TEXT("[HTTP] Logout Complete, Quit Game"));
-	}
-	else // 실패해도 로그아웃은 해야함
+	if (Code == 200) 
 	{
 		OnLogoutResponse.Broadcast(true, Content);
-		UE_LOG(LogTemp, Log, TEXT("[HTTP] Logout Fail, Quit Game"));
+		UE_LOG(LogTemp, Log, TEXT("[HTTP] Logout Complete (Server Confirmed)"));
 	}
-
+	else 
+	{
+		// 서버가 에러를 뱉어도 클라는 꺼야 함
+		OnLogoutResponse.Broadcast(true, Content);
+		UE_LOG(LogTemp, Log, TEXT("[HTTP] Logout Fail (Server Error), But Quitting Game"));
+	}
 }
 
 void UHttpNetworkSubsystem::OnStartMeetingComplete(FHttpRequestPtr Request, FHttpResponsePtr Response,
@@ -399,6 +434,19 @@ void UHttpNetworkSubsystem::OnChatHistoryComplete(FHttpRequestPtr Request, FHttp
 		// 실패 시 에러 메시지 전달 (404 등)
 		OnChatHistoryResponse.Broadcast(false, Content);
 	}
+}
+
+void UHttpNetworkSubsystem::OnLogoutTimeout()
+{
+	// 이미 처리가 끝났다면 무시
+	if (bLogoutProcessed) return;
+
+	bLogoutProcessed = true; // 처리됨 표시
+
+	UE_LOG(LogTemp, Warning, TEXT("[HTTP] Logout Request Timed Out! Forcing Logout locally."));
+
+	// 서버 응답은 못 받았지만, UI/Controller에게 성공했다고 알려서 게임을 종료시킴
+	OnLogoutResponse.Broadcast(true, TEXT("Timeout (Force Logout)"));
 }
 
 void UHttpNetworkSubsystem::OnSendVoiceComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)

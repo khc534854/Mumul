@@ -154,6 +154,15 @@ public:
 private:
 	// [신규] 콜백 함수
 	void OnChatHistoryComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+
+	// [신규] 로그아웃 타임아웃 관리용 타이머 핸들
+	FTimerHandle LogoutTimerHandle;
+
+	// [신규] 로그아웃 처리가 이미 끝났는지 확인하는 플래그 (중복 실행 방지)
+	bool bLogoutProcessed = false;
+
+	// [신규] 타임아웃 발생 시 실행될 함수
+	void OnLogoutTimeout();
 };
 
 template <typename RequestType>
