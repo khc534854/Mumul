@@ -219,8 +219,28 @@ void UPlayerMeetingManagerComponent::Client_StopChannelRecording_Implementation(
 			}
 			owner->ChatComp->GroupChatUI->OnRecordBtnState(false);
 
+			if (owner)
+			{
+				// 1. 움직임 허용
+				owner->SetIgnoreMoveInput(false);
+
+				if (owner->ChatComp && owner->ChatComp->GroupChatUI)
+				{
+					// 2. 녹음 UI 끄기
+					owner->ChatComp->GroupChatUI->OnRecordBtnState(false);
+                
+					// 3. 종료 알림 메시지
+					owner->ChatComp->GroupChatUI->AddBotChat(TEXT("회의가 종료되었습니다."));
+				}
+			}
+			
 			// 녹음 종료 및 마지막 파일 전송 시작
 			VoiceComp->StopRecording();
+
+			if (!owner->HasAuthority())
+			{
+				CurrentMeetingSessionID = TEXT("");
+			}
 
 			UE_LOG(LogTemp, Warning, TEXT(">>> [RECORD STOP]"));
 		}
@@ -495,10 +515,12 @@ void UPlayerMeetingManagerComponent::OnStartMeetingResponse(bool bSuccess, FStri
 		
 		if (owner && owner->ChatComp && owner->ChatComp->GroupChatUI)
 		{
+			owner->SetIgnoreMoveInput(true);
+			
 			UGroupChatUI* ChatUI = owner->ChatComp->GroupChatUI;
 
 			// 1. "회의 시작" 알림 메시지 (나눔이가 말함)
-			ChatUI->AddBotChat(TEXT("회의가 시작되었습니다. 회의 내용은 자동으로 기록됩니다."));
+			ChatUI->AddBotChat(TEXT("회의가 시작되었습니다. 이동이 제한되며 내용은 자동으로 기록됩니다."));
 
 			// 2. 만약 AI 도우미가 켜져 있었다면 강제로 끔 (회의 중 충돌 방지)
 			if (ChatUI->bIsMeetingChatbotActive)
@@ -548,10 +570,12 @@ void UPlayerMeetingManagerComponent::OnJoinMeetingResponse(bool bSuccess)
 
 		if (owner && owner->ChatComp && owner->ChatComp->GroupChatUI)
 		{
+			owner->SetIgnoreMoveInput(true);
+			
 			UGroupChatUI* ChatUI = owner->ChatComp->GroupChatUI;
 
 			// 1. 알림 메시지
-			ChatUI->AddBotChat(TEXT("회의에 참여했습니다. 회의 내용은 자동으로 기록됩니다."));
+			ChatUI->AddBotChat(TEXT("회의에 참여했습니다. 이동이 제한되며 내용은 자동으로 기록됩니다."));
 
 			// 2. AI 도우미 강제 종료
 			if (ChatUI->bIsMeetingChatbotActive)

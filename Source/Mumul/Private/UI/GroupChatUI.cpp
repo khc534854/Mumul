@@ -142,6 +142,16 @@ void UGroupChatUI::SelectGroupChat(class UGroupIconUI* SelectedIcon)
 	if (!SelectedIcon) return;
 	if (CurrentSelectedGroup == SelectedIcon) return;
 
+	if (ACuteAlienController* PC = Cast<ACuteAlienController>(GetOwningPlayer()))
+	{
+		// MeetingComp가 있고, 세션 ID가 있다면 회의 중
+		if (PC->MeetingComp && !PC->MeetingComp->CurrentMeetingSessionID.IsEmpty())
+		{
+			AddBotChat(TEXT("회의 중에는 다른 채팅방으로 이동할 수 없습니다."));
+			return;
+		}
+	}
+	
 	UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
 	int32 UserID = GI ? GI->PlayerUniqueID : 0;
 
@@ -418,11 +428,30 @@ void UGroupChatUI::InitChatbotRoom()
 void UGroupChatUI::OnServerChatHistoryResponse(bool bSuccess, FString Message)
 {
 	// 현재 챗봇 방을 보고 있지 않다면 무시
-	if (!CurrentSelectedGroup || !CurrentSelectedGroup->bIsChatbotRoom) return;
+	//if (!CurrentSelectedGroup || !CurrentSelectedGroup->bIsChatbotRoom) return;
+	if (!CurrentSelectedGroup) return;
 
 	if (bSuccess)
 	{
 		FChatHistoryResponse HistoryData;
+
+		// [핵심 로직] 현재 보고 있는 방의 종류에 따라 클래스와 이름 결정
+		TSubclassOf<UBotChatMessageBlockUI> TargetWidgetClass = nullptr;
+		FString BotName = TEXT("");
+
+		// 1. 학습 챗봇 방인 경우 ("무물이")
+		if (CurrentSelectedGroup->bIsChatbotRoom)
+		{
+			TargetWidgetClass = BotChatMessageBlockUIClass;
+			BotName = TEXT("무물이");
+		}
+		// 2. 일반 그룹 채팅방인 경우 ("나눔이")
+		else
+		{
+			TargetWidgetClass = MeetingBotChatMessageBlockUIClass;
+			BotName = TEXT("나눔이");
+		}
+		
 		if (FJsonObjectConverter::JsonObjectStringToUStruct(Message, &HistoryData, 0, 0))
 		{
 			UE_LOG(LogTemp, Log, TEXT("[ChatHistory] Loaded %d messages"), HistoryData.messages.Num());
@@ -444,17 +473,14 @@ void UGroupChatUI::OnServerChatHistoryResponse(bool bSuccess, FString Message)
 				}
 				else if (Msg.role == TEXT("assistant"))
 				{
-					// 챗봇 답변 -> 봇 말풍선 (AddBotChat 사용은 주의: AddBotChat은 현재 시간 쓰므로 수정 필요)
-					// 기존 AddBotChat은 현재 시간을 찍으므로, 시간을 인자로 받는 버전으로 오버로딩하거나 직접 구현
 
-					// 여기서는 직접 구현 예시 (AddBotChat 로직 활용)
-					if (BotChatMessageBlockUIClass && CurrentSelectedGroup->ChatBlockUI)
+					if (TargetWidgetClass)
 					{
-						UBotChatMessageBlockUI* BotChat = CreateWidget<UBotChatMessageBlockUI>(GetWorld(), BotChatMessageBlockUIClass);
+						UBotChatMessageBlockUI* BotChat = CreateWidget<UBotChatMessageBlockUI>(GetWorld(), TargetWidgetClass);
 						if (BotChat)
 						{
 							CurrentSelectedGroup->ChatBlockUI->ChatScrollBox->AddChild(BotChat);
-							BotChat->SetContent(ParsedTime, TEXT("무물이"), Msg.content);
+							BotChat->SetContent(ParsedTime, BotName, Msg.content);
 						}
 					}
 				}
@@ -495,7 +521,7 @@ void UGroupChatUI::AddBotChat(const FString& Message)
 	if (!CurrentSelectedGroup) return;
 
 	// [핵심 로직] 현재 보고 있는 방의 종류에 따라 클래스와 이름 결정
-	TSubclassOf<UChatMessageBlockUI> TargetWidgetClass = nullptr;
+	TSubclassOf<UBotChatMessageBlockUI> TargetWidgetClass = nullptr;
 	FString BotName = TEXT("");
 
 	// 1. 학습 챗봇 방인 경우 ("무물이")
@@ -514,7 +540,7 @@ void UGroupChatUI::AddBotChat(const FString& Message)
 	// 위젯 생성 및 추가
 	if (TargetWidgetClass)
 	{
-		UChatMessageBlockUI* BotChat = CreateWidget<UChatMessageBlockUI>(GetWorld(), TargetWidgetClass);
+		UBotChatMessageBlockUI* BotChat = CreateWidget<UBotChatMessageBlockUI>(GetWorld(), TargetWidgetClass);
 		if (BotChat)
 		{
 			ChatChunk->ChatScrollBox->AddChild(BotChat);
@@ -884,11 +910,10 @@ void UGroupChatUI::OnClickQuestionBtn()
 {
 	if (ACuteAlienController* PC = Cast<ACuteAlienController>(GetOwningPlayer()))
 	{
-		// MeetingComp가 있고, 세션 ID가 비어있지 않다면 회의 중임
 		if (PC->MeetingComp && !PC->MeetingComp->CurrentMeetingSessionID.IsEmpty())
 		{
 			AddBotChat(TEXT("회의 중에는 나눔이를 사용할 수 없습니다."));
-			return; // 함수 종료 (연결 시도 차단)
+			return; // 함수 종료
 		}
 	}
 	
