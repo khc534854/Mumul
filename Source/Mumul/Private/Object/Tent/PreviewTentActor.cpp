@@ -37,7 +37,8 @@ void APreviewTentActor::OnOverlap(UPrimitiveComponent* OverlappedComponent, AAct
                                   const FHitResult& SweepResult)
 {
 	if (OtherActor && (OtherActor->ActorHasTag("MainArea") ||
-		OtherActor->ActorHasTag("PlayerTent")))
+		OtherActor->ActorHasTag("PlayerTent")) ||
+		(OtherActor->ActorHasTag("GameArea")))
 	{
 		// 1. 카운트 증가
 		OverlapCount++;
@@ -72,7 +73,9 @@ void APreviewTentActor::OnOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 void APreviewTentActor::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (OtherActor && (OtherActor->ActorHasTag("MainArea") || OtherActor->ActorHasTag("PlayerTent")))
+	if (OtherActor && (OtherActor->ActorHasTag("MainArea") ||
+	OtherActor->ActorHasTag("PlayerTent")) ||
+	(OtherActor->ActorHasTag("GameArea")))
 	{
 		// 1. 카운트 감소
 		OverlapCount--;
