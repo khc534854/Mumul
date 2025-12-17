@@ -369,9 +369,6 @@ void UGroupChatUI::OnServerTeamChatMessageResponse(bool bSuccess, FString Messag
 	// 현재 보고 있는 방이 없거나, 챗봇 방(무물이)을 보고 있다면 무시
     if (!CurrentSelectedGroup || CurrentSelectedGroup->bIsChatbotRoom) return;
 
-	
-	UE_LOG(LogTemp, Warning, TEXT("[TeamChat] Loaded original Messages : %s"), *Message);
-
     if (bSuccess)
     {
         // 1. JSON 파싱
@@ -390,22 +387,15 @@ void UGroupChatUI::OnServerTeamChatMessageResponse(bool bSuccess, FString Messag
             // 3. 메시지 순회하며 추가
             for (const FTeamChatMessageResponse& Msg : ChatHistory)
             {
-                if (ChatHistory.Num() > 0 && CurrentSelectedGroup->ChatBlockUI)
-                {
-      //               if (CurrentSelectedGroup->ChatBlockUI->GetTeamID() != Msg.chatId)
-      //               {
-      //                   // 다른 방의 데이터가 뒤늦게 도착한 경우 무시
-						// UE_LOG(LogTemp, Log, TEXT("[TeamChat] Not"),);
-      //               	
-      //                   return; 
-      //               }
-                }
-            	
             	if (Msg.role == "user")
             	{
+            		TArray<FString> Parts;
+            		Msg.formattedCreatedAt.ParseIntoArray(Parts, TEXT(" "));
+            		FString TimeOnly = Parts[Parts.Num() - 2] + TEXT(" ") + Parts.Last();
+            		
 					AddChat(
-					    GetCurrentTeamID(), 
-					    *Msg.formattedCreatedAt, 
+					    GetCurrentTeamID(),
+					    TimeOnly, 
 					    Msg.userId, 
 					    *Msg.userName, 
 					    *Msg.message
@@ -413,7 +403,11 @@ void UGroupChatUI::OnServerTeamChatMessageResponse(bool bSuccess, FString Messag
             	}
 	            else if (Msg.role == "assistant")
 	            {
-					UE_LOG(LogTemp, Warning, TEXT("[TeamChat] Assistant message received"));
+					//UE_LOG(LogTemp, Warning, TEXT("[TeamChat] Assistant message received"));
+
+	            	TArray<FString> Parts;
+	            	Msg.formattedCreatedAt.ParseIntoArray(Parts, TEXT(" "));
+	            	FString TimeOnly = Parts[Parts.Num() - 2] + TEXT(" ") + Parts.Last();
 	            	
 	            	TSubclassOf<UBotChatMessageBlockUI> TargetWidgetClass = MeetingBotChatMessageBlockUIClass;
 	            	FString BotName = TEXT("나눔이");
@@ -423,7 +417,7 @@ void UGroupChatUI::OnServerTeamChatMessageResponse(bool bSuccess, FString Messag
 	            		if (BotChat)
 	            		{
 	            			CurrentSelectedGroup->ChatBlockUI->ChatScrollBox->AddChild(BotChat);
-	            			BotChat->SetContent(Msg.formattedCreatedAt, BotName, Msg.message);
+	            			BotChat->SetContent(TimeOnly, BotName, Msg.message);
 	            		}
 	            	}
 	            }
@@ -431,10 +425,6 @@ void UGroupChatUI::OnServerTeamChatMessageResponse(bool bSuccess, FString Messag
             	{
             		UE_LOG(LogTemp, Warning, TEXT("[TeamChat] message not received"));
             	}
-
-                // UI에 추가 (AddChat 함수 재활용)
-                // AddChat 내부에서 TeamID 검사를 하므로 안전하게 추가됨
-
             }
             
             // 4. 스크롤 맨 아래로 내리기
@@ -647,6 +637,7 @@ void UGroupChatUI::AddBotChat(const FString& Message)
 				if (IsValid(ChatChunk) && IsValid(ChatChunk->ChatScrollBox))
 				{
 					ChatChunk->ChatScrollBox->ScrollToEnd();
+					//ChatChunk->ChatScrollBox->SetScrollOffset(ChatChunk->ChatScrollBox->);
 				}
 			}, 0.01f, false);
 		}
