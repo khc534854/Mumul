@@ -24,7 +24,15 @@ public:
 	UPROPERTY()
 	TObjectPtr<class UOXQuizUI> OXQuizUI;
 	
-public:
+	UFUNCTION(Client, Reliable)
+	void Client_DisplayReady();
+	UFUNCTION(Client, Reliable)
+	void Client_HideOXQuizUI();
+	int32 CountdownEndTime;
+	FTimerHandle ReadyCountdownTimer;
+	void UpdateCountdown();
+	UFUNCTION(Client, Reliable)
+	void Client_StartReadyCountdown(int32 Time);
 	UFUNCTION(Client, Reliable)
 	void Client_DisplayQuestion(const int32& QuestionIdx, const FString& NewQuestion, const int32& QuestionTime);
 	UFUNCTION(Client, Reliable)
@@ -34,7 +42,7 @@ public:
 	
 	UFUNCTION(Server, Reliable)
 	void Server_SpawnCloud(class ACuteAlienPlayer* OwnerPlayer);
-	
+
 	UPROPERTY()
 	TObjectPtr<class ACuteAlienController> owner;
 	UPROPERTY()

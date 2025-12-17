@@ -7,6 +7,7 @@
 #include "Components/SphereComponent.h"
 #include "Player/CuteAlienController.h"
 #include "Player/CuteAlienPlayer.h"
+#include "Player/MumulPlayerState.h"
 
 
 // Sets default values
@@ -32,6 +33,7 @@ void AOXQuizPlayerFinderActor::CheckParticipatingPlayers()
 	if (GM)
 	{
 		GM->ParticipatingPlayers.Empty();
+		GM->PlayerPreviousLocations.Empty();
 		TArray<AActor*> OverlappingActors;
 		PlayerFinderSphere->GetOverlappingActors(OverlappingActors, ACuteAlienPlayer::StaticClass());
 
@@ -41,6 +43,7 @@ void AOXQuizPlayerFinderActor::CheckParticipatingPlayers()
 			if (PC)
 			{
 				GM->ParticipatingPlayers.Add(PC);
+				GM->PlayerPreviousLocations.Add(PC, Actor->GetActorLocation());
 			}
 		}
 	}

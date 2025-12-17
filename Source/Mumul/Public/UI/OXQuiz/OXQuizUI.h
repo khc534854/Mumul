@@ -56,6 +56,8 @@ public:
 	TObjectPtr<class UWidgetSwitcher> OXQuizWS;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class USizeBox> QuizConfirmBox;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UTextBlock> ReadyText;
 
 	void SwitchQuizState(const bool& QuizOrResult);
 

@@ -86,7 +86,7 @@ void UGroupChatUI::NativeConstruct()
 	{
 		QuestionBtn->OnClicked.AddDynamic(this, &UGroupChatUI::OnClickQuestionBtn);
 	}
-	
+
 	if (BeginnerBtn && IntermediateBtn && AdvancedBtn)
 	{
 		BeginnerBtn->OnClicked.AddDynamic(this, &UGroupChatUI::OnBeginnerClicked);
@@ -96,7 +96,7 @@ void UGroupChatUI::NativeConstruct()
 
 	// [신규] 챗봇 방 생성 및 상단 배치
 	InitChatbotRoom();
-	
+
 	// 테스트용 팀채팅
 	UGroupIconUI* GroupIconUI = CreateWidget<UGroupIconUI>(GetWorld(), GroupIconUIClass);
 	AddGroupIcon(GroupIconUI);
@@ -170,7 +170,7 @@ void UGroupChatUI::SelectGroupChat(class UGroupIconUI* SelectedIcon)
 		if (InviteBtn && NaNumiSizeBox && MumuLeeSizeBox)
 		{
 			MumuLeeSizeBox->SetVisibility(ESlateVisibility::Visible);
-			
+
 			InviteBtn->SetVisibility(ESlateVisibility::Collapsed);
 			NaNumiSizeBox->SetVisibility(ESlateVisibility::Collapsed);
 		}
@@ -193,7 +193,7 @@ void UGroupChatUI::SelectGroupChat(class UGroupIconUI* SelectedIcon)
 		{
 			ChatbotIcon->SetIconIMG(MumuLeeOnIMG);
 			MumuLeeSizeBox->SetVisibility(ESlateVisibility::Visible);
-			
+
 			InviteBtn->SetVisibility(ESlateVisibility::Collapsed);
 			NaNumiSizeBox->SetVisibility(ESlateVisibility::Collapsed);
 		}
@@ -246,7 +246,7 @@ void UGroupChatUI::SelectGroupChat(class UGroupIconUI* SelectedIcon)
 		{
 			ChatbotIcon->SetIconIMG(MumuLeeOffIMG);
 			MumuLeeSizeBox->SetVisibility(ESlateVisibility::Collapsed);
-			
+
 			InviteBtn->SetVisibility(ESlateVisibility::Visible);
 			NaNumiSizeBox->SetVisibility(ESlateVisibility::Visible);
 
@@ -430,7 +430,7 @@ void UGroupChatUI::OnServerChatHistoryResponse(bool bSuccess, FString Message)
 			UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
 			FString MyName = GI ? GI->PlayerName : TEXT("Me");
 			int32 MyID = GI ? GI->PlayerUniqueID : 0;
-			
+
 			// 메시지 순회하며 UI 추가
 			for (const FChatHistoryMessage& Msg : HistoryData.messages)
 			{
@@ -450,7 +450,8 @@ void UGroupChatUI::OnServerChatHistoryResponse(bool bSuccess, FString Message)
 					// 여기서는 직접 구현 예시 (AddBotChat 로직 활용)
 					if (BotChatMessageBlockUIClass && CurrentSelectedGroup->ChatBlockUI)
 					{
-						UBotChatMessageBlockUI* BotChat = CreateWidget<UBotChatMessageBlockUI>(GetWorld(), BotChatMessageBlockUIClass);
+						UBotChatMessageBlockUI* BotChat = CreateWidget<UBotChatMessageBlockUI>(
+							GetWorld(), BotChatMessageBlockUIClass);
 						if (BotChat)
 						{
 							CurrentSelectedGroup->ChatBlockUI->ChatScrollBox->AddChild(BotChat);
@@ -519,8 +520,8 @@ void UGroupChatUI::AddBotChat(const FString& Message)
 		{
 			ChatChunk->ChatScrollBox->AddChild(BotChat);
 
-			FString TimeStamp = FDateTime::Now().ToString(TEXT("%H:%M"));
-          
+			FString TimeStamp = MakeChatTimeStamp();
+
 			// 내용 설정
 			BotChat->SetContent(TimeStamp, BotName, Message);
 
@@ -528,10 +529,10 @@ void UGroupChatUI::AddBotChat(const FString& Message)
 			FTimerHandle Handle;
 			GetWorld()->GetTimerManager().SetTimer(Handle, [ChatChunk]()
 			{
-			   if (IsValid(ChatChunk) && IsValid(ChatChunk->ChatScrollBox))
-			   {
-				  ChatChunk->ChatScrollBox->ScrollToEnd();
-			   }
+				if (IsValid(ChatChunk) && IsValid(ChatChunk->ChatScrollBox))
+				{
+					ChatChunk->ChatScrollBox->ScrollToEnd();
+				}
 			}, 0.01f, false);
 		}
 	}
@@ -547,6 +548,34 @@ void UGroupChatUI::RemoveChatBlock() const
 	ChatSizeBox->ClearChildren();
 }
 
+FReply UGroupChatUI::NativeOnPreviewKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
+{
+	// 입력창이 없거나, 입력창에 포커스가 아니면 건드리지 않음
+	if (!EditBox || !EditBox->HasKeyboardFocus())
+	{
+		return Super::NativeOnPreviewKeyDown(InGeometry, InKeyEvent);
+	}
+
+	const FKey Key = InKeyEvent.GetKey();
+	const bool bShiftDown = InKeyEvent.IsShiftDown();
+
+	// Enter 처리
+	if (Key == EKeys::Enter)
+	{
+		// Shift+Enter => 줄바꿈 허용 (기존 동작)
+		if (bShiftDown)
+		{
+			return Super::NativeOnPreviewKeyDown(InGeometry, InKeyEvent); // Unhandled 쪽으로 흐르게
+		}
+
+		// Enter => 줄바꿈 막고 전송
+		OnTextBoxCommitted();
+		return FReply::Handled();
+	}
+
+	return Super::NativeOnPreviewKeyDown(InGeometry, InKeyEvent);
+}
+
 void UGroupChatUI::OnTextBoxCommitted()
 {
 	FText Text = EditBox->GetText();
@@ -556,12 +585,12 @@ void UGroupChatUI::OnTextBoxCommitted()
 
 	// 기본 변수 선언
 	FString Content = Text.ToString();
-	FString TimeStamp = FDateTime::Now().ToString(TEXT("%H:%M"));
+	FString TimeStamp = MakeChatTimeStamp();
 
 	UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
 	FString MyName = GI ? GI->PlayerName : TEXT("Me");
 	int32 MyID = GI ? GI->PlayerUniqueID : 0;
-	
+
 	FString Grade;
 	switch (Difficulty)
 	{
@@ -615,7 +644,8 @@ void UGroupChatUI::OnTextBoxCommitted()
 			// 1. [DB 저장] HTTP 전송
 			if (HttpSystem)
 			{
-				HttpSystem->SendChatMessageRequest(TeamID, MyID, Content, TimeStamp);
+				FString Now = FDateTime::Now().ToString(TEXT("%H:%M"));
+				HttpSystem->SendChatMessageRequest(TeamID, MyID, Content, Now);
 			}
 
 			// 2. [채팅 공유] RPC 전송 (팀원들에게 내 질문이 보이게 함)
@@ -668,6 +698,20 @@ void UGroupChatUI::OnServerChatMessageResponse(bool bSuccess, FString Message)
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s"), *Message);
 	}
+}
+
+FString UGroupChatUI::MakeChatTimeStamp()
+{
+	const FDateTime Now = FDateTime::Now();
+	const int32 H = Now.GetHour();
+	const int32 Hour12 = (H % 12 == 0) ? 12 : H % 12;
+
+	return FString::Printf(
+		TEXT("%s %02d:%02d"),
+		H >= 12 ? TEXT("PM") : TEXT("AM"),
+		Hour12,
+		Now.GetMinute()
+	);
 }
 
 void UGroupChatUI::AddChat(const FString& TeamID, const FString& CurrentTime, const int32& UserID, const FString& Name,
@@ -771,7 +815,7 @@ void UGroupChatUI::SetGroupNameTitle(const FString& GroupName)
 void UGroupChatUI::ToggleCreateGroupChatUI()
 {
 	CreateGroupChatUI->RefreshJoinedPlayerList();
-	
+
 	ToggleVisibility(CreateGroupChatBox);
 	if (InvitationBox->GetVisibility() == ESlateVisibility::Visible)
 	{
@@ -787,7 +831,7 @@ void UGroupChatUI::AddGroupIcon(UGroupIconUI* UI) const
 void UGroupChatUI::ToggleInvitationUI()
 {
 	InvitationUI->RefreshJoinedPlayerList();
-	
+
 	ToggleVisibility(InvitationBox);
 	if (CreateGroupChatBox->GetVisibility() == ESlateVisibility::Visible)
 	{
@@ -891,7 +935,7 @@ void UGroupChatUI::OnClickQuestionBtn()
 			return; // 함수 종료 (연결 시도 차단)
 		}
 	}
-	
+
 	// 토글 로직: 현재 상태 반전
 	bool bNewState = !bIsMeetingChatbotActive;
 

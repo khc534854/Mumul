@@ -23,7 +23,6 @@ void UAskOXQuizUI::OnConfirmQuiz()
 	if (PC && QuizTriggerActor)
 	{
 		PC->Server_RequestStartQuiz(QuizTriggerActor);
-		OXQuizUI->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }
 

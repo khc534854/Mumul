@@ -11,6 +11,7 @@
 #include "Object/OXQuizPlayerFinderActor.h"
 #include "Player/CuteAlienController.h"
 #include "Player/CuteAlienPlayer.h"
+#include "Player/Component/PlayerOXQuizComponent.h"
 
 
 // Sets default values
@@ -47,10 +48,7 @@ void AOXQuizActor::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	FrontBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	BackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	LeftBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	RightBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	ToggleCollision(false);
 	
 	GM = Cast<AMumulMumulGameMode>(GetWorld()->GetAuthGameMode());
 	if (GM)
@@ -67,10 +65,7 @@ void AOXQuizActor::StartOXQuiz(const int32 UserID, const FString& Difficulty)
 	// Set Participating Player
 	OXQuizPlayerFinder->CheckParticipatingPlayers();
 	
-	FrontBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	BackBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	LeftBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	RightBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	ToggleCollision(true);
 	
 	if (GM)
 	{
@@ -79,6 +74,8 @@ void AOXQuizActor::StartOXQuiz(const int32 UserID, const FString& Difficulty)
 			float X = FMath::RandRange(-100.f, 100.f);
 			float Y = FMath::RandRange(-100.f, 100.f);
 			Elem.Key->GetCharacter()->SetActorLocation(this->GetActorLocation() + FVector(X, Y, 300.f));
+			
+			Elem.Key->OXQuizComp->Client_DisplayReady();
 		}
 	}
 
@@ -110,4 +107,20 @@ void AOXQuizActor::JudgePlayerAnswers()
 			Elem.Value.Add(bIsO);
 		}
 	}
+}
+
+void AOXQuizActor::ToggleCollision(bool bEnable)
+{
+	if (bEnable)
+	{
+		FrontBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		BackBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		LeftBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		RightBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		return;
+	}
+	FrontBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	LeftBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	RightBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
