@@ -68,6 +68,9 @@ protected:
 
 	UFUNCTION()
 	void OnMeetingChatEnded(FString Message, FString GroupId);
+
+	UFUNCTION()
+	void OnServerTeamChatMessageResponse(bool bSuccess, FString Message);
     
 	// [신규] 챗봇 방 초기화 함수
 	void InitChatbotRoom();

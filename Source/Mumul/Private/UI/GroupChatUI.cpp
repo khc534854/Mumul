@@ -59,6 +59,8 @@ void UGroupChatUI::NativeConstruct()
 		HttpSystem->OnTeamChatListResponse.AddDynamic(this, &UGroupChatUI::OnServerTeamChatListResponse);
 		HttpSystem->OnChatMessageResponse.AddDynamic(this, &UGroupChatUI::OnServerChatMessageResponse);
 		HttpSystem->OnChatHistoryResponse.AddDynamic(this, &UGroupChatUI::OnServerChatHistoryResponse);
+
+		HttpSystem->OnTeamChatMessageResponse.AddDynamic(this, &UGroupChatUI::OnServerTeamChatMessageResponse);
 	}
 
 	WebSocketSystem = GetGameInstance()->GetSubsystem<UWebSocketSubsystem>();
@@ -362,6 +364,168 @@ void UGroupChatUI::OnMeetingChatEnded(FString Message, FString GroupId)
 	}
 }
 
+void UGroupChatUI::OnServerTeamChatMessageResponse(bool bSuccess, FString Message)
+{
+	// 현재 보고 있는 방이 없거나, 챗봇 방(무물이)을 보고 있다면 무시
+    if (!CurrentSelectedGroup || CurrentSelectedGroup->bIsChatbotRoom) return;
+
+	
+	UE_LOG(LogTemp, Warning, TEXT("[TeamChat] Loaded original Messages : %s"), *Message);
+
+    if (bSuccess)
+    {
+        // 1. JSON 파싱
+        TArray<FTeamChatMessageResponse> ChatHistory;
+        
+        if (FJsonObjectConverter::JsonArrayStringToUStruct(Message, &ChatHistory, 0, 0))
+        {
+            UE_LOG(LogTemp, Log, TEXT("[TeamChat] Loaded %d messages"), ChatHistory.Num());
+
+            // 2. 현재 보여지고 있는 채팅창 초기화 (중복 방지)
+            if (CurrentSelectedGroup->ChatBlockUI)
+            {
+                CurrentSelectedGroup->ChatBlockUI->ChatScrollBox->ClearChildren();
+            }
+
+            // 3. 메시지 순회하며 추가
+            for (const FTeamChatMessageResponse& Msg : ChatHistory)
+            {
+                if (ChatHistory.Num() > 0 && CurrentSelectedGroup->ChatBlockUI)
+                {
+      //               if (CurrentSelectedGroup->ChatBlockUI->GetTeamID() != Msg.chatId)
+      //               {
+      //                   // 다른 방의 데이터가 뒤늦게 도착한 경우 무시
+						// UE_LOG(LogTemp, Log, TEXT("[TeamChat] Not"),);
+      //               	
+      //                   return; 
+      //               }
+                }
+            	
+            	if (Msg.role == "user")
+            	{
+					AddChat(
+					    GetCurrentTeamID(), 
+					    *Msg.formattedCreatedAt, 
+					    Msg.userId, 
+					    *Msg.userName, 
+					    *Msg.message
+					);
+            	}
+	            else if (Msg.role == "assistant")
+	            {
+					UE_LOG(LogTemp, Warning, TEXT("[TeamChat] Assistant message received"));
+	            	
+	            	TSubclassOf<UBotChatMessageBlockUI> TargetWidgetClass = MeetingBotChatMessageBlockUIClass;
+	            	FString BotName = TEXT("나눔이");
+	            	if (TargetWidgetClass)
+	            	{
+	            		UBotChatMessageBlockUI* BotChat = CreateWidget<UBotChatMessageBlockUI>(GetWorld(), TargetWidgetClass);
+	            		if (BotChat)
+	            		{
+	            			CurrentSelectedGroup->ChatBlockUI->ChatScrollBox->AddChild(BotChat);
+	            			BotChat->SetContent(Msg.formattedCreatedAt, BotName, Msg.message);
+	            		}
+	            	}
+	            }
+            	else
+            	{
+            		UE_LOG(LogTemp, Warning, TEXT("[TeamChat] message not received"));
+            	}
+
+                // UI에 추가 (AddChat 함수 재활용)
+                // AddChat 내부에서 TeamID 검사를 하므로 안전하게 추가됨
+
+            }
+            
+            // 4. 스크롤 맨 아래로 내리기
+            if (CurrentSelectedGroup->ChatBlockUI)
+            {
+                // 0.01초 뒤 실행 (위젯이 그려진 후 스크롤 이동)
+                FTimerHandle ScrollHandle;
+                GetWorld()->GetTimerManager().SetTimer(ScrollHandle, [this]()
+                {
+                    if (CurrentSelectedGroup && CurrentSelectedGroup->ChatBlockUI)
+                    {
+                        CurrentSelectedGroup->ChatBlockUI->ChatScrollBox->ScrollToEnd();
+                    }
+                }, 0.01f, false);
+            }
+        }
+        else
+        {
+             UE_LOG(LogTemp, Error, TEXT("[TeamChat] JSON Parsing Failed"));
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("[TeamChat] Failed to load history: %s"), *Message);
+    }
+}
+
+void UGroupChatUI::OnServerChatHistoryResponse(bool bSuccess, FString Message)
+{
+	// 현재 챗봇 방을 보고 있지 않다면 무시
+	if (!CurrentSelectedGroup || !CurrentSelectedGroup->bIsChatbotRoom) return;
+	//if (!CurrentSelectedGroup) return;
+
+	if (bSuccess)
+	{
+		FChatHistoryResponse HistoryData;
+
+		// [핵심 로직] 현재 보고 있는 방의 종류에 따라 클래스와 이름 결정
+		TSubclassOf<UBotChatMessageBlockUI> TargetWidgetClass = BotChatMessageBlockUIClass;
+		FString BotName = TEXT("무물이");
+
+		
+		if (FJsonObjectConverter::JsonObjectStringToUStruct(Message, &HistoryData, 0, 0))
+		{
+			UE_LOG(LogTemp, Log, TEXT("[ChatHistory] Loaded %d messages"), HistoryData.messages.Num());
+
+			UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
+			FString MyName = GI ? GI->PlayerName : TEXT("Me");
+			int32 MyID = GI ? GI->PlayerUniqueID : 0;
+
+			// 메시지 순회하며 UI 추가
+			for (const FChatHistoryMessage& Msg : HistoryData.messages)
+			{
+				FString ParsedTime = ParseTimeFromISO8601(Msg.created_at);
+
+				if (Msg.role == TEXT("user"))
+				{
+					// 내 질문 -> 일반 말풍선 (AddChat)
+					// (TeamID는 현재 챗봇방 ID 사용)
+					AddChat(CurrentSelectedGroup->ChatBlockUI->GetTeamID(), ParsedTime, MyID, MyName, Msg.content);
+				}
+				else if (Msg.role == TEXT("assistant"))
+				{
+
+					if (TargetWidgetClass)
+					{
+						UBotChatMessageBlockUI* BotChat = CreateWidget<UBotChatMessageBlockUI>(GetWorld(), TargetWidgetClass);
+						if (BotChat)
+						{
+							CurrentSelectedGroup->ChatBlockUI->ChatScrollBox->AddChild(BotChat);
+							BotChat->SetContent(ParsedTime, BotName, Msg.content);
+						}
+					}
+				}
+			}
+
+			// 스크롤 맨 아래로
+			if (CurrentSelectedGroup->ChatBlockUI)
+			{
+				CurrentSelectedGroup->ChatBlockUI->ChatScrollBox->ScrollToEnd();
+			}
+		}
+	}
+	else
+	{
+		// 실패 시 (404 등) -> 대화 내용이 없으면 환영 메시지 띄우기
+		// (기존 SelectGroupChat에 있던 환영 메시지 타이머 로직이 여기서 자연스럽게 대체될 수 있음)
+		UE_LOG(LogTemp, Warning, TEXT("[ChatHistory] Failed or Empty: %s"), *Message);
+	}
+}
+
 // void UGroupChatUI::OnAIChatStarted(FString Message)
 // {
 // 	if (CurrentSelectedGroup && CurrentSelectedGroup->bIsChatbotRoom)
@@ -425,81 +589,7 @@ void UGroupChatUI::InitChatbotRoom()
 	}
 }
 
-void UGroupChatUI::OnServerChatHistoryResponse(bool bSuccess, FString Message)
-{
-	// 현재 챗봇 방을 보고 있지 않다면 무시
-	//if (!CurrentSelectedGroup || !CurrentSelectedGroup->bIsChatbotRoom) return;
-	if (!CurrentSelectedGroup) return;
 
-	if (bSuccess)
-	{
-		FChatHistoryResponse HistoryData;
-
-		// [핵심 로직] 현재 보고 있는 방의 종류에 따라 클래스와 이름 결정
-		TSubclassOf<UBotChatMessageBlockUI> TargetWidgetClass = nullptr;
-		FString BotName = TEXT("");
-
-		// 1. 학습 챗봇 방인 경우 ("무물이")
-		if (CurrentSelectedGroup->bIsChatbotRoom)
-		{
-			TargetWidgetClass = BotChatMessageBlockUIClass;
-			BotName = TEXT("무물이");
-		}
-		// 2. 일반 그룹 채팅방인 경우 ("나눔이")
-		else
-		{
-			TargetWidgetClass = MeetingBotChatMessageBlockUIClass;
-			BotName = TEXT("나눔이");
-		}
-		
-		if (FJsonObjectConverter::JsonObjectStringToUStruct(Message, &HistoryData, 0, 0))
-		{
-			UE_LOG(LogTemp, Log, TEXT("[ChatHistory] Loaded %d messages"), HistoryData.messages.Num());
-
-			UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
-			FString MyName = GI ? GI->PlayerName : TEXT("Me");
-			int32 MyID = GI ? GI->PlayerUniqueID : 0;
-
-			// 메시지 순회하며 UI 추가
-			for (const FChatHistoryMessage& Msg : HistoryData.messages)
-			{
-				FString ParsedTime = ParseTimeFromISO8601(Msg.created_at);
-
-				if (Msg.role == TEXT("user"))
-				{
-					// 내 질문 -> 일반 말풍선 (AddChat)
-					// (TeamID는 현재 챗봇방 ID 사용)
-					AddChat(CurrentSelectedGroup->ChatBlockUI->GetTeamID(), ParsedTime, MyID, MyName, Msg.content);
-				}
-				else if (Msg.role == TEXT("assistant"))
-				{
-
-					if (TargetWidgetClass)
-					{
-						UBotChatMessageBlockUI* BotChat = CreateWidget<UBotChatMessageBlockUI>(GetWorld(), TargetWidgetClass);
-						if (BotChat)
-						{
-							CurrentSelectedGroup->ChatBlockUI->ChatScrollBox->AddChild(BotChat);
-							BotChat->SetContent(ParsedTime, BotName, Msg.content);
-						}
-					}
-				}
-			}
-
-			// 스크롤 맨 아래로
-			if (CurrentSelectedGroup->ChatBlockUI)
-			{
-				CurrentSelectedGroup->ChatBlockUI->ChatScrollBox->ScrollToEnd();
-			}
-		}
-	}
-	else
-	{
-		// 실패 시 (404 등) -> 대화 내용이 없으면 환영 메시지 띄우기
-		// (기존 SelectGroupChat에 있던 환영 메시지 타이머 로직이 여기서 자연스럽게 대체될 수 있음)
-		UE_LOG(LogTemp, Warning, TEXT("[ChatHistory] Failed or Empty: %s"), *Message);
-	}
-}
 
 FString UGroupChatUI::ParseTimeFromISO8601(const FString& IsoString)
 {

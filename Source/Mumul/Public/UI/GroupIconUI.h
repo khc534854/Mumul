@@ -21,8 +21,8 @@ protected:
 	TObjectPtr<class UIMGManager> IMGManager;
 	UPROPERTY()
 	TObjectPtr<class UHttpNetworkSubsystem> HttpSystem;
-	UFUNCTION()
-	void OnServerTeamChatMessageResponse(bool bSuccess, FString Message);
+	//UFUNCTION()
+	//void OnServerTeamChatMessageResponse(bool bSuccess, FString Message);
 	UFUNCTION()
 	void DisplayGroupChat();
 	UPROPERTY()

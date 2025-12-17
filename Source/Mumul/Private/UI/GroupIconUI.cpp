@@ -19,11 +19,11 @@ void UGroupIconUI::NativeConstruct()
 
 	IMGManager = NewObject<UIMGManager>(this, UIMGManager::StaticClass());
 	
-	HttpSystem = GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>();
-	if (HttpSystem)
-	{
-		HttpSystem->OnTeamChatMessageResponse.AddDynamic(this, &UGroupIconUI::OnServerTeamChatMessageResponse);
-	}
+	// HttpSystem = GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>();
+	// if (HttpSystem)
+	// {
+	// 	HttpSystem->OnTeamChatMessageResponse.AddDynamic(this, &UGroupIconUI::OnServerTeamChatMessageResponse);
+	// }
 
 	if (!ChatBlockUI)
 	{
@@ -100,51 +100,51 @@ void UGroupIconUI::SetIconIMG(UTexture2D* IMG)
 }
 
 
-void UGroupIconUI::OnServerTeamChatMessageResponse(bool bSuccess, FString Message)
-{
-	if (bSuccess)
-	{
-		// Init ChatBlockUI
-		ChatBlockUI->ChatScrollBox->ClearChildren();
-
-		// 1. JSON 파싱 (Message에는 JSON 원본이 들어있음)
-		TArray<FTeamChatMessageResponse> TeamChatMessage;
-
-		if (FJsonObjectConverter::JsonArrayStringToUStruct(Message, &TeamChatMessage, 0, 0))
-		{
-			// JSON Parsing LOG
-			for (const FTeamChatMessageResponse& Msg : TeamChatMessage)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("======== Chat Message ========"));
-				UE_LOG(LogTemp, Warning, TEXT("chatId     : %s"), *Msg.chatId);
-				UE_LOG(LogTemp, Warning, TEXT("userId     : %d"), Msg.userId);
-				UE_LOG(LogTemp, Warning, TEXT("userName   : %s"), *Msg.userName);
-				UE_LOG(LogTemp, Warning, TEXT("message    : %s"), *Msg.message);
-				UE_LOG(LogTemp, Warning, TEXT("createdAt  : %s"), *Msg.createdAt);
-				UE_LOG(LogTemp, Warning, TEXT("formattedCreatedAt  : %s"), *Msg.formattedCreatedAt);
-			}
-
-			for (const FTeamChatMessageResponse& Msg : TeamChatMessage)
-			{
-				// Add Chat Chunk to ScrollBox
-				UChatMessageBlockUI* Chat = CreateWidget<UChatMessageBlockUI>(GetWorld(), ChatMessageBlockUIClass);
-				ChatBlockUI->ChatScrollBox->AddChild(Chat);
-				TArray<FString> Parts;
-				Msg.formattedCreatedAt.ParseIntoArray(Parts, TEXT(" "));
-				FString TimeOnly = Parts[Parts.Num() - 2] + TEXT(" ") + Parts.Last();
-				Chat->SetContent(TimeOnly, *Msg.userName, *Msg.message);
-				Chat->SetProfileIMG(IMGManager->GetImageByUserID(Msg.userId));
-				Chat->SetChatID(Msg.chatId);
-				Chat->SetUserID(Msg.userId);
-			}
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("TeamChatMessage 파싱 실패"));
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("TeamChatMessage Response 실패 : %s"), *Message);
-	}
-}
+// void UGroupIconUI::OnServerTeamChatMessageResponse(bool bSuccess, FString Message)
+// {
+// 	if (bSuccess)
+// 	{
+// 		// Init ChatBlockUI
+// 		ChatBlockUI->ChatScrollBox->ClearChildren();
+//
+// 		// 1. JSON 파싱 (Message에는 JSON 원본이 들어있음)
+// 		TArray<FTeamChatMessageResponse> TeamChatMessage;
+//
+// 		if (FJsonObjectConverter::JsonArrayStringToUStruct(Message, &TeamChatMessage, 0, 0))
+// 		{
+// 			// JSON Parsing LOG
+// 			for (const FTeamChatMessageResponse& Msg : TeamChatMessage)
+// 			{
+// 				UE_LOG(LogTemp, Warning, TEXT("======== Chat Message ========"));
+// 				UE_LOG(LogTemp, Warning, TEXT("chatId     : %s"), *Msg.chatId);
+// 				UE_LOG(LogTemp, Warning, TEXT("userId     : %d"), Msg.userId);
+// 				UE_LOG(LogTemp, Warning, TEXT("userName   : %s"), *Msg.userName);
+// 				UE_LOG(LogTemp, Warning, TEXT("message    : %s"), *Msg.message);
+// 				UE_LOG(LogTemp, Warning, TEXT("createdAt  : %s"), *Msg.createdAt);
+// 				UE_LOG(LogTemp, Warning, TEXT("formattedCreatedAt  : %s"), *Msg.formattedCreatedAt);
+// 			}
+//
+// 			for (const FTeamChatMessageResponse& Msg : TeamChatMessage)
+// 			{
+// 				// Add Chat Chunk to ScrollBox
+// 				UChatMessageBlockUI* Chat = CreateWidget<UChatMessageBlockUI>(GetWorld(), ChatMessageBlockUIClass);
+// 				ChatBlockUI->ChatScrollBox->AddChild(Chat);
+// 				TArray<FString> Parts;
+// 				Msg.formattedCreatedAt.ParseIntoArray(Parts, TEXT(" "));
+// 				FString TimeOnly = Parts[Parts.Num() - 2] + TEXT(" ") + Parts.Last();
+// 				Chat->SetContent(TimeOnly, *Msg.userName, *Msg.message);
+// 				Chat->SetProfileIMG(IMGManager->GetImageByUserID(Msg.userId));
+// 				Chat->SetChatID(Msg.chatId);
+// 				Chat->SetUserID(Msg.userId);
+// 			}
+// 		}
+// 		else
+// 		{
+// 			UE_LOG(LogTemp, Error, TEXT("TeamChatMessage 파싱 실패"));
+// 		}
+// 	}
+// 	else
+// 	{
+// 		UE_LOG(LogTemp, Error, TEXT("TeamChatMessage Response 실패 : %s"), *Message);
+// 	}
+// }

@@ -528,6 +528,9 @@ struct FTeamChatMessageResponse
 	
 	UPROPERTY()
 	FString formattedCreatedAt;
+	
+	UPROPERTY()
+	FString role;
 };
 
 
