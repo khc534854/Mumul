@@ -425,7 +425,7 @@ void ACuteAlienPlayer::Multicast_PlayElectrocutedMontage_Implementation(FVector 
 				FVector(0.5f)
 			);
 	
-	// 1️⃣ 정방향 재생
+	// 정방향 재생
 	AnimInstance->Montage_Play(ElectrocutedMontage, 1.f);
 
 	// // 종료 콜백 바인딩

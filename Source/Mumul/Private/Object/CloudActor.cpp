@@ -114,8 +114,15 @@ void ACloudActor::UpdateState(float)
 		UpdateDisappear();
 		if (GetStateAlpha(DisappearDuration) >= 1.f)
 		{
+			// 연출 끝 -> 제거
 			SetActorHiddenInGame(true);
 			SetActorTickEnabled(false);
+			SetActorEnableCollision(false);
+
+			if (HasAuthority())
+			{
+				Destroy();
+			}
 		}
 		break;
 	}

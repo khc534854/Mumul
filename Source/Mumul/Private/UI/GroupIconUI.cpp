@@ -129,7 +129,10 @@ void UGroupIconUI::OnServerTeamChatMessageResponse(bool bSuccess, FString Messag
 				// Add Chat Chunk to ScrollBox
 				UChatMessageBlockUI* Chat = CreateWidget<UChatMessageBlockUI>(GetWorld(), ChatMessageBlockUIClass);
 				ChatBlockUI->ChatScrollBox->AddChild(Chat);
-				Chat->SetContent(*Msg.formattedCreatedAt, *Msg.userName, *Msg.message);
+				TArray<FString> Parts;
+				Msg.formattedCreatedAt.ParseIntoArray(Parts, TEXT(" "));
+				FString TimeOnly = Parts[Parts.Num() - 2] + TEXT(" ") + Parts.Last();
+				Chat->SetContent(TimeOnly, *Msg.userName, *Msg.message);
 				Chat->SetProfileIMG(IMGManager->GetImageByUserID(Msg.userId));
 				Chat->SetChatID(Msg.chatId);
 				Chat->SetUserID(Msg.userId);

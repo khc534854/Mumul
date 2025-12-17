@@ -95,6 +95,8 @@ public:
 	void RemoveChatBlock() const;
 	
 protected:
+	virtual FReply NativeOnPreviewKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
+	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UMultiLineEditableTextBox> EditBox;
 	UPROPERTY(meta=(BindWidget))
@@ -105,6 +107,7 @@ protected:
 	void OnServerChatMessageResponse(bool bSuccess, FString Message);
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
 	TSubclassOf<class UChatMessageBlockUI> ChatMessageBlockUIClass;
+	static FString MakeChatTimeStamp();
 public:
 	void AddChat(const FString& TeamID, const FString& CurrentTime, const int32& UserID, const FString& Name, const FString& Text) const;
 		

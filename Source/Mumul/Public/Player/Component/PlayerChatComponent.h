@@ -38,8 +38,7 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Server_AddTeamChatList(const FString& TeamID);
 
-
-
+	
 	UFUNCTION(Server, Reliable)
 	void Server_RequestTeamChatList(const TArray<int32>& UserIDList);
 	UFUNCTION(Client, Reliable)

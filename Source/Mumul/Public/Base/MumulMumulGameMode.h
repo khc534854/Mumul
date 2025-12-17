@@ -12,6 +12,7 @@ struct FHousingSaveData;
 UENUM()
 enum class EQuizPhase : uint8
 {
+	PreStart,   // ★ 신규: 시작 전 카운트다운/대기
 	Question,
 	Answer,
 };
@@ -43,6 +44,7 @@ public:
 	void SpawnTent(const FTransform& SpawnTransform, int32 UserIndex, bool bSaveToDisk, const TArray<FHousingSaveData>& LoadedItems = TArray<FHousingSaveData>());
 	
 	TMap<TObjectPtr<class ACuteAlienController>, TArray<bool>> ParticipatingPlayers;
+	TMap<TObjectPtr<class ACuteAlienController>, FVector> PlayerPreviousLocations;
 	void RegisterQuizActor(class AOXQuizActor* InActor);
 protected:
 	UPROPERTY()
@@ -53,19 +55,27 @@ protected:
 	void OnServerLearningQuizResponse(bool bSuccess, FString Message);
 	
 	EQuizPhase QuizPhase = EQuizPhase::Question;
-	
+
 	UPROPERTY(EditDefaultsOnly, Category="OXQuiz Time")
 	int32 QuestionTime = 10;
 	UPROPERTY(EditDefaultsOnly, Category="OXQuiz Time")
 	int32 AnswerTime = 5;
-	
+
+	// ★ 신규: 시작 전 대기 시간(초)
+	UPROPERTY(EditDefaultsOnly, Category="OXQuiz Time")
+	int32 PreStartTime = 5;
+
 	int32 CurrentQuizIdx;
 	int32 MaxQuizCount;
+
 	FTimerHandle QuizTimer;
+
 	void StartLearningQuiz();
+
+	// ★ 신규: 시작 전 페이즈
+	void StartPreStartPhase();
 	void StartQuestionPhase();
 	void EnterNextStep();
 	void StartAnswerPhase();
 	void ShowResult();
-
 };

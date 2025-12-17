@@ -3,13 +3,13 @@
 
 #include "Player/Component/PlayerOXQuizComponent.h"
 
-#include "Components/SizeBox.h"
+#include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
 #include "Data/ObjectAndClassFinder.h"
+#include "GameFramework/GameStateBase.h"
 #include "Object/CloudActor.h"
 #include "Player/CuteAlienController.h"
 #include "Player/CuteAlienPlayer.h"
-#include "UI/OXQuiz/AskOXQuizUI.h"
 #include "UI/OXQuiz/OXQuizUI.h"
 
 
@@ -30,7 +30,8 @@ void UPlayerOXQuizComponent::BeginPlay()
 
 	if (owner && owner->IsLocalController())
 	{
-		if (TSubclassOf<UOXQuizUI> OXQuizUIClass = UObjectAndClassFinder::Get()->GetWidgetClass<UOXQuizUI>("WBP_OXQuiz"))
+		if (TSubclassOf<UOXQuizUI> OXQuizUIClass = UObjectAndClassFinder::Get()->GetWidgetClass<
+			UOXQuizUI>("WBP_OXQuiz"))
 		{
 			OXQuizUI = CreateWidget<UOXQuizUI>(owner, OXQuizUIClass);
 			if (OXQuizUI)
@@ -40,6 +41,53 @@ void UPlayerOXQuizComponent::BeginPlay()
 			}
 		}
 	}
+}
+
+
+void UPlayerOXQuizComponent::Client_DisplayReady_Implementation()
+{
+	if (OXQuizUI)
+	{
+		OXQuizUI->OXQuizWS->SetActiveWidgetIndex(3);
+		OXQuizUI->SetVisibility(ESlateVisibility::Visible);
+	}
+}
+
+
+void UPlayerOXQuizComponent::Client_HideOXQuizUI_Implementation()
+{
+	OXQuizUI->SetVisibility(ESlateVisibility::Collapsed);
+}
+
+void UPlayerOXQuizComponent::UpdateCountdown()
+{
+	const float ServerNow = GetWorld()->GetGameState()->GetServerWorldTimeSeconds();
+	const int32 Remain = FMath::CeilToInt(CountdownEndTime - ServerNow);
+
+	if (Remain <= 0)
+	{
+		OXQuizUI->ReadyText->SetText(FText::FromString(TEXT("출발!")));
+		GetWorld()->GetTimerManager().ClearTimer(ReadyCountdownTimer);
+		return;
+	}
+
+	OXQuizUI->ReadyText->SetText(FText::AsNumber(Remain));
+}
+
+void UPlayerOXQuizComponent::Client_StartReadyCountdown_Implementation(int32 Time)
+{
+	const float ServerNow = GetWorld()->GetGameState()->GetServerWorldTimeSeconds();
+
+	CountdownEndTime = ServerNow + Time;
+
+	GetWorld()->GetTimerManager().ClearTimer(ReadyCountdownTimer);
+	GetWorld()->GetTimerManager().SetTimer(
+		ReadyCountdownTimer,
+		this,
+		&UPlayerOXQuizComponent::UpdateCountdown,
+		0.1f,
+		true
+	);
 }
 
 void UPlayerOXQuizComponent::Client_DisplayQuestion_Implementation(const int32& QuestionIdx, const FString& NewQuestion,
@@ -55,7 +103,7 @@ void UPlayerOXQuizComponent::Client_DisplayQuestion_Implementation(const int32& 
 }
 
 void UPlayerOXQuizComponent::Client_DisplayAnswer_Implementation(bool AnswerResult, bool NewAnswer,
-															   const FString& NewCommentary, const int32& AnswerTime)
+                                                                 const FString& NewCommentary, const int32& AnswerTime)
 {
 	bool CheckAnswer = true;
 	if (AnswerResult != NewAnswer)
@@ -69,8 +117,8 @@ void UPlayerOXQuizComponent::Client_DisplayAnswer_Implementation(bool AnswerResu
 }
 
 void UPlayerOXQuizComponent::Client_DisplayResult_Implementation(const int32& QuestionIdx, bool AnswerResult,
-															   const FString& QuestionText,
-															   bool AnswerText, const FString& CommentaryText)
+                                                                 const FString& QuestionText,
+                                                                 bool AnswerText, const FString& CommentaryText)
 {
 	bool CheckAnswer = false;
 	if (AnswerResult == AnswerText)

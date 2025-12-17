@@ -35,4 +35,5 @@ public:
 
 	void StartOXQuiz(const int32 UserID, const FString& Difficulty);
 	void JudgePlayerAnswers();
+	void ToggleCollision(bool bEnable);
 };

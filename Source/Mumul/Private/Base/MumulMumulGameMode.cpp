@@ -6,6 +6,7 @@
 #include "JsonObjectConverter.h"
 #include "Base/MumulGameState.h"
 #include "Components/BoxComponent.h"
+#include "GameFramework/Character.h"
 #include "Player/MumulPlayerState.h"
 #include "Save/MapDataSaveGame.h"
 #include "Kismet/GameplayStatics.h"
@@ -262,6 +263,16 @@ void AMumulMumulGameMode::OnServerLearningQuizResponse(bool bSuccess, FString Me
 	else
 	{
 		UE_LOG(LogTemp, Error, TEXT("LearningQuiz Response 실패 : %s"), *Message);
+		
+		// Send back Players
+		for (TPair<TObjectPtr<ACuteAlienController>, FVector>& Elem : PlayerPreviousLocations)
+		{
+			Elem.Key->GetCharacter()->SetActorLocation(Elem.Value);
+		
+			Elem.Key->OXQuizComp->Client_HideOXQuizUI();
+		}
+		
+		OXQuizActor->ToggleCollision(false);
 	}
 }
 
@@ -270,27 +281,36 @@ void AMumulMumulGameMode::StartLearningQuiz()
 	// Init Quiz
 	CurrentQuizIdx = 0;
 	MaxQuizCount = LearningQuiz.quiz.Num();
-	StartQuestionPhase();
+	
+	StartPreStartPhase();
 }
 
-void AMumulMumulGameMode::StartQuestionPhase()
+void AMumulMumulGameMode::StartPreStartPhase()
 {
-	QuizPhase = EQuizPhase::Question;
+	QuizPhase = EQuizPhase::PreStart;
 
-	UE_LOG(LogTemp, Warning, TEXT("문제 %d 표시"), CurrentQuizIdx);
-	// 문제 표시
 	for (TPair<TObjectPtr<ACuteAlienController>, TArray<bool>>& Elem : ParticipatingPlayers)
 	{
-		Elem.Key->OXQuizComp->Client_DisplayQuestion(CurrentQuizIdx, LearningQuiz.quiz[CurrentQuizIdx].question, QuestionTime);
+	    Elem.Key->OXQuizComp->Client_StartReadyCountdown(PreStartTime);
 	}
 
-
+	GetWorld()->GetTimerManager().ClearTimer(QuizTimer);
 	GetWorld()->GetTimerManager().SetTimer(
-		QuizTimer, this, &AMumulMumulGameMode::EnterNextStep, QuestionTime, false);
+		QuizTimer,
+		this,
+		&AMumulMumulGameMode::StartQuestionPhase,
+		FMath::Max(0, PreStartTime),
+		false
+	);
 }
 
 void AMumulMumulGameMode::EnterNextStep()
 {
+	if (QuizPhase == EQuizPhase::PreStart)
+	{
+		return;
+	}
+
 	if (QuizPhase == EQuizPhase::Question)
 	{
 		StartAnswerPhase();
@@ -308,6 +328,22 @@ void AMumulMumulGameMode::EnterNextStep()
 		CurrentQuizIdx++;
 		StartQuestionPhase();
 	}
+}
+
+void AMumulMumulGameMode::StartQuestionPhase()
+{
+	QuizPhase = EQuizPhase::Question;
+
+	UE_LOG(LogTemp, Warning, TEXT("문제 %d 표시"), CurrentQuizIdx);
+	// 문제 표시
+	for (TPair<TObjectPtr<ACuteAlienController>, TArray<bool>>& Elem : ParticipatingPlayers)
+	{
+		Elem.Key->OXQuizComp->Client_DisplayQuestion(CurrentQuizIdx, LearningQuiz.quiz[CurrentQuizIdx].question, QuestionTime);
+	}
+
+
+	GetWorld()->GetTimerManager().SetTimer(
+		QuizTimer, this, &AMumulMumulGameMode::EnterNextStep, QuestionTime, false);
 }
 
 void AMumulMumulGameMode::StartAnswerPhase()
@@ -361,9 +397,5 @@ void AMumulMumulGameMode::ShowResult()
 			Elem.Key->OXQuizComp->Client_DisplayResult(QuestionIdx, Elem.Value[QuestionIdx], LearningQuiz.quiz[QuestionIdx].question, Answer, LearningQuiz.quiz[QuestionIdx].explanation);
 		}
 	}
-	
-	OXQuizActor->FrontBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	OXQuizActor->BackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	OXQuizActor->LeftBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	OXQuizActor->RightBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	OXQuizActor->ToggleCollision(false);
 }
