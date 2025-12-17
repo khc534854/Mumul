@@ -23,6 +23,7 @@ public class Mumul : ModuleRules
 			"AudioCaptureCore",
 			"AudioMixer",
 			"DeveloperSettings",
+			"Niagara"
 		});
 	}
 }

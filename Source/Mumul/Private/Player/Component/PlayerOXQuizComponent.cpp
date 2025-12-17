@@ -6,6 +6,7 @@
 #include "Components/SizeBox.h"
 #include "Components/WidgetSwitcher.h"
 #include "Data/ObjectAndClassFinder.h"
+#include "Object/CloudActor.h"
 #include "Player/CuteAlienController.h"
 #include "Player/CuteAlienPlayer.h"
 #include "UI/OXQuiz/AskOXQuizUI.h"
@@ -42,7 +43,7 @@ void UPlayerOXQuizComponent::BeginPlay()
 }
 
 void UPlayerOXQuizComponent::Client_DisplayQuestion_Implementation(const int32& QuestionIdx, const FString& NewQuestion,
-																 const int32& QuestionTime)
+                                                                   const int32& QuestionTime)
 {
 	if (OXQuizUI)
 	{
@@ -56,10 +57,11 @@ void UPlayerOXQuizComponent::Client_DisplayQuestion_Implementation(const int32& 
 void UPlayerOXQuizComponent::Client_DisplayAnswer_Implementation(bool AnswerResult, bool NewAnswer,
 															   const FString& NewCommentary, const int32& AnswerTime)
 {
-	bool CheckAnswer = false;
-	if (AnswerResult == NewAnswer)
+	bool CheckAnswer = true;
+	if (AnswerResult != NewAnswer)
 	{
-		CheckAnswer = true;
+		CheckAnswer = false;
+		Server_SpawnCloud(player);
 	}
 
 	OXQuizUI->SetQuizAnswer(CheckAnswer, NewAnswer, NewCommentary);
@@ -79,4 +81,13 @@ void UPlayerOXQuizComponent::Client_DisplayResult_Implementation(const int32& Qu
 	OXQuizUI->SwitchQuizState(false);
 	OXQuizUI->SetVisibility(ESlateVisibility::Visible);
 	OXQuizUI->SetQuizResult(QuestionIdx, CheckAnswer, QuestionText, AnswerText, CommentaryText);
+}
+
+void UPlayerOXQuizComponent::Server_SpawnCloud_Implementation(class ACuteAlienPlayer* OwnerPlayer)
+{
+	TSubclassOf<ACloudActor> CloudClass = UObjectAndClassFinder::Get()->GetActorClass<ACloudActor>("BP_Cloud");
+	FVector SpawnLocation = OwnerPlayer->GetActorLocation() + FVector(0.f, 0.f, 200.f);
+	FRotator SpawnRotation = OwnerPlayer->GetActorRotation();
+	ACloudActor* Cloud = GetWorld()->SpawnActor<ACloudActor>(CloudClass, SpawnLocation, SpawnRotation);
+	Cloud->InitOwnerPlayer(OwnerPlayer);
 }

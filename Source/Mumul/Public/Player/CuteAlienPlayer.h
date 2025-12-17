@@ -83,4 +83,19 @@ public:
 	void Server_EquipCustom(FName ItemID);
 
 	void UpdateCustomMesh(FName ItemID);
+	
+	UPROPERTY(EditAnywhere, Category="Cloud|FX")
+	TObjectPtr<class UNiagaraSystem> LightningFX;
+	
+	UPROPERTY(EditAnywhere, Category="Montage")
+	TObjectPtr<class UAnimMontage> ElectrocutedMontage;
+
+	UFUNCTION(Server, Reliable)
+	void Server_PlayElectrocutedMontage(FVector FireLocation,
+	FRotator FireRotation);
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_PlayElectrocutedMontage(FVector FireLocation,
+	FRotator FireRotation);
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_OnCloudMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 };

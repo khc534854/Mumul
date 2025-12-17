@@ -4,6 +4,7 @@
 #include "Player/CuteAlienPlayer.h"
 
 #include "EnhancedInputComponent.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Base/MumulGameState.h"
 #include "Camera/CameraComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
@@ -317,7 +318,6 @@ void ACuteAlienPlayer::UpdateCustomMesh(FName ItemID)
 	CustomMeshComponent->SetStaticMesh(nullptr);
 }
 
-
 void ACuteAlienPlayer::Server_PlayAlienDance_Implementation(int32 SelectIdx)
 {
 	Multicast_PlayAlienDance(SelectIdx);
@@ -387,4 +387,74 @@ void ACuteAlienPlayer::Multicast_PlayAlienDance_Implementation(int32 SelectIdx)
 	default:
 		break;
 	}
+}
+
+
+void ACuteAlienPlayer::Server_PlayElectrocutedMontage_Implementation(FVector FireLocation,
+	FRotator FireRotation)
+{
+	Multicast_PlayElectrocutedMontage(FireLocation, FireRotation);
+}
+
+
+void ACuteAlienPlayer::Multicast_PlayElectrocutedMontage_Implementation(FVector FireLocation,
+	FRotator FireRotation)
+{
+	if (!ElectrocutedMontage)
+		return;
+
+	USkeletalMeshComponent* MeshComp = GetMesh();
+	if (!MeshComp)
+		return;
+
+	UAnimInstance* AnimInstance = MeshComp->GetAnimInstance();
+	if (!AnimInstance)
+		return;
+	
+	if (AnimInstance->Montage_IsPlaying(ElectrocutedMontage))
+		return;
+
+	if (!LightningFX)
+		return;
+		
+	UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+				GetWorld(),
+				LightningFX,
+				FireLocation,
+				FireRotation,
+				FVector(0.5f)
+			);
+	
+	// 1️⃣ 정방향 재생
+	AnimInstance->Montage_Play(ElectrocutedMontage, 1.f);
+
+	// // 종료 콜백 바인딩
+	// if (HasAuthority())
+	// {
+	// 	FOnMontageEnded EndDelegate;
+	// 	EndDelegate.BindUObject(this, &ACuteAlienPlayer::Multicast_OnCloudMontageEnded);
+	// 	AnimInstance->Montage_SetEndDelegate(EndDelegate, ElectrocutedMontage);
+	// 	AnimInstance->Montage_SetEndDelegate(EndDelegate, ElectrocutedMontage);
+	// }
+	
+}
+
+void ACuteAlienPlayer::Multicast_OnCloudMontageEnded_Implementation(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (bInterrupted || Montage != ElectrocutedMontage)
+		return;
+
+	USkeletalMeshComponent* MeshComp = GetMesh();
+	if (!MeshComp)
+		return;
+
+	UAnimInstance* AnimInstance = MeshComp->GetAnimInstance();
+	if (!AnimInstance)
+		return;
+
+	// 2️⃣ 역재생
+	const float MontageLength = Montage->GetPlayLength();
+
+	AnimInstance->Montage_Play(Montage, -1.f);
+	AnimInstance->Montage_SetPosition(Montage, MontageLength);
 }
