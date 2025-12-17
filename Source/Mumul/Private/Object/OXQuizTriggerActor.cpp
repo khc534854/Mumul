@@ -25,6 +25,9 @@ AOXQuizTriggerActor::AOXQuizTriggerActor()
 
 	SceneComp = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComp"));
 	SceneComp->SetupAttachment(TriggerSphere);
+	
+	GlassMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GlassMesh"));
+	GlassMesh->SetupAttachment(RootComponent);
 
 	// DifficultyBubble = CreateDefaultSubobject<UWidgetComponent>(TEXT("DifficultyBubble"));
 	// DifficultyBubble->SetupAttachment(SceneComp);
@@ -35,6 +38,26 @@ AOXQuizTriggerActor::AOXQuizTriggerActor()
 void AOXQuizTriggerActor::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	if (GlassMesh)
+	{
+		GlassMID = GlassMesh->CreateDynamicMaterialInstance(0);
+	}
+	switch (QuizDifficulty)
+	{
+	case EQuizDifficulty::Beginner:
+		GlassMID->SetScalarParameterValue(TEXT("Saturation"), 0.4f);
+		break;
+
+	case EQuizDifficulty::Intermediate:
+		GlassMID->SetScalarParameterValue(TEXT("Saturation"), 0.81f);
+		break;
+
+	case EQuizDifficulty::Advanced:
+		GlassMID->SetScalarParameterValue(TEXT("Saturation"), 0.94f);
+		break;
+	}
+	
 
 	OXQuizActor = Cast<AOXQuizActor>(UGameplayStatics::GetActorOfClass(GetWorld(), AOXQuizActor::StaticClass()));
 

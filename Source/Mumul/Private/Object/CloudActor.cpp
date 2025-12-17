@@ -19,7 +19,7 @@ void ACloudActor::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (auto* Mesh = GetComponentByClass<UStaticMeshComponent>())
+	if (UStaticMeshComponent* Mesh = GetComponentByClass<UStaticMeshComponent>())
 	{
 		CloudMID = Mesh->CreateDynamicMaterialInstance(0);
 	}

@@ -25,6 +25,11 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	
+	UPROPERTY(EditDefaultsOnly, Category="Mesh")
+	TObjectPtr<class UStaticMeshComponent> GlassMesh;
+	UPROPERTY()
+	TObjectPtr<class UMaterialInstanceDynamic> GlassMID;
+	
 	float UIRotDistance = 750.f;
 	float LookAtDistance = 555.f;
 	
