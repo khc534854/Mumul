@@ -85,7 +85,7 @@ void UPlayerOXQuizComponent::Client_StartReadyCountdown_Implementation(int32 Tim
 		ReadyCountdownTimer,
 		this,
 		&UPlayerOXQuizComponent::UpdateCountdown,
-		0.1f,
+		0.05f,
 		true
 	);
 }

@@ -19,7 +19,6 @@
 #include "Base/MumulGameState.h"
 #include "Components/WidgetSwitcher.h"
 #include "Save/MapDataSaveGame.h"
-#include "Network/NetworkStructs.h"
 #include "Kismet/GameplayStatics.h"
 #include "Data/IMGManager.h"
 #include "Object/FeedbackObjectActor.h"
@@ -31,6 +30,7 @@
 #include "Player/Component/PlayerOXQuizComponent.h"
 #include "UI/FeedbackUI.h"
 #include "UI/LogoutUI.h"
+#include "Data/AudioManager.h"
 
 ACuteAlienController::ACuteAlienController()
 {
@@ -116,6 +116,7 @@ void ACuteAlienController::BeginPlay()
 	if (!IsLocalController())
 		return;
 
+	AudioManager = GetGameInstance()->GetSubsystem<UAudioManager>();
 	IMGManager = NewObject<UIMGManager>(this, UIMGManager::StaticClass());
 
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem =

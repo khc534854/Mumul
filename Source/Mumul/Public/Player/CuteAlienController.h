@@ -113,9 +113,6 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UFeedbackUI> FeedbackUI;
 
-	// UPROPERTY()
-	// TSubclassOf<class UGroupChatUI> GroupChatUIClass;
-
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<class ULogoutUI> LogoutUIClass;
 
@@ -126,8 +123,7 @@ public:
 	
 	UPROPERTY()
 	TObjectPtr<UPlayerUI> PlayerUI;
-	// UPROPERTY()
-	// TObjectPtr<UGroupChatUI> GroupChatUI;
+
 	UPROPERTY()
 	TObjectPtr<class UIMGManager> IMGManager;
 
@@ -141,34 +137,6 @@ protected:
 	// 타이머에 의해 호출될 초기화 함수
 	void TryInitPlayerInfo();
 	
-// 	UPROPERTY()
-// 	TSubclassOf<class UGroupIconUI> GroupIconUIClass;
-// 	UFUNCTION()
-// 	void OnServerCreateTeamChatResponse(bool bSuccess, FString Message);
-//
-// public:
-// 	UFUNCTION(Server, Reliable)
-// 	void Server_AddTeamChatList(const FString& TeamID);
-//
-
-//
-// 	UFUNCTION(Server, Reliable)
-// 	void Server_RequestTeamChatList();
-// 	UFUNCTION(NetMulticast, Reliable)
-// 	void Multicast_RequestTeamChatList();
-//
-// 	UFUNCTION(Server, Reliable)
-// 	void Server_CreateGroupChatUI(const TArray<int32>& UserIDs, const FString& TeamID, const FString& TeamName,
-// 	                              const TArray<FTeamUser>& TeamUserIDs);
-// 	UFUNCTION(Client, Reliable)
-// 	void Client_CreateGroupChatUI(const FString& TeamID, const FString& TeamName,
-// 	                              const TArray<FTeamUser>& TeamUserIDs, UTexture2D* IMG);
-//
-// 	UFUNCTION(Server, Reliable)
-// 	void Server_RequestChat(const FString& TeamID, const TArray<int32>& UserIDs, const FString& CurrentTime,
-// 	                         const int32& UserID, const FString& Name, const FString& Text);
-// 	UFUNCTION(Client, Reliable)
-// 	void Client_SendChat(const FString& TeamID, const FString& CurrentTime, const int32& UserID, const FString& Name, const FString& Text);
-
-
+	UPROPERTY()
+	TObjectPtr<class UAudioManager> AudioManager;
 };
