@@ -137,6 +137,7 @@ protected:
 	// 타이머에 의해 호출될 초기화 함수
 	void TryInitPlayerInfo();
 	
+public:
 	UPROPERTY()
 	TObjectPtr<class UAudioManager> AudioManager;
 };

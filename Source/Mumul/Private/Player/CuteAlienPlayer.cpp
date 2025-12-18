@@ -23,6 +23,7 @@
 #include "UI/OXQuiz/AskOXQuizUI.h"
 #include "UI/OXQuiz/OXQuizUI.h"
 #include "NiagaraComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 static const FString ItemDataTablePath = TEXT("/Game/Khc/Blueprint/Object/CustomItemList.CustomItemList");
 // Sets default values
@@ -457,7 +458,12 @@ void ACuteAlienPlayer::Multicast_PlayElectrocutedMontage_Implementation(FVector 
 		true,
 		true
 	);
-
-	// 정방향 재생
+	
 	AnimInstance->Montage_Play(ElectrocutedMontage, 1.f);
+	
+	UGameplayStatics::PlaySoundAtLocation(
+	this,
+	ElectricShock,
+	GetActorLocation()
+);
 }

@@ -54,4 +54,12 @@ public:
 
 	// 아이템 스폰 및 배치 (클라이언트/서버)
 	void SpawnHousingItem(const FHousingSaveData& Data);
+	
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	TObjectPtr<class USoundBase> Zip;
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	TObjectPtr<class USoundBase> Boing;
+	UFUNCTION()
+	void OnSoundFinished();
 };

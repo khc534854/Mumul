@@ -10,23 +10,39 @@ UCLASS()
 class MUMUL_API ACampFireActor : public AActor
 {
 	GENERATED_BODY()
-	
+
 public:
 	ACampFireActor();
 
 protected:
 	virtual void BeginPlay() override;
-
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+
+	UPROPERTY()
+	TObjectPtr<class UMaterialInstanceDynamic> FireMID;
+
+	UPROPERTY(ReplicatedUsing=OnRep_OverlapCount)
+	int32 OverlapCount = 0;
+	UFUNCTION()
+	void OnRep_OverlapCount();
+	void UpdateTargetOpacity();
+	UPROPERTY()
+	TSet<TObjectPtr<class APawn>> OverlappingPawns;
+
+	float CurrentOpacity = 0.f;
+	float TargetOpacity = 0.f;
+	
+	FTimerHandle OpacityTimer;
+	void TickOpacityAnim();
 
 public:
 	// 모닥불 외형
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	class UStaticMeshComponent* MeshComp;
+	TObjectPtr<class UStaticMeshComponent> MeshComp;
 
 	// 보이스 채팅 범위 (콜리전)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	class USphereComponent* VoiceRangeSphere;
+	TObjectPtr<class USphereComponent> VoiceRangeSphere;
 
 	// // 이 모닥불의 고유 채널 ID (에디터에서 설정 가능)
 	// UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Voice")
@@ -34,9 +50,11 @@ public:
 
 	// 오버랩 시작 처리
 	UFUNCTION()
-	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+	                    int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	// 오버랩 종료 처리
 	UFUNCTION()
-	void OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	void OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+	                  int32 OtherBodyIndex);
 };

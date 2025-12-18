@@ -5,6 +5,7 @@
 
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
+#include "Data/AudioManager.h"
 #include "Player/CuteAlienController.h"
 
 
@@ -81,6 +82,8 @@ void AFeedbackObjectActor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, A
 			if (ACuteAlienController* PC = Cast<ACuteAlienController>(Pawn->GetController()))
 			{
 				PC->bCanInteract = true;
+				
+				PC->AudioManager->StartFeedbackMute();
 			}
 		}
 	}
@@ -98,6 +101,8 @@ void AFeedbackObjectActor::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AAc
 			if (ACuteAlienController* PC = Cast<ACuteAlienController>(Pawn->GetController()))
 			{
 				PC->bCanInteract = false;
+				
+				PC->AudioManager->EndFeedbackMute();
 			}
 		}
 	}

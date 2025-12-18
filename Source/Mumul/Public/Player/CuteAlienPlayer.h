@@ -97,4 +97,7 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_PlayElectrocutedMontage(FVector FireLocation,
 	FVector FireDirection);
+	
+	UPROPERTY(EditDefaultsOnly, Category="Sound")
+	TObjectPtr<USoundBase> ElectricShock;
 };

@@ -1,10 +1,10 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Player/Component/PlayerOXQuizComponent.h"
 
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
+#include "Data/AudioManager.h"
 #include "Data/ObjectAndClassFinder.h"
 #include "GameFramework/GameStateBase.h"
 #include "Object/CloudActor.h"
@@ -57,6 +57,7 @@ void UPlayerOXQuizComponent::Client_DisplayReady_Implementation()
 void UPlayerOXQuizComponent::Client_HideOXQuizUI_Implementation()
 {
 	OXQuizUI->SetVisibility(ESlateVisibility::Collapsed);
+	owner->AudioManager->EndQuizBGM();
 }
 
 void UPlayerOXQuizComponent::UpdateCountdown()
@@ -68,7 +69,26 @@ void UPlayerOXQuizComponent::UpdateCountdown()
 	{
 		OXQuizUI->ReadyText->SetText(FText::FromString(TEXT("출발!")));
 		GetWorld()->GetTimerManager().ClearTimer(ReadyCountdownTimer);
+		LastCountdownSecond = TNumericLimits<int32>::Min();
+		
+		// 로컬 컨트롤러에서만 재생
+		if (owner && owner->IsLocalController() && owner->AudioManager)
+		{
+			owner->AudioManager->PlayEndBeepSound();
+		}
 		return;
+	}
+
+	// 1초가 감소하는 "순간"에만 Beep 재생
+	if (Remain != LastCountdownSecond)
+	{
+		LastCountdownSecond = Remain;
+
+		// 로컬 컨트롤러에서만 재생
+		if (owner && owner->IsLocalController() && owner->AudioManager)
+		{
+			owner->AudioManager->PlayBeepSound();
+		}
 	}
 
 	OXQuizUI->ReadyText->SetText(FText::AsNumber(Remain));
@@ -79,6 +99,9 @@ void UPlayerOXQuizComponent::Client_StartReadyCountdown_Implementation(int32 Tim
 	const float ServerNow = GetWorld()->GetGameState()->GetServerWorldTimeSeconds();
 
 	CountdownEndTime = ServerNow + Time;
+
+	// 첫 비프음(처음 숫자 표시될 때)을 빼려면 시작값을 Time으로 세팅
+	LastCountdownSecond = Time;
 
 	GetWorld()->GetTimerManager().ClearTimer(ReadyCountdownTimer);
 	GetWorld()->GetTimerManager().SetTimer(
@@ -120,6 +143,12 @@ void UPlayerOXQuizComponent::Client_DisplayResult_Implementation(const int32& Qu
                                                                  const FString& QuestionText,
                                                                  bool AnswerText, const FString& CommentaryText)
 {
+	// 로컬 컨트롤러에서만 재생
+	if (owner && owner->IsLocalController() && owner->AudioManager)
+	{
+		owner->AudioManager->EndQuizBGM();
+	}
+	
 	bool CheckAnswer = false;
 	if (AnswerResult == AnswerText)
 	{

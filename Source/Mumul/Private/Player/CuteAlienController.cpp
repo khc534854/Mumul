@@ -117,6 +117,11 @@ void ACuteAlienController::BeginPlay()
 		return;
 
 	AudioManager = GetGameInstance()->GetSubsystem<UAudioManager>();
+	if (AudioManager)
+	{
+		AudioManager->PlayIslandBGM();
+	}
+	
 	IMGManager = NewObject<UIMGManager>(this, UIMGManager::StaticClass());
 
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem =

@@ -17,23 +17,43 @@ class MUMUL_API UAudioManager : public UGameInstanceSubsystem
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	
-	UPROPERTY(EditAnywhere, Category = "Sound|BGM")
+	UPROPERTY()
 	TObjectPtr<class USoundBase> IslandBGM;
-
-	UPROPERTY(EditAnywhere, Category = "Sound|BGM")
+	UPROPERTY()
 	TObjectPtr<class USoundBase> QuizBGM;
+	UPROPERTY()
+	TObjectPtr<class USoundBase> FeedbackBGM;
 
-	UPROPERTY(EditAnywhere, Category = "Sound|Mix")
+	UPROPERTY()
+	TObjectPtr<USoundBase> BeepSFX;
+	UPROPERTY()
+	TObjectPtr<USoundBase> EndBeepSFX;
+	UPROPERTY()
 	TObjectPtr<class USoundMix> QuizSoundMix;
+	
+	UPROPERTY()
+	TObjectPtr<USoundBase> CampfireSFX;
 	
 	UPROPERTY()
 	TObjectPtr<class UAudioComponent> IslandBGMComp;
 	UPROPERTY()
 	TObjectPtr<class UAudioComponent> QuizBGMComp;
+	UPROPERTY()
+	TObjectPtr<class UAudioComponent> CampFireComp;
+	UPROPERTY()
+	TObjectPtr<class UAudioComponent> FeedbackComp;
 
 public:
 	void PlayIslandBGM();
 	
 	void StartQuizBGM();
+	void PlayBeepSound();
+	void PlayEndBeepSound();
 	void EndQuizBGM();
+	
+	void StartCampFireSound();
+	void EndCampFireSound();
+	
+	void StartFeedbackMute();
+	void EndFeedbackMute();
 };
