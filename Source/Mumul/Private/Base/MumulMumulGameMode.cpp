@@ -5,7 +5,6 @@
 
 #include "JsonObjectConverter.h"
 #include "Base/MumulGameState.h"
-#include "Components/BoxComponent.h"
 #include "GameFramework/Character.h"
 #include "Player/MumulPlayerState.h"
 #include "Save/MapDataSaveGame.h"

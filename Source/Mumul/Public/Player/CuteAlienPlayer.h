@@ -96,6 +96,4 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_PlayElectrocutedMontage(FVector FireLocation,
 	FRotator FireRotation);
-	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_OnCloudMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 };

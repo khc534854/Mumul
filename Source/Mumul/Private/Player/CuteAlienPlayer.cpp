@@ -22,6 +22,7 @@
 #include "Player/Component/PlayerOXQuizComponent.h"
 #include "UI/OXQuiz/AskOXQuizUI.h"
 #include "UI/OXQuiz/OXQuizUI.h"
+#include "NiagaraComponent.h"
 
 static const FString ItemDataTablePath = TEXT("/Game/Khc/Blueprint/Object/CustomItemList.CustomItemList");
 // Sets default values
@@ -415,46 +416,32 @@ void ACuteAlienPlayer::Multicast_PlayElectrocutedMontage_Implementation(FVector 
 		return;
 
 	if (!LightningFX)
-		return;
-		
-	UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-				GetWorld(),
-				LightningFX,
-				FireLocation,
-				FireRotation,
-				FVector(0.5f)
-			);
+		return;;
+	
+	// ✔ 스폰 로테이션: 위를 향하되 Yaw만 캐릭터 기준
+	FRotator SpawnRotation = GetActorRotation();
+	SpawnRotation.Pitch = -90.f;
+	SpawnRotation.Roll  = 0.f;
+
+	// ✔ Niagara 스폰 (위치는 의미 없음, 기준점만 제공)
+	UNiagaraComponent* NiagaraComp =
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(),
+			LightningFX,
+			GetActorLocation(), // 시스템 루트 위치
+			SpawnRotation,
+			FVector(0.5f)
+		);
+
+	// ✔ 핵심: 실제 타격 지점 전달
+	if (NiagaraComp)
+	{
+		NiagaraComp->SetVectorParameter(
+			FName("SpawnLocation"),
+			FireLocation
+		);
+	}
 	
 	// 정방향 재생
 	AnimInstance->Montage_Play(ElectrocutedMontage, 1.f);
-
-	// // 종료 콜백 바인딩
-	// if (HasAuthority())
-	// {
-	// 	FOnMontageEnded EndDelegate;
-	// 	EndDelegate.BindUObject(this, &ACuteAlienPlayer::Multicast_OnCloudMontageEnded);
-	// 	AnimInstance->Montage_SetEndDelegate(EndDelegate, ElectrocutedMontage);
-	// 	AnimInstance->Montage_SetEndDelegate(EndDelegate, ElectrocutedMontage);
-	// }
-	
-}
-
-void ACuteAlienPlayer::Multicast_OnCloudMontageEnded_Implementation(UAnimMontage* Montage, bool bInterrupted)
-{
-	if (bInterrupted || Montage != ElectrocutedMontage)
-		return;
-
-	USkeletalMeshComponent* MeshComp = GetMesh();
-	if (!MeshComp)
-		return;
-
-	UAnimInstance* AnimInstance = MeshComp->GetAnimInstance();
-	if (!AnimInstance)
-		return;
-
-	// 2️⃣ 역재생
-	const float MontageLength = Montage->GetPlayLength();
-
-	AnimInstance->Montage_Play(Montage, -1.f);
-	AnimInstance->Montage_SetPosition(Montage, MontageLength);
 }
