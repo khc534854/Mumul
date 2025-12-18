@@ -85,15 +85,16 @@ public:
 	void UpdateCustomMesh(FName ItemID);
 	
 	UPROPERTY(EditAnywhere, Category="Cloud|FX")
-	TObjectPtr<class UNiagaraSystem> LightningFX;
-	
+	TObjectPtr<class UNiagaraSystem> LightningBoltVFX;
+	UPROPERTY(EditAnywhere, Category="Cloud|FX")
+	TObjectPtr<class UNiagaraSystem> LightningImpactVFX;
 	UPROPERTY(EditAnywhere, Category="Montage")
 	TObjectPtr<class UAnimMontage> ElectrocutedMontage;
 
 	UFUNCTION(Server, Reliable)
 	void Server_PlayElectrocutedMontage(FVector FireLocation,
-	FRotator FireRotation);
+	FVector FireDirection);
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_PlayElectrocutedMontage(FVector FireLocation,
-	FRotator FireRotation);
+	FVector FireDirection);
 };
