@@ -3,6 +3,7 @@
 
 #include "UI/GroupIconUI.h"
 
+#include "Components/Border.h"
 #include "Network/HttpNetworkSubsystem.h"
 #include "UI/ChatBlockUI.h"
 #include "Components/Button.h"
@@ -58,6 +59,7 @@ void UGroupIconUI::DisplayGroupChat()
 	//
 	// // Send TeamChatMessage Request
 	// HttpSystem->SendTeamChatMessageRequest(ChatBlockUI->GetTeamID());
+	SetHighlight(true);
 
 	if (ParentUI)
 	{
@@ -78,11 +80,22 @@ void UGroupIconUI::InitParentUI(UGroupChatUI* Parent)
 	ParentUI = Parent;
 }
 
+void UGroupIconUI::SetHighlight(bool bIsFocus)
+{
+	
+	FSlateBrush BorderBrush;
+	BorderBrush.DrawAs =  ESlateBrushDrawType::RoundedBox;
+	BorderBrush.OutlineSettings = FSlateBrushOutlineSettings(FVector4(25.0, 0.0, 0.0, 25.0));
+	BorderBrush.TintColor = bIsFocus ? FSlateColor(FLinearColor(0.013702,0.015209,0.029557,1.000000)) : FSlateColor(FLinearColor(1, 1, 1, 0.0f));
+	
+	BackgroundBorder->SetBrush(BorderBrush);
+}
+
 void UGroupIconUI::SetIconIMG(UTexture2D* IMG)
 {
 	FSlateBrush NormalBrush;
 	NormalBrush.SetResourceObject(IMG);
-	NormalBrush.ImageSize = FVector2D(120.f);
+	NormalBrush.ImageSize = FVector2D(100.f);
 	NormalBrush.TintColor = FSlateColor(FLinearColor(1.f, 1.f, 1.f, 1.f));
 
 	FSlateBrush HoveredBrush = NormalBrush;

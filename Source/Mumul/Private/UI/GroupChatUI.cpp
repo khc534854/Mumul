@@ -30,6 +30,7 @@
 #include "Player/Component/PlayerChatComponent.h"
 #include "Player/Component/PlayerMeetingManagerComponent.h"
 #include "UI/BotChatMessageBlockUI.h"
+#include "UI/PlayerUI.h"
 
 void UGroupChatUI::NativeConstruct()
 {
@@ -122,7 +123,7 @@ void UGroupChatUI::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 
 	AlignmentVal = FMath::Lerp(StartVal, TargetVal, Eased);
 
-	if (UCanvasPanelSlot* CanvasPanelSlot = Cast<UCanvasPanelSlot>(GroupChatBorder->Slot))
+	if (UCanvasPanelSlot* CanvasPanelSlot = Cast<UCanvasPanelSlot>(GroupChatBox->Slot))
 	{
 		CanvasPanelSlot->SetAlignment(FVector2D(AlignmentVal, 0.5f));
 	}
@@ -152,6 +153,11 @@ void UGroupChatUI::SelectGroupChat(class UGroupIconUI* SelectedIcon)
 			AddBotChat(TEXT("회의 중에는 다른 채팅방으로 이동할 수 없습니다."));
 			return;
 		}
+	}
+
+	if (CurrentSelectedGroup)
+	{
+		CurrentSelectedGroup->SetHighlight(false);
 	}
 	
 	UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
@@ -197,6 +203,11 @@ void UGroupChatUI::SelectGroupChat(class UGroupIconUI* SelectedIcon)
 	}
 
 	CurrentSelectedGroup = SelectedIcon;
+
+	if (CurrentSelectedGroup)
+	{
+		CurrentSelectedGroup->SetHighlight(true);
+	}
 
 	// 3. 새 방 진입 처리
 	if (SelectedIcon->bIsChatbotRoom)
@@ -950,22 +961,40 @@ void UGroupChatUI::ToggleGroupChatAlignment()
 	// Change Toggle State
 	bIsToggled = !bIsToggled;
 
+	if (bIsToggled && LinkedPlayerUI)
+	{
+		LinkedPlayerUI->CloseSidePanels();
+	}
+	
 	// 버튼 이미지 처리
 	FSlateBrush Brush;
-	Brush.ImageSize = FVector2D(56.f, 84.f);
+	Brush.ImageSize = FVector2D(30.f, 50.f);
 	Brush.SetResourceObject(bIsToggled ? RightIMG : LeftIMG);
 
-	FButtonStyle Style;
-	Style.Normal = Brush;
-	Style.Hovered = Brush;
-	Style.Pressed = Brush;
-	ToggleVisibilityBtn->SetStyle(Style);
+	// FButtonStyle Style;
+	// Style.Normal = Brush;
+	// Style.Hovered = Brush;
+	// Style.Pressed = Brush;
+	ArrowBtnImg->SetBrush(Brush);
 
 	// 애니메이션 시작
 	StartVal = AlignmentVal;
-	TargetVal = bIsToggled ? 1.f : 0.1968f;
+	TargetVal = bIsToggled ? 0.76 : 0.f;
 	Elapsed = 0.f;
 	bAnimating = true;
+}
+
+void UGroupChatUI::InitPlayerUI(UPlayerUI* InPlayerUI)
+{
+	LinkedPlayerUI = InPlayerUI;
+}
+
+void UGroupChatUI::CloseChatUI()
+{
+	if (bIsToggled)
+	{
+		ToggleGroupChatAlignment();
+	}
 }
 
 void UGroupChatUI::OnToggleVisibilityBtn()

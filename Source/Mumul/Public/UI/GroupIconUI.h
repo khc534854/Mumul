@@ -29,7 +29,11 @@ protected:
 	TObjectPtr<class UGroupChatUI> ParentUI;
 public:
 	void InitParentUI(class UGroupChatUI* Parent);
+
+	void SetHighlight(bool bIsFocus);
 protected:
+	UPROPERTY(meta=(BindWidget))               
+	TObjectPtr<class UBorder> BackgroundBorder;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> GroupIconBtn;
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")

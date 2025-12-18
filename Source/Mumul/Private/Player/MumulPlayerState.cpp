@@ -67,16 +67,16 @@ void AMumulPlayerState::OnRep_UserIndex()
 			HttpSystem->SendTeamChatListRequest(PS_UserIndex);
 		}
 		// Set PlayerProfile
-		if (PC->IsLocalController())
-		{
-			if (PC->PlayerUI)
-			{
-				if (IMGManager)
-				{
-					PC->PlayerUI->SetProfileBtnIMG(IMGManager->GetImageByUserID(PS_UserIndex));
-				}
-			}
-		}
+		// if (PC->IsLocalController())
+		// {
+		// 	if (PC->PlayerUI)
+		// 	{
+		// 		if (IMGManager)
+		// 		{
+		// 			PC->PlayerUI->SetProfileBtnIMG(IMGManager->GetImageByUserID(PS_UserIndex));
+		// 		}
+		// 	}
+		// }
 	}
 
 	// Refresh Player ProfileList

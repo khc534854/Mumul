@@ -65,7 +65,7 @@ protected:
 	UFUNCTION()
 	void OnDeleteButtonClicked();
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UBaseButton> HousingDeleteModeBtn;
+	TObjectPtr<class UButton> HousingDeleteModeBtn;
 	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> HousingBtn;
@@ -101,6 +101,9 @@ protected:
 	TObjectPtr<class UButton > ProfileBtn;
 public:
 	void SetProfileBtnIMG(UTexture2D* IMG);
+	void CloseSidePanels();
+	
+
 protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton > LogOutBtn;
@@ -173,4 +176,31 @@ public :
 
 	void CheckEquippedCustomItem();
 	void CheckPlacedHousingItems();
+
+	void CancelTent();
+	
+protected:
+	UPROPERTY()
+	TMap<UButton*, FButtonStyle> OriginalButtonStyles;
+
+	// [신규] 버튼의 활성화 상태에 따라 스타일을 교체하는 함수
+	void SetButtonActiveState(UButton* TargetBtn, bool bIsActive);
+
+	// [신규] 모든 메뉴 버튼의 시각적 상태를 초기화(OFF)하는 함수
+	void ResetAllMenuButtons();
+
+	
+
+protected:
+	// UI 조작이 가능한지 확인하는 플래그
+	bool bIsUIBusy = false;
+
+	// 디바운싱용 타이머 핸들
+	FTimerHandle DebounceTimerHandle;
+
+	// 잠금을 해제하는 함수
+	void UnlockUIInteraction() { bIsUIBusy = false; }
+    
+	// UI 잠금을 거는 헬퍼 함수 (시간 지정 가능)
+	bool TryLockUI(float Duration = 0.3f);
 };

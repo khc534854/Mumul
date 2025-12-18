@@ -19,6 +19,8 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+	virtual void OnRep_PlayerState() override;
 	
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<class UWidgetInteractionComponent> UIInteractionComp;
@@ -61,6 +63,11 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class UVoiceChatComponent* VoiceComponent;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	class UWidgetComponent* WidgetComponent;
+
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	void UpdateNameTag();
 
 	//Minimap
 public:

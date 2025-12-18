@@ -8,6 +8,7 @@
 #include "Base/MumulGameState.h"
 #include "Camera/CameraComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
+#include "Components/TextBlock.h"
 #include "Components/WidgetComponent.h"
 #include "Components/WidgetInteractionComponent.h"
 #include "Components/WidgetSwitcher.h"
@@ -95,6 +96,14 @@ ACuteAlienPlayer::ACuteAlienPlayer()
 	CustomMeshComponent->SetupAttachment(GetMesh()); // 캐릭터의 스켈레탈 메시에 부착
 	CustomMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	CustomMeshComponent->SetRelativeScale3D(FVector::OneVector);
+
+	WidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("NameTagComponent"));
+	WidgetComponent->SetupAttachment(GetRootComponent());
+
+	WidgetComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 130.0f)); // 캐릭터 키에 맞춰 Z값 조절 필요
+	WidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	WidgetComponent->SetCullDistance(1500.0f);
+	WidgetComponent->SetDrawAtDesiredSize(true);
 }
 
 // Called when the game starts or when spawned
@@ -121,6 +130,8 @@ void ACuteAlienPlayer::BeginPlay()
 			// 4. 캡처 시작
 			MinimapCapture->CaptureScene(); // 혹은 CaptureEveryFrame이 켜져있다면 자동 시작됨
 		}
+
+		WidgetComponent->SetVisibility(false);
 	}
 	else
 	{
@@ -137,10 +148,9 @@ void ACuteAlienPlayer::BeginPlay()
 		UpdateBodyMaterial(PS->PS_TendencyID);
 		// 이미 장착된 아이템이 있다면 적용 (Replication 타이밍 이슈 방지)
 		UpdateCustomMesh(PS->EquippedCustomID);
-		
-
 	}
-	
+
+	UpdateNameTag();
 }
 
 void ACuteAlienPlayer::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -160,6 +170,13 @@ void ACuteAlienPlayer::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	}
 
 	Super::EndPlay(EndPlayReason);
+}
+
+void ACuteAlienPlayer::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	UpdateNameTag();
 }
 
 // Called every frame
@@ -255,6 +272,28 @@ void ACuteAlienPlayer::Server_EquipCustom_Implementation(FName ItemID)
 		{
 			GS->Multicast_SavePlayerCosmetic(PS->PS_UserIndex, PS->EquippedCustomID);
 		}
+	}
+}
+
+void ACuteAlienPlayer::UpdateNameTag()
+{
+	AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>();
+	if (!PS) 
+	{
+		// 아직 PlayerState가 없으면 잠시 후 다시 시도 (0.5초 뒤)
+		FTimerHandle WaitHandle;
+		GetWorldTimerManager().SetTimer(WaitHandle, this, &ACuteAlienPlayer::UpdateNameTag, 0.5f, false);
+		return;
+	}
+
+	// 2. 위젯 인스턴스 가져오기
+	UUserWidget* WidgetObj = WidgetComponent->GetUserWidgetObject();
+	if (!WidgetObj) return;
+
+	if (UTextBlock* TextBlock = Cast<UTextBlock>(WidgetObj->GetWidgetFromName(TEXT("NameText"))))
+	{
+		FString DisplayName = PS->GetPlayerName();
+		TextBlock->SetText(FText::FromString(DisplayName));
 	}
 }
 

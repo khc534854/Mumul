@@ -346,13 +346,14 @@ void UPlayerMeetingManagerComponent::OnHostRecordingStopped()
 
 void UPlayerMeetingManagerComponent::OpenMeetingSetupUI()
 {
-	if (VoiceMeetingUIClass)
+	if (VoiceMeetingUIClass && owner)
 	{
 		if (!VoiceMeetingUI)
 		{
 			VoiceMeetingUI = CreateWidget<UVoiceMeetingUI>(owner, VoiceMeetingUIClass);
 			VoiceMeetingUI->AddToViewport();
 		}
+		owner->SetIgnoreMoveInput(true);
 
 		VoiceMeetingUI->InitMeetingUI(true); // 방장 모드
 		VoiceMeetingUI->SetVisibility(ESlateVisibility::Visible);

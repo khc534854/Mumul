@@ -17,16 +17,14 @@ void UCustomItemEntryUI::InitItem(FName ItemID, UTexture2D* Thumbnail, FString I
 	if (ThumbnailImage && Thumbnail)
 	{
 		ThumbnailImage->SetBrushFromTexture(Thumbnail);
+		ThumbnailImage->SetColorAndOpacity(FLinearColor::White);
 	}
     
 	if (ItemNameText)
 	{
 		// [신규] 원래 이름 저장
 		OriginalName = FText::FromString(ItemName);
-		ItemNameText->SetText(OriginalName);
-       
-		// 초기화 시 기본 색상(흰색) 설정
-		ItemNameText->SetColorAndOpacity(FLinearColor::White);
+		ItemNameText->SetVisibility(ESlateVisibility::Hidden);
 	}
 
 	// 초기 상태 업데이트
@@ -67,49 +65,73 @@ void UCustomItemEntryUI::SetItemCheckState(bool bNewState)
 
 void UCustomItemEntryUI::UpdateVisualState()
 {
-	if (!ItemNameText || !ItemCheckBox) return;
+	// 방어 코드: 필수 위젯이 없으면 중단
+    if (!ItemNameText || !ItemCheckBox || !ThumbnailImage) return;
 
-	bool bIsChecked = ItemCheckBox->IsChecked();
+    bool bIsChecked = ItemCheckBox->IsChecked();
 
-	// 1. 커스텀 아이템 (Custom)
-	if (EntryType == EItemEntryType::Custom)
-	{
-		if (bIsChecked)
-		{
-			// 착용 (체크 ON) -> "착용중" (초록)
-			ItemNameText->SetText(FText::FromString(TEXT("착용중")));
-			ItemNameText->SetColorAndOpacity(FLinearColor(0.0f, 0.5f, 1.0f, 1.0f));
-		}
-		else
-		{
-			// 미착용 (체크 OFF) -> 원래 이름 (흰색)
-			ItemNameText->SetText(OriginalName);
-			ItemNameText->SetColorAndOpacity(FLinearColor::White);
-		}
-	}
-	// 2. 하우징 아이템 (Housing)
-	else if (EntryType == EItemEntryType::Housing)
-	{
-		if (bIsChecked)
-		{
-			// 배치 시도 중 (체크 ON) -> "배치중" (노랑)
-			ItemNameText->SetText(FText::FromString(TEXT("배치중")));
-			ItemNameText->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 0.0f, 1.0f)); // Yellow
-		}
-		else
-		{
-			if (bIsPlaced)
-			{
-				// 설치 완료 상태 (체크 OFF + bIsPlaced true) -> "배치됨" (초록)
-				ItemNameText->SetText(FText::FromString(TEXT("배치됨")));
-				ItemNameText->SetColorAndOpacity(FLinearColor(0.0f, 0.5f, 1.0f, 1.0f));
-			}
-			else
-			{
-				// 미선택/기본 (체크 OFF) -> 원래 이름 (흰색)
-				ItemNameText->SetText(OriginalName);
-				ItemNameText->SetColorAndOpacity(FLinearColor::White);
-			}
-		}
-	}
+    // -------------------------------------------------------
+    // 1. 공통 초기화 (기본 상태: 이름 숨김, 이미지 원래 색)
+    // -------------------------------------------------------
+    ItemNameText->SetVisibility(ESlateVisibility::Hidden);
+    ThumbnailImage->SetColorAndOpacity(FLinearColor::White);
+
+    // -------------------------------------------------------
+    // 2. 타입별 분기 처리
+    // -------------------------------------------------------
+
+    // [Type 1] 커스텀 아이템 (Custom)
+    if (EntryType == EItemEntryType::Custom)
+    {
+       if (bIsChecked)
+       {
+          // [착용 상태]
+          // 1. 텍스트 표시: "착용 해제"
+          ItemNameText->SetVisibility(ESlateVisibility::Visible);
+          ItemNameText->SetText(FText::FromString(TEXT("착용\n해제")));
+          ItemNameText->SetColorAndOpacity(FLinearColor::White); 
+
+          // 2. 이미지 톤 다운 (회색)
+          ThumbnailImage->SetColorAndOpacity(FLinearColor(0.3f, 0.3f, 0.3f, 1.0f));
+       }
+       else
+       {
+          // [미착용 상태]
+          // 텍스트 숨김 (공통 초기화에서 처리됨)
+          // 이미지 원래 색 (공통 초기화에서 처리됨)
+       }
+    }
+    // [Type 2] 하우징 아이템 (Housing)
+    else if (EntryType == EItemEntryType::Housing)
+    {
+       if (bIsChecked)
+       {
+          // [설치 중 (프리뷰) 상태]
+          // 1. 텍스트 표시: "배치 중"
+          ItemNameText->SetVisibility(ESlateVisibility::Visible);
+          ItemNameText->SetText(FText::FromString(TEXT("배치 중")));
+          ItemNameText->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 0.0f, 1.0f)); // 강조색(노랑) 유지
+          
+          // 이미지는 톤 다운 하지 않음 (선택 중이므로 잘 보여야 함)
+       }
+       else
+       {
+          if (bIsPlaced)
+          {
+             // [설치 완료 상태]
+             // 1. 텍스트 표시: "배치 됨"
+             ItemNameText->SetVisibility(ESlateVisibility::Visible);
+             ItemNameText->SetText(FText::FromString(TEXT("배치 됨")));
+             ItemNameText->SetColorAndOpacity(FLinearColor::White);
+
+             // 2. 이미지 톤 다운 (회색) -> 이미 설치했으므로 비활성 느낌
+             ThumbnailImage->SetColorAndOpacity(FLinearColor(0.3f, 0.3f, 0.3f, 1.0f));
+          }
+          else
+          {
+             // [미설치 상태]
+             // 텍스트 숨김 & 이미지 원래 색 (공통 초기화에서 처리됨)
+          }
+       }
+    }
 }

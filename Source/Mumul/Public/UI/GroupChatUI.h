@@ -149,6 +149,7 @@ protected:
 	TObjectPtr<class USizeBox> MumuLeeBox;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UScrollBox> GroupScrollBox;
+	
 public:
 	void AddGroupIcon(class UGroupIconUI* UI) const;
 	
@@ -169,7 +170,7 @@ protected:
 	UPROPERTY(editDefaultsOnly, Category="UI Image")
 	TObjectPtr<class UTexture2D> RightIMG;
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UBorder> GroupChatBorder;
+	TObjectPtr<class USizeBox> GroupChatBox;
 	UFUNCTION()
 	void ToggleInvitationUI();
 	UPROPERTY(meta=(BindWidget))
@@ -185,6 +186,14 @@ protected:
 	void ToggleGroupChatAlignment();
 	
 public:
+	void InitPlayerUI(class UPlayerUI* InPlayerUI);
+
+	// [신규] 외부에서 채팅창을 강제로 닫게 하는 함수
+	void CloseChatUI();
+    
+	// [신규] 현재 채팅창이 열려있는지 확인하는 함수
+	bool IsChatOpen() const { return bIsToggled; }
+	
 	bool IsGroupChatToggled() const { return bIsToggled; }
 	UFUNCTION()
 	void OnToggleVisibilityBtn();
@@ -208,6 +217,8 @@ private:
 	FString GetCurrentTeamName() const;
 
 protected:
+	UPROPERTY()
+	UPlayerUI* LinkedPlayerUI;
 	UPROPERTY(EditDefaultsOnly, Category="UI Image")
 	TArray<TObjectPtr<class UTexture2D>> RecordIMGs;
 	UPROPERTY(meta=(BindWidget))
@@ -225,6 +236,8 @@ protected:
 	TObjectPtr<class UTexture2D> NaNumiOffIMG;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UImage> NaNumiIMG;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UImage> ArrowBtnImg;
 public:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> RecordBtn;

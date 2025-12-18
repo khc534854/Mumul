@@ -87,7 +87,12 @@ void UPlayerUI::NativeConstruct()
 
 	PlayerCustomizeBtn->OnClicked.AddDynamic(this, &UPlayerUI::OnCustomizeBoxClick);
 	HousingBtn->OnClicked.AddDynamic(this, &UPlayerUI::OnHousingBoxClick);
-	HousingDeleteModeBtn->BaseButton->OnClicked.AddDynamic(this, &UPlayerUI::OnDeleteButtonClicked);
+	HousingDeleteModeBtn->OnClicked.AddDynamic(this, &UPlayerUI::OnDeleteButtonClicked);
+
+	if (PlayerCustomizeBtn) OriginalButtonStyles.Add(PlayerCustomizeBtn, PlayerCustomizeBtn->GetStyle());
+	if (HousingBtn) OriginalButtonStyles.Add(HousingBtn, HousingBtn->GetStyle());
+	if (TentBtn) OriginalButtonStyles.Add(TentBtn, TentBtn->GetStyle());
+	
 	LoadAndGenerateItemList();
 	LoadAndGenerateHousingItemList();
 }
@@ -149,7 +154,8 @@ void UPlayerUI::StartMinuteTimer()
 void UPlayerUI::UpdateCurrentTime()
 {
 	FDateTime Now = FDateTime::Now();
-	FString TimeString = Now.ToString(TEXT("%H:%M"));
+	FString TimeString = Now.ToString(TEXT("%Y. %m. %d  %H:%M"));
+	//FString TimeString = Now.ToString(TEXT("%H:%M"));
 	if (CurrentTime)
 	{
 		CurrentTime->BaseText->SetText(FText::FromString(TimeString));
@@ -179,6 +185,10 @@ void UPlayerUI::CheckGroupChatUI()
 void UPlayerUI::InitGroupChatUI(UGroupChatUI* UI)
 {
 	GroupChatUI = UI;
+	if (GroupChatUI)
+	{
+		GroupChatUI->InitPlayerUI(this);
+	}
 }
 
 void UPlayerUI::MarkHousingItemAsPlaced(FName ItemID, bool bPlaced)
@@ -244,8 +254,65 @@ void UPlayerUI::CheckPlacedHousingItems()
 	}
 }
 
+void UPlayerUI::CancelTent()
+{
+	ResetAllMenuButtons();
+}
+
+void UPlayerUI::SetButtonActiveState(UButton* TargetBtn, bool bIsActive)
+{
+	if (!TargetBtn || !OriginalButtonStyles.Contains(TargetBtn)) return;
+
+	// 1. 원래 스타일 가져오기
+	FButtonStyle NewStyle = OriginalButtonStyles[TargetBtn];
+
+	// 2. 활성화(ON) 상태라면: Normal 이미지를 Hovered 이미지로 교체
+	if (bIsActive)
+	{
+		NewStyle.Normal = NewStyle.Pressed;
+	}
+	// 3. 비활성화(OFF) 상태라면: 원래 스타일 그대로 사용 (위에서 이미 복사됨)
+
+	// 4. 스타일 적용
+	TargetBtn->SetStyle(NewStyle);
+}
+
+void UPlayerUI::ResetAllMenuButtons()
+{
+	SetButtonActiveState(PlayerCustomizeBtn, false);
+	SetButtonActiveState(HousingBtn, false);
+	SetButtonActiveState(TentBtn, false);
+}
+
+bool UPlayerUI::TryLockUI(float Duration)
+{
+	// 이미 바쁘면(애니메이션 중이거나 방금 눌렀으면) true 반환 -> 함수 실행 막음
+	if (bIsUIBusy) return false;
+
+	// 잠금 걸기
+	bIsUIBusy = true;
+
+	// 지정된 시간(Duration) 뒤에 자동으로 잠금 해제
+	GetWorld()->GetTimerManager().SetTimer(
+		DebounceTimerHandle,
+		this,
+		&UPlayerUI::UnlockUIInteraction,
+		Duration,
+		false
+	);
+
+	return true; // 조작 성공
+}
+
 void UPlayerUI::OnCustomizeBoxClick()
 {
+	if (!TryLockUI()) return;
+	
+	if (GroupChatUI)
+	{
+		GroupChatUI->CloseChatUI();
+	}
+
 	bIsOpenCustomizeUI = !bIsOpenCustomizeUI;
 
 	if (bIsOpenCustomizeUI)
@@ -254,9 +321,11 @@ void UPlayerUI::OnCustomizeBoxClick()
 		{
 			PlayAnimation(HousingBoxAnim, 0, 1, EUMGSequencePlayMode::Reverse);
 			bIsOpenHousingUI = false;
+			ResetHousingSelection();
+			if (PC && PC->HousingComp) PC->HousingComp->StopPreviewHousingItem();
 		}
+        
 		PlayAnimation(CustomizeBoxAnim, 0, 1, EUMGSequencePlayMode::Forward);
-
 		CheckEquippedCustomItem();
 	}
 	else
@@ -264,6 +333,10 @@ void UPlayerUI::OnCustomizeBoxClick()
 		PlayAnimation(CustomizeBoxAnim, 0, 1, EUMGSequencePlayMode::Reverse);
 		PC->OnToggleMouse();
 	}
+
+	SetButtonActiveState(PlayerCustomizeBtn, bIsOpenCustomizeUI); // 내 버튼 상태 반영
+	SetButtonActiveState(HousingBtn, false); // 다른 버튼 끄기
+	SetButtonActiveState(TentBtn, false);
 }
 
 void UPlayerUI::LoadAndGenerateItemList()
@@ -365,7 +438,21 @@ void UPlayerUI::UpdateRecordButtonState(bool bActive)
 
 void UPlayerUI::OnTentClicked()
 {
+	if (!TryLockUI(0.5f)) return;
+	
 	PC->HousingComp->ShowPreviewTent();
+	CloseSidePanels();
+
+	SetButtonActiveState(TentBtn, true);
+    
+	// 텐트 설치 시 다른 UI가 닫혀야 한다면 아래 코드 추가
+	if (bIsOpenCustomizeUI) OnCustomizeBoxClick(); // 혹은 강제 닫기 로직
+	if (bIsOpenHousingUI) OnHousingBoxClick();
+    
+	// 시각적 업데이트 (위에서 닫기 로직 돌면서 꺼졌을 수 있으니 다시 확실하게)
+	SetButtonActiveState(PlayerCustomizeBtn, false);
+	SetButtonActiveState(HousingBtn, false);
+	SetButtonActiveState(TentBtn, true);
 }
 
 void UPlayerUI::OnDeleteButtonClicked()
@@ -380,6 +467,13 @@ void UPlayerUI::OnDeleteButtonClicked()
 
 void UPlayerUI::OnHousingBoxClick()
 {
+	if (!TryLockUI()) return;
+	
+	if (GroupChatUI)
+	{
+		GroupChatUI->CloseChatUI();
+	}
+
 	bIsOpenHousingUI = !bIsOpenHousingUI;
 
 	ResetHousingSelection();
@@ -390,8 +484,8 @@ void UPlayerUI::OnHousingBoxClick()
 			PlayAnimation(CustomizeBoxAnim, 0, 1, EUMGSequencePlayMode::Reverse);
 			bIsOpenCustomizeUI = false;
 		}
+        
 		PlayAnimation(HousingBoxAnim, 0, 1, EUMGSequencePlayMode::Forward);
-
 		CheckPlacedHousingItems();
 	}
 	else
@@ -399,6 +493,10 @@ void UPlayerUI::OnHousingBoxClick()
 		PlayAnimation(HousingBoxAnim, 0, 1, EUMGSequencePlayMode::Reverse);
 		PC->OnToggleMouse();
 	}
+	
+	SetButtonActiveState(HousingBtn, bIsOpenHousingUI);
+	SetButtonActiveState(PlayerCustomizeBtn, false);
+	SetButtonActiveState(TentBtn, false);
 }
 
 void UPlayerUI::LoadAndGenerateHousingItemList()
@@ -490,6 +588,8 @@ void UPlayerUI::ResetHousingSelection()
 
 void UPlayerUI::OnMicClicked()
 {
+	if (!TryLockUI(0.5f)) return;
+	
 	if (UVoiceChatComponent* VoiceComp = GetVoiceComponent())
 	{
 		VoiceComp->ToggleSpeaking();
@@ -498,6 +598,8 @@ void UPlayerUI::OnMicClicked()
 
 void UPlayerUI::OnRecordClicked()
 {
+	if (!TryLockUI(0.5f)) return;
+	
 	if (UVoiceChatComponent* VoiceComp = GetVoiceComponent())
 	{
 		if (PC)
@@ -506,12 +608,22 @@ void UPlayerUI::OnRecordClicked()
 			if (VoiceComp->IsRecording())
 			{
 				PC->MeetingComp->OpenEndMeetingPopup();
+				return;
 			}
-			// 녹음 중 아니면 -> 시작 설정 UI 띄우기
-			else
+			
+			AMumulPlayerState* PS = PC->GetPlayerState<AMumulPlayerState>();
+			if (PS)
 			{
-				PC->MeetingComp->OpenMeetingSetupUI();
+				if (!PS->bIsNearByCampFire)
+				{
+					if (GroupChatUI)
+					{
+						GroupChatUI->AddBotChat(TEXT("모닥불 근처에서만 회의를 시작할 수 있습니다."));
+					}
+					return;
+				}
 			}
+			PC->MeetingComp->OpenMeetingSetupUI();
 		}
 	}
 }
@@ -535,6 +647,31 @@ void UPlayerUI::SetProfileBtnIMG(UTexture2D* IMG)
 	Style.Pressed = PressedBrush;
 
 	ProfileBtn->SetStyle(Style);
+}
+
+void UPlayerUI::CloseSidePanels()
+{
+	// 1. 커스터마이징 UI가 열려있다면 닫기
+	if (bIsOpenCustomizeUI)
+	{
+		bIsOpenCustomizeUI = false;
+		PlayAnimation(CustomizeBoxAnim, 0, 1, EUMGSequencePlayMode::Reverse);
+	}
+
+	// 2. 하우징 UI가 열려있다면 닫기
+	if (bIsOpenHousingUI)
+	{
+		bIsOpenHousingUI = false;
+		PlayAnimation(HousingBoxAnim, 0, 1, EUMGSequencePlayMode::Reverse);
+		ResetHousingSelection();
+		// 하우징 프리뷰 종료 등 필요한 로직 수행
+		if (PC && PC->HousingComp)
+		{
+			PC->HousingComp->StopPreviewHousingItem();
+		}
+	}
+
+	ResetAllMenuButtons();
 }
 
 void UPlayerUI::OnProfileBtnHovered()

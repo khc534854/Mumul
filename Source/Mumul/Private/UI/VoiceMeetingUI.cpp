@@ -89,13 +89,11 @@ void UVoiceMeetingUI::OnClickReturnMeeting()
 {
     SetVisibility(ESlateVisibility::Hidden);
     
-    // // 입력 모드 게임으로 복귀
-    // if (ACuteAlienController* PC = GetMyController())
-    // {
-    //     FInputModeGameOnly InputMode;
-    //     PC->SetInputMode(InputMode);
-    //     PC->SetShowMouseCursor(false);
-    // }
+    if (ACuteAlienController* PC = GetMyController())
+    {
+        PC->SetIgnoreMoveInput(false);
+        //PC->SetShowMouseCursor(false);
+    }
 }
 
 ACuteAlienController* UVoiceMeetingUI::GetMyController()

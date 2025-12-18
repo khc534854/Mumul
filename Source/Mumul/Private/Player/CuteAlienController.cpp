@@ -139,7 +139,7 @@ void ACuteAlienController::BeginPlay()
 		PlayerUI = CreateWidget<UPlayerUI>(this, PlayerUIClass);
 		if (PlayerUI)
 		{
-			PlayerUI->AddToViewport(-1);
+			PlayerUI->AddToViewport(100);
 		}
 	}
 
@@ -274,9 +274,12 @@ void ACuteAlienController::SaveAndExit()
 void ACuteAlienController::OnCancelUI()
 {
 	CancelRadialUI();
-
+	
 	if (HousingComp->PreviewTent)
 	{
+		if (PlayerUI)
+			PlayerUI->CancelTent();
+		
 		HousingComp->PreviewTent->Destroy();
 		HousingComp->PreviewTent = nullptr;
 	}
