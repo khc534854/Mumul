@@ -151,9 +151,9 @@ void ACuteAlienPlayer::BeginPlay()
 		UpdateBodyMaterial(PS->PS_TendencyID);
 		// 이미 장착된 아이템이 있다면 적용 (Replication 타이밍 이슈 방지)
 		UpdateCustomMesh(PS->EquippedCustomID);
+		UpdateNameTag(PS->PS_RealName);
 	}
 
-	UpdateNameTag();
 }
 
 void ACuteAlienPlayer::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -182,11 +182,10 @@ void ACuteAlienPlayer::OnRep_PlayerState()
 	if (AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>())
 	{
 		UpdateBodyMaterial(PS->PS_TendencyID);
-        
 		UpdateCustomMesh(PS->EquippedCustomID);
+		UpdateNameTag(PS->PS_RealName);
 	}
 
-	UpdateNameTag();
 }
 
 // Called every frame
@@ -285,24 +284,15 @@ void ACuteAlienPlayer::Server_EquipCustom_Implementation(FName ItemID)
 	}
 }
 
-void ACuteAlienPlayer::UpdateNameTag()
+void ACuteAlienPlayer::UpdateNameTag(FString Name)
 {
-	AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>();
-	if (!PS) 
-	{
-		// 아직 PlayerState가 없으면 잠시 후 다시 시도 (0.5초 뒤)
-		FTimerHandle WaitHandle;
-		GetWorldTimerManager().SetTimer(WaitHandle, this, &ACuteAlienPlayer::UpdateNameTag, 0.5f, false);
-		return;
-	}
-
 	// 2. 위젯 인스턴스 가져오기
 	UUserWidget* WidgetObj = WidgetComponent->GetUserWidgetObject();
 	if (!WidgetObj) return;
 
 	if (UTextBlock* TextBlock = Cast<UTextBlock>(WidgetObj->GetWidgetFromName(TEXT("NameText"))))
 	{
-		FString DisplayName = PS->PS_RealName;
+		FString DisplayName = Name;
 		TextBlock->SetText(FText::FromString(DisplayName));
 	}
 }
