@@ -37,6 +37,8 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void Mulicast_OnScaleAnimation(bool bPlaySound);
 
+	void PlayTentSpawnSound();
+	
 	UPROPERTY()
 	class ACampFireActor* ChildCampFire;
 

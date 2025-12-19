@@ -67,7 +67,7 @@ public:
 	class UWidgetComponent* WidgetComponent;
 
 	UFUNCTION(BlueprintCallable, Category = "UI")
-	void UpdateNameTag(FString Name);
+	void UpdateNameTag();
 
 	//Minimap
 public:

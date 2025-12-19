@@ -134,6 +134,38 @@ void ATentActor::Deactivate()
 	bIsActive = false;
 }
 
+void ATentActor::PlayTentSpawnSound()
+{
+	// 1. 내 플레이어 컨트롤러 가져오기
+	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
+	if (!PC) return;
+
+	// 2. 내 PlayerState 가져오기
+	AMumulPlayerState* MyPS = PC->GetPlayerState<AMumulPlayerState>();
+	if (!MyPS) return;
+
+	// 3. 텐트 주인이 내가 아니면 소리 재생 안 함
+	if (MyPS->PS_UserIndex != OwnerUserIndex)
+	{
+		return;
+	}
+
+	// 4. 소리 재생 (2D로 재생하면 거리감 없이 내 귀에 바로 들림)
+	//UGameplayStatics::PlaySound2D(this, Zip);
+	
+	UAudioComponent* InstallAudioComp =
+	UGameplayStatics::SpawnSoundAtLocation(
+		this,
+		Zip,
+		GetActorLocation()
+	);
+
+	if (InstallAudioComp)
+	{
+		InstallAudioComp->OnAudioFinished.AddDynamic(this, &ATentActor::OnSoundFinished);
+	}
+}
+
 void ATentActor::OnRep_HousingItems()
 {
 	TArray<AActor*> AttachedActors;
@@ -232,17 +264,7 @@ void ATentActor::Mulicast_OnScaleAnimation_Implementation(bool bPlaySound)
 		return;
 	}
 
-	UAudioComponent* InstallAudioComp =
-	UGameplayStatics::SpawnSoundAtLocation(
-		this,
-		Zip,
-		GetActorLocation()
-	);
-
-	if (InstallAudioComp)
-	{
-		InstallAudioComp->OnAudioFinished.AddDynamic(this, &ATentActor::OnSoundFinished);
-	}
+	
 }
 
 void ATentActor::SetOwnerUserIndex(int32 NewUserIndex)

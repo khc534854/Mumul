@@ -136,6 +136,8 @@ void AMumulMumulGameMode::SpawnTent(const FTransform& SpawnTransform, int32 User
 			TargetTent = PoolElem.Key;
 			TargetTent->ChangeTransform(SpawnTransform);
 			TargetTent->Mulicast_OnScaleAnimation(bPlayInstallSound);
+			TargetTent->Mulicast_OnScaleAnimation_Implementation(bSaveToDisk);
+			TargetTent->PlayTentSpawnSound();
 
 			bTentProcessed = true;
 			UE_LOG(LogTemp, Log, TEXT("[GameMode] Found existing tent for User %d. Moving..."), UserIndex);
@@ -154,6 +156,7 @@ void AMumulMumulGameMode::SpawnTent(const FTransform& SpawnTransform, int32 User
 				TargetTent->SetOwnerUserIndex(UserIndex);
 				TargetTent->Activate(SpawnTransform);
 				TargetTent->Mulicast_OnScaleAnimation(bPlayInstallSound);
+				TargetTent->PlayTentSpawnSound();
 				PoolElem.Value = UserIndex;
 
 				bTentProcessed = true;
