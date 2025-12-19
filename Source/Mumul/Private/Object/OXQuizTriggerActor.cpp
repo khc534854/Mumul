@@ -168,8 +168,20 @@ void AOXQuizTriggerActor::OnEndOverlapPlayer(UPrimitiveComponent* OverlappedComp
 
 FText AOXQuizTriggerActor::GetDifficultyText()
 {
-	return StaticEnum<EQuizDifficulty>()->GetDisplayNameTextByValue(
-					static_cast<int32>(QuizDifficulty));
+	switch (QuizDifficulty)
+	{
+	case EQuizDifficulty::Beginner:
+		return FText::FromString(TEXT("초급"));
+		
+	case EQuizDifficulty::Intermediate:
+		return FText::FromString(TEXT("중급"));
+
+	case EQuizDifficulty::Advanced:
+		return FText::FromString(TEXT("고급"));
+
+	default:
+		return FText::FromString(TEXT("초급"));
+	}
 }
 
 void AOXQuizTriggerActor::OnTriggerQuiz(const int32 UserID)

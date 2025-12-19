@@ -77,7 +77,6 @@ void AOXQuizActor::StartOXQuiz(const int32 UserID, const FString& Difficulty)
 			Elem.Key->GetCharacter()->SetActorLocation(this->GetActorLocation() + FVector(X, Y, 300.f));
 			
 			Elem.Key->OXQuizComp->Client_DisplayReady();
-			Elem.Key->AudioManager->StartQuizBGM();
 		}
 	}
 

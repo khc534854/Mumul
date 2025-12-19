@@ -50,6 +50,7 @@ void UPlayerOXQuizComponent::Client_DisplayReady_Implementation()
 	{
 		OXQuizUI->OXQuizWS->SetActiveWidgetIndex(3);
 		OXQuizUI->SetVisibility(ESlateVisibility::Visible);
+		owner->AudioManager->StartQuizBGM();
 	}
 }
 
