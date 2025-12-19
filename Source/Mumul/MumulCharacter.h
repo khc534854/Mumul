@@ -54,6 +54,7 @@ protected:
 
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
+	void Stop(const FInputActionValue& Value);
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
@@ -72,7 +73,7 @@ protected:
 	TObjectPtr<class UAnimMontage> RollMontage;
 	UPROPERTY(EditDefaultsOnly, Category = "Roll Velocity")
 	float RollStrength = 730.f;
-
+	
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
@@ -86,5 +87,12 @@ public:
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 	void SetFirstPersonView(bool bEnable);
+	
+	UPROPERTY(EditDefaultsOnly, Category="Sound")
+	TObjectPtr<class USoundBase> RollSound;
+	UPROPERTY(EditDefaultsOnly, Category="Sound")
+	TObjectPtr<class USoundBase> FootStep;
+	UPROPERTY()
+	TObjectPtr<class UAudioComponent> FootStepComp;
 };
 

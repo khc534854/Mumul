@@ -29,6 +29,8 @@ protected:
 	UPROPERTY()
 	TObjectPtr<USoundBase> EndBeepSFX;
 	UPROPERTY()
+	TObjectPtr<USoundBase> QuizEndSFX;
+	UPROPERTY()
 	TObjectPtr<class USoundMix> QuizSoundMix;
 	
 	UPROPERTY()

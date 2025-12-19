@@ -12,13 +12,14 @@ void UAudioManager::Initialize(FSubsystemCollectionBase& Collection)
 	Super::Initialize(Collection);
 
 	const UObjectAndClassFinder* Finder = UObjectAndClassFinder::Get();
-	IslandBGM = Finder->GetSound(TEXT("testBGM"));
+	IslandBGM = Finder->GetSound(TEXT("IslandBGM"));
 	QuizBGM = Finder->GetSound(TEXT("QuizBGM"));
 	FeedbackBGM = Finder->GetSound(TEXT("FeedbackBGM"));
 	QuizSoundMix = Finder->GetSoundMix(TEXT("QuizSoundMix"));
 
 	BeepSFX = Finder->GetSound(TEXT("Beep"));
 	EndBeepSFX = Finder->GetSound(TEXT("EndBeep"));
+	QuizEndSFX = Finder->GetSound(TEXT("QuizEnd"));
 	
 	CampfireSFX = Finder->GetSound(TEXT("Campfire"));
 	
@@ -99,9 +100,15 @@ void UAudioManager::EndQuizBGM()
 		QuizBGMComp->FadeOut(0.3f, 0.0f);
 		QuizBGMComp = nullptr;
 	}
-
+	
 	// 2. 상황 종료 → 믹스 Pop
 	UGameplayStatics::PopSoundMixModifier(GetWorld(), QuizSoundMix);
+	
+	UGameplayStatics::PlaySound2D(
+		GetWorld(),
+		QuizEndSFX,
+		1.0f
+	);
 	
 	PlayIslandBGM();
 }

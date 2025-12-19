@@ -24,6 +24,7 @@
 #include "UI/OXQuiz/AskOXQuizUI.h"
 #include "UI/OXQuiz/OXQuizUI.h"
 #include "NiagaraComponent.h"
+#include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 static const FString ItemDataTablePath = TEXT("/Game/Khc/Blueprint/Object/CustomItemList.CustomItemList");

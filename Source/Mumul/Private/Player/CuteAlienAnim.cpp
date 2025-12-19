@@ -3,6 +3,7 @@
 
 #include "Player/CuteAlienAnim.h"
 
+#include "Components/AudioComponent.h"
 #include "Player/CuteAlienPlayer.h"
 
 void UCuteAlienAnim::NativeInitializeAnimation()
@@ -10,7 +11,10 @@ void UCuteAlienAnim::NativeInitializeAnimation()
 	Super::NativeInitializeAnimation();
 
 	Owner = Cast<ACuteAlienPlayer>(TryGetPawnOwner());
-	if (!Owner)
+	if (Owner)
+	{
+	}
+	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("UCuteAlienAnim, Owner is nullptr"))
 	}
