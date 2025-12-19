@@ -63,7 +63,7 @@ AMumulCharacter::AMumulCharacter()
 	{
 		JumpMontage = JumpMontageFinder.Object;
 	}
-	
+
 	FootStepComp = CreateDefaultSubobject<UAudioComponent>(TEXT("FootStepComp"));
 	FootStepComp->SetupAttachment(GetRootComponent());
 	FootStepComp->bAutoActivate = false;
@@ -200,12 +200,21 @@ void AMumulCharacter::Look(const FInputActionValue& Value)
 void AMumulCharacter::OnJump(const FInputActionValue& Value)
 {
 	Server_OnJump();
-	
+
 	if (FootStepComp->IsPlaying() || GetCharacterMovement()->IsFalling())
 	{
 		FootStepComp->FadeOut(0.06f, 0.0f);
 	}
+
+	if (GetCharacterMovement()->IsFalling())
+	{
+		UGameplayStatics::PlaySound2D(
+			this,
+			RollSound
+		);
+	}
 }
+
 
 void AMumulCharacter::Server_OnJump_Implementation()
 {
@@ -244,9 +253,5 @@ void AMumulCharacter::Multicast_OnRollAnimation_Implementation()
 		// 	RollSound,
 		// 	GetActorLocation()
 		// );
-		UGameplayStatics::PlaySound2D(
-	this,
-	RollSound
-		);
 	}
 }
