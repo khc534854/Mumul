@@ -126,7 +126,7 @@ void AMumulCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	{
 		// Jumping
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this,
-		                                   &AMumulCharacter::Server_OnJump);
+		                                   &AMumulCharacter::OnJump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		// Moving
@@ -153,7 +153,7 @@ void AMumulCharacter::Move(const FInputActionValue& Value)
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
-	if (FootStepComp->IsPlaying() == false)
+	if (FootStepComp->IsPlaying() == false && GetCharacterMovement()->IsFalling() == false)
 	{
 		FootStepComp->Play();
 	}
@@ -178,7 +178,7 @@ void AMumulCharacter::Move(const FInputActionValue& Value)
 
 void AMumulCharacter::Stop(const FInputActionValue& Value)
 {
-	if (FootStepComp->IsPlaying())
+	if (FootStepComp->IsPlaying() && GetCharacterMovement()->IsFalling())
 	{
 		FootStepComp->FadeOut(0.06f, 0.0f);
 	}
@@ -197,7 +197,17 @@ void AMumulCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
-void AMumulCharacter::Server_OnJump_Implementation(const FInputActionValue& Value)
+void AMumulCharacter::OnJump(const FInputActionValue& Value)
+{
+	Server_OnJump();
+	
+	if (FootStepComp->IsPlaying() && GetCharacterMovement()->IsFalling())
+	{
+		FootStepComp->FadeOut(0.06f, 0.0f);
+	}
+}
+
+void AMumulCharacter::Server_OnJump_Implementation()
 {
 	if (!IsValid(PlayerAnim) || !IsValid(JumpMontage) || !IsValid(RollMontage))
 		return;

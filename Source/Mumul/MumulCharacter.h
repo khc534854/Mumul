@@ -58,9 +58,11 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+	
+	void OnJump(const FInputActionValue& Value);
 
 	UFUNCTION(Server, Reliable)
-	void Server_OnJump(const FInputActionValue& Value);
+	void Server_OnJump();
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_OnJumpAnimation();
 	UFUNCTION(NetMulticast, Reliable)
