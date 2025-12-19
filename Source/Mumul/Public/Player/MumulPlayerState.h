@@ -45,7 +45,7 @@ public:
 	UFUNCTION()
 	void OnRep_UserIndex();
 
-	UPROPERTY(Replicated, BlueprintReadOnly, Category = "User Info")
+	UPROPERTY(ReplicatedUsing = OnRep_RealName, BlueprintReadOnly, Category = "Info")
 	FString PS_RealName; // name
 
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "User Info")
@@ -88,6 +88,9 @@ public:
 
 	UFUNCTION()
 	void OnRep_TendencyID();
+
+	UFUNCTION()
+	void OnRep_RealName();
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 

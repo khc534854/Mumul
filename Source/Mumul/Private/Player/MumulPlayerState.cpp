@@ -142,3 +142,14 @@ void AMumulPlayerState::OnRep_TendencyID()
 		Character->UpdateBodyMaterial(PS_TendencyID);
 	}
 }
+
+void AMumulPlayerState::OnRep_RealName()
+{
+	ACuteAlienPlayer* MyPawn = GetPawn<ACuteAlienPlayer>();
+    
+	if (MyPawn)
+	{
+		// 캐릭터에게 이름표를 다시 그리라고 명령합니다.
+		MyPawn->UpdateNameTag();
+	}
+}
