@@ -58,7 +58,7 @@ void UMumulGameInstance::Init()
 	//UMumulGameSettings* Settings = GetMutableDefault<UMumulGameSettings>();
 	//Settings->ReloadConfig();
 
-	LoadServerInfoOverride();
+	//LoadServerInfoOverride();
 	
 	IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
 	if (Subsystem)
