@@ -107,4 +107,14 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly, Category="Sound")
 	TObjectPtr<USoundBase> ElectricShock;
+	
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	TObjectPtr<class USoundBase> Zip;
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	TObjectPtr<class USoundBase> Boing;
+	UFUNCTION()
+	void OnSoundFinished();
+public:
+	void PlayTentSpawnSound();
 };

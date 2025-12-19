@@ -331,6 +331,7 @@ void ACuteAlienController::OnClick(const FVector& TentLocation, const FRotator& 
 
 			// Spawn or Move Tent
 			HousingComp->Server_SpawnTent(FTransform(TentRotation, TentLocation));
+			Cast<ACuteAlienPlayer>(GetCharacter())->PlayTentSpawnSound();
 
 			if (AMumulCharacter* MyChar = Cast<AMumulCharacter>(GetPawn()))
 			{
@@ -510,3 +511,4 @@ void ACuteAlienController::TryInitPlayerInfo()
 		UE_LOG(LogTemp, Log, TEXT("[Client] Sent Init Info: %s (ID: %d)"), *GI->PlayerName, GI->PlayerUniqueID);
 	}
 }
+

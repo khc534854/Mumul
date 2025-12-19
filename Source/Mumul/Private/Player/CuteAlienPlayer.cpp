@@ -145,7 +145,7 @@ void ACuteAlienPlayer::BeginPlay()
 			MinimapCapture->SetComponentTickEnabled(false);
 		}
 	}
-	
+
 	if (AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>())
 	{
 		UpdateBodyMaterial(PS->PS_TendencyID);
@@ -153,7 +153,6 @@ void ACuteAlienPlayer::BeginPlay()
 		UpdateCustomMesh(PS->EquippedCustomID);
 		UpdateNameTag();
 	}
-
 }
 
 void ACuteAlienPlayer::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -185,7 +184,6 @@ void ACuteAlienPlayer::OnRep_PlayerState()
 		UpdateCustomMesh(PS->EquippedCustomID);
 		UpdateNameTag();
 	}
-
 }
 
 // Called every frame
@@ -481,7 +479,7 @@ void ACuteAlienPlayer::Multicast_PlayElectrocutedMontage_Implementation(FVector 
 			true,
 			false
 		);
-	
+
 	if (BoltNiagaraComp)
 	{
 		BoltNiagaraComp->SetVectorParameter(
@@ -507,12 +505,36 @@ void ACuteAlienPlayer::Multicast_PlayElectrocutedMontage_Implementation(FVector 
 		true,
 		true
 	);
-	
+
 	AnimInstance->Montage_Play(ElectrocutedMontage, 1.f);
-	
+
 	UGameplayStatics::PlaySoundAtLocation(
+		this,
+		ElectricShock,
+		GetActorLocation()
+	);
+}
+
+void ACuteAlienPlayer::PlayTentSpawnSound()
+{
+	UAudioComponent* InstallAudioComp =
+	UGameplayStatics::SpawnSoundAtLocation(
+		this,
+		Zip,
+		GetActorLocation()
+	);
+
+	if (InstallAudioComp)
+	{
+		InstallAudioComp->OnAudioFinished.AddDynamic(this, &ACuteAlienPlayer::OnSoundFinished);
+	}
+}
+
+
+void ACuteAlienPlayer::OnSoundFinished()
+{
+	UGameplayStatics::PlaySound2D(
 	this,
-	ElectricShock,
-	GetActorLocation()
-);
+	Boing
+	);
 }
