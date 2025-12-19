@@ -4,8 +4,9 @@
 #include "Object/Tent/TentActor.h"
 
 #include "Base/MumulGameState.h"
+#include "Components/AudioComponent.h"
 #include "Data/FHousingItemData.h"
-#include "DynamicMesh/MeshTransforms.h"
+#include "Kismet/GameplayStatics.h"
 #include "Object/CampFireActor.h"
 #include "Library/MathLibrary.h"
 #include "Net/UnrealNetwork.h"
@@ -225,9 +226,27 @@ void ATentActor::Mulicast_OnScaleAnimation_Implementation()
 {
 	TentSequence1st = 0.f;
 	TentSequence2nd = 0.f;
+	
+	UAudioComponent* InstallAudioComp =
+	UGameplayStatics::SpawnSoundAtLocation(
+		this,
+		Zip,
+		GetActorLocation()
+	);
+	
+	InstallAudioComp->OnAudioFinished.AddDynamic(this, &ATentActor::OnSoundFinished);
 }
 
 void ATentActor::SetOwnerUserIndex(int32 NewUserIndex)
 {
 	OwnerUserIndex = NewUserIndex;
+}
+
+void ATentActor::OnSoundFinished()
+{
+	UGameplayStatics::PlaySoundAtLocation(
+	this,
+	Boing,
+	GetActorLocation()
+);
 }

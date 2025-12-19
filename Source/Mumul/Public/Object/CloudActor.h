@@ -108,7 +108,7 @@ protected:
 		Material
 	===================== */
 	UPROPERTY()
-	UMaterialInstanceDynamic* CloudMID = nullptr;
+	TObjectPtr<class UMaterialInstanceDynamic> CloudMID;
 
 	static const FName MaskParamName;
 	static const FName FlashParamName;

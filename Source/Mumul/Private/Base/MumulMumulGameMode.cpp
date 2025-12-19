@@ -5,7 +5,8 @@
 
 #include "JsonObjectConverter.h"
 #include "Base/MumulGameState.h"
-#include "Components/BoxComponent.h"
+#include "Data/AudioManager.h"
+#include "Data/ObjectAndClassFinder.h"
 #include "GameFramework/Character.h"
 #include "Player/MumulPlayerState.h"
 #include "Save/MapDataSaveGame.h"
@@ -20,18 +21,13 @@
 
 AMumulMumulGameMode::AMumulMumulGameMode()
 {
-	static ConstructorHelpers::FClassFinder<ATentActor> TentFinder(
-		TEXT("/Game/Yeomin/Actors/Tent/BP_Tent.BP_Tent_C"));
-	if (TentFinder.Succeeded())
-	{
-		TentClass = TentFinder.Class;
-	}
+	TentClass = UObjectAndClassFinder::Get()->GetActorClass<ATentActor>(TEXT("BP_Tent"));
 }
 
 void AMumulMumulGameMode::BeginPlay()
 {
 	Super::BeginPlay();
-
+	
 	GS = GetGameState<AMumulGameState>();
 
 	for (int i = 0; i < PoolSize; i++)

@@ -30,6 +30,7 @@ public:
 	void Client_HideOXQuizUI();
 	int32 CountdownEndTime;
 	FTimerHandle ReadyCountdownTimer;
+	int32 LastCountdownSecond = TNumericLimits<int32>::Min();
 	void UpdateCountdown();
 	UFUNCTION(Client, Reliable)
 	void Client_StartReadyCountdown(int32 Time);

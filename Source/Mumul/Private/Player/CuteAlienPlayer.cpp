@@ -23,6 +23,8 @@
 #include "Player/Component/PlayerOXQuizComponent.h"
 #include "UI/OXQuiz/AskOXQuizUI.h"
 #include "UI/OXQuiz/OXQuizUI.h"
+#include "NiagaraComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 static const FString ItemDataTablePath = TEXT("/Game/Khc/Blueprint/Object/CustomItemList.CustomItemList");
 // Sets default values
@@ -79,7 +81,7 @@ ACuteAlienPlayer::ACuteAlienPlayer()
 	{
 		IA_Click = IA_ClickFinder.Object;
 	}
-	
+
 	UIInteractionComp = CreateDefaultSubobject<UWidgetInteractionComponent>(TEXT("UI InteractionComp"));
 	UIInteractionComp->SetupAttachment(GetFollowCamera());
 	UIInteractionComp->InteractionDistance = 1200.f;
@@ -116,7 +118,7 @@ void ACuteAlienPlayer::BeginPlay()
 		UIInteractionComp->Deactivate();
 		UIInteractionComp->SetComponentTickEnabled(false);
 	}
-	
+
 	if (IsLocallyControlled())
 	{
 		if (MinimapCapture)
@@ -205,7 +207,7 @@ void ACuteAlienPlayer::OnClickInteraction()
 		{
 			AOXQuizTriggerActor* QuizTriggerActor = Cast<AOXQuizTriggerActor>(WidgetComp->GetOwner());
 			ACuteAlienController* PC = Cast<ACuteAlienController>(GetController());
-			
+
 			// Set Mouse
 			int32 SizeX, SizeY;
 			PC->GetViewportSize(SizeX, SizeY);
@@ -216,7 +218,7 @@ void ACuteAlienPlayer::OnClickInteraction()
 			PC->SetIgnoreLookInput(true);
 			PC->SetShowMouseCursor(true);
 			PC->SetInputMode(InputMode);
-			
+
 			// Set OXQuiz
 			PC->OXQuizComp->OXQuizUI->AskOXQuizUI->SetQuizTriggerActor(QuizTriggerActor);
 			PC->OXQuizComp->OXQuizUI->AskOXQuizUI->SetPlayerController(PC);
@@ -237,11 +239,11 @@ void ACuteAlienPlayer::UpdateBodyMaterial(int32 TendencyIdx)
 	{
 		MatIndexStart = 0;
 	}
-	else if (TendencyIdx >=2 && TendencyIdx <= 5)
+	else if (TendencyIdx >= 2 && TendencyIdx <= 5)
 	{
 		MatIndexStart = (TendencyIdx - 1) * 3;
 	}
-	
+
 	if (PlayerBodyMaterials.IsValidIndex(MatIndexStart + 2))
 	{
 		GetMesh()->SetMaterial(0, PlayerBodyMaterials[MatIndexStart]);
@@ -430,14 +432,14 @@ void ACuteAlienPlayer::Multicast_PlayAlienDance_Implementation(int32 SelectIdx)
 
 
 void ACuteAlienPlayer::Server_PlayElectrocutedMontage_Implementation(FVector FireLocation,
-	FRotator FireRotation)
+                                                                     FVector FireDirection)
 {
-	Multicast_PlayElectrocutedMontage(FireLocation, FireRotation);
+	Multicast_PlayElectrocutedMontage(FireLocation, FireDirection);
 }
 
 
 void ACuteAlienPlayer::Multicast_PlayElectrocutedMontage_Implementation(FVector FireLocation,
-	FRotator FireRotation)
+                                                                        FVector FireDirection)
 {
 	if (!ElectrocutedMontage)
 		return;
@@ -449,51 +451,61 @@ void ACuteAlienPlayer::Multicast_PlayElectrocutedMontage_Implementation(FVector 
 	UAnimInstance* AnimInstance = MeshComp->GetAnimInstance();
 	if (!AnimInstance)
 		return;
-	
+
 	if (AnimInstance->Montage_IsPlaying(ElectrocutedMontage))
 		return;
 
-	if (!LightningFX)
-		return;
-		
+	if (!LightningBoltVFX)
+		return;;
+
+	// ✔ 스폰 로테이션: 위를 향하되 Yaw만 캐릭터 기준
+	FRotator SpawnRotation = GetActorRotation();
+	SpawnRotation.Pitch = -90.f;
+	SpawnRotation.Roll = 0.f;
+
+	// ✔ Niagara 스폰 (위치는 의미 없음, 기준점만 제공)
+	UNiagaraComponent* BoltNiagaraComp =
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(),
+			LightningBoltVFX,
+			FireLocation,
+			SpawnRotation,
+			FVector(0.5f),
+			true,
+			false
+		);
+	
+	if (BoltNiagaraComp)
+	{
+		BoltNiagaraComp->SetVectorParameter(
+			FName("LightingVector"),
+			FireDirection
+		);
+
+		float Dist = FVector::Dist(FireLocation, GetActorLocation());
+		BoltNiagaraComp->SetVariableVec2(
+			FName("LightingSize"),
+			FVector2D(200.f, Dist)
+		);
+
+		BoltNiagaraComp->Activate(true);
+	}
+
 	UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-				GetWorld(),
-				LightningFX,
-				FireLocation,
-				FireRotation,
-				FVector(0.5f)
-			);
+		GetWorld(),
+		LightningImpactVFX,
+		GetActorLocation() + FVector(0.f, 0.f, -104.f),
+		FRotator::ZeroRotator,
+		FVector(0.5f),
+		true,
+		true
+	);
 	
-	// 정방향 재생
 	AnimInstance->Montage_Play(ElectrocutedMontage, 1.f);
-
-	// // 종료 콜백 바인딩
-	// if (HasAuthority())
-	// {
-	// 	FOnMontageEnded EndDelegate;
-	// 	EndDelegate.BindUObject(this, &ACuteAlienPlayer::Multicast_OnCloudMontageEnded);
-	// 	AnimInstance->Montage_SetEndDelegate(EndDelegate, ElectrocutedMontage);
-	// 	AnimInstance->Montage_SetEndDelegate(EndDelegate, ElectrocutedMontage);
-	// }
 	
-}
-
-void ACuteAlienPlayer::Multicast_OnCloudMontageEnded_Implementation(UAnimMontage* Montage, bool bInterrupted)
-{
-	if (bInterrupted || Montage != ElectrocutedMontage)
-		return;
-
-	USkeletalMeshComponent* MeshComp = GetMesh();
-	if (!MeshComp)
-		return;
-
-	UAnimInstance* AnimInstance = MeshComp->GetAnimInstance();
-	if (!AnimInstance)
-		return;
-
-	// 2️⃣ 역재생
-	const float MontageLength = Montage->GetPlayLength();
-
-	AnimInstance->Montage_Play(Montage, -1.f);
-	AnimInstance->Montage_SetPosition(Montage, MontageLength);
+	UGameplayStatics::PlaySoundAtLocation(
+	this,
+	ElectricShock,
+	GetActorLocation()
+);
 }

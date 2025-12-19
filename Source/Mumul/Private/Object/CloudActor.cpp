@@ -19,7 +19,7 @@ void ACloudActor::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (auto* Mesh = GetComponentByClass<UStaticMeshComponent>())
+	if (UStaticMeshComponent* Mesh = GetComponentByClass<UStaticMeshComponent>())
 	{
 		CloudMID = Mesh->CreateDynamicMaterialInstance(0);
 	}
@@ -197,14 +197,11 @@ void ACloudActor::UpdateFire()
 	if (!bFiredThisState)
 	{
 		bFiredThisState = true;
-		//OwnerPlayer = Cast<ACuteAlienPlayer>(UGameplayStatics::GetActorOfClass(GetWorld(), ACuteAlienPlayer::StaticClass()));
+
 		if (OwnerPlayer)
 		{
-			const FVector FireLocation = GetActorLocation() + FVector(0.f, 0.f, -250.f);
-
-			const FRotator FireRotation = (OwnerPlayer->GetActorLocation() - FireLocation).Rotation();
-			
-			OwnerPlayer->Server_PlayElectrocutedMontage(FireLocation, FireRotation);
+			const FVector FireDir = (OwnerPlayer->GetActorLocation() - GetActorLocation()).GetSafeNormal();
+			OwnerPlayer->Server_PlayElectrocutedMontage(this->GetActorLocation(), FireDir);
 		}
 	}
 
