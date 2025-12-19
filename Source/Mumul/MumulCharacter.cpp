@@ -178,7 +178,7 @@ void AMumulCharacter::Move(const FInputActionValue& Value)
 
 void AMumulCharacter::Stop(const FInputActionValue& Value)
 {
-	if (FootStepComp->IsPlaying() && GetCharacterMovement()->IsFalling())
+	if (FootStepComp->IsPlaying() || GetCharacterMovement()->IsFalling())
 	{
 		FootStepComp->FadeOut(0.06f, 0.0f);
 	}
@@ -201,7 +201,7 @@ void AMumulCharacter::OnJump(const FInputActionValue& Value)
 {
 	Server_OnJump();
 	
-	if (FootStepComp->IsPlaying() && GetCharacterMovement()->IsFalling())
+	if (FootStepComp->IsPlaying() || GetCharacterMovement()->IsFalling())
 	{
 		FootStepComp->FadeOut(0.06f, 0.0f);
 	}
