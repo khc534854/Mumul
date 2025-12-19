@@ -6,6 +6,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "OnlineSubsystemUtils.h"
 #include "OnlineSessionSettings.h"
+#include "Base/MumulGameSettings.h"
 #include "Online/OnlineSessionNames.h"
 
 
@@ -13,9 +14,51 @@ UMumulGameInstance::UMumulGameInstance()
 {
 }
 
+void UMumulGameInstance::LoadServerInfoOverride()
+{
+	// 실행 파일(.exe)이 있는 폴더 경로 + 파일명
+	FString FilePath = FPaths::Combine(FPlatformProcess::BaseDir(), TEXT("ServerInfo.txt"));
+
+	// 파일 존재 여부 확인
+	if (!FPaths::FileExists(FilePath))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[ServerInfo] 파일이 없습니다. 기본 설정을 사용합니다. 경로: %s"), *FilePath);
+		return;
+	}
+
+	TArray<FString> Lines;
+	if (FFileHelper::LoadFileToStringArray(Lines, *FilePath))
+	{
+		// 최소 2줄 이상인지 확인 (BaseURL, WebSocketURL)
+		if (Lines.Num() >= 2)
+		{
+			FString LoadedBaseURL = Lines[0].TrimStartAndEnd(); // 공백 제거
+			FString LoadedSocketURL = Lines[1].TrimStartAndEnd();
+
+			// 설정 클래스(CDO) 가져오기
+			UMumulGameSettings* Settings = GetMutableDefault<UMumulGameSettings>();
+            
+			// 값 덮어쓰기
+			Settings->BaseURL = LoadedBaseURL;
+			Settings->WebSocketURL = LoadedSocketURL;
+
+			UE_LOG(LogTemp, Warning, TEXT("=========================================="));
+			UE_LOG(LogTemp, Warning, TEXT("[ServerInfo] 외부 파일에서 설정을 로드했습니다!"));
+			UE_LOG(LogTemp, Warning, TEXT("BaseURL: %s"), *Settings->BaseURL);
+			UE_LOG(LogTemp, Warning, TEXT("SocketURL: %s"), *Settings->WebSocketURL);
+			UE_LOG(LogTemp, Warning, TEXT("=========================================="));
+		}
+	}
+}
+
 void UMumulGameInstance::Init()
 {
 	Super::Init();
+
+	//UMumulGameSettings* Settings = GetMutableDefault<UMumulGameSettings>();
+	//Settings->ReloadConfig();
+
+	LoadServerInfoOverride();
 	
 	IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
 	if (Subsystem)

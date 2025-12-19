@@ -18,6 +18,8 @@ public:
 	// 생성자
 	UMumulGameInstance();
 
+	void LoadServerInfoOverride();
+
 	UFUNCTION()
 	void HandleNotice(const FString& Msg)
 	{

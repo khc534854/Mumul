@@ -289,6 +289,7 @@ void ACuteAlienController::OnCancelUI()
 		HousingComp->PreviewTent->Destroy();
 		HousingComp->PreviewTent = nullptr;
 	}
+	//PlayerUI->CloseSidePanels();
 
 	HousingComp->StopPreviewHousingItem();
 
@@ -323,6 +324,8 @@ void ACuteAlienController::OnClick(const FVector& TentLocation, const FRotator& 
 		// If Tent is Placeable
 		if (HousingComp->PreviewTent->bIsPlaceable)
 		{
+			PlayerUI->CloseSidePanels();
+			
 			HousingComp->PreviewTent->Destroy();
 			HousingComp->PreviewTent = nullptr;
 
