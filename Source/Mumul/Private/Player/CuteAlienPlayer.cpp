@@ -145,7 +145,7 @@ void ACuteAlienPlayer::BeginPlay()
 			MinimapCapture->SetComponentTickEnabled(false);
 		}
 	}
-
+	
 	if (AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>())
 	{
 		UpdateBodyMaterial(PS->PS_TendencyID);
@@ -178,6 +178,13 @@ void ACuteAlienPlayer::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void ACuteAlienPlayer::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
+
+	if (AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>())
+	{
+		UpdateBodyMaterial(PS->PS_TendencyID);
+        
+		UpdateCustomMesh(PS->EquippedCustomID);
+	}
 
 	UpdateNameTag();
 }
@@ -295,7 +302,7 @@ void ACuteAlienPlayer::UpdateNameTag()
 
 	if (UTextBlock* TextBlock = Cast<UTextBlock>(WidgetObj->GetWidgetFromName(TEXT("NameText"))))
 	{
-		FString DisplayName = PS->GetPlayerName();
+		FString DisplayName = PS->PS_RealName;
 		TextBlock->SetText(FText::FromString(DisplayName));
 	}
 }
