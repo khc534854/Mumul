@@ -252,9 +252,13 @@ void ATentActor::SetOwnerUserIndex(int32 NewUserIndex)
 
 void ATentActor::OnSoundFinished()
 {
-	UGameplayStatics::PlaySoundAtLocation(
-		this,
-		Boing,
-		GetActorLocation()
-);
+	// UGameplayStatics::PlaySoundAtLocation(
+	// 	this,
+	// 	Boing,
+	// 	GetActorLocation()
+	// );
+	UGameplayStatics::PlaySound2D(
+	this,
+	Boing
+	);
 }

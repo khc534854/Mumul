@@ -239,10 +239,14 @@ void AMumulCharacter::Multicast_OnRollAnimation_Implementation()
 		LaunchCharacter(Dir * RollStrength, false, false);
 		PlayerAnim->Montage_Play(RollMontage);
 
-		UGameplayStatics::PlaySoundAtLocation(
-			this,
-			RollSound,
-			GetActorLocation()
+		// UGameplayStatics::PlaySoundAtLocation(
+		// 	this,
+		// 	RollSound,
+		// 	GetActorLocation()
+		// );
+		UGameplayStatics::PlaySound2D(
+	this,
+	RollSound
 		);
 	}
 }
