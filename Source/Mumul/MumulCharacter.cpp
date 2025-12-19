@@ -206,7 +206,7 @@ void AMumulCharacter::OnJump(const FInputActionValue& Value)
 		FootStepComp->FadeOut(0.06f, 0.0f);
 	}
 
-	if (GetCharacterMovement()->IsFalling())
+	if (GetCharacterMovement()->IsFalling() && PlayerAnim->Montage_IsPlaying(RollMontage) == false)
 	{
 		UGameplayStatics::PlaySound2D(
 			this,
