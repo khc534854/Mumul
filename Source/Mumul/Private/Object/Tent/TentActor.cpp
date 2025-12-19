@@ -222,19 +222,27 @@ void ATentActor::SpawnHousingItem(const FHousingSaveData& Data)
 	}
 }
 
-void ATentActor::Mulicast_OnScaleAnimation_Implementation()
+void ATentActor::Mulicast_OnScaleAnimation_Implementation(bool bPlaySound)
 {
 	TentSequence1st = 0.f;
 	TentSequence2nd = 0.f;
-	
+
+	if (!bPlaySound)
+	{
+		return;
+	}
+
 	UAudioComponent* InstallAudioComp =
 	UGameplayStatics::SpawnSoundAtLocation(
 		this,
 		Zip,
 		GetActorLocation()
 	);
-	
-	InstallAudioComp->OnAudioFinished.AddDynamic(this, &ATentActor::OnSoundFinished);
+
+	if (InstallAudioComp)
+	{
+		InstallAudioComp->OnAudioFinished.AddDynamic(this, &ATentActor::OnSoundFinished);
+	}
 }
 
 void ATentActor::SetOwnerUserIndex(int32 NewUserIndex)
@@ -245,8 +253,8 @@ void ATentActor::SetOwnerUserIndex(int32 NewUserIndex)
 void ATentActor::OnSoundFinished()
 {
 	UGameplayStatics::PlaySoundAtLocation(
-	this,
-	Boing,
-	GetActorLocation()
+		this,
+		Boing,
+		GetActorLocation()
 );
 }

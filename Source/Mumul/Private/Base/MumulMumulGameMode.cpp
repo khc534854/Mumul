@@ -122,8 +122,11 @@ void AMumulMumulGameMode::SaveUserData(AController* Controller)
 void AMumulMumulGameMode::SpawnTent(const FTransform& SpawnTransform, int32 UserIndex, bool bSaveToDisk,
 	const TArray<FHousingSaveData>& LoadedItems)
 {
-	bool bTentProcessed = false; // 텐트 처리가 완료되었는지 확인하는 플래그
+	bool bTentProcessed = false;
 	ATentActor* TargetTent = nullptr;
+
+	// "로드/복구"일 때만 무음: BeginPlay 복구는 bSaveToDisk=false로 들어오고 있음
+	const bool bPlayInstallSound = bSaveToDisk;
 
 	// 1. 이미 해당 유저가 활성화한 텐트가 있는지 확인 (이동 로직)
 	for (const TPair<TObjectPtr<ATentActor>, int32>& PoolElem : TentPool)
@@ -132,11 +135,11 @@ void AMumulMumulGameMode::SpawnTent(const FTransform& SpawnTransform, int32 User
 		{
 			TargetTent = PoolElem.Key;
 			TargetTent->ChangeTransform(SpawnTransform);
-			TargetTent->Mulicast_OnScaleAnimation();
-            
+			TargetTent->Mulicast_OnScaleAnimation(bPlayInstallSound);
+
 			bTentProcessed = true;
 			UE_LOG(LogTemp, Log, TEXT("[GameMode] Found existing tent for User %d. Moving..."), UserIndex);
-			break; // 리턴 대신 루프 탈출
+			break;
 		}
 	}
 
@@ -150,12 +153,12 @@ void AMumulMumulGameMode::SpawnTent(const FTransform& SpawnTransform, int32 User
 				TargetTent = PoolElem.Key;
 				TargetTent->SetOwnerUserIndex(UserIndex);
 				TargetTent->Activate(SpawnTransform);
-				TargetTent->Mulicast_OnScaleAnimation();
-				PoolElem.Value = UserIndex; // 주인 업데이트
-                
+				TargetTent->Mulicast_OnScaleAnimation(bPlayInstallSound);
+				PoolElem.Value = UserIndex;
+
 				bTentProcessed = true;
 				UE_LOG(LogTemp, Log, TEXT("[GameMode] Recycled inactive tent for User %d."), UserIndex);
-				break; // 리턴 대신 루프 탈출
+				break;
 			}
 		}
 	}

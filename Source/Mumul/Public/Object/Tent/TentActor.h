@@ -35,7 +35,7 @@ public:
 	float TentSequence1st;
 	float TentSequence2nd;
 	UFUNCTION(NetMulticast, Reliable)
-	void Mulicast_OnScaleAnimation();
+	void Mulicast_OnScaleAnimation(bool bPlaySound);
 
 	UPROPERTY()
 	class ACampFireActor* ChildCampFire;
