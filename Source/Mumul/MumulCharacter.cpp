@@ -10,6 +10,8 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Components/AudioComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Player/CuteAlienAnim.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -61,14 +63,20 @@ AMumulCharacter::AMumulCharacter()
 	{
 		JumpMontage = JumpMontageFinder.Object;
 	}
+	
+	FootStepComp = CreateDefaultSubobject<UAudioComponent>(TEXT("FootStepComp"));
+	FootStepComp->SetupAttachment(GetRootComponent());
+	FootStepComp->bAutoActivate = false;
 }
 
 void AMumulCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
-	
+
 	PlayerAnim = Cast<UCuteAlienAnim>(GetMesh()->GetAnimInstance());
+
+	FootStepComp->SetSound(FootStep);
 }
 
 void AMumulCharacter::SetFirstPersonView(bool bEnable)
@@ -77,10 +85,10 @@ void AMumulCharacter::SetFirstPersonView(bool bEnable)
 	{
 		// 1인칭 모드: 카메라 붐 길이를 0으로 줄임
 		CameraBoom->TargetArmLength = 30.0f;
-        
+
 		// 카메라 위치를 약간 위로 조정 (캐릭터 눈높이)
 		// 필요에 따라 Z값을 조정하세요 (예: 20~60)
-		CameraBoom->SocketOffset = FVector(0, 0, 80.f); 
+		CameraBoom->SocketOffset = FVector(0, 0, 80.f);
 
 		// 캐릭터가 카메라 회전을 따라가도록 설정 (설치 편의성)
 		bUseControllerRotationYaw = true;
@@ -106,31 +114,37 @@ void AMumulCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	// Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
 	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<
+			UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
-	
+
 	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		// Jumping
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this,
-										   &AMumulCharacter::Server_OnJump);
+		                                   &AMumulCharacter::Server_OnJump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this,
-										   &AMumulCharacter::Move);
+		                                   &AMumulCharacter::Move);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this,
+		                                   &AMumulCharacter::Stop);
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this,
-										   &AMumulCharacter::Look);
+		                                   &AMumulCharacter::Look);
 	}
 	else
 	{
-		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
+		UE_LOG(LogTemplateCharacter, Error,
+		       TEXT(
+			       "'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."
+		       ), *GetNameSafe(this));
 	}
 }
 
@@ -138,6 +152,11 @@ void AMumulCharacter::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
+
+	if (FootStepComp->IsPlaying() == false)
+	{
+		FootStepComp->Play();
+	}
 
 	if (Controller != nullptr)
 	{
@@ -147,13 +166,21 @@ void AMumulCharacter::Move(const FInputActionValue& Value)
 
 		// get forward vector
 		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-	
+
 		// get right vector 
 		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
 		// add movement 
 		AddMovementInput(ForwardDirection, MovementVector.Y);
 		AddMovementInput(RightDirection, MovementVector.X);
+	}
+}
+
+void AMumulCharacter::Stop(const FInputActionValue& Value)
+{
+	if (FootStepComp->IsPlaying())
+	{
+		FootStepComp->FadeOut(0.06f, 0.0f);
 	}
 }
 
@@ -174,19 +201,20 @@ void AMumulCharacter::Server_OnJump_Implementation(const FInputActionValue& Valu
 {
 	if (!IsValid(PlayerAnim) || !IsValid(JumpMontage) || !IsValid(RollMontage))
 		return;
-	
+
 	if (GetCharacterMovement()->IsFalling())
 	{
 		Multicast_OnRollAnimation();
 		return;
 	}
-	
+
 	Multicast_OnJumpAnimation();
 }
 
 void AMumulCharacter::Multicast_OnJumpAnimation_Implementation()
 {
-	if (PlayerAnim->Montage_IsPlaying(JumpMontage) == false && GetCharacterMovement()->IsFalling() == false && PlayerAnim->Montage_IsPlaying(RollMontage) == false)
+	if (PlayerAnim->Montage_IsPlaying(JumpMontage) == false && GetCharacterMovement()->IsFalling() == false &&
+		PlayerAnim->Montage_IsPlaying(RollMontage) == false)
 	{
 		PlayerAnim->Montage_Play(JumpMontage);
 	}
@@ -200,5 +228,11 @@ void AMumulCharacter::Multicast_OnRollAnimation_Implementation()
 		Dir.Normalize();
 		LaunchCharacter(Dir * RollStrength, false, false);
 		PlayerAnim->Montage_Play(RollMontage);
+
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			RollSound,
+			GetActorLocation()
+		);
 	}
 }
