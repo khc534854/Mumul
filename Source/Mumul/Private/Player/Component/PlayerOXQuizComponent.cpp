@@ -48,6 +48,7 @@ void UPlayerOXQuizComponent::Client_DisplayReady_Implementation()
 {
 	if (OXQuizUI)
 	{
+		OXQuizUI->ReadyText->SetText(FText::FromString(TEXT("준비되셨나요 !")));
 		OXQuizUI->OXQuizWS->SetActiveWidgetIndex(3);
 		OXQuizUI->SetVisibility(ESlateVisibility::Visible);
 		owner->AudioManager->StartQuizBGM();
