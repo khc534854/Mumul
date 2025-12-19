@@ -188,6 +188,7 @@ void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const
 		}
 		PS->SetPlayerName(Name);
 		PS->PS_RealName = Name;
+		PS->OnRep_RealName();
 		PS->PS_UserType = Type;
 		PS->Server_SetVoiceChannelID(TEXT("Lobby"));
 		// PS->CampID = CampID; (인자 추가 시)
