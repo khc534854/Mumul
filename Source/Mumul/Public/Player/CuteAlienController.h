@@ -67,6 +67,8 @@ public:
 	TObjectPtr<class UPlayerMeetingManagerComponent> MeetingComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<class UPlayerOXQuizComponent> OXQuizComp;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<class UPlayerNoticeComponent> NoticeComp;
 
 public:
 	UPROPERTY()

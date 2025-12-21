@@ -409,7 +409,7 @@ struct FLearningQuizRequest
 	GENERATED_BODY()
 
 	UPROPERTY()
-	int32 userId;
+	int32 userId = 0;
 	
 	UPROPERTY()
 	FString grade;
@@ -422,7 +422,7 @@ struct FQuizContent
 	GENERATED_BODY()
 
 	UPROPERTY()
-	int32 id;
+	int32 id = 0;
 
 	UPROPERTY()
 	FString type;
@@ -443,7 +443,7 @@ struct FLearningQuizResponse
 	GENERATED_BODY()
 
 	UPROPERTY()
-	bool isLearningQuestion;
+	bool isLearningQuestion = false;
 
 	UPROPERTY()
 	FString grade;
