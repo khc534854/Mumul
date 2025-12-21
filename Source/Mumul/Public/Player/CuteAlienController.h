@@ -44,6 +44,8 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Server_InitPlayerInfo(int32 UID, const FString& Name, const FString& Type, int32 Tendency);
 
+	UFUNCTION(Client, Reliable)
+	void Client_PlayLoadSequence();
 
 	UPROPERTY()
 	TObjectPtr<class UInputMappingContext> IMC_Player;

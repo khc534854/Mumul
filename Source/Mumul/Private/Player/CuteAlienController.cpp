@@ -3,12 +3,15 @@
 
 #include "Player/CuteAlienController.h"
 
+#include "EngineUtils.h"
 #include "Player/CuteAlienPlayer.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "UI/RadialUI.h"
 #include "Blueprint/UserWidget.h"
 #include "InputMappingContext.h"
+#include "LevelSequenceActor.h"
+#include "LevelSequencePlayer.h"
 #include "Base/MumulGameInstance.h"
 #include "GameFramework/GameStateBase.h"
 #include "Player/MumulPlayerState.h"
@@ -199,6 +202,8 @@ void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const
 
 		// 강제 동기화 (선택)
 		PS->ForceNetUpdate();
+		
+		bool bIsFirstTime = true;
 
 		FString SlotName = TEXT("IslandMapSave");
 		if (UGameplayStatics::DoesSaveGameExist(SlotName, 0))
@@ -213,6 +218,7 @@ void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const
 				{
 					if (APawn* MyPawn = GetPawn())
 					{
+						bIsFirstTime = false;
 						// Z축 보정 (바닥 끼임 방지)
 						FVector SafeLoc = SavedTr->GetLocation() + FVector(0, 0, 50.0f);
 						SavedTr->SetLocation(SafeLoc);
@@ -231,10 +237,35 @@ void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const
 				}
 			}
 		}
+		
+		if (bIsFirstTime)
+		{
+			Client_PlayLoadSequence();
+			UE_LOG(LogTemp, Warning, TEXT("[Server] User %d is New! Requesting Intro Sequence."), UID);
+		}
+		
 		UE_LOG(LogTemp, Log, TEXT("[Server] PlayerState Initialized: %s (ID: %d)"), *Name, UID);
 	}
 }
 
+
+void ACuteAlienController::Client_PlayLoadSequence_Implementation()
+{
+	for (TActorIterator<ALevelSequenceActor> It(GetWorld()); It; ++It)
+	{
+		ALevelSequenceActor* SeqActor = *It;
+		
+		if (SeqActor && SeqActor->ActorHasTag(TEXT("LoginSequence")))
+        
+        
+		if (SeqActor && SeqActor->GetSequencePlayer())
+		{
+			SeqActor->GetSequencePlayer()->Play();
+			UE_LOG(LogTemp, Warning, TEXT("[Client] 레벨 시퀀스 재생 시작"));
+			break; // 하나만 찾아서 재생하고 종료
+		}
+	}
+}
 
 void ACuteAlienController::Tick(float DeltaSeconds)
 {
