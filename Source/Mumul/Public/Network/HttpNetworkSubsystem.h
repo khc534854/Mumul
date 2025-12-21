@@ -138,7 +138,7 @@ private:
 	void AddString(TArray<uint8>& OutPayload, const FString& InString);
 public:
 	void OnLearningQuizComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-	UPROPERTY(EditAnywhere, Category="Network")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Network")
 	FString BaseURL = TEXT("http://127.0.0.1:8000");
 
 	int64 GetCurrentEpochMs();

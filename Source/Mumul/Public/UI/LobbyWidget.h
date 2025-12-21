@@ -140,6 +140,7 @@ protected:
     TObjectPtr<class UWidgetAnimation > PopResult;
 
     // 1. 설문조사 JSON 로드 및 파싱 (NativeConstruct에서 호출)
+    UFUNCTION(BlueprintCallable)
     void LoadSurveyData();
 
     // 2. 현재 질문을 UI에 표시

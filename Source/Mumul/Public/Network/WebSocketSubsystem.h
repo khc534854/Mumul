@@ -61,7 +61,7 @@ public:
     bool IsConnected() const;
 
 public:
-    UPROPERTY(EditAnywhere, Category="Network")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Network")
     FString BaseURL = TEXT("ws://127.0.0.1:8000/ws");
 
     // [신규] 현재 연결된 챗봇 타입
