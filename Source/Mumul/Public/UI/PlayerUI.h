@@ -145,6 +145,11 @@ protected:
 	UFUNCTION()
 	void OnRecordClicked();
 
+public:
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UButton> NoticeBtn;
+	UFUNCTION()
+	void OnClickNoticeBtn();
 	
 	// Time
 protected:

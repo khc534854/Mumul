@@ -4,7 +4,6 @@
 #include "UI/PlayerUI.h"
 
 #include "EngineUtils.h"
-#include "Animation/WidgetAnimation.h"
 #include "Components/Button.h"
 #include "Components/CheckBox.h"
 #include "Components/HorizontalBox.h"
@@ -20,11 +19,12 @@
 #include "Player/MumulPlayerState.h"
 #include "Player/Component/PlayerHousingSystemComponent.h"
 #include "Player/Component/PlayerMeetingManagerComponent.h"
+#include "Player/Component/PlayerNoticeComponent.h"
 #include "save/MapDataSaveGame.h"
 #include "UI/CustomItemEntryUI.h"
 #include "UI/GroupChatUI.h"
-#include "UI/BaseUI/BaseButton.h"
 #include "UI/BaseUI/BaseText.h"
+#include "UI/NoticeUI/NoticeUI.h"
 
 void UPlayerUI::NativeConstruct()
 {
@@ -95,6 +95,11 @@ void UPlayerUI::NativeConstruct()
 	
 	LoadAndGenerateItemList();
 	LoadAndGenerateHousingItemList();
+	
+	if (NoticeBtn)
+	{
+		NoticeBtn->OnClicked.AddDynamic(this, &UPlayerUI::OnClickNoticeBtn);
+	}
 }
 
 void UPlayerUI::OnLogOutBtnClicked()
@@ -626,6 +631,11 @@ void UPlayerUI::OnRecordClicked()
 			PC->MeetingComp->OpenMeetingSetupUI();
 		}
 	}
+}
+
+void UPlayerUI::OnClickNoticeBtn()
+{
+	PC->NoticeComp->NoticeUI->OnToggleNoticeVisibility();
 }
 
 void UPlayerUI::SetProfileBtnIMG(UTexture2D* IMG)
