@@ -3,10 +3,12 @@
 
 #include "Player/Component/PlayerNoticeComponent.h"
 
+#include "Components/Button.h"
 #include "Data/ObjectAndClassFinder.h"
 #include "Network/WebSocketSubsystem.h"
 #include "Player/CuteAlienController.h"
 #include "Player/CuteAlienPlayer.h"
+#include "UI/PlayerUI.h"
 #include "UI/NoticeUI/NoticeUI.h"
 
 

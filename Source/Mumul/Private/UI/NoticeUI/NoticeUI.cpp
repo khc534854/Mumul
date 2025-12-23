@@ -15,8 +15,6 @@ void UNoticeUI::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	ToggleNoticeBtn->OnClicked.AddDynamic(this, &UNoticeUI::OnToggleNoticeVisibility);
-
 	NoticeTap->OnClicked.AddDynamic(this, &UNoticeUI::OnSwitchToNotice);
 	InformationTap->OnClicked.AddDynamic(this, &UNoticeUI::OnSwitchToInformation);
 	DirectMessageTap->OnClicked.AddDynamic(this, &UNoticeUI::OnSwitchToDM);

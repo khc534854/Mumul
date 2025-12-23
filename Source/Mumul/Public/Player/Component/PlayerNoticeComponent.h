@@ -27,9 +27,11 @@ protected:
 	UFUNCTION()
 	void OnDirectMessage(const FString& NoticeMessage);
 	
+public:
 	UPROPERTY()
 	TObjectPtr<class UNoticeUI> NoticeUI;
 	
+protected:
 	UPROPERTY()
 	TObjectPtr<class ACuteAlienController> owner;
 	UPROPERTY()

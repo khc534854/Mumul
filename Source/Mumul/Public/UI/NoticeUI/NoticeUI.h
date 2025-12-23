@@ -110,13 +110,10 @@ protected:
 	UPROPERTY()
 	TObjectPtr<class UNoticeContentUI> NoticeContentUI;
 	
-	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UButton> ToggleNoticeBtn;
-	UFUNCTION()
-	void OnToggleNoticeVisibility();
 	void SortNotices(UVerticalBox* ConfirmedBox, UVerticalBox* UnConfirmedBox);
 	
 public:
+	void OnToggleNoticeVisibility();
 	void AddNotice(const FNoticeViewData& Data);
 	void AddDM(const FNoticeViewData& Data);
 };
