@@ -151,9 +151,6 @@ struct FDispatchNoticePayload
 
     UPROPERTY()
     FString text;
-
-    UPROPERTY()
-    FString urgency;
 };
 
 USTRUCT(BlueprintType)
@@ -184,10 +181,12 @@ struct FDispatchAckPayload
 };
 
 USTRUCT(BlueprintType)
-struct FDispatchPongPayload
+struct FDispatchAckPongPayload
 {
     GENERATED_BODY()
 
+	bool ok;
+	
     UPROPERTY()
     FString serverAt;
 };

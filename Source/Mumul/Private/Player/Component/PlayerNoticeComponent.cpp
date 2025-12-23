@@ -54,40 +54,34 @@ void UPlayerNoticeComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 
 void UPlayerNoticeComponent::OnNotice(const FDispatchNoticePayload& Notice)
 {
-	FNoticeViewData NoticeData;
-    
-	FString DisplayContent = FString::Printf(TEXT("[%s] %s\n%s"), *Notice.urgency, *Notice.title, *Notice.text);
-	NoticeData.Notice.Content = DisplayContent;
-    
-	NoticeData.Notice.CreatedAt = FDateTime::Now();
-	NoticeData.UserState.bConfirmed = false;
+	UE_LOG(LogTemp, Warning, TEXT("[Notice] %s"), *Notice.noticeId);
+	UE_LOG(LogTemp, Warning, TEXT("[Notice] %s"), *Notice.title);
+	UE_LOG(LogTemp, Warning, TEXT("[Notice] %s"), *Notice.text);
+	
+	FNoticeData NoticeData;
+	NoticeData.noticeId = *Notice.noticeId;
+	NoticeData.title = *Notice.title;
+	NoticeData.text = *Notice.text;
+	NoticeData.CreatedAt = FDateTime::Now();
 
 	if (NoticeUI)
 	{
 		NoticeUI->AddNotice(NoticeData);
-        
-		if (WebSocketSystem)
-		{
-			WebSocketSystem->SendDispatchAck(TEXT("notice"), Notice.noticeId);
-		}
 	}
 }
 
 void UPlayerNoticeComponent::OnDirectMessage(const FDispatchDMPayload& DM)
 {
-	FNoticeViewData NoticeData;
-	NoticeData.Notice.Content = DM.text;
-	NoticeData.Notice.CreatedAt = FDateTime::Now();
-	NoticeData.UserState.bConfirmed = false;
+	UE_LOG(LogTemp, Warning, TEXT("[DM] %s"), *DM.messageId);
+	UE_LOG(LogTemp, Warning, TEXT("[DM] %s"), *DM.text);
+	
+	FDMData DMData;
+	DMData.messageId = DM.messageId;
+	DMData.text = DM.text;
+	DMData.CreatedAt = FDateTime::Now();
 
 	if (NoticeUI)
 	{
-		NoticeUI->AddDM(NoticeData);
-        
-		// (선택) 수신 확인 ACK 자동 전송
-		if (WebSocketSystem)
-		{
-			WebSocketSystem->SendDispatchAck(TEXT("dm"), DM.messageId);
-		}
+		NoticeUI->AddDM(DMData);
 	}
 }

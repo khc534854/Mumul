@@ -4,9 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Network/NetworkStructs.h"
 #include "NoticeContentUI.generated.h"
 
-struct FNoticeViewData;
+struct FDMData;
+struct FNoticeData;
 /**
  * 
  */
@@ -20,6 +22,8 @@ protected:
 	
 	UPROPERTY()
 	TObjectPtr<class UWebSocketSubsystem> WebSocketSystem;
+	UFUNCTION()
+	void OnAckResponse(const FDispatchAckPongPayload& AckPong);
 	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UTextBlock> NoticeContentText;
@@ -31,12 +35,15 @@ protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UTextBlock> NoticeConfirmText;
 	
-	int32 NoticeId;
+	FString ContentID;
 	FDateTime CreatedAt;
 	bool bIsConfirmed = false;
 	
+	bool bIsNotice = true;
+	
 public:
-	void InitUI(const FNoticeViewData& Data);
+	void InitUI(const FNoticeData& Data);
+	void InitUI(const FDMData& Data);
 	FDateTime GetCreatedAt() const { return CreatedAt; }
 	bool IsConfirmed() const { return bIsConfirmed; }
 	void UpdateConfirmButtonUI();
