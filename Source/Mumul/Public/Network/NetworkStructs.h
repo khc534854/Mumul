@@ -134,7 +134,7 @@ struct FLearningQueryPayload
     FString query;
 
     UPROPERTY()
-    int32 grade = 0;
+    FString grade;
 };
 
 // --- D. Dispatch (공지/DM) ---

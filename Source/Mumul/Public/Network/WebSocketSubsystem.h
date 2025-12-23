@@ -68,7 +68,7 @@ public:
     void StartLearningChat(int32 SessionId, int32 UserId);
 
     UFUNCTION(BlueprintCallable, Category = "Network|WS|Learning")
-    void QueryLearningChat(int32 SessionId, int32 UserId, FString Query, int32 Grade);
+    void QueryLearningChat(int32 SessionId, int32 UserId, FString Query, FString Grade);
 
     UFUNCTION(BlueprintCallable, Category = "Network|WS|Learning")
     void EndLearningChat(int32 SessionId, int32 UserId);
@@ -154,6 +154,7 @@ void UWebSocketSubsystem::SendEnvelope(const FString& Domain, const FString& Eve
     FString JsonString;
     TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&JsonString);
     FJsonSerializer::Serialize(RootObj.ToSharedRef(), Writer);
+    UE_LOG(LogTemp, Log, TEXT("[WS Send] Domain: %s | Event: %s | Payload: %s"), *Domain, *Event, *JsonString);
 
     WebSocket->Send(JsonString);
 }

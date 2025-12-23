@@ -154,31 +154,44 @@ void ACuteAlienController::BeginPlay()
 		Subsystem->AddMappingContext(IMC_Player, 0);
 	}
 
-	if (RadialUIClass)
-	{
-		RadialUI = CreateWidget<URadialUI>(this, RadialUIClass);
-		if (RadialUI)
-		{
-			RadialUI->AddToViewport();
-			RadialUI->SetVisibility(ESlateVisibility::Hidden);
-		}
-	}
-
 	if (PlayerUIClass)
 	{
 		PlayerUI = CreateWidget<UPlayerUI>(this, PlayerUIClass);
 		if (PlayerUI)
 		{
-			PlayerUI->AddToViewport(100);
-			PlayerUI->SetVisibility(ESlateVisibility::Hidden);
+			// 기본 배경이므로 낮은 값 (10)
+			PlayerUI->AddToViewport(10); 
+			PlayerUI->SetVisibility(ESlateVisibility::Hidden); // 인트로 끝나고 보여줌
 		}
 	}
 
-	if (PlayerUI && ChatComp->GroupChatUI)
+	// [2단계] GroupChatUI (채팅창) - Z: 20
+	// (PlayerChatComponent에서 생성되지만 여기서 Z-Order 관리)
+	if (ChatComp && ChatComp->GroupChatUI) 
 	{
-		PlayerUI->InitGroupChatUI(ChatComp->GroupChatUI);
+		if (PlayerUI)
+		{
+			PlayerUI->InitGroupChatUI(ChatComp->GroupChatUI);
+		}
+       
+		// 채팅창은 HUD보다 위에 있어야 함 (20)
+		if (!ChatComp->GroupChatUI->IsInViewport())
+		{
+			ChatComp->GroupChatUI->AddToViewport(10);
+		}
 		ChatComp->GroupChatUI->SetVisibility(ESlateVisibility::Hidden);
-		RadialUI->SetVisibility(ESlateVisibility::Hidden);
+	}
+
+	// [3단계] RadialUI (메뉴) - Z: 30
+	if (RadialUIClass)
+	{
+		RadialUI = CreateWidget<URadialUI>(this, RadialUIClass);
+		if (RadialUI)
+		{
+			// 메뉴는 채팅창보다도 위에 뜰 수 있음 (30)
+			RadialUI->AddToViewport(30);
+			RadialUI->SetVisibility(ESlateVisibility::Hidden);
+		}
 	}
 
 	TryInitPlayerInfo();
@@ -485,7 +498,7 @@ void ACuteAlienController::TryInteractWithFeedbackActor()
 			if (!FeedbackUI && FeedbackUIClass)
 			{
 				FeedbackUI = CreateWidget<UFeedbackUI>(this, FeedbackUIClass);
-				FeedbackUI->AddToViewport(10); // 다른 UI보다 위에 오도록 Z-Order 설정
+				FeedbackUI->AddToViewport(50); // 다른 UI보다 위에 오도록 Z-Order 설정
 			}
 
 			// UI 표시 및 입력 모드 전환
@@ -528,7 +541,7 @@ void ACuteAlienController::OpenLogoutUI()
 		LogoutUI = CreateWidget<ULogoutUI>(this, LogoutUIClass);
 		if (LogoutUI)
 		{
-			LogoutUI->AddToViewport(20); // Z-Order를 높게 설정 (최상단)
+			LogoutUI->AddToViewport(100); // Z-Order를 높게 설정 (최상단)
 		}
 	}
 
@@ -690,12 +703,12 @@ void ACuteAlienController::OnIntroSequenceFinished()
 
 	if (PlayerUI)
 	{
-		PlayerUI->SetVisibility(ESlateVisibility::Visible);
+		PlayerUI->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	}
 
 	if (ChatComp && ChatComp->GroupChatUI)
 	{
-		ChatComp->GroupChatUI->SetVisibility(ESlateVisibility::Visible);
+		ChatComp->GroupChatUI->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	}
 	
 	if (PlayerCameraManager)

@@ -30,6 +30,12 @@ void UPlayerUI::NativeConstruct()
 {
 	Super::NativeConstruct();
 
+	if (UWidget* RootWidget = GetRootWidget())
+	{
+		// 배경 투명 영역 클릭 통과 설정
+		RootWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	}
+
 	UpdateCurrentTime();
 	FDateTime Now = FDateTime::Now();
 	int32 RemainingSeconds = 60 - Now.GetSecond();

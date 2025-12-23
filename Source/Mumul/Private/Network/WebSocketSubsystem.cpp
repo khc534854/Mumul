@@ -153,14 +153,16 @@ void UWebSocketSubsystem::HandleSystemMessage(const FString& Event, TSharedPtr<F
     {
         FSystemRegisterPayload Data;
         FJsonObjectConverter::JsonObjectToUStruct(PayloadObj.ToSharedRef(), &Data);
+        
+        UE_LOG(LogTemp, Log, TEXT("[WS Recv] System Registered UserID: %d"), Data.userId); // 로그
         OnSystemRegistered.Broadcast(Data.userId);
-        UE_LOG(LogTemp, Log, TEXT("[WS] System: Registered (User %d)"), Data.userId);
     }
     else if (Event == TEXT("error"))
     {
         FString ErrorMsg = PayloadObj->GetStringField(TEXT("message"));
+        
+        UE_LOG(LogTemp, Error, TEXT("[WS Recv] System Error: %s"), *ErrorMsg); // 로그
         OnSystemError.Broadcast(ErrorMsg);
-        UE_LOG(LogTemp, Error, TEXT("[WS] System Error: %s"), *ErrorMsg);
     }
 }
 
@@ -169,9 +171,21 @@ void UWebSocketSubsystem::HandleMeetingMessage(const FString& Event, TSharedPtr<
     FMeetingResponsePayload Data;
     FJsonObjectConverter::JsonObjectToUStruct(PayloadObj.ToSharedRef(), &Data);
 
-    if (Event == TEXT("chat_started")) OnMeetingChatStarted.Broadcast(Data);
-    else if (Event == TEXT("answer")) OnMeetingAnswer.Broadcast(Data);
-    else if (Event == TEXT("chat_ended")) OnMeetingChatEnded.Broadcast(Data);
+    if (Event == TEXT("chat_started"))
+    {
+        UE_LOG(LogTemp, Log, TEXT("[WS Recv] Meeting Started (Group: %s): %s"), *Data.groupId, *Data.message); // 로그
+        OnMeetingChatStarted.Broadcast(Data);
+    }
+    else if (Event == TEXT("answer"))
+    {
+        UE_LOG(LogTemp, Log, TEXT("[WS Recv] Meeting Answer (Group: %s): %s"), *Data.groupId, *Data.answer); // 로그
+        OnMeetingAnswer.Broadcast(Data);
+    }
+    else if (Event == TEXT("chat_ended"))
+    {
+        UE_LOG(LogTemp, Log, TEXT("[WS Recv] Meeting Ended (Group: %s): %s"), *Data.groupId, *Data.message); // 로그
+        OnMeetingChatEnded.Broadcast(Data);
+    }
 }
 
 void UWebSocketSubsystem::HandleLearningMessage(const FString& Event, TSharedPtr<FJsonObject> PayloadObj)
@@ -179,9 +193,21 @@ void UWebSocketSubsystem::HandleLearningMessage(const FString& Event, TSharedPtr
     FLearningResponsePayload Data;
     FJsonObjectConverter::JsonObjectToUStruct(PayloadObj.ToSharedRef(), &Data);
 
-    if (Event == TEXT("chat_started")) OnLearningChatStarted.Broadcast(Data);
-    else if (Event == TEXT("answer")) OnLearningAnswer.Broadcast(Data);
-    else if (Event == TEXT("chat_ended")) OnLearningChatEnded.Broadcast(Data);
+    if (Event == TEXT("chat_started"))
+    {
+        UE_LOG(LogTemp, Log, TEXT("[WS Recv] Learning Started: %s"), *Data.message); // 로그
+        OnLearningChatStarted.Broadcast(Data);
+    }
+    else if (Event == TEXT("answer"))
+    {
+        UE_LOG(LogTemp, Log, TEXT("[WS Recv] Learning Answer: %s"), *Data.answer); // 로그
+        OnLearningAnswer.Broadcast(Data);
+    }
+    else if (Event == TEXT("chat_ended"))
+    {
+        UE_LOG(LogTemp, Log, TEXT("[WS Recv] Learning Ended: %s"), *Data.message); // 로그
+        OnLearningChatEnded.Broadcast(Data);
+    }
 }
 
 void UWebSocketSubsystem::HandleDispatchMessage(const FString& Event, TSharedPtr<FJsonObject> PayloadObj)
@@ -190,22 +216,26 @@ void UWebSocketSubsystem::HandleDispatchMessage(const FString& Event, TSharedPtr
     {
         FDispatchNoticePayload Notice;
         FJsonObjectConverter::JsonObjectToUStruct(PayloadObj.ToSharedRef(), &Notice);
+        
+        UE_LOG(LogTemp, Log, TEXT("[WS Recv] Notice: [%s] %s"), *Notice.urgency, *Notice.title); // 로그
         OnDispatchNotice.Broadcast(Notice);
     }
     else if (Event == TEXT("dm"))
     {
         FDispatchDMPayload DM;
         FJsonObjectConverter::JsonObjectToUStruct(PayloadObj.ToSharedRef(), &DM);
+        
+        UE_LOG(LogTemp, Log, TEXT("[WS Recv] DM: %s"), *DM.text); // 로그
         OnDispatchDM.Broadcast(DM);
     }
     else if (Event == TEXT("pong"))
     {
+        UE_LOG(LogTemp, Verbose, TEXT("[WS Recv] Pong Received")); // 로그 (Verbose 추천)
         OnPongReceived.Broadcast();
-        UE_LOG(LogTemp, Log, TEXT("[WS] Pong Received"));
     }
     else if (Event == TEXT("ack_ok"))
     {
-        UE_LOG(LogTemp, Verbose, TEXT("[WS] ACK OK"));
+        UE_LOG(LogTemp, Verbose, TEXT("[WS Recv] ACK OK")); // 로그
     }
 }
 
@@ -254,7 +284,7 @@ void UWebSocketSubsystem::StartLearningChat(int32 SessionId, int32 UserId)
     SendEnvelope(TEXT("learning"), TEXT("start_chat"), Payload);
 }
 
-void UWebSocketSubsystem::QueryLearningChat(int32 SessionId, int32 UserId, FString Query, int32 Grade)
+void UWebSocketSubsystem::QueryLearningChat(int32 SessionId, int32 UserId, FString Query, FString Grade)
 {
     FLearningQueryPayload Payload;
     Payload.sessionId = SessionId;

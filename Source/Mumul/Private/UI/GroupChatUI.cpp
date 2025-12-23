@@ -38,6 +38,12 @@ void UGroupChatUI::NativeConstruct()
 {
 	Super::NativeConstruct();
 
+	if (UWidget* RootWidget = GetRootWidget())
+	{
+		// 배경 투명 영역 클릭 통과 설정
+		RootWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	}
+
 	IMGManager = NewObject<UIMGManager>(this, UIMGManager::StaticClass());
 
 	ChatEnter->OnPressed.AddDynamic(this, &UGroupChatUI::OnTextBoxCommitted);
@@ -490,6 +496,11 @@ void UGroupChatUI::SelectGroupChat(class UGroupIconUI* SelectedIcon)
         // 2) HTTP로 지난 대화 내역 불러오기
         if (HttpSystem)
         {
+        	if (SelectedIcon->ChatBlockUI)
+        	{
+        		SelectedIcon->ChatBlockUI->ChatScrollBox->ClearChildren();
+        	}
+        	
             HttpSystem->SendTeamChatMessageRequest(SelectedIcon->ChatBlockUI->GetTeamID());
         }
 
@@ -992,13 +1003,12 @@ void UGroupChatUI::OnTextBoxCommitted()
     FString MyName = GI ? GI->PlayerName : TEXT("Me");
     int32 MyID = GI ? GI->PlayerUniqueID : 0;
 
-    // [변경] 난이도 Enum -> int 변환
-    int32 GradeInt = 1;
+    FString Grade = TEXT("초급");
     switch (Difficulty)
     {
-    case EMumuLeeDifficulty::Beginner:  GradeInt = 1; break;
-    case EMumuLeeDifficulty::Normal:    GradeInt = 2; break;
-    case EMumuLeeDifficulty::Advanced:  GradeInt = 3; break;
+    case EMumuLeeDifficulty::Beginner:  Grade = TEXT("초급"); break;
+    case EMumuLeeDifficulty::Normal:    Grade = TEXT("중급"); break;
+    case EMumuLeeDifficulty::Advanced:  Grade = TEXT("고급"); break;
     }
 
     // [전송 로직 분기]
@@ -1010,7 +1020,7 @@ void UGroupChatUI::OnTextBoxCommitted()
        if (WebSocketSystem && WebSocketSystem->IsConnected())
        {
           // [신규 함수 사용]
-          WebSocketSystem->QueryLearningChat(MyID, MyID, Content, GradeInt);
+          WebSocketSystem->QueryLearningChat(MyID, MyID, Content, Grade);
        }
        else
        {
@@ -1021,45 +1031,56 @@ void UGroupChatUI::OnTextBoxCommitted()
     else
     {
        // === Case B: 일반 그룹 채팅방 ===
-       if (CurrentSelectedGroup->ChatBlockUI)
-       {
-          FString TeamID = CurrentSelectedGroup->ChatBlockUI->GetTeamID();
+        if (CurrentSelectedGroup->ChatBlockUI)
+        {
+          	FString TeamID = CurrentSelectedGroup->ChatBlockUI->GetTeamID();
+       	  	bool bSentToBot = false;
+		  	
+          	// 1. [DB 저장] HTTP 전송 (기존 유지)
+          	// if (HttpSystem)
+          	// {
+          	//    FString Now = FDateTime::Now().ToString(TEXT("%H:%M"));
+          	//    HttpSystem->SendChatMessageRequest(TeamID, MyID, Content, Now);
+          	// }
+		  	
+          	// 2. [채팅 공유] RPC 전송 (기존 유지)
 
-          // 1. [DB 저장] HTTP 전송 (기존 유지)
-          if (HttpSystem)
-          {
-             FString Now = FDateTime::Now().ToString(TEXT("%H:%M"));
-             HttpSystem->SendChatMessageRequest(TeamID, MyID, Content, Now);
-          }
+		  	
+          	// 3. [AI 질문] 도우미 (웹소켓)
+          	if (bIsMeetingChatbotActive)
+          	{
+          	   	if (WebSocketSystem && WebSocketSystem->IsConnected())
+          	   	{
+          	   	   // [신규 함수 사용]
+          	   	   	WebSocketSystem->QueryMeetingChat(TeamID, MyID, MyName, Content);
+          	   	   	UE_LOG(LogTemp, Log, TEXT("[MeetingBot] Query Sent: %s"), *Content);
+          	   		bSentToBot = true;
+          	   	}
+          	   	else
+          	   	{
+          	   	   	AddBotChat(TEXT("회의 도우미와 연결이 끊겼습니다."));
+          	   	   	bIsMeetingChatbotActive = false;
+          	   	   	UpdateQuestionButtonState();
+          	   	   	WebSocketSystem->Connect(); // 재연결 시도
+          	   	}
+          	}
 
-          // 2. [채팅 공유] RPC 전송 (기존 유지)
-          TArray<int32> UserIDs;
-          CurrentSelectedGroup->ChatBlockUI->GetTeamUsers().GetKeys(UserIDs);
+        	if (!bSentToBot && HttpSystem) 
+        	{
+        		FString Now = FDateTime::Now().ToString(TEXT("%H:%M"));
+        		HttpSystem->SendChatMessageRequest(TeamID, MyID, Content, Now);
+        	}
 
-          if (ACuteAlienController* PC = Cast<ACuteAlienController>(GetOwningPlayer()))
-          {
-             PC->ChatComp->Server_RequestChat(TeamID, UserIDs, TimeStamp, MyID, MyName, Content);
-          }
-
-          // 3. [AI 질문] 도우미 (웹소켓)
-          if (bIsMeetingChatbotActive)
-          {
-             if (WebSocketSystem && WebSocketSystem->IsConnected())
-             {
-                // [신규 함수 사용]
-                WebSocketSystem->QueryMeetingChat(TeamID, MyID, MyName, Content);
-                UE_LOG(LogTemp, Log, TEXT("[MeetingBot] Query Sent: %s"), *Content);
-             }
-             else
-             {
-                AddBotChat(TEXT("회의 도우미와 연결이 끊겼습니다."));
-                bIsMeetingChatbotActive = false;
-                UpdateQuestionButtonState();
-                WebSocketSystem->Connect(); // 재연결 시도
-             }
-          }
+        	TArray<int32> UserIDs;
+        	CurrentSelectedGroup->ChatBlockUI->GetTeamUsers().GetKeys(UserIDs);
+        	if (ACuteAlienController* PC = Cast<ACuteAlienController>(GetOwningPlayer()))
+        	{
+        		PC->ChatComp->Server_RequestChat(TeamID, UserIDs, TimeStamp, MyID, MyName, Content);
+        	}
        }
     }
+
+	
     
     FSlateApplication::Get().SetKeyboardFocus(ChatEnter->TakeWidget());
     EditBox->SetText(FText::FromString(TEXT("")));

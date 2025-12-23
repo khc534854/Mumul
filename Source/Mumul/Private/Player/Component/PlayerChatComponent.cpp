@@ -3,6 +3,7 @@
 
 #include "Player/Component/PlayerChatComponent.h"
 
+#include "IDetailGroup.h"
 #include "Base/MumulGameInstance.h"
 #include "Base/MumulGameState.h"
 #include "Blueprint/UserWidget.h"
@@ -67,8 +68,6 @@ void UPlayerChatComponent::BeginPlay()
 			GroupChatUI = CreateWidget<UGroupChatUI>(owner, GroupChatUIClass);
 			if (GroupChatUI)
 			{
-				GroupChatUI->AddToViewport(110);
-
 				if (owner->PlayerUI)
 				{
 					owner->PlayerUI->InitGroupChatUI(GroupChatUI);
