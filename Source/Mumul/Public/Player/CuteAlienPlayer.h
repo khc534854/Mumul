@@ -125,4 +125,18 @@ protected:
 	void OnSoundFinished();
 public:
 	void PlayTentSpawnSound();
+
+	void SetIsMeetingSitting(bool bIsSitting, AActor* FocusTarget = nullptr);
+
+	// [신규] 일어서기 몽타주 (있다면)
+	UPROPERTY(EditDefaultsOnly, Category = "Montage")
+	TObjectPtr<class UAnimMontage> StandUpMontage;
+
+private:
+	UPROPERTY()
+	USceneComponent* OriginalCameraParent = nullptr;
+    
+	FTransform OriginalCameraTransform;
+	float OriginalArmLength = 0.0f;
+	FVector OriginalSocketOffset;
 };

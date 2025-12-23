@@ -25,6 +25,8 @@
 #include "UI/OXQuiz/OXQuizUI.h"
 #include "NiagaraComponent.h"
 #include "Components/AudioComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 static const FString ItemDataTablePath = TEXT("/Game/Khc/Blueprint/Object/CustomItemList.CustomItemList");
@@ -158,6 +160,11 @@ void ACuteAlienPlayer::BeginPlay()
 		// 이미 장착된 아이템이 있다면 적용 (Replication 타이밍 이슈 방지)
 		UpdateCustomMesh(PS->EquippedCustomID);
 		UpdateNameTag();
+	}
+
+	if (WidgetComponent)
+	{
+		WidgetComponent->SetVisibility(false);
 	}
 }
 
@@ -544,6 +551,79 @@ void ACuteAlienPlayer::PlayTentSpawnSound()
 	{
 		InstallAudioComp->OnAudioFinished.AddDynamic(this, &ACuteAlienPlayer::OnSoundFinished);
 	}
+}
+
+void ACuteAlienPlayer::SetIsMeetingSitting(bool bIsSitting, AActor* FocusTarget)
+{
+    if (!GetCameraBoom()) return;
+
+    if (bIsSitting)
+    {
+        // 1. 물리/이동 멈춤
+        GetCharacterMovement()->DisableMovement();
+        GetCharacterMovement()->StopMovementImmediately();
+
+    	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+        // 2. 앉기 애니메이션 재생
+        Server_SitDown();
+
+        // 3. [신규] 카메라를 모닥불 중심으로 이동
+        if (FocusTarget)
+        {
+            // 원래 상태 저장 (복구용)
+            OriginalCameraParent = GetCameraBoom()->GetAttachParent();
+            OriginalCameraTransform = GetCameraBoom()->GetRelativeTransform();
+            OriginalArmLength = GetCameraBoom()->TargetArmLength;
+            OriginalSocketOffset = GetCameraBoom()->SocketOffset;
+
+            // 모닥불에 부착 (월드 트랜스폼 유지 X -> 모닥불 기준 로컬 0,0,0으로 가기 위해)
+            GetCameraBoom()->AttachToComponent(FocusTarget->GetRootComponent(), FAttachmentTransformRules::KeepWorldTransform);
+
+            // 모닥불 중심에서 살짝 위로 올림 (불꽃 때문에 시야 가림 방지)
+            FVector ViewCenterOffset = FVector(0.f, 0.f, 120.f); 
+            
+            // 위치 이동 (부드럽게 이동하고 싶으면 Tick에서 보간해야 하지만, 여기선 즉시 이동)
+            GetCameraBoom()->SetWorldLocation(FocusTarget->GetActorLocation() + ViewCenterOffset);
+            
+            // 설정 변경: 모닥불 중심에서 360도 회전하며 주변을 보도록 설정
+            GetCameraBoom()->TargetArmLength = 0.0f; // 중심점에서 1인칭처럼 보거나
+            // CameraBoom->TargetArmLength = 300.0f; // 약간 뒤로 빼서 모닥불 전체를 조망할 수도 있음
+            
+            GetCameraBoom()->SocketOffset = FVector::ZeroVector;
+            
+            // 회전 제어는 Controller의 Input을 계속 따르도록 유지 (bUsePawnControlRotation = true 가정)
+        }
+    }
+    else
+    {
+        // 1. 이동 재개
+        GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+    	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
+        // 2. 애니메이션 정지
+        if (PlayerAnim)
+        {
+            if (PlayerAnim->Montage_IsPlaying(SitMontage))
+            {
+                PlayerAnim->Montage_Stop(0.5f, SitMontage);
+            }
+            if (StandUpMontage)
+            {
+                PlayerAnim->Montage_Play(StandUpMontage);
+            }
+        }
+
+        // 3. [신규] 카메라 복구 (캐릭터 등 뒤로)
+        if (OriginalCameraParent)
+        {
+            GetCameraBoom()->AttachToComponent(OriginalCameraParent, FAttachmentTransformRules::KeepWorldTransform);
+            
+            // 원래 위치/설정으로 복원
+            GetCameraBoom()->SetRelativeTransform(OriginalCameraTransform);
+            GetCameraBoom()->TargetArmLength = OriginalArmLength;
+            GetCameraBoom()->SocketOffset = OriginalSocketOffset;
+        }
+    }
 }
 
 

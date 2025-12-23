@@ -183,10 +183,10 @@ void ULobbyWidget::OnServerLoginResponse(bool bSuccess, FString Message)
                 // ... 필요한 정보 다 저장
             }
 
-            UWebSocketSubsystem* WSSystem = GI->GetSubsystem<UWebSocketSubsystem>();
-            if (WSSystem)
+            UWebSocketSubsystem* WS = GI->GetSubsystem<UWebSocketSubsystem>();
+            if (WS)
             {
-                WSSystem->Connect();
+                WS->Connect();
             }
 
             // 5. 관리자 여부 확인 및 화면 이동
@@ -434,6 +434,10 @@ void ULobbyWidget::OnClickEnterGame()
 
 void ULobbyWidget::OnClickCreate()
 {
+    btn_Create->SetIsEnabled(false);
+    btn_Create_1->SetIsEnabled(false);
+    
+    
     if (APlayerController* PC = GetOwningPlayer())
     {
         PC->PlayerCameraManager->StartCameraFade(0.0f, 1.0f, 0.5f, FLinearColor::Black, true, true);

@@ -57,4 +57,17 @@ public:
 	UFUNCTION()
 	void OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	                  int32 OtherBodyIndex);
+
+	// [신규] 좌석 위치 컴포넌트 배열
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Meeting")
+	TArray<TObjectPtr<USceneComponent>> SeatPoints;
+
+	// [신규] 자리 점유 현황 (UserID -> SeatIndex)
+	TMap<int32, int32> OccupiedSeats;
+
+	// [신규] 빈 자리를 찾아 할당하고 Transform 반환 (Server Only)
+	bool AssignAvailableSeat(int32 UserID, FTransform& OutTransform);
+
+	// [신규] 자리를 비움 (Server Only)
+	void ReleaseSeat(int32 UserID);
 };

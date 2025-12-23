@@ -696,7 +696,7 @@ void UGroupChatUI::OnServerTeamChatMessageResponse(bool bSuccess, FString Messag
 
             			if (LoadInst->PlayerTendency.Find(Msg.userId))
             			{
-            				targetTendency = *LoadInst->PlayerTendency.Find(Msg.userId);
+            				targetTendency = *LoadInst->PlayerTendency.Find(Msg.userId) - 1;
             			}
             		}
             		
@@ -792,7 +792,22 @@ void UGroupChatUI::OnServerChatHistoryResponse(bool bSuccess, FString Message)
 				{
 					// 내 질문 -> 일반 말풍선 (AddChat)
 					// (TeamID는 현재 챗봇방 ID 사용)
-					AddChat(CurrentSelectedGroup->ChatBlockUI->GetTeamID(), ParsedTime, MyID, MyName, Msg.content, 0);	// TODO: Get Tendency from Save Data
+					
+					int32 targetTendency = 0;
+					FString SlotName = TEXT("IslandMapSave");
+					if (UGameplayStatics::DoesSaveGameExist(SlotName, 0))
+					{
+						UMapDataSaveGame* LoadInst = Cast<UMapDataSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, 0));
+
+						if (LoadInst->PlayerTendency.Find(MyID))
+						{
+							targetTendency = *LoadInst->PlayerTendency.Find(MyID) - 1;
+						}
+					}
+					
+
+					
+					AddChat(CurrentSelectedGroup->ChatBlockUI->GetTeamID(), ParsedTime, MyID, MyName, Msg.content, targetTendency);
 				}
 				else if (Msg.role == TEXT("assistant"))
 				{

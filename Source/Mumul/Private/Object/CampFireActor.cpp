@@ -29,6 +29,33 @@ ACampFireActor::ACampFireActor()
 	// 3. 이벤트 바인딩
 	VoiceRangeSphere->OnComponentBeginOverlap.AddDynamic(this, &ACampFireActor::OnOverlapBegin);
 	VoiceRangeSphere->OnComponentEndOverlap.AddDynamic(this, &ACampFireActor::OnOverlapEnd);
+	
+	float Radius = 150.0f; // 모닥불 중심으로부터의 거리
+	int32 SeatCount = 6;
+    
+	for (int32 i = 0; i < SeatCount; i++)
+	{
+		FString SeatName = FString::Printf(TEXT("SeatPoint_%d"), i);
+		USceneComponent* Seat = CreateDefaultSubobject<USceneComponent>(*SeatName);
+		Seat->SetupAttachment(RootComponent);
+
+		// 각도를 60도씩 돌려서 배치
+		float Angle = i * 60.0f;
+		float Radian = FMath::DegreesToRadians(Angle);
+
+		FVector Location;
+		Location.X = FMath::Cos(Radian) * Radius;
+		Location.Y = FMath::Sin(Radian) * Radius;
+		Location.Z = 100.0f; // 바닥보다 살짝 위
+
+		// 모닥불을 바라보게 회전 (중심 쪽으로)
+		FRotator Rotation = FRotator(0.0f, Angle + 180.0f, 0.0f);
+
+		Seat->SetRelativeLocation(Location);
+		Seat->SetRelativeRotation(Rotation);
+
+		SeatPoints.Add(Seat);
+	}
 }
 
 // Called when the game starts or when spawned
@@ -172,5 +199,57 @@ void ACampFireActor::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* O
 		{
 			PC->AudioManager->EndCampFireSound();
 		}
+	}
+}
+
+bool ACampFireActor::AssignAvailableSeat(int32 UserID, FTransform& OutTransform)
+{
+	// 이미 앉아있는 유저라면 기존 자리 반환
+	if (OccupiedSeats.Contains(UserID))
+	{
+		int32 SeatIdx = OccupiedSeats[UserID];
+		if (SeatPoints.IsValidIndex(SeatIdx))
+		{
+			OutTransform = SeatPoints[SeatIdx]->GetComponentTransform();
+			return true;
+		}
+	}
+
+	// 빈 자리 찾기
+	for (int32 i = 0; i < SeatPoints.Num(); i++)
+	{
+		// 맵의 Value(SeatIndex) 중에 현재 i가 없으면 빈 자리
+		bool bIsOccupied = false;
+		for (auto& Elem : OccupiedSeats)
+		{
+			if (Elem.Value == i)
+			{
+				bIsOccupied = true;
+				break;
+			}
+		}
+
+		if (!bIsOccupied)
+		{
+			// 자리 배정
+			OccupiedSeats.Add(UserID, i);
+			if (SeatPoints.IsValidIndex(i))
+			{
+				OutTransform = SeatPoints[i]->GetComponentTransform();
+				UE_LOG(LogTemp, Warning, TEXT("[Campfire] Assigned Seat %d to User %d"), i, UserID);
+				return true;
+			}
+		}
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("[Campfire] No seats available!"));
+	return false;
+}
+
+void ACampFireActor::ReleaseSeat(int32 UserID)
+{
+	if (OccupiedSeats.Remove(UserID) > 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Campfire] Released Seat for User %d"), UserID);
 	}
 }

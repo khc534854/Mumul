@@ -309,7 +309,10 @@ void UHttpNetworkSubsystem::OnStartMeetingComplete(FHttpRequestPtr Request, FHtt
 		}
 		else
 		{
-			UE_LOG(LogTemp, Error, TEXT("[HTTP] Start Meeting Failed: %d / %s"), Code, *Content);
+			FVoiceMeetingStartSuccessResponse SuccessData;
+			SuccessData.meeting_id = "TEST";
+			OnStartMeeting.Broadcast(false, SuccessData.meeting_id);
+			UE_LOG(LogTemp, Error, TEXT("[HTTP] Start Meeting Failed, TEST Meeting Start: %d / %s"), Code, *Content);
 		}
 	}
 

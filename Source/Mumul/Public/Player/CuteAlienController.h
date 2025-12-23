@@ -46,7 +46,7 @@ public:
 	void Server_InitPlayerInfo(int32 UID, const FString& Name, const FString& Type, int32 Tendency);
 
 	UFUNCTION(Client, Reliable)
-	void Client_PlayLoadSequence();
+	void Client_PlayLoadSequence(bool PlaySequence);
 
 	UPROPERTY()
 	TObjectPtr<class UInputMappingContext> IMC_Player;
@@ -147,6 +147,9 @@ protected:
 
 	// 타이머에 의해 호출될 초기화 함수
 	void TryInitPlayerInfo();
+
+	UFUNCTION()
+	void OnWebSocketConnected();
 	
 public:
 	UPROPERTY()
@@ -156,7 +159,8 @@ private:
 	FTimerHandle PCGWaitTimerHandle;
 
 	// PCG 완료 체크 함수
-	void CheckPCGAndPlayIntro();
+	UFUNCTION()
+	void CheckPCGAndPlayIntro(bool SkipIntro);
 
 	// 시네마틱이 끝났을 때 호출될 함수
 	UFUNCTION() 
@@ -165,4 +169,24 @@ private:
 	// 재생할 시퀀스 플레이어 저장용
 	UPROPERTY()
 	ULevelSequencePlayer* IntroSequencePlayer;
+
+public:
+	UFUNCTION(Server, Reliable)
+	void Server_TrySitAtCampfire();
+
+	// [신규] 실제 위치 이동 및 착석 처리 (클라이언트)
+	UFUNCTION(Client, Reliable)
+	void Client_SitAtLocation(const FTransform& TargetTransform, class ACampFireActor* TargetFire);
+
+	// [신규] 기상 요청 (서버)
+	UFUNCTION(Server, Reliable)
+	void Server_StandUpFromMeeting();
+
+	// [신규] 기상 처리 (클라이언트)
+	UFUNCTION(Client, Reliable)
+	void Client_StandUp();
+
+	// 현재 앉아있는 모닥불 저장용
+	UPROPERTY()
+	TObjectPtr<class ACampFireActor> CurrentMeetingCampFire;
 };

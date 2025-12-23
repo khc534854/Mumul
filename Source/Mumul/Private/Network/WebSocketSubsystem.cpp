@@ -151,17 +151,19 @@ void UWebSocketSubsystem::HandleSystemMessage(const FString& Event, TSharedPtr<F
 {
     if (Event == TEXT("registered"))
     {
+        // 성공 응답: {"userId": 123}
         FSystemRegisterPayload Data;
-        FJsonObjectConverter::JsonObjectToUStruct(PayloadObj.ToSharedRef(), &Data);
-        
-        UE_LOG(LogTemp, Log, TEXT("[WS Recv] System Registered UserID: %d"), Data.userId); // 로그
-        OnSystemRegistered.Broadcast(Data.userId);
+        if (FJsonObjectConverter::JsonObjectToUStruct(PayloadObj.ToSharedRef(), &Data))
+        {
+            UE_LOG(LogTemp, Log, TEXT("[WS] System Registered Success: UserID %d"), Data.userId);
+            OnSystemRegistered.Broadcast(Data.userId);
+        }
     }
     else if (Event == TEXT("error"))
     {
+        // 실패 응답: {"message": "userId required"}
         FString ErrorMsg = PayloadObj->GetStringField(TEXT("message"));
-        
-        UE_LOG(LogTemp, Error, TEXT("[WS Recv] System Error: %s"), *ErrorMsg); // 로그
+        UE_LOG(LogTemp, Error, TEXT("[WS] System Error: %s"), *ErrorMsg);
         OnSystemError.Broadcast(ErrorMsg);
     }
 }
@@ -247,6 +249,7 @@ void UWebSocketSubsystem::RegisterUser(int32 UserId)
     FSystemRegisterPayload Payload;
     Payload.userId = UserId;
     SendEnvelope(TEXT("system"), TEXT("register"), Payload);
+    UE_LOG(LogTemp, Log, TEXT("[WS] Sending Register Request for UserID: %d"), UserId);
 }
 
 void UWebSocketSubsystem::StartMeetingChat(FString GroupId, int32 UserId, FString UserName)

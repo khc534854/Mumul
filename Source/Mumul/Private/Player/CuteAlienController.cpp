@@ -21,6 +21,7 @@
 
 #include "Network/HttpNetworkSubsystem.h"
 #include "Base/MumulGameState.h"
+#include "Components/WidgetComponent.h"
 #include "Components/WidgetSwitcher.h"
 #include "Save/MapDataSaveGame.h"
 #include "Kismet/GameplayStatics.h"
@@ -35,7 +36,9 @@
 #include "UI/FeedbackUI.h"
 #include "UI/LogoutUI.h"
 #include "Data/AudioManager.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Network/WebSocketSubsystem.h"
+#include "Object/CampFireActor.h"
 #include "UI/GroupChatUI.h"
 #include "Player/Component/PlayerNoticeComponent.h"
 
@@ -235,9 +238,6 @@ void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const
 		PS->PS_TendencyID = Tendency;
 		PS->OnRep_TendencyID();
 
-
-		
-
 		// 강제 동기화 (선택)
 		PS->ForceNetUpdate();
 		
@@ -284,8 +284,12 @@ void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const
 		
 		if (bIsFirstTime)
 		{
-			Client_PlayLoadSequence();
+			Client_PlayLoadSequence(false);
 			UE_LOG(LogTemp, Warning, TEXT("[Server] User %d is New! Requesting Intro Sequence."), UID);
+		}
+		else
+		{
+			Client_PlayLoadSequence(true);
 		}
 		
 		UE_LOG(LogTemp, Log, TEXT("[Server] PlayerState Initialized: %s (ID: %d)"), *Name, UID);
@@ -295,18 +299,19 @@ void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const
 }
 
 
-void ACuteAlienController::Client_PlayLoadSequence_Implementation()
+void ACuteAlienController::Client_PlayLoadSequence_Implementation(bool PlaySequence)
 {
 
+	FTimerDelegate TimerDel;
+
+	TimerDel.BindUFunction(this, FName("CheckPCGAndPlayIntro"), PlaySequence);
+	
 	GetWorld()->GetTimerManager().SetTimer(
 		PCGWaitTimerHandle, 
-		this, 
-		&ACuteAlienController::CheckPCGAndPlayIntro, 
+		TimerDel, 
 		0.5f, 
 		true
 	);
-	
-	
 }
 
 void ACuteAlienController::Tick(float DeltaSeconds)
@@ -612,11 +617,17 @@ void ACuteAlienController::TryInitPlayerInfo()
 		{
 			if (!WS->IsConnected())
 			{
+				if (!WS->OnConnected.Contains(this, FName("OnWebSocketConnected")))
+				{
+					WS->OnConnected.AddDynamic(this, &ACuteAlienController::OnWebSocketConnected);
+				}
+               
 				UE_LOG(LogTemp, Log, TEXT("[Client] TryInitPlayerInfo: Connecting WebSocket..."));
 				WS->Connect();
 			}
 			else
 			{
+				WS->RegisterUser(GI->PlayerUniqueID);
 				UE_LOG(LogTemp, Log, TEXT("[Client] WebSocket already connected."));
 			}
 		}
@@ -625,7 +636,22 @@ void ACuteAlienController::TryInitPlayerInfo()
 	}
 }
 
-void ACuteAlienController::CheckPCGAndPlayIntro()
+void ACuteAlienController::OnWebSocketConnected()
+{
+	if (UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance()))
+	{
+		if (UWebSocketSubsystem* WS = GI->GetSubsystem<UWebSocketSubsystem>())
+		{
+			// 연결되었으니 등록 요청
+			WS->RegisterUser(GI->PlayerUniqueID);
+            
+			// (선택) 한 번만 실행하고 싶다면 바인딩 해제
+			WS->OnConnected.RemoveDynamic(this, &ACuteAlienController::OnWebSocketConnected);
+		}
+	}
+}
+
+void ACuteAlienController::CheckPCGAndPlayIntro(bool SkipIntro)
 {
 	bool bIsGenerating = false;
 
@@ -652,47 +678,71 @@ void ACuteAlienController::CheckPCGAndPlayIntro()
 	GetWorld()->GetTimerManager().ClearTimer(PCGWaitTimerHandle);
 
 	// 시네마틱 액터 찾기
-	ALevelSequenceActor* TargetSeqActor = nullptr;
-	for (TActorIterator<ALevelSequenceActor> It(GetWorld()); It; ++It)
+
+	if (SkipIntro)
 	{
-		if (It->GetSequencePlayer()) 
-		{
-			TargetSeqActor = *It;
-			break;
-		}
-	}
-
-	if (TargetSeqActor)
-	{
-		IntroSequencePlayer = TargetSeqActor->GetSequencePlayer();
-		if (IntroSequencePlayer)
-		{
-			// 1. [중요] 시네마틱 종료 이벤트 바인딩
-			IntroSequencePlayer->OnFinished.AddDynamic(this, &ACuteAlienController::OnIntroSequenceFinished);
-
-			// 2. 재생 시작
-			IntroSequencePlayer->Play();
-
-			// 3. 화면 페이드 인 (검은 화면 -> 밝은 화면)
-			// 1.0초에 걸쳐 서서히 밝아짐
-			PlayerCameraManager->StartCameraFade(1.0f, 0.0f, 1.0f, FLinearColor::Black, false, true);
-               
-			UE_LOG(LogTemp, Warning, TEXT("[Intro] PCG Ready. Starting Sequence & Fade In."));
-		}
+		PlayerCameraManager->StartCameraFade(1.0f, 0.0f, 1.0f, FLinearColor::Black, false, true);
+		OnIntroSequenceFinished();
 	}
 	else
 	{
-		// 시네마틱이 없다면 바로 게임 시작 처리
-		OnIntroSequenceFinished();
+		ALevelSequenceActor* TargetSeqActor = nullptr;
+		for (TActorIterator<ALevelSequenceActor> It(GetWorld()); It; ++It)
+		{
+			if (It->GetSequencePlayer()) 
+			{
+				TargetSeqActor = *It;
+				break;
+			}
+		}
+
+		if (TargetSeqActor)
+		{
+			IntroSequencePlayer = TargetSeqActor->GetSequencePlayer();
+			if (IntroSequencePlayer)
+			{
+				// 1. [중요] 시네마틱 종료 이벤트 바인딩
+				IntroSequencePlayer->OnFinished.AddDynamic(this, &ACuteAlienController::OnIntroSequenceFinished);
+
+				// 2. 재생 시작
+				IntroSequencePlayer->Play();
+
+				// 3. 화면 페이드 인 (검은 화면 -> 밝은 화면)
+				// 1.0초에 걸쳐 서서히 밝아짐
+				PlayerCameraManager->StartCameraFade(1.0f, 0.0f, 1.0f, FLinearColor::Black, false, true);
+               
+				UE_LOG(LogTemp, Warning, TEXT("[Intro] PCG Ready. Starting Sequence & Fade In."));
+			}
+		}
+		else
+		{
+			// 시네마틱이 없다면 바로 게임 시작 처리
+			PlayerCameraManager->StartCameraFade(1.0f, 0.0f, 1.0f, FLinearColor::Black, false, true);
+			OnIntroSequenceFinished();
+		}
 	}
+	
+	
 }
 
 void ACuteAlienController::OnIntroSequenceFinished()
 {
 	SetCinematicMode(false, true, true, true, true);
 
+	for (TActorIterator<ACuteAlienPlayer> It(GetWorld()); It; ++It)
+	{
+		ACuteAlienPlayer* Pl = *It;
+		if (Pl && Pl->WidgetComponent)
+		{
+			Pl->WidgetComponent->SetVisibility(true);
+            
+			// 이름 데이터가 아직 UI에 반영 안 됐을 수도 있으니 강제 업데이트
+			Pl->UpdateNameTag(); 
+		}
+	}
+	
 	// 2. 입력 허용
-	bShowMouseCursor = true;
+	bShowMouseCursor = false;
 	SetIgnoreLookInput(false);
 	SetIgnoreMoveInput(false);
     
@@ -715,5 +765,102 @@ void ACuteAlienController::OnIntroSequenceFinished()
 	{
 		PlayerCameraManager->StopCameraFade();
 	}
+}
+
+void ACuteAlienController::Server_TrySitAtCampfire_Implementation()
+{
+    APawn* MyPawn = GetPawn();
+    if (!MyPawn) return;
+
+    // 현재 오버랩된 모닥불 찾기
+    ACampFireActor* TargetFire = nullptr;
+    TArray<AActor*> OverlappingActors;
+    MyPawn->GetOverlappingActors(OverlappingActors, ACampFireActor::StaticClass());
+
+    if (OverlappingActors.Num() > 0)
+    {
+        TargetFire = Cast<ACampFireActor>(OverlappingActors[0]);
+    }
+
+    // 모닥불을 찾았다면 자리 배정 요청
+    if (TargetFire)
+    {
+        AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>();
+        if (PS)
+        {
+            FTransform SeatTransform;
+            if (TargetFire->AssignAvailableSeat(PS->PS_UserIndex, SeatTransform))
+            {
+                // 성공 시 클라이언트에게 이동 명령
+                Client_SitAtLocation(SeatTransform, TargetFire);
+            }
+        }
+    }
+}
+
+void ACuteAlienController::Client_SitAtLocation_Implementation(const FTransform& TargetTransform, ACampFireActor* TargetFire)
+{
+	CurrentMeetingCampFire = TargetFire;
+    
+	ACuteAlienPlayer* MyChar = Cast<ACuteAlienPlayer>(GetPawn());
+	if (MyChar)
+	{
+		// [수정] 1. 위치와 회전 설정
+		FVector TargetLoc = TargetTransform.GetLocation();
+		FRotator TargetRot = TargetTransform.GetRotation().Rotator();
+
+		// 모닥불 액터가 있다면, 그쪽을 바라보도록 회전 재계산
+		if (TargetFire)
+		{
+			FVector FireLoc = TargetFire->GetActorLocation();
+            
+			// 높이 차이는 무시하고 평면상에서 바라보게 함 (Z축 제외)
+			FVector Start = FVector(TargetLoc.X, TargetLoc.Y, 0.f);
+			FVector End = FVector(FireLoc.X, FireLoc.Y, 0.f);
+            
+			TargetRot = UKismetMathLibrary::FindLookAtRotation(Start, End);
+		}
+
+		// 계산된 위치와 회전으로 이동
+		MyChar->SetActorLocationAndRotation(TargetLoc, TargetRot, false, nullptr, ETeleportType::TeleportPhysics);
+
+		// 2. 앉기 상태 변경 및 카메라 타겟 전달
+		MyChar->SetIsMeetingSitting(true, TargetFire);
+        
+		// 3. 움직임 제한
+		SetIgnoreMoveInput(true);
+		SetIgnoreLookInput(false);
+	}
+}
+
+void ACuteAlienController::Server_StandUpFromMeeting_Implementation()
+{
+    // 저장된 모닥불에서 자리 반납
+    if (CurrentMeetingCampFire)
+    {
+        AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>();
+        if (PS)
+        {
+            CurrentMeetingCampFire->ReleaseSeat(PS->PS_UserIndex);
+        }
+    }
+    
+    Client_StandUp();
+}
+
+void ACuteAlienController::Client_StandUp_Implementation()
+{
+    CurrentMeetingCampFire = nullptr;
+
+    ACuteAlienPlayer* MyChar = Cast<ACuteAlienPlayer>(GetPawn());
+    if (MyChar)
+    {
+        // 1. 일어서기 상태 변경
+        MyChar->SetIsMeetingSitting(false);
+
+        // 2. 움직임 허용
+        SetIgnoreMoveInput(false);
+        // SetIgnoreLookInput(false);
+    }
 }
 

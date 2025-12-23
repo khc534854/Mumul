@@ -78,7 +78,7 @@ void UPlayerMeetingManagerComponent::BeginPlay()
 			VoiceMeetingUI = CreateWidget<UVoiceMeetingUI>(owner, VoiceMeetingUIClass);
 			if (VoiceMeetingUI)
 			{
-				VoiceMeetingUI->AddToViewport();
+				VoiceMeetingUI->AddToViewport(100);
 				VoiceMeetingUI->SetVisibility(ESlateVisibility::Hidden);
 			}
 		}
@@ -223,6 +223,7 @@ void UPlayerMeetingManagerComponent::Client_StopChannelRecording_Implementation(
 			{
 				// 1. 움직임 허용
 				owner->SetIgnoreMoveInput(false);
+				owner->Server_StandUpFromMeeting();
 
 				if (owner->ChatComp && owner->ChatComp->GroupChatUI)
 				{
@@ -351,7 +352,7 @@ void UPlayerMeetingManagerComponent::OpenMeetingSetupUI()
 		if (!VoiceMeetingUI)
 		{
 			VoiceMeetingUI = CreateWidget<UVoiceMeetingUI>(owner, VoiceMeetingUIClass);
-			VoiceMeetingUI->AddToViewport();
+			VoiceMeetingUI->AddToViewport(100);
 		}
 		owner->SetIgnoreMoveInput(true);
 
@@ -367,7 +368,7 @@ void UPlayerMeetingManagerComponent::OpenEndMeetingPopup()
 		if (!VoiceMeetingUI)
 		{
 			VoiceMeetingUI = CreateWidget<UVoiceMeetingUI>(owner, VoiceMeetingUIClass);
-			VoiceMeetingUI->AddToViewport();
+			VoiceMeetingUI->AddToViewport(100);
 		}
 
 		// 종료 확인 화면(Index 1)으로 전환
@@ -517,6 +518,7 @@ void UPlayerMeetingManagerComponent::OnStartMeetingResponse(bool bSuccess, FStri
 		if (owner && owner->ChatComp && owner->ChatComp->GroupChatUI)
 		{
 			owner->SetIgnoreMoveInput(true);
+			owner->Server_TrySitAtCampfire();
 			
 			UGroupChatUI* ChatUI = owner->ChatComp->GroupChatUI;
 
@@ -543,6 +545,9 @@ void UPlayerMeetingManagerComponent::OnStartMeetingResponse(bool bSuccess, FStri
 	}
 	else
 	{
+		owner->SetIgnoreMoveInput(true);
+		owner->Server_TrySitAtCampfire();
+		
 		UE_LOG(LogTemp, Error, TEXT("[Meeting] Failed to Create Meeting."));
 	}
 }
@@ -565,6 +570,7 @@ void UPlayerMeetingManagerComponent::OnJoinMeetingResponse(bool bSuccess)
 				if (owner->IsLocalController())
 				{
 					owner->ChatComp->GroupChatUI->OnRecordBtnState(true);
+					owner->Server_TrySitAtCampfire();
 				}
 			}
 		}
