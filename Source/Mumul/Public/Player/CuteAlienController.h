@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "LevelSequencePlayer.h"
 #include "GameFramework/PlayerController.h"
 #include "Sound/SoundAttenuation.h"
 #include "CuteAlienController.generated.h"
@@ -148,4 +149,18 @@ protected:
 public:
 	UPROPERTY()
 	TObjectPtr<class UAudioManager> AudioManager;
+
+private:
+	FTimerHandle PCGWaitTimerHandle;
+
+	// PCG 완료 체크 함수
+	void CheckPCGAndPlayIntro();
+
+	// 시네마틱이 끝났을 때 호출될 함수
+	UFUNCTION() 
+	void OnIntroSequenceFinished();
+    
+	// 재생할 시퀀스 플레이어 저장용
+	UPROPERTY()
+	ULevelSequencePlayer* IntroSequencePlayer;
 };

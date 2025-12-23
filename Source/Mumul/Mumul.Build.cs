@@ -24,7 +24,8 @@ public class Mumul : ModuleRules
 			"AudioMixer",
 			"DeveloperSettings",
 			"Niagara",
-			"LevelSequence", "MovieScene"
+			"LevelSequence", "MovieScene",
+			"PCG"
 		});
 	}
 }

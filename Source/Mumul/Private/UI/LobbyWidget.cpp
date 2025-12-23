@@ -391,6 +391,11 @@ void ULobbyWidget::OnClickEnterGame()
 {
     if (FirstSessionIndex != -1)
     {
+        if (APlayerController* PC = GetOwningPlayer())
+        {
+            PC->PlayerCameraManager->StartCameraFade(0.0f, 1.0f, 0.5f, FLinearColor::Black, true, true);
+        }
+        
         // GameInstance를 통해 첫 번째 세션(인덱스 0)으로 조인 요청
         gi->JoinGameSession(FirstSessionIndex);
         
@@ -421,6 +426,11 @@ void ULobbyWidget::OnClickEnterGame()
 
 void ULobbyWidget::OnClickCreate()
 {
+    if (APlayerController* PC = GetOwningPlayer())
+    {
+        PC->PlayerCameraManager->StartCameraFade(0.0f, 1.0f, 0.5f, FLinearColor::Black, true, true);
+    }
+    
     //FString sessionName = editSessionName->GetText().ToString();
     FString sessionName = FString("Mumul");
     FString mapURL = FString("/Game/Khc/Maps/Island?listen");

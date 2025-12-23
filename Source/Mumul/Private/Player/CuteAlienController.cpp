@@ -17,6 +17,7 @@
 #include "Player/MumulPlayerState.h"
 #include "Object/Tent/PreviewTentActor.h"
 #include "Net/VoiceConfig.h"
+#include "PCGComponent.h"
 
 #include "Network/HttpNetworkSubsystem.h"
 #include "Base/MumulGameState.h"
@@ -34,6 +35,7 @@
 #include "UI/FeedbackUI.h"
 #include "UI/LogoutUI.h"
 #include "Data/AudioManager.h"
+#include "UI/GroupChatUI.h"
 
 ACuteAlienController::ACuteAlienController()
 {
@@ -111,6 +113,22 @@ void ACuteAlienController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (IsLocalController())
+	{
+		// 1. 도착하자마자 화면을 검게 유지 (로비에서 넘어온 페이드가 풀릴 수 있으므로 강제 설정)
+		// Alpha 1.0 -> 1.0 (계속 검음)
+		PlayerCameraManager->StartCameraFade(1.0f, 1.0f, 10.0f, FLinearColor::Black, true, true);
+
+		// 2. 조작 및 UI 차단 (Cinematic Mode)
+		// bInCinematicMode, bHidePlayer, bAffectsHUD, bAffectsMovement, bAffectsTurning
+		SetCinematicMode(true, false, true, true, true);
+        
+		// 마우스 커서도 숨김
+		bShowMouseCursor = false;
+		SetIgnoreLookInput(true);
+		SetIgnoreMoveInput(true);
+	}
+
 	GS = Cast<AMumulGameState>(GetWorld()->GetGameState());
 
 	HttpSystem = GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>();
@@ -149,12 +167,14 @@ void ACuteAlienController::BeginPlay()
 		if (PlayerUI)
 		{
 			PlayerUI->AddToViewport(100);
+			PlayerUI->SetVisibility(ESlateVisibility::Hidden);
 		}
 	}
 
 	if (PlayerUI && ChatComp->GroupChatUI)
 	{
 		PlayerUI->InitGroupChatUI(ChatComp->GroupChatUI);
+		ChatComp->GroupChatUI->SetVisibility(ESlateVisibility::Hidden);
 		RadialUI->SetVisibility(ESlateVisibility::Hidden);
 	}
 
@@ -251,20 +271,16 @@ void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const
 
 void ACuteAlienController::Client_PlayLoadSequence_Implementation()
 {
-	for (TActorIterator<ALevelSequenceActor> It(GetWorld()); It; ++It)
-	{
-		ALevelSequenceActor* SeqActor = *It;
-		
-		if (SeqActor && SeqActor->ActorHasTag(TEXT("LoginSequence")))
-        
-        
-		if (SeqActor && SeqActor->GetSequencePlayer())
-		{
-			SeqActor->GetSequencePlayer()->Play();
-			UE_LOG(LogTemp, Warning, TEXT("[Client] 레벨 시퀀스 재생 시작"));
-			break; // 하나만 찾아서 재생하고 종료
-		}
-	}
+
+	GetWorld()->GetTimerManager().SetTimer(
+		PCGWaitTimerHandle, 
+		this, 
+		&ACuteAlienController::CheckPCGAndPlayIntro, 
+		0.5f, 
+		true
+	);
+	
+	
 }
 
 void ACuteAlienController::Tick(float DeltaSeconds)
@@ -565,5 +581,89 @@ void ACuteAlienController::TryInitPlayerInfo()
 
 		UE_LOG(LogTemp, Log, TEXT("[Client] Sent Init Info: %s (ID: %d)"), *GI->PlayerName, GI->PlayerUniqueID);
 	}
+}
+
+void ACuteAlienController::CheckPCGAndPlayIntro()
+{
+	bool bIsGenerating = false;
+
+	// 1. 월드에 존재하는 모든 PCG 컴포넌트를 순회하며 생성 중인지 확인
+	// (TObjectIterator는 메모리상의 모든 객체를 찾으므로 GetWorld() 체크 필수)
+	for (TObjectIterator<UPCGComponent> It; It; ++It)
+	{
+		UPCGComponent* PCGComp = *It;
+		if (PCGComp && PCGComp->GetWorld() == GetWorld())
+		{
+			if (PCGComp->IsGenerating())
+			{
+				bIsGenerating = true;
+				break; // 하나라도 생성 중이면 즉시 중단하고 대기
+			}
+		}
+	}
+
+	if (bIsGenerating)
+		return;
+
+	// 타이머 종료 및 카운트 초기화
+	GetWorld()->GetTimerManager().ClearTimer(PCGWaitTimerHandle);
+
+	// 시네마틱 액터 찾기
+	ALevelSequenceActor* TargetSeqActor = nullptr;
+	for (TActorIterator<ALevelSequenceActor> It(GetWorld()); It; ++It)
+	{
+		if (It->GetSequencePlayer()) 
+		{
+			TargetSeqActor = *It;
+			break;
+		}
+	}
+
+	if (TargetSeqActor)
+	{
+		IntroSequencePlayer = TargetSeqActor->GetSequencePlayer();
+		if (IntroSequencePlayer)
+		{
+			// 1. [중요] 시네마틱 종료 이벤트 바인딩
+			IntroSequencePlayer->OnFinished.AddDynamic(this, &ACuteAlienController::OnIntroSequenceFinished);
+
+			// 2. 재생 시작
+			IntroSequencePlayer->Play();
+
+			// 3. 화면 페이드 인 (검은 화면 -> 밝은 화면)
+			// 1.0초에 걸쳐 서서히 밝아짐
+			PlayerCameraManager->StartCameraFade(1.0f, 0.0f, 1.0f, FLinearColor::Black, false, true);
+               
+			UE_LOG(LogTemp, Warning, TEXT("[Intro] PCG Ready. Starting Sequence & Fade In."));
+		}
+	}
+	else
+	{
+		// 시네마틱이 없다면 바로 게임 시작 처리
+		OnIntroSequenceFinished();
+	}
+}
+
+void ACuteAlienController::OnIntroSequenceFinished()
+{
+	SetCinematicMode(false, true, true, true, true);
+
+	// 2. 입력 허용
+	bShowMouseCursor = true;
+	SetIgnoreLookInput(false);
+	SetIgnoreMoveInput(false);
+    
+	// 마우스 모드 설정 (게임+UI)
+	FInputModeGameAndUI InputMode;
+	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+	SetInputMode(InputMode);
+
+	if (PlayerUI)
+	{
+		PlayerUI->SetVisibility(ESlateVisibility::Visible);
+		ChatComp->GroupChatUI->SetVisibility(ESlateVisibility::Visible);
+		PlayerUI->AddToViewport(); // 만약 아직 안 붙였다면
+	}
+
 }
 
