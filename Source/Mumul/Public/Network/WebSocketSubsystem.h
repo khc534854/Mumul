@@ -114,6 +114,13 @@ private:
     void StopReconnectTimer();
     void TryReconnect();
 
+    FTimerHandle HeartbeatTimerHandle;
+    
+    // [신규] 주기적으로 Ping을 보내는 함수
+    void StartHeartbeat();
+    void StopHeartbeat();
+    void SendHeartbeatPing();
+
     // 메시지 라우터
     void HandleWebSocketMessage(const FString& Message);
     

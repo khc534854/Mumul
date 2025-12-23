@@ -67,7 +67,7 @@ void UPlayerChatComponent::BeginPlay()
 			GroupChatUI = CreateWidget<UGroupChatUI>(owner, GroupChatUIClass);
 			if (GroupChatUI)
 			{
-				GroupChatUI->AddToViewport(1);
+				GroupChatUI->AddToViewport(110);
 
 				if (owner->PlayerUI)
 				{

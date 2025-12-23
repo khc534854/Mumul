@@ -41,8 +41,8 @@ void UPlayerNoticeComponent::BeginPlay()
 		WebSocketSystem = owner->GetGameInstance()->GetSubsystem<UWebSocketSubsystem>();
 		if (WebSocketSystem)
 		{
-			WebSocketSystem->OnNoticeReceived.AddDynamic(this, &UPlayerNoticeComponent::OnNotice);
-			WebSocketSystem->OnDirectMessageReceived.AddDynamic(this, &UPlayerNoticeComponent::OnDirectMessage);
+			WebSocketSystem->OnDispatchNotice.AddDynamic(this, &UPlayerNoticeComponent::OnNotice);
+			WebSocketSystem->OnDispatchDM.AddDynamic(this, &UPlayerNoticeComponent::OnDirectMessage);
 		}
 	}
 }
@@ -54,24 +54,42 @@ void UPlayerNoticeComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
-void UPlayerNoticeComponent::OnNotice(const FString& NoticeMessage)
+void UPlayerNoticeComponent::OnNotice(const FDispatchNoticePayload& Notice)
 {
-	// TODO: AddNotice Struct
-	// Test Add Notice
 	FNoticeViewData NoticeData;
-	NoticeData.Notice.Content = FString(TEXT("Test Notice!"));
+    
+	FString DisplayContent = FString::Printf(TEXT("[%s] %s\n%s"), *Notice.urgency, *Notice.title, *Notice.text);
+	NoticeData.Notice.Content = DisplayContent;
+    
 	NoticeData.Notice.CreatedAt = FDateTime::Now();
 	NoticeData.UserState.bConfirmed = false;
-	NoticeUI->AddNotice(NoticeData);
+
+	if (NoticeUI)
+	{
+		NoticeUI->AddNotice(NoticeData);
+        
+		if (WebSocketSystem)
+		{
+			WebSocketSystem->SendDispatchAck(TEXT("notice"), Notice.noticeId);
+		}
+	}
 }
 
-void UPlayerNoticeComponent::OnDirectMessage(const FString& NoticeMessage)
+void UPlayerNoticeComponent::OnDirectMessage(const FDispatchDMPayload& DM)
 {
-	// TODO: AddDM Struct
-	// Test Add DM
 	FNoticeViewData NoticeData;
-	NoticeData.Notice.Content = FString(TEXT("Test DM!"));
+	NoticeData.Notice.Content = DM.text;
 	NoticeData.Notice.CreatedAt = FDateTime::Now();
 	NoticeData.UserState.bConfirmed = false;
-	NoticeUI->AddDM(NoticeData);
+
+	if (NoticeUI)
+	{
+		NoticeUI->AddDM(NoticeData);
+        
+		// (선택) 수신 확인 ACK 자동 전송
+		if (WebSocketSystem)
+		{
+			WebSocketSystem->SendDispatchAck(TEXT("dm"), DM.messageId);
+		}
+	}
 }

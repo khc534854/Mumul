@@ -6,6 +6,7 @@
 #include "Network/HttpNetworkSubsystem.h"
 #include "Base/MumulGameInstance.h"
 #include "OnlineSessionSettings.h"
+#include "OnlineSubsystemUtils.h"
 #include "Components/Button.h"
 #include "Components/EditableTextBox.h"
 #include "Components/Image.h"
@@ -16,6 +17,7 @@
 #include "Components/ScrollBox.h"
 #include "Player/MumulPlayerState.h"
 #include "Network/NetworkStructs.h"
+#include "Network/WebSocketSubsystem.h"
 #include "UI/BaseUI/BaseButton.h"
 #include "UI/BaseUI/BaseText.h"
 
@@ -179,6 +181,12 @@ void ULobbyWidget::OnServerLoginResponse(bool bSuccess, FString Message)
                     else GI->PlayerTendency = 0;
                 }
                 // ... 필요한 정보 다 저장
+            }
+
+            UWebSocketSubsystem* WSSystem = GI->GetSubsystem<UWebSocketSubsystem>();
+            if (WSSystem)
+            {
+                WSSystem->Connect();
             }
 
             // 5. 관리자 여부 확인 및 화면 이동

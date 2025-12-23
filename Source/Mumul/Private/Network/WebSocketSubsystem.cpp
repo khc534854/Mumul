@@ -42,21 +42,29 @@ void UWebSocketSubsystem::Connect()
             if (UWebSocketSubsystem* StrongThis = WeakThis.Get())
             {
                 UE_LOG(LogTemp, Log, TEXT("[WS] Connected!"));
-                StrongThis->OnConnected.Broadcast();
+                
+                // [중요] 연결되자마자 재연결 타이머 끄고, 하트비트 시작
                 StrongThis->StopReconnectTimer();
+                StrongThis->StartHeartbeat(); 
+
+                StrongThis->OnConnected.Broadcast();
             }
         });
     });
 
     WebSocket->OnClosed().AddLambda([WeakThis](int32 StatusCode, const FString& Reason, bool bWasClean)
     {
-        AsyncTask(ENamedThreads::GameThread, [WeakThis, StatusCode, Reason]()
+        AsyncTask(ENamedThreads::GameThread, [WeakThis, StatusCode]()
         {
             if (UWebSocketSubsystem* StrongThis = WeakThis.Get())
             {
-                UE_LOG(LogTemp, Warning, TEXT("[WS] Closed (%d): %s"), StatusCode, *Reason);
+                UE_LOG(LogTemp, Warning, TEXT("[WS] Closed. Code: %d"), StatusCode);
+                
+                // [중요] 연결 끊기면 하트비트 끄고, 재연결 시도 여부 결정
+                StrongThis->StopHeartbeat();
                 StrongThis->OnClosed.Broadcast(StatusCode);
 
+                // 우리가 끄라고 명령(Close())한 게 아닌데 끊겼다면 재연결 시도
                 if (StrongThis->bShouldBeConnected)
                 {
                     StrongThis->StartReconnectTimer();
@@ -94,8 +102,14 @@ void UWebSocketSubsystem::Connect()
 void UWebSocketSubsystem::Close()
 {
     bShouldBeConnected = false;
+    
     StopReconnectTimer();
-    if (IsConnected()) WebSocket->Close();
+    StopHeartbeat();
+
+    if (IsConnected())
+    {
+        WebSocket->Close();
+    }
 }
 
 bool UWebSocketSubsystem::IsConnected() const
@@ -296,20 +310,78 @@ void UWebSocketSubsystem::StartReconnectTimer()
 {
     if (GetWorld() && !GetWorld()->GetTimerManager().IsTimerActive(ReconnectTimerHandle))
     {
-        GetWorld()->GetTimerManager().SetTimer(ReconnectTimerHandle, this, &UWebSocketSubsystem::TryReconnect, 5.0f, true);
+        // 5초 뒤에 재연결 시도
+        GetWorld()->GetTimerManager().SetTimer(
+            ReconnectTimerHandle, 
+            this, 
+            &UWebSocketSubsystem::TryReconnect, 
+            5.0f, 
+            true
+        );
+        UE_LOG(LogTemp, Warning, TEXT("[WS] Auto-Reconnect Timer Started..."));
     }
 }
 
 void UWebSocketSubsystem::StopReconnectTimer()
 {
-    if (GetWorld()) GetWorld()->GetTimerManager().ClearTimer(ReconnectTimerHandle);
+    if (GetWorld())
+    {
+        GetWorld()->GetTimerManager().ClearTimer(ReconnectTimerHandle);
+    }
 }
 
 void UWebSocketSubsystem::TryReconnect()
 {
-    if (!IsConnected())
+    if (IsConnected())
     {
-        UE_LOG(LogTemp, Log, TEXT("[WS] Reconnecting..."));
-        Connect();
+        StopReconnectTimer();
+        return;
+    }
+
+    UE_LOG(LogTemp, Log, TEXT("[WS] Trying to Reconnect..."));
+    Connect();
+}
+
+void UWebSocketSubsystem::StartHeartbeat()
+{
+    // 이미 돌고 있으면 리셋
+    StopHeartbeat();
+
+    // 30초마다 Ping 전송 (서버 타임아웃 설정보다 조금 짧게 잡아야 함)
+    if (GetWorld())
+    {
+        GetWorld()->GetTimerManager().SetTimer(
+            HeartbeatTimerHandle, 
+            this, 
+            &UWebSocketSubsystem::SendHeartbeatPing, 
+            30.0f, 
+            true // 반복
+        );
+        UE_LOG(LogTemp, Verbose, TEXT("[WS] Heartbeat Started"));
+    }
+}
+
+void UWebSocketSubsystem::StopHeartbeat()
+{
+    if (GetWorld())
+    {
+        GetWorld()->GetTimerManager().ClearTimer(HeartbeatTimerHandle);
+    }
+}
+
+void UWebSocketSubsystem::SendHeartbeatPing()
+{
+    if (IsConnected())
+    {
+        // 명세서에 정의된 Ping 전송
+        SendPing(); 
+        // 로그가 너무 많이 쌓이면 Verbose로 변경
+        // UE_LOG(LogTemp, Verbose, TEXT("[WS] Ping Sent")); 
+    }
+    else
+    {
+        // 연결된 줄 알았는데 끊겨있다면? -> 즉시 재연결 절차로 넘어감
+        StopHeartbeat();
+        StartReconnectTimer();
     }
 }

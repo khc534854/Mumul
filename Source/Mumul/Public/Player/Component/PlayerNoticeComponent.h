@@ -23,9 +23,9 @@ protected:
 	UPROPERTY()
 	TObjectPtr<class UWebSocketSubsystem> WebSocketSystem;
 	UFUNCTION()
-	void OnNotice(const FString& NoticeMessage);
+	void OnNotice(const FDispatchNoticePayload& Notice);
 	UFUNCTION()
-	void OnDirectMessage(const FString& NoticeMessage);
+	void OnDirectMessage(const FDispatchDMPayload& DM);
 	
 public:
 	UPROPERTY()

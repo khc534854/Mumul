@@ -7,6 +7,7 @@
 #include "Components/Button.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Network/HttpNetworkSubsystem.h"
+#include "Network/WebSocketSubsystem.h"
 #include "Player/CuteAlienController.h"
 #include "UI/BaseUI/BaseButton.h"
 
@@ -35,6 +36,12 @@ void ULogoutUI::OnClickedLogoutYesBtn()
 	UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
 	if (GI)
 	{
+		UWebSocketSubsystem* WS = GI->GetSubsystem<UWebSocketSubsystem>();
+		if (WS)
+		{
+			WS->Close();
+		}
+		
 		UHttpNetworkSubsystem* Http = GI->GetSubsystem<UHttpNetworkSubsystem>();
 		if (Http)
 		{
@@ -46,8 +53,6 @@ void ULogoutUI::OnClickedLogoutYesBtn()
 			LogOutNoBtn->SetIsEnabled(false);
 
 			Http->SendLogoutRequest(GI->PlayerUniqueID);
-            
-			// (선택) 버튼 비활성화 등 중복 전송 방지 처리
 		}
 	}
 }

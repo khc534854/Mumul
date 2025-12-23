@@ -35,6 +35,7 @@
 #include "UI/FeedbackUI.h"
 #include "UI/LogoutUI.h"
 #include "Data/AudioManager.h"
+#include "Network/WebSocketSubsystem.h"
 #include "UI/GroupChatUI.h"
 #include "Player/Component/PlayerNoticeComponent.h"
 
@@ -220,6 +221,8 @@ void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const
 
 		PS->PS_TendencyID = Tendency;
 		PS->OnRep_TendencyID();
+
+
 		
 
 		// 강제 동기화 (선택)
@@ -259,6 +262,12 @@ void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const
 				}
 			}
 		}
+
+		UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance());
+		if (GS)
+		{
+			GS->Multicast_SavePlayerTendency(GI->PlayerUniqueID, GI->PlayerTendency);
+		}
 		
 		if (bIsFirstTime)
 		{
@@ -267,6 +276,8 @@ void ACuteAlienController::Server_InitPlayerInfo_Implementation(int32 UID, const
 		}
 		
 		UE_LOG(LogTemp, Log, TEXT("[Server] PlayerState Initialized: %s (ID: %d)"), *Name, UID);
+
+
 	}
 }
 
@@ -581,9 +592,20 @@ void ACuteAlienController::TryInitPlayerInfo()
 			GI->PlayerTendency
 		);
 		
-		if (GS)
+
+
+		UWebSocketSubsystem* WS = GI->GetSubsystem<UWebSocketSubsystem>();
+		if (WS)
 		{
-			GS->Multicast_SavePlayerTendency(GI->PlayerUniqueID, GI->PlayerTendency);
+			if (!WS->IsConnected())
+			{
+				UE_LOG(LogTemp, Log, TEXT("[Client] TryInitPlayerInfo: Connecting WebSocket..."));
+				WS->Connect();
+			}
+			else
+			{
+				UE_LOG(LogTemp, Log, TEXT("[Client] WebSocket already connected."));
+			}
 		}
 
 		UE_LOG(LogTemp, Log, TEXT("[Client] Sent Init Info: %s (ID: %d)"), *GI->PlayerName, GI->PlayerUniqueID);
@@ -669,9 +691,16 @@ void ACuteAlienController::OnIntroSequenceFinished()
 	if (PlayerUI)
 	{
 		PlayerUI->SetVisibility(ESlateVisibility::Visible);
-		ChatComp->GroupChatUI->SetVisibility(ESlateVisibility::Visible);
-		PlayerUI->AddToViewport(); // 만약 아직 안 붙였다면
 	}
 
+	if (ChatComp && ChatComp->GroupChatUI)
+	{
+		ChatComp->GroupChatUI->SetVisibility(ESlateVisibility::Visible);
+	}
+	
+	if (PlayerCameraManager)
+	{
+		PlayerCameraManager->StopCameraFade();
+	}
 }
 
