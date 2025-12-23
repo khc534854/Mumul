@@ -112,7 +112,7 @@ protected:
 	TSubclassOf<class UChatMessageBlockUI> ChatMessageBlockUIClass;
 	static FString MakeChatTimeStamp();
 public:
-	void AddChat(const FString& TeamID, const FString& CurrentTime, const int32& UserID, const FString& Name, const FString& Text) const;
+	void AddChat(const FString& TeamID, const FString& CurrentTime, const int32& UserID, const FString& Name, const FString& Text, const int32& TendencyID) const;
 		
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class USizeBox> ChatSizeBox;
