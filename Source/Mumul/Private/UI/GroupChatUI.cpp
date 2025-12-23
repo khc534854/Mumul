@@ -27,8 +27,10 @@
 #include "Components/VerticalBoxSlot.h"
 #include "Library/MathLibrary.h"
 #include "Data/IMGManager.h"
+#include "Kismet/GameplayStatics.h"
 #include "Player/Component/PlayerChatComponent.h"
 #include "Player/Component/PlayerMeetingManagerComponent.h"
+#include "Save/MapDataSaveGame.h"
 #include "UI/BotChatMessageBlockUI.h"
 #include "UI/PlayerUI.h"
 
@@ -403,6 +405,19 @@ void UGroupChatUI::OnServerTeamChatMessageResponse(bool bSuccess, FString Messag
             		TArray<FString> Parts;
             		Msg.formattedCreatedAt.ParseIntoArray(Parts, TEXT(" "));
             		FString TimeOnly = Parts[Parts.Num() - 2] + TEXT(" ") + Parts.Last();
+
+
+            		int32 targetTendency = 0;
+            		FString SlotName = TEXT("IslandMapSave");
+            		if (UGameplayStatics::DoesSaveGameExist(SlotName, 0))
+            		{
+            			UMapDataSaveGame* LoadInst = Cast<UMapDataSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, 0));
+
+            			if (LoadInst->PlayerTendency.Find(Msg.userId))
+            			{
+            				targetTendency = *LoadInst->PlayerTendency.Find(Msg.userId);
+            			}
+            		}
             		
 					AddChat(
 					    GetCurrentTeamID(),
@@ -410,7 +425,7 @@ void UGroupChatUI::OnServerTeamChatMessageResponse(bool bSuccess, FString Messag
 					    Msg.userId, 
 					    *Msg.userName, 
 					    *Msg.message,
-					    0	// TODO: Get Tendency from Save Data
+					    targetTendency
 					);
             	}
 	            else if (Msg.role == "assistant")
