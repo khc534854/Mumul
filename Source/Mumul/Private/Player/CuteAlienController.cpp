@@ -36,6 +36,7 @@
 #include "UI/LogoutUI.h"
 #include "Data/AudioManager.h"
 #include "UI/GroupChatUI.h"
+#include "Player/Component/PlayerNoticeComponent.h"
 
 ACuteAlienController::ACuteAlienController()
 {
@@ -93,6 +94,7 @@ ACuteAlienController::ACuteAlienController()
 	MeetingComp = CreateDefaultSubobject<UPlayerMeetingManagerComponent>(TEXT("MeetingComp"));
 	ChatComp = CreateDefaultSubobject<UPlayerChatComponent>(TEXT("SocialComp"));
 	OXQuizComp = CreateDefaultSubobject<UPlayerOXQuizComponent>(TEXT("OXQuizComp"));
+	NoticeComp = CreateDefaultSubobject<UPlayerNoticeComponent>(TEXT("NoticeComp"));
 
 	static ConstructorHelpers::FClassFinder<UFeedbackUI> FeedbackUIFinder(
 	   TEXT("/Game/Khc/Blueprint/UI/WBP_FeedbackUI.WBP_FeedbackUI_C")); // 경로 확인 필수!
@@ -130,8 +132,7 @@ void ACuteAlienController::BeginPlay()
 	}
 
 	GS = Cast<AMumulGameState>(GetWorld()->GetGameState());
-
-
+	
 	HttpSystem = GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>();
 
 

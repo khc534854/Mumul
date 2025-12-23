@@ -214,18 +214,19 @@ void UPlayerChatComponent::Server_RequestChat_Implementation(const FString& Team
 	// Add GroupChatUI for each Client
 	for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
 	{
-		if (UserIDs.Contains(Cast<AMumulPlayerState>(PS)->PS_UserIndex))
+		AMumulPlayerState* MPS = Cast<AMumulPlayerState>(PS);
+		if (UserIDs.Contains(MPS->PS_UserIndex))
 		{
 			if (ACuteAlienController* PC = Cast<ACuteAlienController>(PS->GetOwningController()))
 			{
-				PC->ChatComp->Client_SendChat(TeamID, CurrentTime, UserID, Name, Text);
+				PC->ChatComp->Client_SendChat(TeamID, CurrentTime, UserID, Name, Text, MPS->PS_TendencyID);
 			}
 		}
 	}
 }
 
 void UPlayerChatComponent::Client_SendChat_Implementation(const FString& TeamID, const FString& CurrentTime,
-                                                          const int32& UserID, const FString& Name, const FString& Text)
+                                                          const int32& UserID, const FString& Name, const FString& Text, const int32& TendencyID)
 {
-	GroupChatUI->AddChat(TeamID, CurrentTime, UserID, Name, Text);
+	GroupChatUI->AddChat(TeamID, CurrentTime, UserID, Name, Text, TendencyID);
 }

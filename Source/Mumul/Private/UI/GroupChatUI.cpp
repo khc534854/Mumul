@@ -409,7 +409,8 @@ void UGroupChatUI::OnServerTeamChatMessageResponse(bool bSuccess, FString Messag
 					    TimeOnly, 
 					    Msg.userId, 
 					    *Msg.userName, 
-					    *Msg.message
+					    *Msg.message,
+					    0	// TODO: Get Tendency from Save Data
 					);
             	}
 	            else if (Msg.role == "assistant")
@@ -495,7 +496,7 @@ void UGroupChatUI::OnServerChatHistoryResponse(bool bSuccess, FString Message)
 				{
 					// 내 질문 -> 일반 말풍선 (AddChat)
 					// (TeamID는 현재 챗봇방 ID 사용)
-					AddChat(CurrentSelectedGroup->ChatBlockUI->GetTeamID(), ParsedTime, MyID, MyName, Msg.content);
+					AddChat(CurrentSelectedGroup->ChatBlockUI->GetTeamID(), ParsedTime, MyID, MyName, Msg.content, 0);	// TODO: Get Tendency from Save Data
 				}
 				else if (Msg.role == TEXT("assistant"))
 				{
@@ -735,7 +736,7 @@ void UGroupChatUI::OnTextBoxCommitted()
 	// [전송 로직 분기]
 	if (CurrentSelectedGroup->bIsChatbotRoom)
 	{
-		AddChat(CurrentSelectedGroup->ChatBlockUI->GetTeamID(), TimeStamp, MyID, MyName, Content);
+		AddChat(CurrentSelectedGroup->ChatBlockUI->GetTeamID(), TimeStamp, MyID, MyName, Content, 0);	// TODO: Get Tendency from Save Data
 		// === Case A: 학습 챗봇 방 (개인용) ===
 		if (WebSocketSystem && WebSocketSystem->IsConnected())
 		{
@@ -832,7 +833,7 @@ FString UGroupChatUI::MakeChatTimeStamp()
 }
 
 void UGroupChatUI::AddChat(const FString& TeamID, const FString& CurrentTime, const int32& UserID, const FString& Name,
-                           const FString& Text) const
+                           const FString& Text, const int32& TendencyID) const
 {
 	if (UChatBlockUI* ChatChunk = Cast<UChatBlockUI>(ChatSizeBox->GetChildAt(0)))
 	{
@@ -849,7 +850,7 @@ void UGroupChatUI::AddChat(const FString& TeamID, const FString& CurrentTime, co
 		UChatMessageBlockUI* Chat = CreateWidget<UChatMessageBlockUI>(GetWorld(), ChatMessageBlockUIClass);
 		ChatChunk->ChatScrollBox->AddChild(Chat);
 		Chat->SetContent(CurrentTime, Name, Text);
-		Chat->SetProfileIMG(IMGManager->GetImageByUserID(UserID));
+		Chat->SetProfileIMG(IMGManager->GetImageByUserID(TendencyID));
 
 		// If Scroll is at End
 		if (ScrollOffset == EndOfScrollOffset)

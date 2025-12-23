@@ -55,7 +55,7 @@ public:
 	void Server_RequestChat(const FString& TeamID, const TArray<int32>& UserIDs, const FString& CurrentTime,
 							 const int32& UserID, const FString& Name, const FString& Text);
 	UFUNCTION(Client, Reliable)
-	void Client_SendChat(const FString& TeamID, const FString& CurrentTime, const int32& UserID, const FString& Name, const FString& Text);
+	void Client_SendChat(const FString& TeamID, const FString& CurrentTime, const int32& UserID, const FString& Name, const FString& Text, const int32& TendencyID);
 	
 	UPROPERTY()
 	TObjectPtr<class ACuteAlienController> owner;
