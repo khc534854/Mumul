@@ -30,7 +30,7 @@ void AMumulGameState::RemovePlayerState(APlayerState* PlayerState)
 
 }
 
-void AMumulGameState::Multicast_SavePlayerCosmetic(int32 UserIndex, FName ItemID)
+void AMumulGameState::Multicast_SavePlayerCosmetic_Implementation(int32 UserIndex, FName ItemID)
 {
 	FString SlotName = TEXT("IslandMapSave");
 
@@ -57,6 +57,24 @@ void AMumulGameState::Multicast_SavePlayerCosmetic(int32 UserIndex, FName ItemID
 	if (UGameplayStatics::SaveGameToSlot(SaveInst, SlotName, 0))
 	{
 		UE_LOG(LogTemp, Log, TEXT("[SaveGame] User %d Equipped Item: %s"), UserIndex, *ItemID.ToString());
+	}
+}
+
+void AMumulGameState::Multicast_SavePlayerTendency_Implementation(int32 UserIndex, int32 TendencyID)
+{
+	FString SlotName = TEXT("IslandMapSave");
+
+	UMapDataSaveGame* SaveInst = Cast<UMapDataSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, 0));
+	if (!SaveInst)
+	{
+		SaveInst = Cast<UMapDataSaveGame>(UGameplayStatics::CreateSaveGameObject(UMapDataSaveGame::StaticClass()));
+	}
+
+	SaveInst->PlayerTendency.Add(UserIndex, TendencyID);
+
+	if (UGameplayStatics::SaveGameToSlot(SaveInst, SlotName, 0))
+	{
+		UE_LOG(LogTemp, Log, TEXT("[SaveGame] User %d Tendency : %d"), UserIndex, TendencyID);
 	}
 }
 

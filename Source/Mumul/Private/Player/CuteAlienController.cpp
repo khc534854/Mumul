@@ -131,6 +131,7 @@ void ACuteAlienController::BeginPlay()
 
 	GS = Cast<AMumulGameState>(GetWorld()->GetGameState());
 
+
 	HttpSystem = GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>();
 
 
@@ -578,6 +579,11 @@ void ACuteAlienController::TryInitPlayerInfo()
 			GI->PlayerType,
 			GI->PlayerTendency
 		);
+		
+		if (GS)
+		{
+			GS->Multicast_SavePlayerTendency(GI->PlayerUniqueID, GI->PlayerTendency);
+		}
 
 		UE_LOG(LogTemp, Log, TEXT("[Client] Sent Init Info: %s (ID: %d)"), *GI->PlayerName, GI->PlayerUniqueID);
 	}
@@ -594,6 +600,7 @@ void ACuteAlienController::CheckPCGAndPlayIntro()
 		UPCGComponent* PCGComp = *It;
 		if (PCGComp && PCGComp->GetWorld() == GetWorld())
 		{
+			
 			if (PCGComp->IsGenerating())
 			{
 				bIsGenerating = true;

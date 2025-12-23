@@ -52,4 +52,7 @@ public:
 
 	UPROPERTY()
 	TMap<int32, FName> PlayerCosmetics;
+
+	UPROPERTY()
+	TMap<int32, int32> PlayerTendency;
 };

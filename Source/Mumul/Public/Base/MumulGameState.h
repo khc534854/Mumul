@@ -28,7 +28,10 @@ public:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_SavePlayerLocation(int32 UserIndex, FTransform Location);
+	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_SavePlayerCosmetic(int32 UserIndex, FName ItemID);
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_SavePlayerTendency(int32 UserIndex, int32 TendencyID);
 
 protected:
 	UPROPERTY(Replicated)
