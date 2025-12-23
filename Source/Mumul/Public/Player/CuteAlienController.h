@@ -122,6 +122,8 @@ protected:
 	TObjectPtr<ULogoutUI> LogoutUI;
 public:
 	bool bCanInteract = false;
+	bool bCanSit = false;
+	bool bIsSitting = false;
 	
 	UPROPERTY()
 	TObjectPtr<UPlayerUI> PlayerUI;
@@ -130,6 +132,10 @@ public:
 	TObjectPtr<class UIMGManager> IMGManager;
 
 	void TryInteractWithFeedbackActor();
+	void SitState(bool newSitState);
+
+	UPROPERTY()
+	TObjectPtr<class AChairObject> TargetChair;
 	
 	void OpenLogoutUI();
 protected:

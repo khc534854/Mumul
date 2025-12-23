@@ -276,6 +276,12 @@ void ACuteAlienController::Tick(float DeltaSeconds)
 		if (WasInputKeyJustPressed(EKeys::LeftMouseButton))
 			TryInteractWithFeedbackActor();
 	}
+
+	if (bCanSit)
+	{
+		if (WasInputKeyJustPressed(EKeys::LeftMouseButton))
+			SitState(true);
+	}
 }
 
 void ACuteAlienController::OnPressEsc()
@@ -464,6 +470,23 @@ void ACuteAlienController::TryInteractWithFeedbackActor()
 				SetInputMode(InputMode);
 			}
 		}
+	}
+}
+
+void ACuteAlienController::SitState(bool newSitState)
+{
+	bIsSitting = newSitState;
+
+	if (bIsSitting)
+	{
+		if (TargetChair)
+		{
+			// 플레이어 앉히기
+		}
+	}
+	else
+	{
+		// 플레이어 때기
 	}
 }
 

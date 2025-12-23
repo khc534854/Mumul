@@ -52,6 +52,9 @@ protected:
 	UPROPERTY()
 	TObjectPtr<class UAnimMontage> DanceMontage7;
 
+	UPROPERTY()
+	TObjectPtr<class UAnimMontage> SitMontage;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Customs")
 	UStaticMeshComponent* CustomMeshComponent;
 	
@@ -60,6 +63,11 @@ public:
 	void Server_PlayAlienDance(int32 SelectIdx);
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_PlayAlienDance(int32 SelectIdx);
+
+	UFUNCTION(Server, Reliable)
+	void Server_SitDown();
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_SitDown();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class UVoiceChatComponent* VoiceComponent;

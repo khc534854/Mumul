@@ -76,6 +76,13 @@ ACuteAlienPlayer::ACuteAlienPlayer()
 		DanceMontage7 = Dance7MontageFinder.Object;
 	}
 
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> SitMontageFinder(
+	TEXT("/Game/Yeomin/Characters/CuteAlien/Animations/Animation2/Sitting_Montage.Sitting_Montage"));
+	if (SitMontageFinder.Succeeded())
+	{
+		SitMontage = SitMontageFinder.Object;
+	}
+
 	static ConstructorHelpers::FObjectFinder<UInputAction> IA_ClickFinder(
 		TEXT("/Game/Yeomin/Characters/Inputs/Actions/IA_Click.IA_Click"));
 	if (IA_ClickFinder.Succeeded())
@@ -133,7 +140,6 @@ void ACuteAlienPlayer::BeginPlay()
 			// 4. 캡처 시작
 			MinimapCapture->CaptureScene(); // 혹은 CaptureEveryFrame이 켜져있다면 자동 시작됨
 		}
-
 		WidgetComponent->SetVisibility(false);
 	}
 	else
@@ -280,6 +286,16 @@ void ACuteAlienPlayer::Server_EquipCustom_Implementation(FName ItemID)
 			GS->Multicast_SavePlayerCosmetic(PS->PS_UserIndex, PS->EquippedCustomID);
 		}
 	}
+}
+
+void ACuteAlienPlayer::Server_SitDown_Implementation()
+{
+	Multicast_SitDown();
+}
+
+void ACuteAlienPlayer::Multicast_SitDown_Implementation()
+{
+	PlayerAnim->Montage_Play(SitMontage);
 }
 
 void ACuteAlienPlayer::UpdateNameTag()
