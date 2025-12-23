@@ -21,10 +21,14 @@ protected:
 	                           FActorComponentTickFunction* ThisTickFunction) override;
 	
 	UPROPERTY()
+	TObjectPtr<class UWebSocketSubsystem> WebSocketSystem;
+	UFUNCTION()
+	void OnNotice(const FString& NoticeMessage);
+	UFUNCTION()
+	void OnDirectMessage(const FString& NoticeMessage);
+	
+	UPROPERTY()
 	TObjectPtr<class UNoticeUI> NoticeUI;
-	
-	
-	
 	
 	UPROPERTY()
 	TObjectPtr<class ACuteAlienController> owner;

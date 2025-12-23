@@ -7,6 +7,7 @@
 #include "Components/Button.h"
 #include "Components/ScrollBox.h"
 #include "Components/VerticalBox.h"
+#include "Components/WidgetSwitcher.h"
 #include "Data/ObjectAndClassFinder.h"
 #include "UI/NoticeUI/NoticeContentUI.h"
 
@@ -15,35 +16,98 @@ void UNoticeUI::NativeConstruct()
 	Super::NativeConstruct();
 
 	ToggleNoticeBtn->OnClicked.AddDynamic(this, &UNoticeUI::OnToggleNoticeVisibility);
+
+	NoticeTap->OnClicked.AddDynamic(this, &UNoticeUI::OnSwitchToNotice);
+	InformationTap->OnClicked.AddDynamic(this, &UNoticeUI::OnSwitchToInformation);
+	DirectMessageTap->OnClicked.AddDynamic(this, &UNoticeUI::OnSwitchToDM);
+
 	NoticeBorder->SetVisibility(ESlateVisibility::Collapsed);
+
+	ChangeNoticeState(ENoticeState::Information);
 }
+
+void UNoticeUI::ChangeNoticeState(ENoticeState NewState)
+{
+	CurNoticeState = NewState;
+	
+	switch (NewState)
+	{
+	case ENoticeState::Notice:
+		NoticeWS->SetActiveWidgetIndex(0);
+		NoticeTap->SetIsEnabled(false);
+		InformationTap->SetIsEnabled(true);
+		DirectMessageTap->SetIsEnabled(true);
+		break;
+	case ENoticeState::Information:
+		NoticeWS->SetActiveWidgetIndex(1);
+		NoticeTap->SetIsEnabled(true);
+		InformationTap->SetIsEnabled(false);
+		DirectMessageTap->SetIsEnabled(true);
+		break;
+	case ENoticeState::DM:
+		NoticeWS->SetActiveWidgetIndex(2);
+		NoticeTap->SetIsEnabled(true);
+		InformationTap->SetIsEnabled(true);
+		DirectMessageTap->SetIsEnabled(false);
+		break;
+	}
+}
+
+
+// Switch Buttons
+void UNoticeUI::OnSwitchToNotice()
+{
+	SortNotices(ConfirmedVBox, UnConfirmedVBox);
+	ChangeNoticeState(ENoticeState::Notice);
+}
+void UNoticeUI::OnSwitchToInformation()
+{
+	ChangeNoticeState(ENoticeState::Information);
+}
+void UNoticeUI::OnSwitchToDM()
+{
+	SortNotices(DMConfirmedVBox, DMUnConfirmedVBox);
+	ChangeNoticeState(ENoticeState::DM);
+}
+
 
 void UNoticeUI::OnToggleNoticeVisibility()
 {
 	if (NoticeBorder->GetVisibility() == ESlateVisibility::Collapsed)
 	{
-		SortNotices();
+		switch (CurNoticeState)
+		{
+		case ENoticeState::Notice:
+			SortNotices(ConfirmedVBox, UnConfirmedVBox);
+			break;
+		case ENoticeState::Information:
+			break;
+		case ENoticeState::DM:
+			SortNotices(DMConfirmedVBox, DMUnConfirmedVBox);
+			break;
+		}
 		NoticeBorder->SetVisibility(ESlateVisibility::Visible);
 	}
 	else
 	{
 		NoticeBorder->SetVisibility(ESlateVisibility::Collapsed);
 	}
-	
+
 	// Test Add Notice
 	FNoticeViewData NoticeData;
 	NoticeData.Notice.Content = FString(TEXT("Test Notice!"));
 	NoticeData.Notice.CreatedAt = FDateTime::Now();
 	NoticeData.UserState.bConfirmed = false;
 	AddNotice(NoticeData);
+	AddDM(NoticeData);
 }
 
-void UNoticeUI::SortNotices()
+void UNoticeUI::SortNotices(UVerticalBox* ConfirmedBox, UVerticalBox* UnConfirmedBox)
 {
 	TArray<UNoticeContentUI*> AllNoticeUIs;
 
 	// 1️⃣ 모든 공지 아이템 수집
-	for (UWidget* Child : UnConfirmedVBox->GetAllChildren())
+	for (UWidget* Child : UnConfirmedBox->GetAllChildren())
 	{
 		if (UNoticeContentUI* NoticeUI = Cast<UNoticeContentUI>(Child))
 		{
@@ -51,7 +115,7 @@ void UNoticeUI::SortNotices()
 		}
 	}
 
-	for (UWidget* Child : ConfirmedVBox->GetAllChildren())
+	for (UWidget* Child : ConfirmedBox->GetAllChildren())
 	{
 		if (UNoticeContentUI* NoticeUI = Cast<UNoticeContentUI>(Child))
 		{
@@ -73,18 +137,18 @@ void UNoticeUI::SortNotices()
 	});
 
 	// 3️⃣ 정렬 결과를 UI에 반영
-	UnConfirmedVBox->ClearChildren();
-	ConfirmedVBox->ClearChildren();
+	UnConfirmedBox->ClearChildren();
+	ConfirmedBox->ClearChildren();
 
 	for (UNoticeContentUI* NoticeUI : AllNoticeUIs)
 	{
 		if (NoticeUI->IsConfirmed())
 		{
-			ConfirmedVBox->AddChild(NoticeUI);
+			ConfirmedBox->AddChild(NoticeUI);
 		}
 		else
 		{
-			UnConfirmedVBox->AddChild(NoticeUI);
+			UnConfirmedBox->AddChild(NoticeUI);
 		}
 	}
 }
@@ -97,5 +161,16 @@ void UNoticeUI::AddNotice(const FNoticeViewData& Data)
 		NoticeContentUI = CreateWidget<UNoticeContentUI>(this, UNoticeContentUIClass);
 		NoticeContentUI->InitUI(Data);
 		UnConfirmedVBox->InsertChildAt(0, NoticeContentUI);
+	}
+}
+
+void UNoticeUI::AddDM(const FNoticeViewData& Data)
+{
+	if (TSubclassOf<UNoticeContentUI> UNoticeContentUIClass = UObjectAndClassFinder::Get()->GetWidgetClass<
+		UNoticeContentUI>("WBP_NoticeContent"))
+	{
+		NoticeContentUI = CreateWidget<UNoticeContentUI>(this, UNoticeContentUIClass);
+		NoticeContentUI->InitUI(Data);
+		DMUnConfirmedVBox->InsertChildAt(0, NoticeContentUI);
 	}
 }

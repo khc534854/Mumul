@@ -5,6 +5,7 @@
 
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
+#include "Network/WebSocketSubsystem.h"
 #include "UI/NoticeUI/NoticeUI.h"
 
 void UNoticeContentUI::NativeConstruct()
@@ -12,16 +13,31 @@ void UNoticeContentUI::NativeConstruct()
 	Super::NativeConstruct();
 	
 	NoticeConfirmBtn->OnClicked.AddDynamic(this, &UNoticeContentUI::OnConfirmClicked);
+	
+	WebSocketSystem = GetGameInstance()->GetSubsystem<UWebSocketSubsystem>();
 }
 
 void UNoticeContentUI::OnConfirmClicked()
 {
 	bIsConfirmed = true;
-	
 	UpdateConfirmButtonUI();
 	
 	// ️서버 저장
-	
+	if (WebSocketSystem && WebSocketSystem->IsConnected())
+	{
+		// TODO: SendStructMessage
+		// FWSRequest_Query QueryReq;
+		// QueryReq.sessionId = MyID; // 학습 챗봇은 sessionId = userId
+		// QueryReq.userId = MyID;
+		// QueryReq.query = Content;
+		// QueryReq.grade = Grade;
+		// WebSocketSystem->SendStructMessage(QueryReq);
+	}
+	else
+	{
+		bIsConfirmed = false;
+		UpdateConfirmButtonUI();
+	}
 }
 
 void UNoticeContentUI::InitUI(const FNoticeViewData& Data)

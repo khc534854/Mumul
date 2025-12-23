@@ -54,6 +54,14 @@ struct FNoticeViewData
 	FUserNoticeState UserState;
 };
 
+UENUM()
+enum class ENoticeState : uint8
+{
+	Notice,
+	Information,
+	DM,
+};
+
 UCLASS()
 class MUMUL_API UNoticeUI : public UUserWidget
 {
@@ -62,13 +70,25 @@ class MUMUL_API UNoticeUI : public UUserWidget
 protected:
 	virtual void NativeConstruct() override;
 	
+	ENoticeState CurNoticeState = ENoticeState::Notice;
+	
+	void ChangeNoticeState(ENoticeState NewState);
+	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UBorder> NoticeBorder;
 	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> NoticeTap;
+	UFUNCTION()
+	void OnSwitchToNotice();
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UButton> InformationTap;
+	UFUNCTION()
+	void OnSwitchToInformation();
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> DirectMessageTap;
+	UFUNCTION()
+	void OnSwitchToDM();
 	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UWidgetSwitcher> NoticeWS;
@@ -79,6 +99,14 @@ protected:
 	TObjectPtr<class UVerticalBox> UnConfirmedVBox;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UVerticalBox> ConfirmedVBox;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UScrollBox> InformationScrollBox;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UScrollBox> DMScrollBox;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UVerticalBox> DMUnConfirmedVBox;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UVerticalBox> DMConfirmedVBox;
 	UPROPERTY()
 	TObjectPtr<class UNoticeContentUI> NoticeContentUI;
 	
@@ -86,8 +114,9 @@ protected:
 	TObjectPtr<class UButton> ToggleNoticeBtn;
 	UFUNCTION()
 	void OnToggleNoticeVisibility();
+	void SortNotices(UVerticalBox* ConfirmedBox, UVerticalBox* UnConfirmedBox);
 	
 public:
 	void AddNotice(const FNoticeViewData& Data);
-	void SortNotices();
+	void AddDM(const FNoticeViewData& Data);
 };

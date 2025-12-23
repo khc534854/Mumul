@@ -258,8 +258,15 @@ void UWebSocketSubsystem::HandleNoticeMessage(TSharedPtr<FJsonObject> JsonObject
 
     if (EventType == TEXT("notice"))
     {
+        // TODO: Parse JSON
         FString NoticeMsg = JsonObject->GetStringField(TEXT("message"));
         OnNoticeReceived.Broadcast(NoticeMsg);
+    }
+    if (EventType == TEXT("DirectMessage"))
+    {
+        // TODO: Parse JSON
+        FString NoticeMsg = JsonObject->GetStringField(TEXT("message"));
+        OnDirectMessageReceived.Broadcast(NoticeMsg);
     }
     else
     {

@@ -18,6 +18,9 @@ class MUMUL_API UNoticeContentUI : public UUserWidget
 protected:
 	virtual void NativeConstruct() override;
 	
+	UPROPERTY()
+	TObjectPtr<class UWebSocketSubsystem> WebSocketSystem;
+	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UTextBlock> NoticeContentText;
 

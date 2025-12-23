@@ -34,6 +34,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnMeetingChatEnded, FString, Messa
 
 // 공지 델리게이트 (Notice)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNoticeReceived, const FString&, NoticeMessage);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDirectMessageReceived, const FString&, NoticeMessage);
 
 
 UCLASS()
@@ -97,6 +98,8 @@ public:
     // 공지 이벤트
     UPROPERTY(BlueprintAssignable)
     FOnNoticeReceived OnNoticeReceived;
+    UPROPERTY(BlueprintAssignable)
+    FOnNoticeReceived OnDirectMessageReceived;
     
 private:
     TSharedPtr<IWebSocket> WebSocket;
