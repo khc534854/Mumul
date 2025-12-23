@@ -115,10 +115,10 @@ UWebSocketSubsystem* ANetworkTestActor::GetWSSubsystem()
 
 void ANetworkTestActor::TestWS_Connect()
 {
-    if (UWebSocketSubsystem* WS = GetWSSubsystem())
-    {
-        WS->Connect(WebSocketURL);
-    }
+    // if (UWebSocketSubsystem* WS = GetWSSubsystem())
+    // {
+    //     WS->Connect(WebSocketURL);
+    // }
 }
 
 void ANetworkTestActor::TestWS_StartChat()
@@ -137,15 +137,15 @@ void ANetworkTestActor::TestWS_StartChat()
 
 void ANetworkTestActor::TestWS_SendQuery()
 {
-    if (UWebSocketSubsystem* WS = GetWSSubsystem())
-    {
-        FWSRequest_Query Req;
-        //Req.sessionId = WS_SessionID;
-        Req.query = WS_QueryText;
-
-        WS->SendStructMessage(Req);
-        UE_LOG(LogTemp, Log, TEXT("[Test] WS Query Sent: %s"), *WS_QueryText);
-    }
+    // if (UWebSocketSubsystem* WS = GetWSSubsystem())
+    // {
+    //     FWSRequest_Query Req;
+    //     //Req.sessionId = WS_SessionID;
+    //     Req.query = WS_QueryText;
+    //
+    //     WS->SendStructMessage(Req);
+    //     UE_LOG(LogTemp, Log, TEXT("[Test] WS Query Sent: %s"), *WS_QueryText);
+    // }
 }
 
 void ANetworkTestActor::TestWS_EndChat()

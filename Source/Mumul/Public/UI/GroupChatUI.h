@@ -51,23 +51,23 @@ public:
 protected:
 	// [신규] 학습 챗봇용 핸들러 (1:1)
 	UFUNCTION()
-	void OnLearningChatStarted(FString Message);
-    
-	UFUNCTION()
-	void OnLearningChatAnswer(FString Answer);
-    
-	UFUNCTION()
-	void OnLearningChatEnded(FString Message);
-
-	// [신규] 회의 도우미용 핸들러 (그룹)
-	UFUNCTION()
-	void OnMeetingChatStarted(FString Message, FString GroupId, FString UserName);
+	void OnLearningChatStarted(const FLearningResponsePayload& Info);
 
 	UFUNCTION()
-	void OnMeetingChatAnswer(FString Answer, FString GroupId);
+	void OnLearningChatAnswer(const FLearningResponsePayload& Answer);
 
 	UFUNCTION()
-	void OnMeetingChatEnded(FString Message, FString GroupId);
+	void OnLearningChatEnded(const FLearningResponsePayload& Info);
+
+	// [변경] 회의 도우미 핸들러 (인자: 구조체 참조)
+	UFUNCTION()
+	void OnMeetingChatStarted(const FMeetingResponsePayload& Info);
+
+	UFUNCTION()
+	void OnMeetingAnswer(const FMeetingResponsePayload& Answer);
+
+	UFUNCTION()
+	void OnMeetingChatEnded(const FMeetingResponsePayload& Info);
 
 	UFUNCTION()
 	void OnServerTeamChatMessageResponse(bool bSuccess, FString Message);

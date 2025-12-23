@@ -3,6 +3,195 @@
 #include "CoreMinimal.h"
 #include "NetworkStructs.generated.h"
 
+USTRUCT(BlueprintType)
+struct FSystemRegisterPayload
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+    int32 userId = 0;
+};
+
+USTRUCT(BlueprintType)
+struct FSystemErrorPayload
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+    FString message;
+};
+
+// --- B. Meeting (회의) ---
+USTRUCT(BlueprintType)
+struct FMeetingStartPayload
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+    FString groupId;
+
+    UPROPERTY()
+    int32 userId = 0;
+
+    UPROPERTY()
+    FString userName;
+};
+
+USTRUCT(BlueprintType)
+struct FMeetingResponsePayload
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+    FString groupId;
+
+    UPROPERTY()
+    int32 userId = 0;
+
+    UPROPERTY()
+    FString userName;
+
+    UPROPERTY()
+    FString message;
+
+    UPROPERTY()
+    FString answer;
+};
+
+USTRUCT(BlueprintType)
+struct FMeetingQueryPayload
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+    FString groupId;
+
+    UPROPERTY()
+    int32 userId = 0;
+
+    UPROPERTY()
+    FString userName;
+
+    UPROPERTY()
+    FString query;
+
+    UPROPERTY()
+    FString meeting_id;
+};
+
+USTRUCT(BlueprintType)
+struct FMeetingEndPayload
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+    FString groupId;
+};
+
+// --- C. Learning (학습) ---
+USTRUCT(BlueprintType)
+struct FLearningStartPayload
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+    int32 sessionId = 0;
+
+    UPROPERTY()
+    int32 userId = 0;
+};
+
+USTRUCT(BlueprintType)
+struct FLearningResponsePayload
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+    int32 sessionId = 0;
+
+    UPROPERTY()
+    int32 userId = 0;
+
+    UPROPERTY()
+    FString message;
+
+    UPROPERTY()
+    FString answer;
+};
+
+USTRUCT(BlueprintType)
+struct FLearningQueryPayload
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+    int32 sessionId = 0;
+
+    UPROPERTY()
+    int32 userId = 0;
+
+    UPROPERTY()
+    FString query;
+
+    UPROPERTY()
+    int32 grade = 0;
+};
+
+// --- D. Dispatch (공지/DM) ---
+USTRUCT(BlueprintType)
+struct FDispatchNoticePayload
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+    FString noticeId;
+
+    UPROPERTY()
+    FString title;
+
+    UPROPERTY()
+    FString text;
+
+    UPROPERTY()
+    FString urgency;
+};
+
+USTRUCT(BlueprintType)
+struct FDispatchDMPayload
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+    FString messageId;
+
+    UPROPERTY()
+    FString text;
+};
+
+USTRUCT(BlueprintType)
+struct FDispatchAckPayload
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+    FString kind;
+
+    UPROPERTY()
+    FString messageId;
+
+    UPROPERTY()
+    FString receivedAt;
+};
+
+USTRUCT(BlueprintType)
+struct FDispatchPongPayload
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+    FString serverAt;
+};
+
 USTRUCT()
 struct FPlayerLogRequest
 {
