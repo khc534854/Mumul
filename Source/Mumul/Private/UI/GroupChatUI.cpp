@@ -3,6 +3,7 @@
 
 #include "UI/GroupChatUI.h"
 
+#include "Animation/WidgetAnimation.h"
 #include "Network/HttpNetworkSubsystem.h"
 #include "Components/Border.h"
 #include "Network/WebSocketSubsystem.h"
@@ -52,7 +53,6 @@ void UGroupChatUI::NativeConstruct()
 	CreateGroupChatUI = CreateWidget<UCreateGroupChatUI>(this, CreateGroupChatUIClass);
 	CreateGroupChatUI->InitParentUI(this);
 	CreateGroupChatBox->AddChild(CreateGroupChatUI);
-	CreateGroupChatBox->SetVisibility(ESlateVisibility::Hidden);
 
 	InvitationUI = CreateWidget<UInvitationUI>(this, InvitationUIClass);
 	InvitationBox->AddChild(InvitationUI);
@@ -146,6 +146,14 @@ void UGroupChatUI::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	{
 		bAnimating = false;
 	}
+}
+
+void UGroupChatUI::NativeOnInitialized()
+{
+	Super::NativeOnInitialized();
+	
+	// Init CreateGroupUI position
+	PlayAnimation(CreateGroupUI_SlideUp, CreateGroupUI_SlideUp->GetEndTime(), 1, EUMGSequencePlayMode::Reverse);
 }
 
 void UGroupChatUI::ToggleVisibility(UWidget* Widget)
@@ -1231,10 +1239,18 @@ void UGroupChatUI::ToggleCreateGroupChatUI()
 {
 	CreateGroupChatUI->RefreshJoinedPlayerList();
 
-	ToggleVisibility(CreateGroupChatBox);
-	if (InvitationBox->GetVisibility() == ESlateVisibility::Visible)
+	if (IsAnimationPlaying(CreateGroupUI_SlideUp))
+		return;
+	
+	if (bCreateGroupVisible)
 	{
-		ToggleVisibility(InvitationBox);
+		bCreateGroupVisible = false;
+		PlayAnimation(CreateGroupUI_SlideUp, 0, 1, EUMGSequencePlayMode::Reverse);
+	}
+	else
+	{
+		bCreateGroupVisible = true;
+		PlayAnimation(CreateGroupUI_SlideUp);
 	}
 }
 
