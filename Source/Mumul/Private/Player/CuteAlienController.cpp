@@ -740,6 +740,8 @@ void ACuteAlienController::OnIntroSequenceFinished()
 {
 	SetCinematicMode(false, true, true, true, true);
 
+	bIsIntroFinished = true;
+
 	for (TActorIterator<ACuteAlienPlayer> It(GetWorld()); It; ++It)
 	{
 		ACuteAlienPlayer* Pl = *It;

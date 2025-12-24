@@ -360,20 +360,37 @@ void ACuteAlienPlayer::UpdateNameTag()
 	AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>();
 	if (!PS)
 	{
-		// 아직 PlayerState가 없으면 잠시 후 다시 시도 (0.5초 뒤)
+		// 재시도 타이머
 		FTimerHandle WaitHandle;
 		GetWorldTimerManager().SetTimer(WaitHandle, this, &ACuteAlienPlayer::UpdateNameTag, 0.5f, false);
 		return;
 	}
 
-	// 2. 위젯 인스턴스 가져오기
+	// 1. 텍스트 업데이트 (기존 로직)
 	UUserWidget* WidgetObj = WidgetComponent->GetUserWidgetObject();
-	if (!WidgetObj) return;
-
-	if (UTextBlock* TextBlock = Cast<UTextBlock>(WidgetObj->GetWidgetFromName(TEXT("NameText"))))
+	if (WidgetObj)
 	{
-		FString DisplayName = PS->PS_RealName;
-		TextBlock->SetText(FText::FromString(DisplayName));
+		if (UTextBlock* TextBlock = Cast<UTextBlock>(WidgetObj->GetWidgetFromName(TEXT("NameText"))))
+		{
+			FString DisplayName = PS->PS_RealName;
+			TextBlock->SetText(FText::FromString(DisplayName));
+		}
+	}
+
+	if (APlayerController* LocalPC = GetWorld()->GetFirstPlayerController())
+	{
+		if (ACuteAlienController* AlienPC = Cast<ACuteAlienController>(LocalPC))
+		{
+			// "내 화면에서 인트로가 이미 끝났다면, 이 캐릭터의 이름표를 보여줘라"
+			// (방장 입장에서는 bIsIntroFinished가 true이므로 나중에 들어온 사람 이름표가 바로 켜짐)
+			if (AlienPC->bIsIntroFinished)
+			{
+				if (WidgetComponent->GetVisibleFlag() == false)
+				{
+					WidgetComponent->SetVisibility(true);
+				}
+			}
+		}
 	}
 }
 

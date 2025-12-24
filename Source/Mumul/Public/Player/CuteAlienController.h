@@ -154,6 +154,7 @@ protected:
 public:
 	UPROPERTY()
 	TObjectPtr<class UAudioManager> AudioManager;
+	bool bIsIntroFinished = false;
 
 private:
 	FTimerHandle PCGWaitTimerHandle;
