@@ -138,6 +138,8 @@ public:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_StandUp();
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_SitAtLocation(FVector TargetLoc, FRotator TargetRot, ACampFireActor* TargetFire);
 
 private:
 	UPROPERTY()

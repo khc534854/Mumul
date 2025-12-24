@@ -30,6 +30,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/VoiceConfig.h"
+#include "Object/CampFireActor.h"
 
 static const FString ItemDataTablePath = TEXT("/Game/Khc/Blueprint/Object/CustomItemList.CustomItemList");
 // Sets default values
@@ -690,6 +691,42 @@ void ACuteAlienPlayer::SetIsMeetingSitting(bool bIsSitting, AActor* FocusTarget)
             GetCameraBoom()->SocketOffset = OriginalSocketOffset;
         }
     }
+}
+
+void ACuteAlienPlayer::Multicast_SitAtLocation_Implementation(FVector TargetLoc, FRotator TargetRot,
+	ACampFireActor* TargetFire)
+{
+	// 1. [텔레포트] 물리 가속도 무시하고 즉시 이동
+	if (GetCharacterMovement())
+	{
+		GetCharacterMovement()->StopMovementImmediately();
+		GetCharacterMovement()->DisableMovement();
+	}
+    
+	// TeleportPhysics: 슥 미끄러지는 현상 방지
+	SetActorLocationAndRotation(TargetLoc, TargetRot, false, nullptr, ETeleportType::TeleportPhysics);
+
+	// 2. 애니메이션 및 상태 변경 (기존 함수 활용)
+	// (TargetFire는 카메라 부착용으로 넘겨줌)
+	SetIsMeetingSitting(true, TargetFire); 
+
+	// 3. [핵심] 로컬 컨트롤러(나) 상태 동기화
+	// 멀티캐스트는 모든 클라이언트에서 실행되지만, 입력 제한과 변수 저장은 '주인'만 하면 됩니다.
+	if (IsLocallyControlled())
+	{
+		if (ACuteAlienController* MyPC = Cast<ACuteAlienController>(GetController()))
+		{
+			// (1) 시선 강제 고정
+			MyPC->SetControlRotation(TargetRot);
+
+			// (2) 입력 제한
+			MyPC->SetIgnoreMoveInput(true);
+			MyPC->SetIgnoreLookInput(false); // 마우스는 움직이게
+
+			// (3) 로컬 변수 동기화 (일어날 때 사용)
+			MyPC->CurrentMeetingCampFire = TargetFire;
+		}
+	}
 }
 
 void ACuteAlienPlayer::Server_StandUp_Implementation()

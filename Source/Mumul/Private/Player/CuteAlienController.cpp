@@ -782,69 +782,48 @@ void ACuteAlienController::OnIntroSequenceFinished()
 
 void ACuteAlienController::Server_TrySitAtCampfire_Implementation()
 {
-    APawn* MyPawn = GetPawn();
-    if (!MyPawn) return;
+	ACuteAlienPlayer* MyPawn = Cast<ACuteAlienPlayer>(GetPawn());
+	if (!MyPawn) return;
 
-    // 현재 오버랩된 모닥불 찾기
-    ACampFireActor* TargetFire = nullptr;
-    TArray<AActor*> OverlappingActors;
-    MyPawn->GetOverlappingActors(OverlappingActors, ACampFireActor::StaticClass());
+	// 1. 모닥불 찾기
+	ACampFireActor* TargetFire = nullptr;
+	TArray<AActor*> OverlappingActors;
+	MyPawn->GetOverlappingActors(OverlappingActors, ACampFireActor::StaticClass());
 
-    if (OverlappingActors.Num() > 0)
-    {
-        TargetFire = Cast<ACampFireActor>(OverlappingActors[0]);
-    }
-
-    // 모닥불을 찾았다면 자리 배정 요청
-    if (TargetFire)
-    {
-        AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>();
-        if (PS)
-        {
-            FTransform SeatTransform;
-        	if (TargetFire->AssignAvailableSeat(PS, SeatTransform))
-        	{
-        		Client_SitAtLocation(SeatTransform, TargetFire);
-        	}
-        }
-    }
-}
-
-void ACuteAlienController::Client_SitAtLocation_Implementation(const FTransform& TargetTransform, ACampFireActor* TargetFire)
-{
-	CurrentMeetingCampFire = TargetFire;
-    
-	ACuteAlienPlayer* MyChar = Cast<ACuteAlienPlayer>(GetPawn());
-	if (MyChar)
+	if (OverlappingActors.Num() > 0)
 	{
-		// [수정] 1. 위치와 회전 설정
-		FVector TargetLoc = TargetTransform.GetLocation();
-		FRotator TargetRot = TargetTransform.GetRotation().Rotator();
+		TargetFire = Cast<ACampFireActor>(OverlappingActors[0]);
+	}
 
-		// 모닥불 액터가 있다면, 그쪽을 바라보도록 회전 재계산
-		if (TargetFire)
+	// 2. 자리 배정 및 위치 계산
+	if (TargetFire)
+	{
+		AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>();
+		FTransform SeatTransform;
+        
+		// 서버에서 빈 자리 점유 (AssignAvailableSeat 내부에서 OccupiedSeats 업데이트됨)
+		if (TargetFire->AssignAvailableSeat(PS, SeatTransform))
 		{
+			// [서버 변수 저장] 서버도 나중에 ReleaseSeat을 하려면 알고 있어야 함
+			CurrentMeetingCampFire = TargetFire;
+
+			// [위치/회전 계산]
+			FVector TargetLoc = SeatTransform.GetLocation();
 			FVector FireLoc = TargetFire->GetActorLocation();
             
-			// 높이 차이는 무시하고 평면상에서 바라보게 함 (Z축 제외)
-			FVector Start = FVector(TargetLoc.X, TargetLoc.Y, 0.f);
-			FVector End = FVector(FireLoc.X, FireLoc.Y, 0.f);
-            
-			TargetRot = UKismetMathLibrary::FindLookAtRotation(Start, End);
+			// 모닥불 바라보는 회전 (Z축 무시)
+			FVector Dir = FireLoc - TargetLoc;
+			Dir.Z = 0.f;
+			FRotator TargetRot = FRotationMatrix::MakeFromX(Dir).Rotator();
+
+			// [최적화] 서버 -> 바로 멀티캐스트 호출 (TargetFire 포함)
+			// 이제 클라이언트를 거치지 않고 즉시 모든 화면에서 적용됩니다.
+			MyPawn->Multicast_SitAtLocation(TargetLoc, TargetRot, TargetFire);
 		}
-		SetControlRotation(TargetRot);
-
-		// 계산된 위치와 회전으로 이동
-		MyChar->SetActorLocationAndRotation(TargetLoc, TargetRot, false, nullptr, ETeleportType::TeleportPhysics);
-
-		// 2. 앉기 상태 변경 및 카메라 타겟 전달
-		MyChar->SetIsMeetingSitting(true, TargetFire);
-        
-		// 3. 움직임 제한
-		SetIgnoreMoveInput(true);
-		SetIgnoreLookInput(false);
 	}
 }
+
+
 
 void ACuteAlienController::Server_StandUpFromMeeting_Implementation()
 {

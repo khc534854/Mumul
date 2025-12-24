@@ -175,10 +175,6 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Server_TrySitAtCampfire();
 
-	// [신규] 실제 위치 이동 및 착석 처리 (클라이언트)
-	UFUNCTION(Client, Reliable)
-	void Client_SitAtLocation(const FTransform& TargetTransform, class ACampFireActor* TargetFire);
-
 	// [신규] 기상 요청 (서버)
 	UFUNCTION(Server, Reliable)
 	void Server_StandUpFromMeeting();
