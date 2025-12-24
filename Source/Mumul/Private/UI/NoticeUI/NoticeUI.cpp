@@ -4,11 +4,14 @@
 #include "UI/NoticeUI/NoticeUI.h"
 
 #include "Animation/WidgetAnimation.h"
+#include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/ScrollBox.h"
 #include "Components/VerticalBox.h"
 #include "Components/WidgetSwitcher.h"
 #include "Data/ObjectAndClassFinder.h"
+#include "Player/CuteAlienController.h"
+#include "UI/PlayerUI.h"
 #include "UI/NoticeUI/NoticeContentUI.h"
 
 void UNoticeUI::NativeConstruct()
@@ -102,6 +105,11 @@ void UNoticeUI::OnToggleNoticeVisibility()
 		}
 		bIsNoticeVisible = true;
 		PlayAnimation(NoticeUI_SildeUpAnim);
+		
+		if (UnConfirmedVBox->GetChildrenCount() == 0)
+		{
+			Cast<ACuteAlienController>(GetOwningPlayer())->PlayerUI->NewNoticeBorder->SetVisibility(ESlateVisibility::Collapsed);
+		}
 	}
 }
 

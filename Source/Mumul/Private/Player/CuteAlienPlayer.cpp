@@ -225,23 +225,27 @@ void ACuteAlienPlayer::OnClickInteraction()
 		{
 			AOXQuizTriggerActor* QuizTriggerActor = Cast<AOXQuizTriggerActor>(WidgetComp->GetOwner());
 			ACuteAlienController* PC = Cast<ACuteAlienController>(GetController());
+			
+			if (PC->OXQuizComp->OXQuizUI->GetVisibility() == ESlateVisibility::Collapsed || PC->OXQuizComp->OXQuizUI->GetVisibility() == ESlateVisibility::SelfHitTestInvisible)
+			{
+				// Set Mouse
+				int32 SizeX, SizeY;
+				PC->GetViewportSize(SizeX, SizeY);
+				PC->SetMouseLocation(SizeX / 2, SizeY / 2);
+				PC->OnCancelUI();
+				FInputModeGameAndUI InputMode;
+				InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
+				PC->SetIgnoreLookInput(true);
+				PC->SetShowMouseCursor(true);
+				PC->SetInputMode(InputMode);
 
-			// Set Mouse
-			int32 SizeX, SizeY;
-			PC->GetViewportSize(SizeX, SizeY);
-			PC->SetMouseLocation(SizeX / 2, SizeY / 2);
-			PC->OnCancelUI();
-			FInputModeGameAndUI InputMode;
-			InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
-			PC->SetIgnoreLookInput(true);
-			PC->SetShowMouseCursor(true);
-			PC->SetInputMode(InputMode);
-
-			// Set OXQuiz
-			PC->OXQuizComp->OXQuizUI->AskOXQuizUI->SetQuizTriggerActor(QuizTriggerActor);
-			PC->OXQuizComp->OXQuizUI->AskOXQuizUI->SetPlayerController(PC);
-			PC->OXQuizComp->OXQuizUI->OXQuizWS->SetActiveWidgetIndex(2);
-			PC->OXQuizComp->OXQuizUI->AskOXQuizUI->SetAskQuizText(QuizTriggerActor->GetDifficultyText());
+				// Set OXQuiz
+				PC->OXQuizComp->OXQuizUI->AskOXQuizUI->SetQuizTriggerActor(QuizTriggerActor);
+				PC->OXQuizComp->OXQuizUI->AskOXQuizUI->SetPlayerController(PC);
+				PC->OXQuizComp->OXQuizUI->OXQuizWS->SetActiveWidgetIndex(2);
+				PC->OXQuizComp->OXQuizUI->AskOXQuizUI->SetAskQuizText(QuizTriggerActor->GetDifficultyText());
+				PC->OXQuizComp->OXQuizUI->PlayAnimation(PC->OXQuizComp->OXQuizUI->Confirm_PopUp);
+			}
 			PC->OXQuizComp->OXQuizUI->SetVisibility(ESlateVisibility::Visible);
 		}
 	}

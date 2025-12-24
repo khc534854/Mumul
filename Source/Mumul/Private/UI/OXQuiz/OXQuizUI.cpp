@@ -39,7 +39,8 @@ void UOXQuizUI::NativeConstruct()
 
 void UOXQuizUI::OnCancelClicked()
 {
-	SetVisibility(ESlateVisibility::Collapsed);
+	SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	PlayAnimation(Confirm_PopUp, 0, 1, EUMGSequencePlayMode::Reverse);
 }
 
 void UOXQuizUI::SetTimerText(const int32& NewTime)
@@ -67,7 +68,8 @@ void UOXQuizUI::UpdateTimer()
 
 void UOXQuizUI::OnConfirmResult()
 {
-	this->SetVisibility(ESlateVisibility::Hidden);
+	SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	PlayAnimation(Result_PopUp, 0, 1, EUMGSequencePlayMode::Reverse);
 }
 
 void UOXQuizUI::SwitchQuizState(const bool& QuizOrResult)
@@ -80,6 +82,7 @@ void UOXQuizUI::SwitchQuizState(const bool& QuizOrResult)
 	}
 	StopAnimation(TimerAnimation);
 	OXQuizWS->SetActiveWidgetIndex(1);
+	PlayAnimation(Result_PopUp);
 }
 
 void UOXQuizUI::SetQuizQuestion(const int32& QuestionIdx, const FString& NewQuiz)

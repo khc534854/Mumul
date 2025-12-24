@@ -4,12 +4,14 @@
 #include "Player/Component/PlayerNoticeComponent.h"
 
 #include "Base/MumulGameState.h"
+#include "Components/Border.h"
 #include "Data/ObjectAndClassFinder.h"
 #include "Network/HttpNetworkSubsystem.h"
 #include "Network/WebSocketSubsystem.h"
 #include "Player/CuteAlienController.h"
 #include "Player/CuteAlienPlayer.h"
 #include "Player/MumulPlayerState.h"
+#include "UI/PlayerUI.h"
 #include "UI/NoticeUI/NoticeUI.h"
 
 
@@ -101,6 +103,10 @@ void UPlayerNoticeComponent::OnServerDispatchHistoryResponse(bool bSuccess, FStr
 				if (Item.Event == TEXT("notice"))
 				{
 					NoticeUI->AddNotice(Payload);
+					if (Payload.IsConfirmed == false)
+					{
+						owner->PlayerUI->NewNoticeBorder->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+					}
 				}
 				else if (Item.Event == TEXT("dm"))
 				{
@@ -128,6 +134,7 @@ void UPlayerNoticeComponent::OnNotice(const FDispatchPayloadBase& Notice)
 	if (NoticeUI)
 	{
 		NoticeUI->AddNotice(Notice);
+		owner->PlayerUI->NewNoticeBorder->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	}
 }
 
@@ -153,5 +160,6 @@ void UPlayerNoticeComponent::Client_OnSendDM_Implementation(const FDispatchPaylo
 	if (NoticeUI)
 	{
 		NoticeUI->AddDM(DM);
+		owner->PlayerUI->NewNoticeBorder->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	}
 }

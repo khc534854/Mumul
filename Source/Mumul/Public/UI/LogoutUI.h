@@ -32,6 +32,10 @@ public:
 	
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UWidgetSwitcher> WidgetSwitcher;
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	TObjectPtr<class UWidgetAnimation> LogOut_SlideAnim;
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	TObjectPtr<class UWidgetAnimation> Help_SlideAnim;
 	
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UBaseButton> NextBtn;

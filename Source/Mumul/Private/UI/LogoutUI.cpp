@@ -65,8 +65,9 @@ void ULogoutUI::OnClickedLogoutYesBtn()
 
 void ULogoutUI::OnClickedLogoutNoBtn()
 {
-	SetVisibility(ESlateVisibility::Hidden);
-
+	PlayAnimation(LogOut_SlideAnim, 0, 1, EUMGSequencePlayMode::Reverse);
+	SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	
 	// 입력 모드 복구 (게임 모드로)
 	if (PC)
 	{
@@ -108,7 +109,16 @@ void ULogoutUI::OnClickedNextBtn()
 	if (!HelpImages.IsValidIndex(CurImageIdx))
 	{
 		// 도움말이 끝나면 창 닫기 (또는 로그아웃 페이지로 돌아가기)
-		OnClickedLogoutNoBtn(); // 닫기 로직 재활용
+		PlayAnimation(Help_SlideAnim, 0, 1, EUMGSequencePlayMode::Reverse);
+		SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	
+		// 입력 모드 복구 (게임 모드로)
+		if (PC)
+		{
+			PC->SetIgnoreLookInput(false);
+			PC->SetShowMouseCursor(false);
+			PC->SetInputMode(FInputModeGameOnly());
+		}
 		return;
 	}
     

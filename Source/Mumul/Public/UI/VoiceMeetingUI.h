@@ -13,6 +13,10 @@ protected:
 	virtual void NativeConstruct() override;
 
 public:
+	UPROPERTY(meta=(BindWidgetAnim), Transient)
+	class UWidgetAnimation* StartMeeting_SlideAnim;
+	UPROPERTY(meta=(BindWidgetAnim), Transient)
+	class UWidgetAnimation* EndMeeting_SlideAnim;
 	UPROPERTY(meta=(BindWidget))
 	class UWidgetSwitcher* MeetingWidgetSwitcher;
 	

@@ -36,7 +36,7 @@ void UPlayerOXQuizComponent::BeginPlay()
 			OXQuizUI = CreateWidget<UOXQuizUI>(owner, OXQuizUIClass);
 			if (OXQuizUI)
 			{
-				OXQuizUI->AddToViewport();
+				OXQuizUI->AddToViewport(1000);
 				OXQuizUI->SetVisibility(ESlateVisibility::Collapsed);
 			}
 		}
@@ -122,6 +122,10 @@ void UPlayerOXQuizComponent::Client_DisplayQuestion_Implementation(const int32& 
 	{
 		OXQuizUI->SwitchQuizState(true);
 		OXQuizUI->SetVisibility(ESlateVisibility::HitTestInvisible);
+		if (QuestionIdx == 0)
+		{
+			OXQuizUI->PlayAnimation(OXQuizUI->Question_SlideAnim);
+		}
 		OXQuizUI->SetQuizQuestion(QuestionIdx, NewQuestion);
 		OXQuizUI->StartQuestionTimer(QuestionTime);
 	}

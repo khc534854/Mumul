@@ -4,6 +4,7 @@
 #include "UI/PlayerUI.h"
 
 #include "EngineUtils.h"
+#include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/CheckBox.h"
 #include "Components/HorizontalBox.h"
@@ -117,6 +118,7 @@ void UPlayerUI::NativeConstruct()
 	{
 		NoticeBtn->OnClicked.AddDynamic(this, &UPlayerUI::OnClickNoticeBtn);
 	}
+	NewNoticeBorder->SetVisibility(ESlateVisibility::Collapsed);
 }
 
 void UPlayerUI::OnLogOutBtnClicked()

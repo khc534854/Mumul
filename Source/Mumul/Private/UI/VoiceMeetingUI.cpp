@@ -40,7 +40,8 @@ void UVoiceMeetingUI::SetMeetingState(bool bIsActive)
     // 여기서는 "회의 시작됨 -> UI 숨김" 처리
     if (bIsActive)
     {
-        SetVisibility(ESlateVisibility::Hidden);
+        SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+        PlayAnimation(StartMeeting_SlideAnim, 0, 1, EUMGSequencePlayMode::Reverse);
         
         // // 입력 모드 복귀
         // if (ACuteAlienController* PC = GetMyController())
@@ -81,13 +82,15 @@ void UVoiceMeetingUI::OnClickConfirmEnd()
         // 컨트롤러에게 종료 요청 (RPC)
         PC->MeetingComp->RequestStopMeetingRecording();
     }
-    SetVisibility(ESlateVisibility::Hidden);
+    SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+    PlayAnimation(EndMeeting_SlideAnim, 0, 1, EUMGSequencePlayMode::Reverse);
 }
 
 // [종료 확인 - 아니오]
 void UVoiceMeetingUI::OnClickReturnMeeting()
 {
-    SetVisibility(ESlateVisibility::Hidden);
+    SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+    PlayAnimation(EndMeeting_SlideAnim, 0, 1, EUMGSequencePlayMode::Reverse);
     
     if (ACuteAlienController* PC = GetMyController())
     {
@@ -103,5 +106,12 @@ ACuteAlienController* UVoiceMeetingUI::GetMyController()
 
 void UVoiceMeetingUI::OnClickMeetingCancel()
 {
-    OnClickReturnMeeting();
+    SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+    PlayAnimation(StartMeeting_SlideAnim, 0, 1, EUMGSequencePlayMode::Reverse);
+    
+    if (ACuteAlienController* PC = GetMyController())
+    {
+        PC->SetIgnoreMoveInput(false);
+        //PC->SetShowMouseCursor(false);
+    }
 }

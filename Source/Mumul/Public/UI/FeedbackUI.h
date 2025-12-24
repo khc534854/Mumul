@@ -30,6 +30,10 @@ public:
 	// 피드백 화면
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UWidgetSwitcher> FeedbackWidgetSwitcher;
+	UPROPERTY(meta=(BindWidgetAnim), Transient)
+	TObjectPtr<class UWidgetAnimation> Feedback_SlideAnim;
+	UPROPERTY(meta=(BindWidgetAnim), Transient)
+	TObjectPtr<class UWidgetAnimation> FeedbackResult_SlideAnim;
 	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UBaseTextBox> FeedbackText; 

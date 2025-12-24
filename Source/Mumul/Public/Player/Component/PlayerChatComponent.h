@@ -26,9 +26,7 @@ public:
 	                           FActorComponentTickFunction* ThisTickFunction) override;
 	
 	UPROPERTY()
-	TSubclassOf<class UGroupChatUI> GroupChatUIClass;
-	UPROPERTY()
-	TObjectPtr<UGroupChatUI> GroupChatUI;
+	TObjectPtr<class UGroupChatUI> GroupChatUI;
 	
 	UPROPERTY()
 	TSubclassOf<class UGroupIconUI> GroupIconUIClass;
