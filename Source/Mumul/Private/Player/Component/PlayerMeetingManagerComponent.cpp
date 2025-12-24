@@ -384,6 +384,18 @@ void UPlayerMeetingManagerComponent::OpenEndMeetingPopup()
 
 void UPlayerMeetingManagerComponent::UpdateVoiceChannelMuting()
 {
+	if (!owner)
+	{
+		owner = Cast<ACuteAlienController>(GetOwner());
+	}
+
+	// [수정 2] 그래도 없으면 리턴 (방어 코드)
+	if (!owner) 
+	{
+		// 아직 오너가 준비되지 않았으므로 무시 (나중에 다시 호출되거나 BeginPlay 이후 정상 작동)
+		return; 
+	}
+	
 	AMumulPlayerState* PS = owner->GetPlayerState<AMumulPlayerState>();
 	if (!PS) return;
 
