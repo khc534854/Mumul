@@ -65,6 +65,7 @@ void AMumulPlayerState::OnRep_UserIndex()
 		if (HttpSystem)
 		{
 			HttpSystem->SendTeamChatListRequest(PS_UserIndex);
+			HttpSystem->SendDispatchHistoryRequest(PS_UserIndex);
 		}
 		// Set PlayerProfile
 		// if (PC->IsLocalController())

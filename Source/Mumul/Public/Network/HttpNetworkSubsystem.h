@@ -27,6 +27,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnLearningQuizResponseReceived, bo
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSurveyResultResponse, bool, bSuccess, FString, Message);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSurveyListResponse, bool, bSuccess, FString, Message);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnFeedbackResponse, bool, bSuccess, FString, Message);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDispatchHistoryResponse, bool, bSuccess, FString, Message);
 
 UCLASS()
 class MUMUL_API UHttpNetworkSubsystem : public UGameInstanceSubsystem
@@ -84,6 +85,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Network")
 	void SendFeedbackRequest(int32 UserID, const FString& Content);
 	
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void SendDispatchHistoryRequest(int32 UserID);
+	
 	UPROPERTY(BlueprintAssignable)
 	FOnLoginResponseReceived OnLoginResponse;
 	UPROPERTY(BlueprintAssignable)
@@ -116,6 +120,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnFeedbackResponse OnFeedbackResponse;
+	
+	UPROPERTY(BlueprintAssignable)
+	FOnDispatchHistoryResponse OnDispatchHistoryResponse;
 
 private:
 	// 통신이 끝났을 때(응답 왔을 때) 호출될 콜백 함수
@@ -133,7 +140,7 @@ private:
 	void OnSurveyResultComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void OnSurveyListComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void OnFeedbackComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-	
+	void OnDispatchHistoryComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	
 	void AddString(TArray<uint8>& OutPayload, const FString& InString);
 public:

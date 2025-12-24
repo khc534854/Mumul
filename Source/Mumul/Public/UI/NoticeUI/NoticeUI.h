@@ -15,43 +15,37 @@ struct FNoticeData
 	GENERATED_BODY()
 
 	UPROPERTY()
-	int64 NoticeId;          // 공지 고유 ID
+	FString noticeId;
 
 	UPROPERTY()
-	FString Content;
+	FString title;
+	
+	UPROPERTY()
+	FString text;
 
 	UPROPERTY()
 	FDateTime CreatedAt;
-};
-
-USTRUCT(BlueprintType)
-struct FUserNoticeState
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	int64 NoticeId;
-
-	UPROPERTY()
-	FString UserId;
-
+	
 	UPROPERTY()
 	bool bConfirmed = false;
-
-	UPROPERTY()
-	FDateTime ConfirmedAt;
 };
 
 USTRUCT()
-struct FNoticeViewData
+struct FDMData
 {
 	GENERATED_BODY()
 
 	UPROPERTY()
-	FNoticeData Notice;
+	FString messageId;
 
 	UPROPERTY()
-	FUserNoticeState UserState;
+	FString text;
+	
+	UPROPERTY()
+	FDateTime CreatedAt;
+	
+	UPROPERTY()
+	bool bConfirmed = false;
 };
 
 UENUM()
@@ -114,6 +108,6 @@ protected:
 	
 public:
 	void OnToggleNoticeVisibility();
-	void AddNotice(const FNoticeViewData& Data);
-	void AddDM(const FNoticeViewData& Data);
+	void AddNotice(const FNoticeData& Data);
+	void AddDM(const FDMData& Data);
 };

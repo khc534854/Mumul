@@ -29,6 +29,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLearningChatEnded, const FLearnin
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDispatchNotice, const FDispatchNoticePayload&, Notice);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDispatchDM, const FDispatchDMPayload&, DM);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPongReceived);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAckPongReceived, const FDispatchAckPongPayload&, AckPong);
 
 UCLASS()
 class MUMUL_API UWebSocketSubsystem : public UGameInstanceSubsystem
@@ -102,6 +103,7 @@ public:
     UPROPERTY(BlueprintAssignable) FOnDispatchNotice OnDispatchNotice;
     UPROPERTY(BlueprintAssignable) FOnDispatchDM OnDispatchDM;
     UPROPERTY(BlueprintAssignable) FOnPongReceived OnPongReceived;
+    UPROPERTY(BlueprintAssignable) FOnAckPongReceived OnAckPongReceived;
 
 private:
     TSharedPtr<IWebSocket> WebSocket;

@@ -219,7 +219,7 @@ void UWebSocketSubsystem::HandleDispatchMessage(const FString& Event, TSharedPtr
         FDispatchNoticePayload Notice;
         FJsonObjectConverter::JsonObjectToUStruct(PayloadObj.ToSharedRef(), &Notice);
         
-        UE_LOG(LogTemp, Log, TEXT("[WS Recv] Notice: [%s] %s"), *Notice.urgency, *Notice.title); // 로그
+        UE_LOG(LogTemp, Log, TEXT("[WS Recv] Notice: [%s] %s"), *Notice.noticeId, *Notice.title); // 로그
         OnDispatchNotice.Broadcast(Notice);
     }
     else if (Event == TEXT("dm"))
@@ -237,6 +237,9 @@ void UWebSocketSubsystem::HandleDispatchMessage(const FString& Event, TSharedPtr
     }
     else if (Event == TEXT("ack_ok"))
     {
+        FDispatchAckPongPayload AckPong;
+        FJsonObjectConverter::JsonObjectToUStruct(PayloadObj.ToSharedRef(), &AckPong);
+        OnAckPongReceived.Broadcast(AckPong);
         UE_LOG(LogTemp, Verbose, TEXT("[WS Recv] ACK OK")); // 로그
     }
 }

@@ -90,14 +90,6 @@ void UNoticeUI::OnToggleNoticeVisibility()
 	{
 		NoticeBorder->SetVisibility(ESlateVisibility::Collapsed);
 	}
-
-	// Test Add Notice
-	FNoticeViewData NoticeData;
-	NoticeData.Notice.Content = FString(TEXT("Test Notice!"));
-	NoticeData.Notice.CreatedAt = FDateTime::Now();
-	NoticeData.UserState.bConfirmed = false;
-	AddNotice(NoticeData);
-	AddDM(NoticeData);
 }
 
 void UNoticeUI::SortNotices(UVerticalBox* ConfirmedBox, UVerticalBox* UnConfirmedBox)
@@ -151,7 +143,7 @@ void UNoticeUI::SortNotices(UVerticalBox* ConfirmedBox, UVerticalBox* UnConfirme
 	}
 }
 
-void UNoticeUI::AddNotice(const FNoticeViewData& Data)
+void UNoticeUI::AddNotice(const FNoticeData& Data)
 {
 	if (TSubclassOf<UNoticeContentUI> UNoticeContentUIClass = UObjectAndClassFinder::Get()->GetWidgetClass<
 		UNoticeContentUI>("WBP_NoticeContent"))
@@ -162,11 +154,13 @@ void UNoticeUI::AddNotice(const FNoticeViewData& Data)
 	}
 }
 
-void UNoticeUI::AddDM(const FNoticeViewData& Data)
+void UNoticeUI::AddDM(const FDMData& Data)
 {
 	if (TSubclassOf<UNoticeContentUI> UNoticeContentUIClass = UObjectAndClassFinder::Get()->GetWidgetClass<
 		UNoticeContentUI>("WBP_NoticeContent"))
 	{
+		
+		
 		NoticeContentUI = CreateWidget<UNoticeContentUI>(this, UNoticeContentUIClass);
 		NoticeContentUI->InitUI(Data);
 		DMUnConfirmedVBox->InsertChildAt(0, NoticeContentUI);
