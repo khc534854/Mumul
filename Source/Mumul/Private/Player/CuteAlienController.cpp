@@ -832,6 +832,7 @@ void ACuteAlienController::Client_SitAtLocation_Implementation(const FTransform&
             
 			TargetRot = UKismetMathLibrary::FindLookAtRotation(Start, End);
 		}
+		SetControlRotation(TargetRot);
 
 		// 계산된 위치와 회전으로 이동
 		MyChar->SetActorLocationAndRotation(TargetLoc, TargetRot, false, nullptr, ETeleportType::TeleportPhysics);
