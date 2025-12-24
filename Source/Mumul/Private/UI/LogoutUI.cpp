@@ -5,6 +5,7 @@
 
 #include "Base/MumulGameInstance.h"
 #include "Components/Button.h"
+#include "Components/Image.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Network/HttpNetworkSubsystem.h"
 #include "Network/WebSocketSubsystem.h"
@@ -22,6 +23,11 @@ void ULogoutUI::NativeConstruct()
 	if (LogOutNoBtn && LogOutNoBtn->BaseButton)
 	{
 		LogOutNoBtn->BaseButton->OnClicked.AddDynamic(this, &ULogoutUI::OnClickedLogoutNoBtn);
+	}
+
+	if (NextBtn && NextBtn->BaseButton)
+	{
+		NextBtn->BaseButton->OnClicked.AddDynamic(this, &ULogoutUI::OnClickedNextBtn);
 	}
 
 	PC = Cast<ACuteAlienController>(GetOwningPlayer());
@@ -82,4 +88,32 @@ void ULogoutUI::OnLogoutResponseReceived(bool bSuccess, FString Message)
 	UE_LOG(LogTemp, Warning, TEXT("[Logout] %s : %s"), bSuccess ? TEXT("Success" : TEXT("Failed")), *Message);
 	
 	PC->SaveAndExit();
+}
+
+void ULogoutUI::OpenHelpPopup()
+{
+	CurImageIdx = 0;
+    
+	// [신규] 첫 번째 이미지 설정
+	if (HelpImages.IsValidIndex(0) && HelpImg)
+	{
+		HelpImg->SetBrushFromTexture(HelpImages[0]);
+	}
+}
+
+void ULogoutUI::OnClickedNextBtn()
+{
+	CurImageIdx++;
+	
+	if (!HelpImages.IsValidIndex(CurImageIdx))
+	{
+		// 도움말이 끝나면 창 닫기 (또는 로그아웃 페이지로 돌아가기)
+		OnClickedLogoutNoBtn(); // 닫기 로직 재활용
+		return;
+	}
+    
+	if (HelpImg)
+	{
+		HelpImg->SetBrushFromTexture(HelpImages[CurImageIdx]);
+	}
 }

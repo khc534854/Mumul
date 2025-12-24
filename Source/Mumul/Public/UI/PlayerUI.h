@@ -98,7 +98,11 @@ protected:
 	// LogOut
 protected:
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UButton > ProfileBtn;
+	TObjectPtr<class USizeBox> ProfileUISizeBox;
+	
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UButton> ProfileBtn;
+
 public:
 	void SetProfileBtnIMG(UTexture2D* IMG);
 	void CloseSidePanels();
@@ -107,6 +111,10 @@ public:
 protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton > LogOutBtn;
+
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UButton > HelpBtn;
+	
 	bool bIsMainHovered = false;
 	bool bIsSubHovered = false;
 	bool bIsTryingToHide = false;
@@ -114,16 +122,21 @@ protected:
 
 	UFUNCTION()
 	void OnLogOutBtnClicked();
-	void TryHideLogOutBtn();
-	void HideLogOutBtn();
+	UFUNCTION()
+	void OnHelpBtnClicked();
+	
+	void TryHideProfileBox();
+	void HideProfileBox();
+
+
 	UFUNCTION()
 	void OnProfileBtnHovered();
 	UFUNCTION()
 	void OnProfileBtnUnhovered();
 	UFUNCTION()
-	void OnLogOutBtnHovered();
+	void OnSubButtonHovered();
 	UFUNCTION()
-	void OnLogOutBtnUnhovered();
+	void OnSubButtonUnhovered();
 
 	// Voice
 protected:

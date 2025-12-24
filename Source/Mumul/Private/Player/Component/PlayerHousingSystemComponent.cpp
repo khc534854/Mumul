@@ -388,7 +388,7 @@ void UPlayerHousingSystemComponent::StopPreviewHousingItem()
         
 		owner->SetShowMouseCursor(true);
 		FInputModeGameAndUI InputMode;
-		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
 		owner->SetInputMode(InputMode);
 		owner->PlayerUI->ResetHousingSelection();
 		owner->OnToggleMouse();
@@ -434,7 +434,7 @@ void UPlayerHousingSystemComponent::StopHousingDeleteMode()
     
     owner->SetShowMouseCursor(true);
     FInputModeGameAndUI InputMode;
-    InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+    InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
     owner->SetInputMode(InputMode);
     
     // UI 체크박스 해제 요청 (필요하다면)

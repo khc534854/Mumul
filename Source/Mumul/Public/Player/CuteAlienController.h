@@ -140,7 +140,7 @@ public:
 	UPROPERTY()
 	TObjectPtr<class AChairObject> TargetChair;
 	
-	void OpenLogoutUI();
+	void OpenLogoutUI(int32 StartWidgetIndex = 0);
 protected:
 	// PlayerState 초기화 대기용 타이머 핸들
 	FTimerHandle InitPlayerStateTimerHandle;

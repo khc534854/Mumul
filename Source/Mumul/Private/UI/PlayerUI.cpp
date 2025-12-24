@@ -8,6 +8,7 @@
 #include "Components/CheckBox.h"
 #include "Components/HorizontalBox.h"
 #include "Components/Image.h"
+#include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
 #include "Data/FCustomItemData.h"
 #include "Data/FHousingItemData.h"
@@ -81,15 +82,25 @@ void UPlayerUI::NativeConstruct()
 		VoiceComp->OnRecordingStateChanged.AddDynamic(this, &UPlayerUI::UpdateRecordButtonState);
 	}
 
-	LogOutBtn->SetVisibility(ESlateVisibility::Hidden);
+	ProfileUISizeBox->SetVisibility(ESlateVisibility::Hidden);
 
 	// 델리게이트 바인딩
 	ProfileBtn->OnHovered.AddDynamic(this, &UPlayerUI::OnProfileBtnHovered);
 	ProfileBtn->OnUnhovered.AddDynamic(this, &UPlayerUI::OnProfileBtnUnhovered);
 
-	LogOutBtn->OnHovered.AddDynamic(this, &UPlayerUI::OnLogOutBtnHovered);
-	LogOutBtn->OnUnhovered.AddDynamic(this, &UPlayerUI::OnLogOutBtnUnhovered);
-	LogOutBtn->OnClicked.AddDynamic(this, &UPlayerUI::OnLogOutBtnClicked);
+	if (LogOutBtn)
+	{
+		LogOutBtn->OnHovered.AddDynamic(this, &UPlayerUI::OnSubButtonHovered);
+		LogOutBtn->OnUnhovered.AddDynamic(this, &UPlayerUI::OnSubButtonUnhovered);
+		LogOutBtn->OnClicked.AddDynamic(this, &UPlayerUI::OnLogOutBtnClicked);
+	}
+
+	if (HelpBtn)
+	{
+		HelpBtn->OnHovered.AddDynamic(this, &UPlayerUI::OnSubButtonHovered);
+		HelpBtn->OnUnhovered.AddDynamic(this, &UPlayerUI::OnSubButtonUnhovered);
+		HelpBtn->OnClicked.AddDynamic(this, &UPlayerUI::OnHelpBtnClicked);
+	}
 
 	PlayerCustomizeBtn->OnClicked.AddDynamic(this, &UPlayerUI::OnCustomizeBoxClick);
 	HousingBtn->OnClicked.AddDynamic(this, &UPlayerUI::OnHousingBoxClick);
@@ -111,7 +122,7 @@ void UPlayerUI::NativeConstruct()
 void UPlayerUI::OnLogOutBtnClicked()
 {
 	//PC->SaveAndExit();
-	PC->OpenLogoutUI();
+	PC->OpenLogoutUI(0);
 }
 
 void UPlayerUI::TryBindMinimap()
@@ -695,29 +706,29 @@ void UPlayerUI::OnProfileBtnHovered()
 	bIsMainHovered = true;
 	GetWorld()->GetTimerManager().ClearTimer(HideLogOutTimer);
 	bIsTryingToHide = false;
-	LogOutBtn->SetVisibility(ESlateVisibility::Visible);
+	ProfileUISizeBox->SetVisibility(ESlateVisibility::Visible);
 }
 
 void UPlayerUI::OnProfileBtnUnhovered()
 {
 	bIsMainHovered = false;
-	TryHideLogOutBtn();
+	TryHideProfileBox();
 }
 
-void UPlayerUI::OnLogOutBtnHovered()
+void UPlayerUI::OnSubButtonHovered()
 {
 	bIsSubHovered = true;
 	GetWorld()->GetTimerManager().ClearTimer(HideLogOutTimer);
 	bIsTryingToHide = false;
 }
 
-void UPlayerUI::OnLogOutBtnUnhovered()
+void UPlayerUI::OnSubButtonUnhovered()
 {
 	bIsSubHovered = false;
-	TryHideLogOutBtn();
+	TryHideProfileBox();
 }
 
-void UPlayerUI::TryHideLogOutBtn()
+void UPlayerUI::TryHideProfileBox()
 {
 	if (bIsTryingToHide)
 		return;
@@ -727,18 +738,23 @@ void UPlayerUI::TryHideLogOutBtn()
 	GetWorld()->GetTimerManager().SetTimer(
 		HideLogOutTimer,
 		this,
-		&UPlayerUI::HideLogOutBtn,
-		0.05f,
+		&UPlayerUI::HideProfileBox,
+		0.1f,
 		false
 	);
 }
 
-void UPlayerUI::HideLogOutBtn()
+void UPlayerUI::HideProfileBox()
 {
 	bIsTryingToHide = false;
 	
 	if (bIsMainHovered || bIsSubHovered)
 		return;
 
-	LogOutBtn->SetVisibility(ESlateVisibility::Hidden);
+	ProfileUISizeBox->SetVisibility(ESlateVisibility::Hidden);
+}
+
+void UPlayerUI::OnHelpBtnClicked()
+{
+	PC->OpenLogoutUI(1);
 }

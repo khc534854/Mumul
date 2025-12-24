@@ -538,7 +538,7 @@ void ACuteAlienController::SitState(bool newSitState)
 	}
 }
 
-void ACuteAlienController::OpenLogoutUI()
+void ACuteAlienController::OpenLogoutUI(int32 StartWidgetIndex)
 {
 	FlushPressedKeys();
 	// UI가 아직 없으면 생성
@@ -547,22 +547,32 @@ void ACuteAlienController::OpenLogoutUI()
 		LogoutUI = CreateWidget<ULogoutUI>(this, LogoutUIClass);
 		if (LogoutUI)
 		{
-			LogoutUI->AddToViewport(100); // Z-Order를 높게 설정 (최상단)
+			LogoutUI->AddToViewport(100);
 		}
 	}
 
 	// UI 표시 및 입력 모드 전환
 	if (LogoutUI)
 	{
-		// [핵심 수정] 숨겨져 있던 위젯을 다시 보이게 설정
+		// [신규] 요청받은 페이지로 전환
+		if (LogoutUI->WidgetSwitcher)
+		{
+			LogoutUI->WidgetSwitcher->SetActiveWidgetIndex(StartWidgetIndex);
+           
+			// 도움말(1)인 경우 초기화 로직이 있다면 호출
+			if (StartWidgetIndex == 1) 
+			{
+				LogoutUI->OpenHelpPopup();
+			}
+		}
+
 		LogoutUI->SetVisibility(ESlateVisibility::Visible);
 
 		SetShowMouseCursor(true);
        
 		FInputModeUIOnly InputMode;
-		// 위젯 포커스를 강제로 잡아서 ESC키 등이 UI에서 처리되도록 함
 		InputMode.SetWidgetToFocus(LogoutUI->TakeWidget());
-		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
 		SetInputMode(InputMode);
 	}
 }
