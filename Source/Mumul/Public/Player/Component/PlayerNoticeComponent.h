@@ -7,6 +7,9 @@
 #include "PlayerNoticeComponent.generated.h"
 
 
+struct FDispatchNoticePayload;
+struct FDispatchDMPayload;
+
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class MUMUL_API UPlayerNoticeComponent : public UActorComponent
 {
@@ -19,6 +22,11 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
 	                           FActorComponentTickFunction* ThisTickFunction) override;
+	
+	UPROPERTY()
+	TObjectPtr<class UHttpNetworkSubsystem> HttpSystem;
+	UFUNCTION()
+	void OnServerDispatchHistoryResponse(bool bSuccess, FString Message);
 	
 	UPROPERTY()
 	TObjectPtr<class UWebSocketSubsystem> WebSocketSystem;

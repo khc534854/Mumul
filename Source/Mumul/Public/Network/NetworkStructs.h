@@ -192,6 +192,68 @@ struct FDispatchAckPongPayload
 };
 
 USTRUCT()
+struct FDispatchPayloadBase
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	int32 MessageId;
+
+	UPROPERTY()
+	int32 RecipientId;
+
+	UPROPERTY()
+	int32 CampId;
+
+	UPROPERTY()
+	int32 SenderId;
+	
+	UPROPERTY()
+	FString Title;
+
+	UPROPERTY()
+	FString Text;
+
+	UPROPERTY()
+	FDateTime CreatedAt;
+
+	UPROPERTY()
+	bool NeedConfirmation;
+
+	UPROPERTY()
+	bool IsConfirmed;
+
+	UPROPERTY()
+	FDateTime ConfirmedAt;
+};
+
+USTRUCT()
+struct FDispatchItem
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FString Domain;
+
+	UPROPERTY()
+	FString Event;   // "notice" | "dm"
+
+	UPROPERTY()
+	FDispatchPayloadBase Payload;
+};
+
+USTRUCT()
+struct FDispatchHistory
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TArray<FDispatchItem> Items;
+};
+
+// 
+
+USTRUCT()
 struct FPlayerLogRequest
 {
 	GENERATED_BODY()

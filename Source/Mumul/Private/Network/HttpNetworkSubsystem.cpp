@@ -749,6 +749,22 @@ void UHttpNetworkSubsystem::SendFeedbackRequest(int32 UserID, const FString& Con
 	UE_LOG(LogTemp, Log, TEXT("[HTTP] Sending Feedback Request - User: %d"), UserID);
 }
 
+void UHttpNetworkSubsystem::SendDispatchHistoryRequest(int32 UserID)
+{
+	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
+	
+	FString FullURL = FString::Printf(TEXT("%s/dispatch/history?useId=%d"), *BaseURL, UserID);
+    
+	Request->SetURL(FullURL);
+	Request->SetVerb("GET");
+	Request->SetHeader("Content-Type", "application/json");
+
+	Request->OnProcessRequestComplete().BindUObject(this, &UHttpNetworkSubsystem::OnChatHistoryComplete);
+	Request->ProcessRequest();
+    
+	UE_LOG(LogTemp, Log, TEXT("[HTTP] Request [User: %d] Dispatch History: %s"), UserID, *FullURL);
+}
+
 void UHttpNetworkSubsystem::OnCreateTeamChatComplete(TSharedPtr<IHttpRequest> HttpRequest,
                                                      TSharedPtr<IHttpResponse> HttpResponse, bool bArg) const
 {
@@ -923,5 +939,41 @@ void UHttpNetworkSubsystem::OnFeedbackComplete(FHttpRequestPtr Request, FHttpRes
 		}
        
 		UE_LOG(LogTemp, Error, TEXT("[HTTP] Feedback Upload Failed: %d / %s"), Code, *Content);
+	}
+}
+
+void UHttpNetworkSubsystem::OnDispatchHistoryComplete(FHttpRequestPtr Request, FHttpResponsePtr Response,
+	bool bWasSuccessful)
+{
+	if (!bWasSuccessful || !Response.IsValid())
+	{
+		OnDispatchHistoryResponse.Broadcast(false, TEXT("네트워크 연결 실패"));
+		return;
+	}
+
+	int32 Code = Response->GetResponseCode();
+	FString Content = Response->GetContentAsString();
+
+	if (Code == 200) // 성공
+	{
+		// [수정] 성공 시에는 가공하지 말고 JSON 원본(Content)을 그대로 보냅니다.
+		// 그래야 위젯에서 데이터를 뽑아 쓸 수 있습니다.
+		OnDispatchHistoryResponse.Broadcast(true, Content);
+	}
+	else if (Code == 404) // 실패
+	{
+		FFailResponse FailData;
+		if (FJsonObjectConverter::JsonObjectStringToUStruct(Content, &FailData, 0, 0))
+		{
+			OnDispatchHistoryResponse.Broadcast(false, FailData.detail.message);
+		}
+		else
+		{
+			OnDispatchHistoryResponse.Broadcast(false, TEXT("Dispatch 불러오기 실패 (알 수 없는 오류)"));
+		}
+	}
+	else
+	{
+		OnDispatchHistoryResponse.Broadcast(false, FString::Printf(TEXT("서버 오류: %d"), Code));
 	}
 }
