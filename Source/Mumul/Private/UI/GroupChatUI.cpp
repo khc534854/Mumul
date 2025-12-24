@@ -1090,7 +1090,8 @@ void UGroupChatUI::OnTextBoxCommitted()
         	CurrentSelectedGroup->ChatBlockUI->GetTeamUsers().GetKeys(UserIDs);
         	if (ACuteAlienController* PC = Cast<ACuteAlienController>(GetOwningPlayer()))
         	{
-        		PC->ChatComp->Server_RequestChat(TeamID, UserIDs, TimeStamp, MyID, MyName, Content);
+        		if (AMumulPlayerState* PS = Cast<AMumulPlayerState>(PC->PlayerState))
+        		PC->ChatComp->Server_RequestChat(TeamID, UserIDs, TimeStamp, MyID, MyName, Content, PS->PS_TendencyID);
         	}
        }
     }

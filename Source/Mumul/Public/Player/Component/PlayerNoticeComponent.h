@@ -7,8 +7,7 @@
 #include "PlayerNoticeComponent.generated.h"
 
 
-struct FDispatchNoticePayload;
-struct FDispatchDMPayload;
+struct FDispatchPayloadBase;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class MUMUL_API UPlayerNoticeComponent : public UActorComponent
@@ -31,9 +30,13 @@ protected:
 	UPROPERTY()
 	TObjectPtr<class UWebSocketSubsystem> WebSocketSystem;
 	UFUNCTION()
-	void OnNotice(const FDispatchNoticePayload& Notice);
+	void OnNotice(const FDispatchPayloadBase& Notice);
 	UFUNCTION()
-	void OnDirectMessage(const FDispatchDMPayload& DM);
+	void OnDirectMessage(const FDispatchPayloadBase& DM);
+	UFUNCTION(Server, Reliable)
+	void Server_OnSendDM(const FDispatchPayloadBase& DM);
+	UFUNCTION(Client, Reliable)
+	void Client_OnSendDM(const FDispatchPayloadBase& DM);
 	
 public:
 	UPROPERTY()

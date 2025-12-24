@@ -208,7 +208,7 @@ void UPlayerChatComponent::Client_CreateGroupChatUI_Implementation(const FString
 
 void UPlayerChatComponent::Server_RequestChat_Implementation(const FString& TeamID, const TArray<int32>& UserIDs,
                                                              const FString& CurrentTime, const int32& UserID,
-                                                             const FString& Name, const FString& Text)
+                                                             const FString& Name, const FString& Text, const int32& TendencyID)
 {
 	// Add GroupChatUI for each Client
 	for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
@@ -218,7 +218,7 @@ void UPlayerChatComponent::Server_RequestChat_Implementation(const FString& Team
 		{
 			if (ACuteAlienController* PC = Cast<ACuteAlienController>(PS->GetOwningController()))
 			{
-				PC->ChatComp->Client_SendChat(TeamID, CurrentTime, UserID, Name, Text, MPS->PS_TendencyID);
+				PC->ChatComp->Client_SendChat(TeamID, CurrentTime, UserID, Name, Text, TendencyID);
 			}
 		}
 	}

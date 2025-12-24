@@ -7,8 +7,7 @@
 #include "Network/NetworkStructs.h"
 #include "NoticeContentUI.generated.h"
 
-struct FDMData;
-struct FNoticeData;
+
 /**
  * 
  */
@@ -35,15 +34,14 @@ protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UTextBlock> NoticeConfirmText;
 	
-	FString ContentID;
+	int32 ContentID;
 	FDateTime CreatedAt;
 	bool bIsConfirmed = false;
 	
 	bool bIsNotice = true;
 	
 public:
-	void InitUI(const FNoticeData& Data);
-	void InitUI(const FDMData& Data);
+	void InitUI(const FDispatchPayloadBase& Data);
 	FDateTime GetCreatedAt() const { return CreatedAt; }
 	bool IsConfirmed() const { return bIsConfirmed; }
 	void UpdateConfirmButtonUI();

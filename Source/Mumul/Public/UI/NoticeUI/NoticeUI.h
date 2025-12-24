@@ -9,44 +9,8 @@
 /**
  * 
  */
-USTRUCT(BlueprintType)
-struct FNoticeData
-{
-	GENERATED_BODY()
 
-	UPROPERTY()
-	FString noticeId;
-
-	UPROPERTY()
-	FString title;
-	
-	UPROPERTY()
-	FString text;
-
-	UPROPERTY()
-	FDateTime CreatedAt;
-	
-	UPROPERTY()
-	bool bConfirmed = false;
-};
-
-USTRUCT()
-struct FDMData
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	FString messageId;
-
-	UPROPERTY()
-	FString text;
-	
-	UPROPERTY()
-	FDateTime CreatedAt;
-	
-	UPROPERTY()
-	bool bConfirmed = false;
-};
+struct FDispatchPayloadBase;
 
 UENUM()
 enum class ENoticeState : uint8
@@ -108,6 +72,6 @@ protected:
 	
 public:
 	void OnToggleNoticeVisibility();
-	void AddNotice(const FNoticeData& Data);
-	void AddDM(const FDMData& Data);
+	void AddNotice(const FDispatchPayloadBase& Data);
+	void AddDM(const FDispatchPayloadBase& Data);
 };
