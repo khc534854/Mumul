@@ -63,11 +63,12 @@ public:
 	TArray<TObjectPtr<USceneComponent>> SeatPoints;
 
 	// [신규] 자리 점유 현황 (UserID -> SeatIndex)
-	TMap<int32, int32> OccupiedSeats;
+	UPROPERTY()
+	TMap<APlayerState*, int32> OccupiedSeats;
 
 	// [신규] 빈 자리를 찾아 할당하고 Transform 반환 (Server Only)
-	bool AssignAvailableSeat(int32 UserID, FTransform& OutTransform);
+	bool AssignAvailableSeat(APlayerState* Requester, FTransform& OutTransform);
 
 	// [신규] 자리를 비움 (Server Only)
-	void ReleaseSeat(int32 UserID);
+	void ReleaseSeat(APlayerState* Requester);
 };

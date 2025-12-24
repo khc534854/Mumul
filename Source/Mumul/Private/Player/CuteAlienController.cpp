@@ -791,11 +791,10 @@ void ACuteAlienController::Server_TrySitAtCampfire_Implementation()
         if (PS)
         {
             FTransform SeatTransform;
-            if (TargetFire->AssignAvailableSeat(PS->PS_UserIndex, SeatTransform))
-            {
-                // 성공 시 클라이언트에게 이동 명령
-                Client_SitAtLocation(SeatTransform, TargetFire);
-            }
+        	if (TargetFire->AssignAvailableSeat(PS, SeatTransform))
+        	{
+        		Client_SitAtLocation(SeatTransform, TargetFire);
+        	}
         }
     }
 }
@@ -840,11 +839,12 @@ void ACuteAlienController::Server_StandUpFromMeeting_Implementation()
     // 저장된 모닥불에서 자리 반납
     if (CurrentMeetingCampFire)
     {
-        AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>();
-        if (PS)
-        {
-            CurrentMeetingCampFire->ReleaseSeat(PS->PS_UserIndex);
-        }
+    	AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>();
+    	if (PS)
+    	{
+    		// [수정] PS 포인터 전달
+    		CurrentMeetingCampFire->ReleaseSeat(PS);
+    	}
     }
 
 	if (ACharacter* MyChar = Cast<ACharacter>(GetPawn()))

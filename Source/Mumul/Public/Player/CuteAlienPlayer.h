@@ -132,6 +132,12 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Montage")
 	TObjectPtr<class UAnimMontage> StandUpMontage;
 
+	UFUNCTION(Server, Reliable)
+	void Server_StandUp();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_StandUp();
+
 private:
 	UPROPERTY()
 	USceneComponent* OriginalCameraParent = nullptr;

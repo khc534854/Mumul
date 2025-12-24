@@ -202,12 +202,14 @@ void ACampFireActor::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* O
 	}
 }
 
-bool ACampFireActor::AssignAvailableSeat(int32 UserID, FTransform& OutTransform)
+bool ACampFireActor::AssignAvailableSeat(APlayerState* Requester, FTransform& OutTransform)
 {
-	// 이미 앉아있는 유저라면 기존 자리 반환
-	if (OccupiedSeats.Contains(UserID))
+	if (!Requester) return false;
+
+	// 1. 이미 자리가 있는 경우
+	if (OccupiedSeats.Contains(Requester))
 	{
-		int32 SeatIdx = OccupiedSeats[UserID];
+		int32 SeatIdx = OccupiedSeats[Requester];
 		if (SeatPoints.IsValidIndex(SeatIdx))
 		{
 			OutTransform = SeatPoints[SeatIdx]->GetComponentTransform();
@@ -215,11 +217,11 @@ bool ACampFireActor::AssignAvailableSeat(int32 UserID, FTransform& OutTransform)
 		}
 	}
 
-	// 빈 자리 찾기
+	// 2. 빈 자리 찾기
 	for (int32 i = 0; i < SeatPoints.Num(); i++)
 	{
-		// 맵의 Value(SeatIndex) 중에 현재 i가 없으면 빈 자리
 		bool bIsOccupied = false;
+		// 맵의 Value(좌석 번호)를 순회하며 현재 i가 사용 중인지 확인
 		for (auto& Elem : OccupiedSeats)
 		{
 			if (Elem.Value == i)
@@ -231,25 +233,24 @@ bool ACampFireActor::AssignAvailableSeat(int32 UserID, FTransform& OutTransform)
 
 		if (!bIsOccupied)
 		{
-			// 자리 배정
-			OccupiedSeats.Add(UserID, i);
+			// 자리 배정 (포인터를 키로 사용)
+			OccupiedSeats.Add(Requester, i);
 			if (SeatPoints.IsValidIndex(i))
 			{
 				OutTransform = SeatPoints[i]->GetComponentTransform();
-				UE_LOG(LogTemp, Warning, TEXT("[Campfire] Assigned Seat %d to User %d"), i, UserID);
+				UE_LOG(LogTemp, Warning, TEXT("[Campfire] Assigned Seat %d to %s"), i, *Requester->GetPlayerName());
 				return true;
 			}
 		}
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("[Campfire] No seats available!"));
 	return false;
 }
 
-void ACampFireActor::ReleaseSeat(int32 UserID)
+void ACampFireActor::ReleaseSeat(APlayerState* Requester)
 {
-	if (OccupiedSeats.Remove(UserID) > 0)
+	if (OccupiedSeats.Remove(Requester) > 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[Campfire] Released Seat for User %d"), UserID);
+		UE_LOG(LogTemp, Warning, TEXT("[Campfire] Released Seat for %s"), *Requester->GetPlayerName());
 	}
 }

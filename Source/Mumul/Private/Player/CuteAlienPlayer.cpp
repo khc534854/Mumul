@@ -604,18 +604,7 @@ void ACuteAlienPlayer::SetIsMeetingSitting(bool bIsSitting, AActor* FocusTarget)
         GetCharacterMovement()->SetMovementMode(MOVE_Walking);
     	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
-        // 2. 애니메이션 정지
-        if (PlayerAnim)
-        {
-            if (PlayerAnim->Montage_IsPlaying(SitMontage))
-            {
-                PlayerAnim->Montage_Stop(0.5f, SitMontage);
-            }
-            if (StandUpMontage)
-            {
-                PlayerAnim->Montage_Play(StandUpMontage);
-            }
-        }
+    	Server_StandUp();
 
         // 3. [신규] 카메라 복구 (캐릭터 등 뒤로)
         if (OriginalCameraParent)
@@ -628,6 +617,28 @@ void ACuteAlienPlayer::SetIsMeetingSitting(bool bIsSitting, AActor* FocusTarget)
             GetCameraBoom()->SocketOffset = OriginalSocketOffset;
         }
     }
+}
+
+void ACuteAlienPlayer::Server_StandUp_Implementation()
+{
+	Multicast_StandUp();
+}
+
+void ACuteAlienPlayer::Multicast_StandUp_Implementation()
+{
+	if (PlayerAnim)
+	{
+		// 앉기 루프 정지
+		if (PlayerAnim->Montage_IsPlaying(SitMontage))
+		{
+			PlayerAnim->Montage_Stop(0.5f, SitMontage);
+		}
+		// 일어서기 몽타주 재생 (모든 클라이언트에서 보임)
+		if (StandUpMontage)
+		{
+			PlayerAnim->Montage_Play(StandUpMontage);
+		}
+	}
 }
 
 
