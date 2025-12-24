@@ -756,13 +756,13 @@ void UHttpNetworkSubsystem::SendDispatchHistoryRequest(int32 UserID)
 {
 	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
 	
-	FString FullURL = FString::Printf(TEXT("%s/dispatch/history?useId=%d"), *BaseURL, UserID);
+	FString FullURL = FString::Printf(TEXT("%s/dispatch/history?userId=%d"), *BaseURL, UserID);
     
 	Request->SetURL(FullURL);
 	Request->SetVerb("GET");
 	Request->SetHeader("Content-Type", "application/json");
 
-	Request->OnProcessRequestComplete().BindUObject(this, &UHttpNetworkSubsystem::OnChatHistoryComplete);
+	Request->OnProcessRequestComplete().BindUObject(this, &UHttpNetworkSubsystem::OnDispatchHistoryComplete);
 	Request->ProcessRequest();
     
 	UE_LOG(LogTemp, Log, TEXT("[HTTP] Request [User: %d] Dispatch History: %s"), UserID, *FullURL);

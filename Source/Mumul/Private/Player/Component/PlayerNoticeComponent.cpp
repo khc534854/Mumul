@@ -3,11 +3,13 @@
 
 #include "Player/Component/PlayerNoticeComponent.h"
 
+#include "Base/MumulGameState.h"
 #include "Data/ObjectAndClassFinder.h"
 #include "Network/HttpNetworkSubsystem.h"
 #include "Network/WebSocketSubsystem.h"
 #include "Player/CuteAlienController.h"
 #include "Player/CuteAlienPlayer.h"
+#include "Player/MumulPlayerState.h"
 #include "UI/NoticeUI/NoticeUI.h"
 
 
@@ -40,7 +42,7 @@ void UPlayerNoticeComponent::BeginPlay()
 		HttpSystem = owner->GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>();
 		if (HttpSystem)
 		{
-			HttpSystem->OnLearningQuizResponse.AddDynamic(
+			HttpSystem->OnDispatchHistoryResponse.AddDynamic(
 				this, &UPlayerNoticeComponent::OnServerDispatchHistoryResponse);
 		}
 		WebSocketSystem = owner->GetGameInstance()->GetSubsystem<UWebSocketSubsystem>();
@@ -70,8 +72,45 @@ void UPlayerNoticeComponent::OnServerDispatchHistoryResponse(bool bSuccess, FStr
 		{
 			// JSON Parsing LOG
 			UE_LOG(LogTemp, Log, TEXT("[DispatchHistory] Parse Success. ItemCount = %d"), DispatchHistory.Items.Num());
-			
-			
+			for (int32 Index = 0; Index < DispatchHistory.Items.Num(); ++Index)
+			{
+				const FDispatchItem& Item = DispatchHistory.Items[Index];
+				const FDispatchPayloadBase& Payload = Item.Payload;
+				UE_LOG(LogTemp, Log,
+				       TEXT("[Item %d] Domain=%s Event=%s"),
+				       Index,
+				       *Item.Domain,
+				       *Item.Event
+				);
+				UE_LOG(LogTemp, Log,
+				       TEXT("[Payload] MessageId=%d Title=\"%s\" Text=\"%s\" CreatedAt=\"%s\""),
+				       Payload.MessageId,
+				       *Payload.Title, *Payload.Text, *Payload.CreatedAt.ToString()
+				);
+				UE_LOG(LogTemp, Log,
+				       TEXT("[Payload] NeedConfirm=%s IsConfirmed=%s"),
+				       Payload.NeedConfirmation ? TEXT("true") : TEXT("false"),
+				       Payload.IsConfirmed ? TEXT("true") : TEXT("false")
+				);
+			}
+
+			for (int32 Index = 0; Index < DispatchHistory.Items.Num(); ++Index)
+			{
+				const FDispatchItem& Item = DispatchHistory.Items[Index];
+				const FDispatchPayloadBase& Payload = Item.Payload;
+				if (Item.Event == TEXT("notice"))
+				{
+					NoticeUI->AddNotice(Payload);
+				}
+				else if (Item.Event == TEXT("dm"))
+				{
+					NoticeUI->AddDM(Payload);
+				}
+				else
+				{
+					UE_LOG(LogTemp, Error, TEXT("Unknown Event : %s"), *Item.Event);
+				}
+			}
 		}
 		else
 		{
@@ -84,36 +123,35 @@ void UPlayerNoticeComponent::OnServerDispatchHistoryResponse(bool bSuccess, FStr
 	}
 }
 
-void UPlayerNoticeComponent::OnNotice(const FDispatchNoticePayload& Notice)
+void UPlayerNoticeComponent::OnNotice(const FDispatchPayloadBase& Notice)
 {
 	if (NoticeUI)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[Notice] %s"), *Notice.noticeId);
-		UE_LOG(LogTemp, Warning, TEXT("[Notice] %s"), *Notice.title);
-		UE_LOG(LogTemp, Warning, TEXT("[Notice] %s"), *Notice.text);
-
-		FNoticeData NoticeData;
-		NoticeData.noticeId = *Notice.noticeId;
-		NoticeData.title = *Notice.title;
-		NoticeData.text = *Notice.text;
-		NoticeData.CreatedAt = FDateTime::Now();
-
-		NoticeUI->AddNotice(NoticeData);
+		NoticeUI->AddNotice(Notice);
 	}
 }
 
-void UPlayerNoticeComponent::OnDirectMessage(const FDispatchDMPayload& DM)
+void UPlayerNoticeComponent::OnDirectMessage(const FDispatchPayloadBase& DM)
+{
+	Server_OnSendDM(DM);
+}
+
+void UPlayerNoticeComponent::Server_OnSendDM_Implementation(const FDispatchPayloadBase& DM)
+{
+	for (APlayerState* PS : owner->GS->PlayerArray)
+	{
+		AMumulPlayerState* MPS = Cast<AMumulPlayerState>(PS);
+		if (MPS->PS_UserIndex == DM.RecipientId)
+		{
+			Client_OnSendDM(DM);
+		}
+	}
+}
+
+void UPlayerNoticeComponent::Client_OnSendDM_Implementation(const FDispatchPayloadBase& DM)
 {
 	if (NoticeUI)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[DM] %s"), *DM.messageId);
-		UE_LOG(LogTemp, Warning, TEXT("[DM] %s"), *DM.text);
-
-		FDMData DMData;
-		DMData.messageId = DM.messageId;
-		DMData.text = DM.text;
-		DMData.CreatedAt = FDateTime::Now();
-
-		NoticeUI->AddDM(DMData);
+		NoticeUI->AddDM(DM);
 	}
 }

@@ -53,7 +53,7 @@ public:
 
 	UFUNCTION(Server, Reliable)
 	void Server_RequestChat(const FString& TeamID, const TArray<int32>& UserIDs, const FString& CurrentTime,
-							 const int32& UserID, const FString& Name, const FString& Text);
+							 const int32& UserID, const FString& Name, const FString& Text, const int32& TendencyID);
 	UFUNCTION(Client, Reliable)
 	void Client_SendChat(const FString& TeamID, const FString& CurrentTime, const int32& UserID, const FString& Name, const FString& Text, const int32& TendencyID);
 	

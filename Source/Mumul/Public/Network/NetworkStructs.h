@@ -139,33 +139,6 @@ struct FLearningQueryPayload
 
 // --- D. Dispatch (공지/DM) ---
 USTRUCT(BlueprintType)
-struct FDispatchNoticePayload
-{
-    GENERATED_BODY()
-
-    UPROPERTY()
-    FString noticeId;
-
-    UPROPERTY()
-    FString title;
-
-    UPROPERTY()
-    FString text;
-};
-
-USTRUCT(BlueprintType)
-struct FDispatchDMPayload
-{
-    GENERATED_BODY()
-
-    UPROPERTY()
-    FString messageId;
-
-    UPROPERTY()
-    FString text;
-};
-
-USTRUCT(BlueprintType)
 struct FDispatchAckPayload
 {
     GENERATED_BODY()
@@ -174,7 +147,7 @@ struct FDispatchAckPayload
     FString kind;
 
     UPROPERTY()
-    FString messageId;
+    int32 messageId;
 
     UPROPERTY()
     FString receivedAt;
@@ -251,7 +224,7 @@ struct FDispatchHistory
 	TArray<FDispatchItem> Items;
 };
 
-// 
+// Player
 
 USTRUCT()
 struct FPlayerLogRequest

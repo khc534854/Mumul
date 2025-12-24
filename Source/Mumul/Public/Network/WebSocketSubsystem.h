@@ -26,8 +26,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLearningAnswer, const FLearningRe
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLearningChatEnded, const FLearningResponsePayload&, Info);
 
 // Dispatch
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDispatchNotice, const FDispatchNoticePayload&, Notice);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDispatchDM, const FDispatchDMPayload&, DM);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDispatchNotice, const FDispatchPayloadBase&, Notice);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDispatchDM, const FDispatchPayloadBase&, DM);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPongReceived);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAckPongReceived, const FDispatchAckPongPayload&, AckPong);
 
@@ -76,7 +76,7 @@ public:
 
     // --- D. Dispatch ---
     UFUNCTION(BlueprintCallable, Category = "Network|WS|Dispatch")
-    void SendDispatchAck(FString Kind, FString MessageId);
+    void SendDispatchAck(FString Kind, int32 MessageId);
 
     UFUNCTION(BlueprintCallable, Category = "Network|WS|Dispatch")
     void SendPing();

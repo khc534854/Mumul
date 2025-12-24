@@ -45,34 +45,27 @@ void UNoticeContentUI::OnConfirmClicked()
 		{
 			WebSocketSystem->SendDispatchAck(TEXT("notice"), ContentID);
 		}
-		else
-		{
-			WebSocketSystem->SendDispatchAck(TEXT("dm"), ContentID);
-		}
 	}
 }
 
-void UNoticeContentUI::InitUI(const FNoticeData& Data)
+void UNoticeContentUI::InitUI(const FDispatchPayloadBase& Data)
 {
-	ContentID = Data.noticeId;
-	CreatedAt = Data.CreatedAt;
-	bIsConfirmed = Data.bConfirmed;
+	if (Data.NeedConfirmation)
+	{
+		ContentID = Data.MessageId;
+		CreatedAt = Data.CreatedAt;
+		bIsConfirmed = Data.IsConfirmed;
 
-	FString Content = FString::Printf(TEXT("[%s] \n%s"), *Data.title, *Data.text);
+		FString Content = FString::Printf(TEXT("[%s] \n%s"), *Data.Title, *Data.Text);
 
-	NoticeContentText->SetText(FText::FromString(Content));
-	UpdateConfirmButtonUI();
-}
-
-void UNoticeContentUI::InitUI(const FDMData& Data)
-{
-	ContentID = Data.messageId;
-	CreatedAt = Data.CreatedAt;
-	bIsConfirmed = Data.bConfirmed;
-	bIsNotice = false;
-
-	NoticeContentText->SetText(FText::FromString(Data.text));
-	UpdateConfirmButtonUI();
+		NoticeContentText->SetText(FText::FromString(Content));
+		UpdateConfirmButtonUI();
+	}
+	else
+	{
+		NoticeContentText->SetText(FText::FromString(Data.Text));
+		NoticeConfirmBtn->SetVisibility(ESlateVisibility::Collapsed);
+	}
 }
 
 void UNoticeContentUI::UpdateConfirmButtonUI()

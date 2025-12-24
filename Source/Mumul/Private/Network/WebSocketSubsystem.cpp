@@ -216,18 +216,18 @@ void UWebSocketSubsystem::HandleDispatchMessage(const FString& Event, TSharedPtr
 {
     if (Event == TEXT("notice"))
     {
-        FDispatchNoticePayload Notice;
+        FDispatchPayloadBase Notice;
         FJsonObjectConverter::JsonObjectToUStruct(PayloadObj.ToSharedRef(), &Notice);
         
-        UE_LOG(LogTemp, Log, TEXT("[WS Recv] Notice: [%s] %s"), *Notice.noticeId, *Notice.title); // 로그
+        UE_LOG(LogTemp, Log, TEXT("[WS Recv] Notice: [%d] %s"), Notice.MessageId, *Notice.Title); // 로그
         OnDispatchNotice.Broadcast(Notice);
     }
     else if (Event == TEXT("dm"))
     {
-        FDispatchDMPayload DM;
+        FDispatchPayloadBase DM;
         FJsonObjectConverter::JsonObjectToUStruct(PayloadObj.ToSharedRef(), &DM);
         
-        UE_LOG(LogTemp, Log, TEXT("[WS Recv] DM: %s"), *DM.text); // 로그
+        UE_LOG(LogTemp, Log, TEXT("[WS Recv] DM: %s"), *DM.Text); // 로그
         OnDispatchDM.Broadcast(DM);
     }
     else if (Event == TEXT("pong"))
@@ -309,7 +309,7 @@ void UWebSocketSubsystem::EndLearningChat(int32 SessionId, int32 UserId)
     SendEnvelope(TEXT("learning"), TEXT("end_chat"), Payload);
 }
 
-void UWebSocketSubsystem::SendDispatchAck(FString Kind, FString MessageId)
+void UWebSocketSubsystem::SendDispatchAck(FString Kind, int32 MessageId)
 {
     FDispatchAckPayload Payload;
     Payload.kind = Kind;

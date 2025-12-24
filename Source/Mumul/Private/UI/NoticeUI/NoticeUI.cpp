@@ -21,7 +21,7 @@ void UNoticeUI::NativeConstruct()
 
 	NoticeBorder->SetVisibility(ESlateVisibility::Collapsed);
 
-	ChangeNoticeState(ENoticeState::Information);
+	ChangeNoticeState(ENoticeState::Notice);
 }
 
 void UNoticeUI::ChangeNoticeState(ENoticeState NewState)
@@ -64,7 +64,7 @@ void UNoticeUI::OnSwitchToInformation()
 }
 void UNoticeUI::OnSwitchToDM()
 {
-	SortNotices(DMConfirmedVBox, DMUnConfirmedVBox);
+	//SortNotices(DMConfirmedVBox, DMUnConfirmedVBox);
 	ChangeNoticeState(ENoticeState::DM);
 }
 
@@ -81,7 +81,7 @@ void UNoticeUI::OnToggleNoticeVisibility()
 		case ENoticeState::Information:
 			break;
 		case ENoticeState::DM:
-			SortNotices(DMConfirmedVBox, DMUnConfirmedVBox);
+			//SortNotices(DMConfirmedVBox, DMUnConfirmedVBox);
 			break;
 		}
 		NoticeBorder->SetVisibility(ESlateVisibility::Visible);
@@ -143,7 +143,7 @@ void UNoticeUI::SortNotices(UVerticalBox* ConfirmedBox, UVerticalBox* UnConfirme
 	}
 }
 
-void UNoticeUI::AddNotice(const FNoticeData& Data)
+void UNoticeUI::AddNotice(const FDispatchPayloadBase& Data)
 {
 	if (TSubclassOf<UNoticeContentUI> UNoticeContentUIClass = UObjectAndClassFinder::Get()->GetWidgetClass<
 		UNoticeContentUI>("WBP_NoticeContent"))
@@ -154,13 +154,11 @@ void UNoticeUI::AddNotice(const FNoticeData& Data)
 	}
 }
 
-void UNoticeUI::AddDM(const FDMData& Data)
+void UNoticeUI::AddDM(const FDispatchPayloadBase& Data)
 {
 	if (TSubclassOf<UNoticeContentUI> UNoticeContentUIClass = UObjectAndClassFinder::Get()->GetWidgetClass<
 		UNoticeContentUI>("WBP_NoticeContent"))
 	{
-		
-		
 		NoticeContentUI = CreateWidget<UNoticeContentUI>(this, UNoticeContentUIClass);
 		NoticeContentUI->InitUI(Data);
 		DMUnConfirmedVBox->InsertChildAt(0, NoticeContentUI);
