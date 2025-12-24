@@ -223,6 +223,7 @@ void UPlayerMeetingManagerComponent::Client_StopChannelRecording_Implementation(
 			{
 				// 1. 움직임 허용
 				owner->SetIgnoreMoveInput(false);
+				owner->SetIgnoreLookInput(false);
 				owner->Server_StandUpFromMeeting();
 
 				if (owner->ChatComp && owner->ChatComp->GroupChatUI)
@@ -545,8 +546,8 @@ void UPlayerMeetingManagerComponent::OnStartMeetingResponse(bool bSuccess, FStri
 	}
 	else
 	{
-		owner->SetIgnoreMoveInput(true);
-		owner->Server_TrySitAtCampfire();
+		//owner->SetIgnoreMoveInput(true);
+		//owner->Server_TrySitAtCampfire();
 		
 		UE_LOG(LogTemp, Error, TEXT("[Meeting] Failed to Create Meeting."));
 	}

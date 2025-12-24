@@ -555,7 +555,11 @@ void ACuteAlienPlayer::PlayTentSpawnSound()
 
 void ACuteAlienPlayer::SetIsMeetingSitting(bool bIsSitting, AActor* FocusTarget)
 {
-    if (!GetCameraBoom()) return;
+    if (!GetCameraBoom())
+    {
+    	UE_LOG(LogTemp, Warning, TEXT("[Player] No Camera Boom"));
+	    return;
+    }
 
     if (bIsSitting)
     {

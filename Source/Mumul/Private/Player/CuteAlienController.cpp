@@ -36,6 +36,7 @@
 #include "UI/FeedbackUI.h"
 #include "UI/LogoutUI.h"
 #include "Data/AudioManager.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Network/WebSocketSubsystem.h"
 #include "Object/CampFireActor.h"
@@ -734,7 +735,8 @@ void ACuteAlienController::OnIntroSequenceFinished()
 		ACuteAlienPlayer* Pl = *It;
 		if (Pl && Pl->WidgetComponent)
 		{
-			Pl->WidgetComponent->SetVisibility(true);
+			if (Pl != Cast<ACuteAlienPlayer>(GetPawn()))
+				Pl->WidgetComponent->SetVisibility(true);
             
 			// 이름 데이터가 아직 UI에 반영 안 됐을 수도 있으니 강제 업데이트
 			Pl->UpdateNameTag(); 
@@ -747,8 +749,8 @@ void ACuteAlienController::OnIntroSequenceFinished()
 	SetIgnoreMoveInput(false);
     
 	// 마우스 모드 설정 (게임+UI)
-	FInputModeGameAndUI InputMode;
-	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+	FInputModeGameOnly InputMode;
+	InputMode.SetConsumeCaptureMouseDown(true);
 	SetInputMode(InputMode);
 
 	if (PlayerUI)
@@ -844,23 +846,36 @@ void ACuteAlienController::Server_StandUpFromMeeting_Implementation()
             CurrentMeetingCampFire->ReleaseSeat(PS->PS_UserIndex);
         }
     }
-    
+
+	if (ACharacter* MyChar = Cast<ACharacter>(GetPawn()))
+	{
+		if (MyChar->GetCharacterMovement())
+		{
+			MyChar->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+		}
+	}
+	
     Client_StandUp();
 }
 
 void ACuteAlienController::Client_StandUp_Implementation()
 {
-    CurrentMeetingCampFire = nullptr;
+	CurrentMeetingCampFire = nullptr;
 
-    ACuteAlienPlayer* MyChar = Cast<ACuteAlienPlayer>(GetPawn());
-    if (MyChar)
-    {
-        // 1. 일어서기 상태 변경
-        MyChar->SetIsMeetingSitting(false);
+	ACuteAlienPlayer* MyChar = Cast<ACuteAlienPlayer>(GetPawn());
+	if (MyChar)
+	{
+		// 1. 일어서기 상태 변경 (카메라 복구 등)
+		MyChar->SetIsMeetingSitting(false);
+        
+		// 이동 모드 복구 (안전장치)
+		if (MyChar->GetCharacterMovement())
+		{
+			MyChar->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+		}
 
-        // 2. 움직임 허용
-        SetIgnoreMoveInput(false);
-        // SetIgnoreLookInput(false);
-    }
+		ResetIgnoreMoveInput();
+		ResetIgnoreLookInput();
+	}
 }
 
