@@ -26,6 +26,10 @@ class MUMUL_API UGroupChatUI : public UUserWidget
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+	virtual void NativeOnInitialized() override;
+	
+	UPROPERTY(meta=(BindWidgetAnim), Transient)
+	TObjectPtr<class UWidgetAnimation> CreateGroupUI_SlideUp;
 	
 	EMumuLeeDifficulty Difficulty = EMumuLeeDifficulty::Beginner;
 	
@@ -34,6 +38,7 @@ protected:
 	UPROPERTY()
 	TObjectPtr<class UHttpNetworkSubsystem> HttpSystem;
 	
+	bool bCreateGroupVisible = false;
 	void ToggleVisibility(UWidget* Widget);
 
 	// [신규] 웹소켓 서브시스템

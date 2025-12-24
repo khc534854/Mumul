@@ -3,7 +3,7 @@
 
 #include "UI/NoticeUI/NoticeUI.h"
 
-#include "Components/Border.h"
+#include "Animation/WidgetAnimation.h"
 #include "Components/Button.h"
 #include "Components/ScrollBox.h"
 #include "Components/VerticalBox.h"
@@ -19,15 +19,21 @@ void UNoticeUI::NativeConstruct()
 	InformationTap->OnClicked.AddDynamic(this, &UNoticeUI::OnSwitchToInformation);
 	DirectMessageTap->OnClicked.AddDynamic(this, &UNoticeUI::OnSwitchToDM);
 
-	NoticeBorder->SetVisibility(ESlateVisibility::Collapsed);
-
 	ChangeNoticeState(ENoticeState::Notice);
+}
+
+void UNoticeUI::NativeOnInitialized()
+{
+	Super::NativeOnInitialized();
+	
+	// Init NoticeUI position
+	PlayAnimation(NoticeUI_SildeUpAnim, NoticeUI_SildeUpAnim->GetEndTime(), 1, EUMGSequencePlayMode::Reverse);
 }
 
 void UNoticeUI::ChangeNoticeState(ENoticeState NewState)
 {
 	CurNoticeState = NewState;
-	
+
 	switch (NewState)
 	{
 	case ENoticeState::Notice:
@@ -58,10 +64,12 @@ void UNoticeUI::OnSwitchToNotice()
 	SortNotices(ConfirmedVBox, UnConfirmedVBox);
 	ChangeNoticeState(ENoticeState::Notice);
 }
+
 void UNoticeUI::OnSwitchToInformation()
 {
 	ChangeNoticeState(ENoticeState::Information);
 }
+
 void UNoticeUI::OnSwitchToDM()
 {
 	//SortNotices(DMConfirmedVBox, DMUnConfirmedVBox);
@@ -71,7 +79,15 @@ void UNoticeUI::OnSwitchToDM()
 
 void UNoticeUI::OnToggleNoticeVisibility()
 {
-	if (NoticeBorder->GetVisibility() == ESlateVisibility::Collapsed)
+	if (IsAnimationPlaying(NoticeUI_SildeUpAnim))
+		return;
+	
+	if (bIsNoticeVisible)
+	{
+		bIsNoticeVisible = false;
+		PlayAnimation(NoticeUI_SildeUpAnim, 0, 1, EUMGSequencePlayMode::Reverse);
+	}
+	else
 	{
 		switch (CurNoticeState)
 		{
@@ -84,11 +100,8 @@ void UNoticeUI::OnToggleNoticeVisibility()
 			//SortNotices(DMConfirmedVBox, DMUnConfirmedVBox);
 			break;
 		}
-		NoticeBorder->SetVisibility(ESlateVisibility::Visible);
-	}
-	else
-	{
-		NoticeBorder->SetVisibility(ESlateVisibility::Collapsed);
+		bIsNoticeVisible = true;
+		PlayAnimation(NoticeUI_SildeUpAnim);
 	}
 }
 

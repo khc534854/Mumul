@@ -27,6 +27,7 @@ class MUMUL_API UNoticeUI : public UUserWidget
 	
 protected:
 	virtual void NativeConstruct() override;
+	virtual void NativeOnInitialized() override;
 	
 	ENoticeState CurNoticeState = ENoticeState::Notice;
 	
@@ -34,6 +35,9 @@ protected:
 	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UBorder> NoticeBorder;
+	UPROPERTY(meta=(BindWidgetAnim), Transient)
+	TObjectPtr<class UWidgetAnimation> NoticeUI_SildeUpAnim;
+	bool bIsNoticeVisible = false;
 	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> NoticeTap;
