@@ -377,6 +377,12 @@ void ACuteAlienPlayer::UpdateNameTag()
 		}
 	}
 
+	if (IsLocallyControlled())
+	{
+		WidgetComponent->SetVisibility(false);
+		return; 
+	}
+
 	if (APlayerController* LocalPC = GetWorld()->GetFirstPlayerController())
 	{
 		if (ACuteAlienController* AlienPC = Cast<ACuteAlienController>(LocalPC))

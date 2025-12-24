@@ -744,14 +744,13 @@ void ACuteAlienController::OnIntroSequenceFinished()
 
 	for (TActorIterator<ACuteAlienPlayer> It(GetWorld()); It; ++It)
 	{
-		ACuteAlienPlayer* Pl = *It;
-		if (Pl && Pl->WidgetComponent)
+		ACuteAlienPlayer* Character = *It;
+        
+		// [수정] "내 캐릭터가 아닐 때만" 켜기
+		if (Character && Character->WidgetComponent && !Character->IsLocallyControlled())
 		{
-			if (Pl != Cast<ACuteAlienPlayer>(GetPawn()))
-				Pl->WidgetComponent->SetVisibility(true);
-            
-			// 이름 데이터가 아직 UI에 반영 안 됐을 수도 있으니 강제 업데이트
-			Pl->UpdateNameTag(); 
+			Character->WidgetComponent->SetVisibility(true);
+			Character->UpdateNameTag(); 
 		}
 	}
 	
