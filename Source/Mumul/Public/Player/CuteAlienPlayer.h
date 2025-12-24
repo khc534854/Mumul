@@ -29,6 +29,7 @@ protected:
 	void OnClickInteraction();
 	
 public:
+	void UpdateVoiceIconState();
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 

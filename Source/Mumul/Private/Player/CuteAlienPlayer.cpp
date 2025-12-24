@@ -26,8 +26,10 @@
 #include "NiagaraComponent.h"
 #include "Components/AudioComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/Image.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/VoiceConfig.h"
 
 static const FString ItemDataTablePath = TEXT("/Game/Khc/Blueprint/Object/CustomItemList.CustomItemList");
 // Sets default values
@@ -203,6 +205,8 @@ void ACuteAlienPlayer::OnRep_PlayerState()
 void ACuteAlienPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	UpdateVoiceIconState();
 }
 
 // Called to bind functionality to input
@@ -243,6 +247,52 @@ void ACuteAlienPlayer::OnClickInteraction()
 			PC->OXQuizComp->OXQuizUI->OXQuizWS->SetActiveWidgetIndex(2);
 			PC->OXQuizComp->OXQuizUI->AskOXQuizUI->SetAskQuizText(QuizTriggerActor->GetDifficultyText());
 			PC->OXQuizComp->OXQuizUI->SetVisibility(ESlateVisibility::Visible);
+		}
+	}
+}
+
+void ACuteAlienPlayer::UpdateVoiceIconState()
+{
+	// 1. 이름표 위젯 가져오기
+	if (!WidgetComponent) return;
+	UUserWidget* WidgetObj = WidgetComponent->GetUserWidgetObject();
+	if (!WidgetObj) return;
+
+	// 2. 말하기 아이콘 이미지 가져오기 (이름은 위젯 에디터에서 정한 것과 같아야 함)
+	UImage* MicIcon = Cast<UImage>(WidgetObj->GetWidgetFromName(TEXT("SpeakingIcon")));
+	if (!MicIcon) return;
+
+	// 3. PlayerState 확인
+	AMumulPlayerState* PS = GetPlayerState<AMumulPlayerState>();
+	if (!PS) return;
+
+	// 4. 이 플레이어의 VOIP Talker 가져오기 (엔진이 관리하는 객체)
+	// GetUniqueId()를 통해 나든 남이든 상관없이 Talker를 찾습니다.
+	UVOIPTalker* Talker = UVOIPStatics::GetVOIPTalkerForPlayer(PS->GetUniqueId());
+
+	bool bIsTalking = false;
+	if (Talker)
+	{
+		// 5. 목소리 레벨 확인 (0.01f 이상이면 말하는 중으로 간주)
+		if (Talker->GetVoiceLevel() > 0.01f)
+		{
+			bIsTalking = true;
+		}
+	}
+
+	// 6. 상태에 따라 아이콘 켜고 끄기
+	if (bIsTalking)
+	{
+		if (MicIcon->GetVisibility() != ESlateVisibility::Visible)
+		{
+			MicIcon->SetVisibility(ESlateVisibility::Visible);
+		}
+	}
+	else
+	{
+		if (MicIcon->GetVisibility() != ESlateVisibility::Hidden)
+		{
+			MicIcon->SetVisibility(ESlateVisibility::Hidden);
 		}
 	}
 }
