@@ -56,7 +56,7 @@ void UGroupChatUI::NativeConstruct()
 
 	InvitationUI = CreateWidget<UInvitationUI>(this, InvitationUIClass);
 	InvitationBox->AddChild(InvitationUI);
-	InvitationBox->SetVisibility(ESlateVisibility::Hidden);
+	InvitationBox->SetVisibility(ESlateVisibility::Collapsed);
 
 	InviteBtn->OnPressed.AddDynamic(this, &UGroupChatUI::ToggleInvitationUI);
 	ToggleVisibilityBtn->OnPressed.AddDynamic(this, &UGroupChatUI::OnToggleVisibilityBtn);
@@ -68,7 +68,6 @@ void UGroupChatUI::NativeConstruct()
 		HttpSystem->OnTeamChatListResponse.AddDynamic(this, &UGroupChatUI::OnServerTeamChatListResponse);
 		HttpSystem->OnChatMessageResponse.AddDynamic(this, &UGroupChatUI::OnServerChatMessageResponse);
 		HttpSystem->OnChatHistoryResponse.AddDynamic(this, &UGroupChatUI::OnServerChatHistoryResponse);
-
 		HttpSystem->OnTeamChatMessageResponse.AddDynamic(this, &UGroupChatUI::OnServerTeamChatMessageResponse);
 	}
 
@@ -153,13 +152,13 @@ void UGroupChatUI::NativeOnInitialized()
 	Super::NativeOnInitialized();
 	
 	// Init CreateGroupUI position
-	PlayAnimation(CreateGroupUI_SlideUp, CreateGroupUI_SlideUp->GetEndTime(), 1, EUMGSequencePlayMode::Reverse);
+	PlayAnimation(CreateGroupUI_Slide, CreateGroupUI_Slide->GetEndTime(), 1, EUMGSequencePlayMode::Reverse);
 }
 
 void UGroupChatUI::ToggleVisibility(UWidget* Widget)
 {
 	const bool bIsVisible = (Widget->GetVisibility() == ESlateVisibility::Visible);
-	Widget->SetVisibility(bIsVisible ? ESlateVisibility::Hidden : ESlateVisibility::Visible);
+	Widget->SetVisibility(bIsVisible ? ESlateVisibility::Collapsed : ESlateVisibility::Visible);
 }
 
 // void UGroupChatUI::SelectGroupChat(class UGroupIconUI* SelectedIcon)
@@ -1239,18 +1238,18 @@ void UGroupChatUI::ToggleCreateGroupChatUI()
 {
 	CreateGroupChatUI->RefreshJoinedPlayerList();
 
-	if (IsAnimationPlaying(CreateGroupUI_SlideUp))
+	if (IsAnimationPlaying(CreateGroupUI_Slide))
 		return;
 	
 	if (bCreateGroupVisible)
 	{
 		bCreateGroupVisible = false;
-		PlayAnimation(CreateGroupUI_SlideUp, 0, 1, EUMGSequencePlayMode::Reverse);
+		PlayAnimation(CreateGroupUI_Slide, 0, 1, EUMGSequencePlayMode::Reverse);
 	}
 	else
 	{
 		bCreateGroupVisible = true;
-		PlayAnimation(CreateGroupUI_SlideUp);
+		PlayAnimation(CreateGroupUI_Slide);
 	}
 }
 

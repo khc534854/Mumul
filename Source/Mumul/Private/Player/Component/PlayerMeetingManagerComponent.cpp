@@ -5,6 +5,7 @@
 
 #include "Base/MumulGameInstance.h"
 #include "Base/MumulGameState.h"
+#include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
 #include "GameFramework/GameStateBase.h"
 #include "Net/VoiceConfig.h"
@@ -16,6 +17,7 @@
 #include "Player/Component/PlayerChatComponent.h"
 #include "UI/GroupChatUI.h"
 #include "UI/VoiceMeetingUI.h"
+#include "UI/BaseUI/BaseText.h"
 
 
 class UMumulGameInstance;
@@ -79,7 +81,7 @@ void UPlayerMeetingManagerComponent::BeginPlay()
 			if (VoiceMeetingUI)
 			{
 				VoiceMeetingUI->AddToViewport(100);
-				VoiceMeetingUI->SetVisibility(ESlateVisibility::Hidden);
+				VoiceMeetingUI->SetVisibility(ESlateVisibility::Collapsed);
 			}
 		}
 	}
@@ -358,7 +360,9 @@ void UPlayerMeetingManagerComponent::OpenMeetingSetupUI()
 		owner->SetIgnoreMoveInput(true);
 
 		VoiceMeetingUI->InitMeetingUI(true); // 방장 모드
+		VoiceMeetingUI->TeamNameText->BaseText->SetText(FText::FromString(owner->ChatComp->GroupChatUI->GetCurrentTeamName()));
 		VoiceMeetingUI->SetVisibility(ESlateVisibility::Visible);
+		VoiceMeetingUI->PlayAnimation(VoiceMeetingUI->StartMeeting_SlideAnim);
 	}
 }
 
@@ -379,6 +383,7 @@ void UPlayerMeetingManagerComponent::OpenEndMeetingPopup()
 		}
 
 		VoiceMeetingUI->SetVisibility(ESlateVisibility::Visible);
+		VoiceMeetingUI->PlayAnimation(VoiceMeetingUI->EndMeeting_SlideAnim, 0, 1, EUMGSequencePlayMode::Reverse);
 	}
 }
 

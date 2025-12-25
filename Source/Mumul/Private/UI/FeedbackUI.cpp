@@ -69,8 +69,9 @@ void UFeedbackUI::OnClickedConfirmEndBtn()
 
 void UFeedbackUI::OnClickedCancelEndBtn()
 {
-	SetVisibility(ESlateVisibility::Hidden);
-
+	SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	PlayAnimation(Feedback_SlideAnim, 0, 1, EUMGSequencePlayMode::Reverse);
+	
 	// 입력 모드 복구 (게임 모드로)
 	if (APlayerController* PC = GetOwningPlayer())
 	{
@@ -82,7 +83,16 @@ void UFeedbackUI::OnClickedCancelEndBtn()
 
 void UFeedbackUI::OnClickedFeedbackExitBtn()
 {
-	OnClickedCancelEndBtn();
+	SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	PlayAnimation(FeedbackResult_SlideAnim, 0, 1, EUMGSequencePlayMode::Reverse);
+	
+	// 입력 모드 복구 (게임 모드로)
+	if (APlayerController* PC = GetOwningPlayer())
+	{
+		PC->SetIgnoreLookInput(false);
+		PC->SetShowMouseCursor(false);
+		PC->SetInputMode(FInputModeGameOnly());
+	}
 }
 
 void UFeedbackUI::OnFeedbackResponseReceived(bool bSuccess, FString Message)
@@ -91,6 +101,7 @@ void UFeedbackUI::OnFeedbackResponseReceived(bool bSuccess, FString Message)
 	{
 		// 결과 화면(Index 1)으로 전환
 		FeedbackWidgetSwitcher->SetActiveWidgetIndex(1);
+		PlayAnimation(FeedbackResult_SlideAnim);
 	}
 
 	if (FeedbackResultText)
@@ -113,11 +124,12 @@ void UFeedbackUI::OnFeedbackResponseReceived(bool bSuccess, FString Message)
 void UFeedbackUI::OpenFeedbackUI()
 {
 	SetVisibility(ESlateVisibility::Visible);
-    
+	
 	// 첫 번째 화면(입력창)으로 전환
 	if (FeedbackWidgetSwitcher)
 	{
 		FeedbackWidgetSwitcher->SetActiveWidgetIndex(0);
+		PlayAnimation(Feedback_SlideAnim);
 	}
 
 	if (FeedbackText)

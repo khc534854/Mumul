@@ -163,6 +163,8 @@ public:
 	TObjectPtr<class UButton> NoticeBtn;
 	UFUNCTION()
 	void OnClickNoticeBtn();
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UBorder> NewNoticeBorder;
 	
 	// Time
 protected:

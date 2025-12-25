@@ -29,7 +29,7 @@ protected:
 	virtual void NativeOnInitialized() override;
 	
 	UPROPERTY(meta=(BindWidgetAnim), Transient)
-	TObjectPtr<class UWidgetAnimation> CreateGroupUI_SlideUp;
+	TObjectPtr<class UWidgetAnimation> CreateGroupUI_Slide;
 	
 	EMumuLeeDifficulty Difficulty = EMumuLeeDifficulty::Beginner;
 	
@@ -216,7 +216,7 @@ public:
 	void UpdateQuestionButtonState();
 	// 현재 AI 도우미가 켜져 있는지 확인하는 플래그
 	bool bIsMeetingChatbotActive = false;
-private:
+	
 	// 헬퍼: 현재 방 정보 가져오기
 	FString GetCurrentTeamID() const;
 	FString GetCurrentTeamName() const;

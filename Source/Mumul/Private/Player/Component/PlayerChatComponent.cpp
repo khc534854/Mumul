@@ -3,11 +3,11 @@
 
 #include "Player/Component/PlayerChatComponent.h"
 
-#include "IDetailGroup.h"
 #include "Base/MumulGameInstance.h"
 #include "Base/MumulGameState.h"
 #include "Blueprint/UserWidget.h"
 #include "Data/IMGManager.h"
+#include "Data/ObjectAndClassFinder.h"
 #include "Network/HttpNetworkSubsystem.h"
 #include "Network/NetworkStructs.h"
 #include "Player/CuteAlienController.h"
@@ -23,13 +23,6 @@ UPlayerChatComponent::UPlayerChatComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	SetIsReplicatedByDefault(true);
-
-	static ConstructorHelpers::FClassFinder<UGroupChatUI> GroupChatUIFinder(
-		TEXT("/Game/Yeomin/Characters/UI/BP/WBP_GroupChatUI.WBP_GroupChatUI_C"));
-	if (GroupChatUIFinder.Succeeded())
-	{
-		GroupChatUIClass = GroupChatUIFinder.Class;
-	}
 
 	static ConstructorHelpers::FClassFinder<UGroupIconUI> GroupIconUIFinder(
 		TEXT("/Game/Yeomin/Characters/UI/BP/WBP_GroupProfileUI.WBP_GroupProfileUI_C"));
@@ -63,7 +56,7 @@ void UPlayerChatComponent::BeginPlay()
 		}
 
 		// 2. 위젯 생성
-		if (GroupChatUIClass)
+		if (TSubclassOf<UGroupChatUI> GroupChatUIClass = UObjectAndClassFinder::Get()->GetWidgetClass<UGroupChatUI>("WBP_GroupChatUI"))
 		{
 			GroupChatUI = CreateWidget<UGroupChatUI>(owner, GroupChatUIClass);
 			if (GroupChatUI)

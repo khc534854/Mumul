@@ -22,7 +22,13 @@ public:
 	TObjectPtr<class UAskOXQuizUI> AskOXQuizUI;
 	UFUNCTION()
 	void OnCancelClicked();
-
+	UPROPERTY(meta=(BindWidgetAnim), Transient)
+	TObjectPtr<class UWidgetAnimation> Confirm_PopUp;
+	UPROPERTY(meta=(BindWidgetAnim), Transient)
+	TObjectPtr<class UWidgetAnimation> Result_PopUp;
+	UPROPERTY(meta=(BindWidgetAnim), Transient)
+	TObjectPtr<class UWidgetAnimation> Question_SlideAnim;
+	
 protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class USizeBox> QuizSizeBox;

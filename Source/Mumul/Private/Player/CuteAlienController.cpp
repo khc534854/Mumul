@@ -165,7 +165,7 @@ void ACuteAlienController::BeginPlay()
 		{
 			// 기본 배경이므로 낮은 값 (10)
 			PlayerUI->AddToViewport(10); 
-			PlayerUI->SetVisibility(ESlateVisibility::Hidden); // 인트로 끝나고 보여줌
+			PlayerUI->SetVisibility(ESlateVisibility::Collapsed); // 인트로 끝나고 보여줌
 		}
 	}
 
@@ -183,7 +183,7 @@ void ACuteAlienController::BeginPlay()
 		{
 			ChatComp->GroupChatUI->AddToViewport(10);
 		}
-		ChatComp->GroupChatUI->SetVisibility(ESlateVisibility::Hidden);
+		ChatComp->GroupChatUI->SetVisibility(ESlateVisibility::Collapsed);
 	}
 
 	// [3단계] RadialUI (메뉴) - Z: 30
@@ -194,7 +194,7 @@ void ACuteAlienController::BeginPlay()
 		{
 			// 메뉴는 채팅창보다도 위에 뜰 수 있음 (30)
 			RadialUI->AddToViewport(30);
-			RadialUI->SetVisibility(ESlateVisibility::Hidden);
+			RadialUI->SetVisibility(ESlateVisibility::Collapsed);
 		}
 	}
 
@@ -446,14 +446,14 @@ void ACuteAlienController::ShowRadialUI()
 
 void ACuteAlienController::HideRadialUI()
 {
-	if (!RadialUI || RadialUI->GetVisibility() == ESlateVisibility::Hidden)
+	if (!RadialUI || RadialUI->GetVisibility() == ESlateVisibility::Collapsed)
 		return;
 
 	SetIgnoreLookInput(false);
 	SetShowMouseCursor(false);
 	SetInputMode(FInputModeGameOnly());
 
-	RadialUI->SetVisibility(ESlateVisibility::Hidden);
+	RadialUI->SetVisibility(ESlateVisibility::Collapsed);
 	bIsRadialVisible = false;
 
 	// [추가] 선택된 슬롯 확인
@@ -471,7 +471,7 @@ void ACuteAlienController::CancelRadialUI()
 {
 	SetIgnoreLookInput(false);
 
-	RadialUI->SetVisibility(ESlateVisibility::Hidden);
+	RadialUI->SetVisibility(ESlateVisibility::Collapsed);
 	bIsRadialVisible = false;
 }
 
@@ -550,7 +550,7 @@ void ACuteAlienController::OpenLogoutUI(int32 StartWidgetIndex)
 			LogoutUI->AddToViewport(100);
 		}
 	}
-
+	
 	// UI 표시 및 입력 모드 전환
 	if (LogoutUI)
 	{
@@ -558,11 +558,13 @@ void ACuteAlienController::OpenLogoutUI(int32 StartWidgetIndex)
 		if (LogoutUI->WidgetSwitcher)
 		{
 			LogoutUI->WidgetSwitcher->SetActiveWidgetIndex(StartWidgetIndex);
+			LogoutUI->PlayAnimation(LogoutUI->LogOut_SlideAnim);
            
 			// 도움말(1)인 경우 초기화 로직이 있다면 호출
 			if (StartWidgetIndex == 1) 
 			{
 				LogoutUI->OpenHelpPopup();
+				LogoutUI->PlayAnimation(LogoutUI->Help_SlideAnim);
 			}
 		}
 
