@@ -39,4 +39,7 @@ protected:
 	void AnimNotify_StartJump();
 	UFUNCTION()
 	void AnimNotify_OnJump();
+	
+	UPROPERTY(EditDefaultsOnly, Category="Sound")
+	TObjectPtr<class USoundBase> JumpSound;
 };

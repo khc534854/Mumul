@@ -106,6 +106,14 @@ void AMumulCharacter::SetFirstPersonView(bool bEnable)
 	}
 }
 
+void AMumulCharacter::Client_PlayRollSound_Implementation()
+{
+	UGameplayStatics::PlaySound2D(
+		this,
+		RollSound
+	);
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Input
 
@@ -205,14 +213,14 @@ void AMumulCharacter::OnJump(const FInputActionValue& Value)
 	{
 		FootStepComp->FadeOut(0.06f, 0.0f);
 	}
-
-	if (GetCharacterMovement()->IsFalling() && PlayerAnim->Montage_IsPlaying(RollMontage) == false)
-	{
-		UGameplayStatics::PlaySound2D(
-			this,
-			RollSound
-		);
-	}
+	
+	// if (GetCharacterMovement()->IsFalling() && PlayerAnim->Montage_IsPlaying(RollMontage) == false)
+	// {
+	// 	UGameplayStatics::PlaySound2D(
+	// 			this,
+	// 			RollSound
+	// 		);
+	// }
 }
 
 
@@ -224,6 +232,7 @@ void AMumulCharacter::Server_OnJump_Implementation()
 	if (GetCharacterMovement()->IsFalling())
 	{
 		Multicast_OnRollAnimation();
+		Client_PlayRollSound(); 
 		return;
 	}
 

@@ -4,6 +4,7 @@
 #include "Player/CuteAlienAnim.h"
 
 #include "Components/AudioComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Player/CuteAlienPlayer.h"
 
 void UCuteAlienAnim::NativeInitializeAnimation()
@@ -41,6 +42,14 @@ void UCuteAlienAnim::AnimNotify_OnJump()
 {
 	if (Owner)
 	{
+		if (Owner->IsLocallyControlled())
+		{
+			UGameplayStatics::PlaySound2D(
+				this,
+				JumpSound
+			);
+		}
+		
 		Owner->Jump();
 	}
 	JumpPlayRate = 1.f;

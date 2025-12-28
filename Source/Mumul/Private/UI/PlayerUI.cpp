@@ -657,7 +657,7 @@ void UPlayerUI::OnRecordClicked()
 void UPlayerUI::OnClickNoticeBtn()
 {
 	if (bIsOpenCustomizeUI) OnCustomizeBoxClick(); 
-	if (bIsOpenHousingUI) OnHousingBoxClick(); S
+	if (bIsOpenHousingUI) OnHousingBoxClick();
 	if (GroupChatUI) GroupChatUI->CloseChatUI();
 	
 	if (PC && PC->NoticeComp && PC->NoticeComp->NoticeUI)

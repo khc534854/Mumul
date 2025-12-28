@@ -147,7 +147,7 @@ struct FDispatchAckPayload
     FString kind;
 
     UPROPERTY()
-    int32 messageId;
+    int32 messageId = 0;
 
     UPROPERTY()
     FString receivedAt;
@@ -170,16 +170,16 @@ struct FDispatchPayloadBase
 	GENERATED_BODY()
 
 	UPROPERTY()
-	int32 MessageId;
+	int32 MessageId = 0;
 
 	UPROPERTY()
-	int32 RecipientId;
+	int32 RecipientId = 0;
 
 	UPROPERTY()
-	int32 CampId;
+	int32 CampId = 0;
 
 	UPROPERTY()
-	int32 SenderId;
+	int32 SenderId = 0;
 	
 	UPROPERTY()
 	FString Title;
@@ -191,10 +191,10 @@ struct FDispatchPayloadBase
 	FDateTime CreatedAt;
 
 	UPROPERTY()
-	bool NeedConfirmation;
+	bool NeedConfirmation = false;
 
 	UPROPERTY()
-	bool IsConfirmed;
+	bool IsConfirmed = false;
 
 	UPROPERTY()
 	FDateTime ConfirmedAt;

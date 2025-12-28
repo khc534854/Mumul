@@ -92,6 +92,8 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly, Category="Sound")
 	TObjectPtr<class USoundBase> RollSound;
+	UFUNCTION(Client, Reliable)
+	void Client_PlayRollSound();
 	UPROPERTY(EditDefaultsOnly, Category="Sound")
 	TObjectPtr<class USoundBase> FootStep;
 	UPROPERTY()
