@@ -336,6 +336,7 @@ void UPlayerUI::OnCustomizeBoxClick()
 	{
 		GroupChatUI->CloseChatUI();
 	}
+	CloseNoticeUI();
 
 	bIsOpenCustomizeUI = !bIsOpenCustomizeUI;
 
@@ -497,6 +498,7 @@ void UPlayerUI::OnHousingBoxClick()
 	{
 		GroupChatUI->CloseChatUI();
 	}
+	CloseNoticeUI();
 
 	bIsOpenHousingUI = !bIsOpenHousingUI;
 
@@ -654,7 +656,48 @@ void UPlayerUI::OnRecordClicked()
 
 void UPlayerUI::OnClickNoticeBtn()
 {
-	PC->NoticeComp->NoticeUI->OnToggleNoticeVisibility();
+	if (bIsOpenCustomizeUI) OnCustomizeBoxClick(); 
+	if (bIsOpenHousingUI) OnHousingBoxClick(); S
+	if (GroupChatUI) GroupChatUI->CloseChatUI();
+	
+	if (PC && PC->NoticeComp && PC->NoticeComp->NoticeUI)
+	{
+		PC->NoticeComp->NoticeUI->OnToggleNoticeVisibility();
+
+		if (PC->NoticeComp->NoticeUI->bIsNoticeVisible)
+		{
+			if (!PC->bShowMouseCursor)
+			{
+				PC->OnToggleMouse();
+			}
+			else
+			{
+				FInputModeGameAndUI InputMode;
+				InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
+				PC->SetInputMode(InputMode);
+			}
+		}
+		else
+		{
+			if (PC->bShowMouseCursor)
+			{
+				PC->OnToggleMouse();
+			}
+		}
+	}
+}
+
+void UPlayerUI::CloseNoticeUI()
+{
+	if (PC && PC->NoticeComp && PC->NoticeComp->NoticeUI)
+	{
+		// NoticeUI 내부의 변수(bIsNoticeVisible)를 확인해서 열려있을 때만 닫기
+		if (PC->NoticeComp->NoticeUI->bIsNoticeVisible)
+		{
+			// Toggle 함수를 호출하면 닫힘 (열려있으므로)
+			PC->NoticeComp->NoticeUI->OnToggleNoticeVisibility();
+		}
+	}
 }
 
 void UPlayerUI::SetProfileBtnIMG(UTexture2D* IMG)
@@ -699,7 +742,8 @@ void UPlayerUI::CloseSidePanels()
 			PC->HousingComp->StopPreviewHousingItem();
 		}
 	}
-
+	CloseNoticeUI();
+	
 	ResetAllMenuButtons();
 }
 

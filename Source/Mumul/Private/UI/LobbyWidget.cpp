@@ -85,6 +85,13 @@ void ULobbyWidget::NativeConstruct()
         btn_Enter->SetIsEnabled(false); // 처음에는 비활성화 (검색 전)
     }
     
+    if (SurveyAnim)
+    {
+        FWidgetAnimationDynamicEvent AnimDelegate;
+        AnimDelegate.BindDynamic(this, &ULobbyWidget::OnSurveyAnimFinished);
+        BindToAnimationFinished(SurveyAnim, AnimDelegate);
+    }
+    
     LoadSurveyData();
 }
 
@@ -233,7 +240,6 @@ void ULobbyWidget::UpdateTendencyResultImage(int32 TendencyID)
 {
     if (!TendencyResultImg) return;
 
-    // TendencyID는 1부터 시작하므로 배열 인덱스(0부터 시작)로 변환 (-1)
     int32 ImageIndex = TendencyID - 1;
 
     if (TendencyImages.IsValidIndex(ImageIndex) && TendencyImages[ImageIndex])
@@ -244,6 +250,19 @@ void ULobbyWidget::UpdateTendencyResultImage(int32 TendencyID)
     else
     {
         UE_LOG(LogTemp, Warning, TEXT("[UI] Invalid Tendency ID or Texture missing. ID: %d"), TendencyID);
+    }
+}
+
+void ULobbyWidget::OnSurveyAnimFinished()
+{
+    if (SurveyAnim && bIsSurveyFadingOut)
+    {
+        bIsSurveyFadingOut = false;
+
+        CurrentQuestionIndex++;
+        UpdateSurveyUI();
+
+        PlayAnimation(SurveyAnim, 0.0f, 1, EUMGSequencePlayMode::Forward);
     }
 }
 
@@ -295,29 +314,30 @@ void ULobbyWidget::OnSurveyNoClicked_Internal()
 
 void ULobbyWidget::OnSurveyChoiceClicked(int32 ChoiceIndex)
 {
-    if (CurrentQuestionIndex >= SurveyData.questions.Num())
-    {
-        // 이미 완료됨
-        return;
-    }
-
-    // 1. 결과 저장
-    // (ChoiceIndex는 0 또는 1, value는 3 또는 1이지만, result 배열에는 index 값(0 또는 1)을 저장하므로 ChoiceIndex 저장)
     SurveyResults.Add(ChoiceIndex); 
 
-    // 2. 다음 질문으로 이동
-    CurrentQuestionIndex++;
-
-    if (CurrentQuestionIndex < SurveyData.questions.Num())
+    // 다음 질문이 남았는지 확인
+    if (CurrentQuestionIndex + 1 < SurveyData.questions.Num())
     {
-        // 다음 질문 업데이트
-        UpdateSurveyUI();
+        if (SurveyAnim)
+        {
+            // 1. 상태를 FadingOut으로 설정
+            bIsSurveyFadingOut = true;
+            
+            // 2. 애니메이션 역재생 (투명도 1 -> 0)
+            PlayAnimation(SurveyAnim, 0.0f, 1, EUMGSequencePlayMode::Reverse);
+        }
+        else
+        {
+            // 애니메이션이 없으면 즉시 변경 (예외 처리)
+            CurrentQuestionIndex++;
+            UpdateSurveyUI();
+        }
     }
     else
     {
-        // 3. 모든 질문 완료 -> 결과 제출
+        // 3. 모든 질문 완료 -> 결과 제출 (애니메이션 없이 진행하거나 필요 시 추가)
         SendSurveyResult();
-        //WidgetSwitcher->SetActiveWidgetIndex(3);
     }
 }
 
@@ -382,11 +402,16 @@ void ULobbyWidget::OnSurveyListResponse(bool bSuccess, FString Message)
     {
         if (FJsonObjectConverter::JsonObjectStringToUStruct(Message, &SurveyData, 0, 0))
         {
-            UE_LOG(LogTemp, Error, TEXT("[Survey] List Parsing Complete"));
+            UE_LOG(LogTemp, Log, TEXT("[Survey] List Parsing Complete")); // LogTemp 수정
 
             CurrentQuestionIndex = 0;
             SurveyResults.Empty();
             UpdateSurveyUI();
+
+            if (SurveyAnim)
+            {
+                PlayAnimation(SurveyAnim, 0.0f, 1, EUMGSequencePlayMode::Forward);
+            }
         }
     }
     else

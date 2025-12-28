@@ -37,7 +37,7 @@ protected:
 	TObjectPtr<class UBorder> NoticeBorder;
 	UPROPERTY(meta=(BindWidgetAnim), Transient)
 	TObjectPtr<class UWidgetAnimation> NoticeUI_SildeUpAnim;
-	bool bIsNoticeVisible = false;
+
 	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> NoticeTap;
@@ -78,4 +78,6 @@ public:
 	void OnToggleNoticeVisibility();
 	void AddNotice(const FDispatchPayloadBase& Data);
 	void AddDM(const FDispatchPayloadBase& Data);
+	
+	bool bIsNoticeVisible = false;
 };

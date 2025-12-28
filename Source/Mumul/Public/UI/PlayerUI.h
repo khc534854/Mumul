@@ -166,6 +166,8 @@ public:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UBorder> NewNoticeBorder;
 	
+	void CloseNoticeUI();
+	
 	// Time
 protected:
 	UPROPERTY(meta=(BindWidget))

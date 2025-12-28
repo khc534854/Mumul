@@ -138,6 +138,14 @@ protected:
 
     UPROPERTY(Transient, meta = (BindWidgetAnim))
     TObjectPtr<class UWidgetAnimation > PopResult;
+    
+    UPROPERTY(Transient, meta = (BindWidgetAnim))
+    TObjectPtr<class UWidgetAnimation > SurveyAnim;
+    
+    bool bIsSurveyFadingOut = false;
+
+    UFUNCTION()
+    void OnSurveyAnimFinished();
 
     // 1. 설문조사 JSON 로드 및 파싱 (NativeConstruct에서 호출)
     UFUNCTION(BlueprintCallable)
