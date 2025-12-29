@@ -672,22 +672,28 @@ void ACuteAlienPlayer::SetIsMeetingSitting(bool bIsSitting, AActor* FocusTarget)
                 	FVector DirToMe = (GetActorLocation() - FireCenter).GetSafeNormal();
                 	FRotator LookAtRot = DirToMe.Rotation();
 
-                	PC->SetShowMouseCursor(false); 
-                	FInputModeGameOnly InputMode;
-                	PC->SetInputMode(InputMode);
-                	PC->FlushPressedKeys(); // 눌려있는 키 상태 초기화
-
                 	PC->SetControlRotation(LookAtRot);
 
-                	bool bWasLagEnabled = GetCameraBoom()->bEnableCameraLag;
-                	GetCameraBoom()->bEnableCameraLag = false; 
-                    
-                	if (PC->PlayerCameraManager)
+                	if (FSlateApplication::IsInitialized())
                 	{
-                		PC->PlayerCameraManager->UpdateCamera(0.0f);
+                		FSlateApplication::Get().SetAllUserFocusToGameViewport();
                 	}
 
-                	GetCameraBoom()->bEnableCameraLag = bWasLagEnabled;
+                	PC->SetShowMouseCursor(false);
+                	FInputModeGameOnly InputMode;
+                	InputMode.SetConsumeCaptureMouseDown(false); 
+                	PC->SetInputMode(InputMode);
+
+                	if (GetCameraBoom())
+                	{
+                		bool bOldLag = GetCameraBoom()->bEnableCameraLag;
+                		GetCameraBoom()->bEnableCameraLag = false;
+                    
+                		if (PC->PlayerCameraManager)
+                		{
+                			PC->PlayerCameraManager->UpdateCamera(0.0f);
+                		}
+                	}
                 }
             }
         }
