@@ -164,7 +164,7 @@ void ANetworkTestActor::TestWS_Close()
 {
     if (UWebSocketSubsystem* WS = GetWSSubsystem())
     {
-        WS->Close();
+        //WS->Close();
     }
 }
 
