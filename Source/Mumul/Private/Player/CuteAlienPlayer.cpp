@@ -668,6 +668,8 @@ void ACuteAlienPlayer::SetIsMeetingSitting(bool bIsSitting, AActor* FocusTarget)
 
                 	PC->SetControlRotation(LookAtRot);
                 	PC->OnToggleMouse();
+                	PC->OnToggleMouse();
+                	PC->OnToggleMouse();
 
                 	if (GetCameraBoom())
                 	{
@@ -748,8 +750,6 @@ void ACuteAlienPlayer::UpdateNameTagVisibility()
 void ACuteAlienPlayer::Multicast_SitAtLocation_Implementation(FVector TargetLoc, FRotator TargetRot,
                                                               ACampFireActor* TargetFire)
 {
-	// 1. [텔레포트] 물리 가속도 무시하고 즉시 이동
-
 	bUseControllerRotationYaw = false;
 	
 	if (GetCharacterMovement())
@@ -758,14 +758,9 @@ void ACuteAlienPlayer::Multicast_SitAtLocation_Implementation(FVector TargetLoc,
 		GetCharacterMovement()->DisableMovement();
 	}
     
-	// TeleportPhysics: 슥 미끄러지는 현상 방지
 	SetActorLocationAndRotation(TargetLoc, TargetRot, false, nullptr, ETeleportType::TeleportPhysics);
-
-	// 2. 애니메이션 및 상태 변경 (기존 함수 활용)
-	// (TargetFire는 카메라 부착용으로 넘겨줌)
 	SetIsMeetingSitting(true, TargetFire);
 
-	SetActorRotation(TargetRot);
 
 	if (IsLocallyControlled())
 	{

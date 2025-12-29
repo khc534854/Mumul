@@ -824,9 +824,8 @@ void ACuteAlienController::Server_TrySitAtCampfire_Implementation()
 			FVector FireLoc = TargetFire->GetActorLocation();
             
 			// 모닥불 바라보는 회전 (Z축 무시)
-			FVector Dir = FireLoc - TargetLoc;
-			Dir.Z = 0.f;
-			FRotator TargetRot = FRotationMatrix::MakeFromX(Dir).Rotator();
+			FVector DirToFire = (FireLoc - TargetLoc).GetSafeNormal2D();
+			FRotator TargetRot = DirToFire.Rotation();
 
 			// [최적화] 서버 -> 바로 멀티캐스트 호출 (TargetFire 포함)
 			// 이제 클라이언트를 거치지 않고 즉시 모든 화면에서 적용됩니다.
