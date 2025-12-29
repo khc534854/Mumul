@@ -18,10 +18,7 @@ protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UTextBlock> DispatchText;
 	FString MakePreviewText(const FString& OriginalText, int32 MaxLength);
-	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UTextBlock> TimeStampText;
 	
 public:
 	void SetDispatchText(const FString& Text);
-	void SetTimeStampText(const FDateTime& Text);
 };

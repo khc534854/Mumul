@@ -4,7 +4,6 @@
 #include "UI/NoticeUI/NoticeUI.h"
 
 #include "Animation/WidgetAnimation.h"
-#include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/ScrollBox.h"
 #include "Components/SizeBox.h"
@@ -12,8 +11,6 @@
 #include "Components/WidgetSwitcher.h"
 #include "Data/AudioManager.h"
 #include "Data/ObjectAndClassFinder.h"
-#include "Player/CuteAlienController.h"
-#include "UI/PlayerUI.h"
 #include "UI/NoticeUI/DispatchPopUI.h"
 #include "UI/NoticeUI/NoticeContentUI.h"
 
@@ -173,6 +170,7 @@ void UNoticeUI::AddNotice(const FDispatchPayloadBase& Data)
 	{
 		NoticeContentUI = CreateWidget<UNoticeContentUI>(GetOwningPlayer(), NoticeContentUIClass);
 		NoticeContentUI->InitUI(Data);
+		NoticeContentUI->SetTimeStampText(Data.CreatedAt);
 		UnConfirmedVBox->InsertChildAt(0, NoticeContentUI);
 	}
 }
@@ -184,6 +182,7 @@ void UNoticeUI::AddDM(const FDispatchPayloadBase& Data)
 	{
 		NoticeContentUI = CreateWidget<UNoticeContentUI>(GetOwningPlayer(), NoticeContentUIClass);
 		NoticeContentUI->InitUI(Data);
+		NoticeContentUI->SetTimeStampText(Data.CreatedAt);
 		DMUnConfirmedVBox->InsertChildAt(0, NoticeContentUI);
 	}
 }
@@ -207,7 +206,6 @@ void UNoticeUI::DisplayDispatchPopUp(const FDispatchPayloadBase& DispatchPayload
 			Content = FString::Printf(TEXT("[%s] \n%s"), *DispatchPayload.Title, *DispatchPayload.Text);
 		}
 		DispatchPopUI->SetDispatchText(Content);
-		DispatchPopUI->SetTimeStampText(DispatchPayload.CreatedAt);
 		DispatchBox->AddChild(DispatchPopUI);
 	}
 }

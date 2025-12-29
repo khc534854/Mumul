@@ -40,6 +40,7 @@ void UPlayerNoticeComponent::BeginPlay()
 			{
 				NoticeUI->AddToViewport();
 				NoticeUI->SetVisibility(ESlateVisibility::Visible);
+				NoticeUI->SortNotices(NoticeUI->ConfirmedVBox, NoticeUI->UnConfirmedVBox);
 			}
 		}
 		HttpSystem = owner->GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>();

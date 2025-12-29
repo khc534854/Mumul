@@ -40,9 +40,13 @@ protected:
 	
 	bool bIsNotice = true;
 	
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UTextBlock> TimeStampText;
+	
 public:
 	void InitUI(const FDispatchPayloadBase& Data);
 	FDateTime GetCreatedAt() const { return CreatedAt; }
 	bool IsConfirmed() const { return bIsConfirmed; }
 	void UpdateConfirmButtonUI();
+	void SetTimeStampText(const FDateTime& Text);
 };
