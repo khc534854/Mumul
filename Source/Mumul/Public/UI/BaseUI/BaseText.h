@@ -17,7 +17,7 @@ class MUMUL_API UBaseText : public UUserWidget
 public:
 	virtual void NativePreConstruct() override;
 	
-	UPROPERTY(meta=(BindWidget))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta=(BindWidget))
 	TObjectPtr<class UTextBlock> BaseText;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Content")

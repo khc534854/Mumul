@@ -53,6 +53,9 @@ protected:
 	UPROPERTY()
 	TMap<FName, TObjectPtr<UCustomItemEntryUI>> ItemWidgetMap;
 
+	UPROPERTY()
+	TObjectPtr<class UAudioManager> AudioManager;
+
 	// Housing
 protected:
 	UFUNCTION()

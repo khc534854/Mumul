@@ -209,6 +209,7 @@ void ACuteAlienPlayer::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	UpdateVoiceIconState();
+	UpdateNameTagVisibility();
 }
 
 // Called to bind functionality to input
@@ -373,7 +374,7 @@ void ACuteAlienPlayer::UpdateNameTag()
 		return;
 	}
 
-	// 1. 텍스트 업데이트 (기존 로직)
+	// 1. 텍스트 내용만 업데이트 (가시성 로직 삭제)
 	UUserWidget* WidgetObj = WidgetComponent->GetUserWidgetObject();
 	if (WidgetObj)
 	{
@@ -381,28 +382,6 @@ void ACuteAlienPlayer::UpdateNameTag()
 		{
 			FString DisplayName = PS->PS_RealName;
 			TextBlock->SetText(FText::FromString(DisplayName));
-		}
-	}
-
-	if (IsLocallyControlled())
-	{
-		WidgetComponent->SetVisibility(false);
-		return; 
-	}
-
-	if (APlayerController* LocalPC = GetWorld()->GetFirstPlayerController())
-	{
-		if (ACuteAlienController* AlienPC = Cast<ACuteAlienController>(LocalPC))
-		{
-			// "내 화면에서 인트로가 이미 끝났다면, 이 캐릭터의 이름표를 보여줘라"
-			// (방장 입장에서는 bIsIntroFinished가 true이므로 나중에 들어온 사람 이름표가 바로 켜짐)
-			if (AlienPC->bIsIntroFinished)
-			{
-				if (WidgetComponent->GetVisibleFlag() == false)
-				{
-					WidgetComponent->SetVisibility(true);
-				}
-			}
 		}
 	}
 }
@@ -699,8 +678,49 @@ void ACuteAlienPlayer::SetIsMeetingSitting(bool bIsSitting, AActor* FocusTarget)
     }
 }
 
+void ACuteAlienPlayer::UpdateNameTagVisibility()
+{
+	if (!WidgetComponent) return;
+
+	// 1. 내 캐릭터(로컬)인 경우 무조건 숨김
+	if (IsLocallyControlled())
+	{
+		if (WidgetComponent->IsVisible()) WidgetComponent->SetVisibility(false);
+		return;
+	}
+
+	// 2. 관전자(내 화면의 플레이어) 찾기
+	APlayerController* LocalPC = GetWorld()->GetFirstPlayerController();
+	if (!LocalPC) return;
+
+	APawn* LocalPawn = LocalPC->GetPawn();
+	if (!LocalPawn) return;
+
+	// 3. 인트로 확인 (방장이면 인트로가 끝났어야 보임)
+	if (ACuteAlienController* AlienPC = Cast<ACuteAlienController>(LocalPC))
+	{
+		if (!AlienPC->bIsIntroFinished)
+		{
+			if (WidgetComponent->IsVisible()) WidgetComponent->SetVisibility(false);
+			return;
+		}
+	}
+
+	// 4. 거리 계산 (제곱 거리 사용으로 최적화 - Sqrt 연산 생략)
+	float DistSq = FVector::DistSquared(GetActorLocation(), LocalPawn->GetActorLocation());
+	float VisibleDistSq = NameTagVisibleDistance * NameTagVisibleDistance;
+
+	// 5. 조건에 따라 켜고 끄기
+	bool bShouldBeVisible = (DistSq <= VisibleDistSq);
+
+	if (WidgetComponent->IsVisible() != bShouldBeVisible)
+	{
+		WidgetComponent->SetVisibility(bShouldBeVisible);
+	}
+}
+
 void ACuteAlienPlayer::Multicast_SitAtLocation_Implementation(FVector TargetLoc, FRotator TargetRot,
-	ACampFireActor* TargetFire)
+                                                              ACampFireActor* TargetFire)
 {
 	// 1. [텔레포트] 물리 가속도 무시하고 즉시 이동
 	if (GetCharacterMovement())

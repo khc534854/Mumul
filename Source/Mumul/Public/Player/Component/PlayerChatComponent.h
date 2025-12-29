@@ -7,6 +7,8 @@
 #include "PlayerChatComponent.generated.h"
 
 
+struct FTeamUser;
+
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class MUMUL_API UPlayerChatComponent : public UActorComponent
 {
@@ -54,6 +56,9 @@ public:
 							 const int32& UserID, const FString& Name, const FString& Text, const int32& TendencyID);
 	UFUNCTION(Client, Reliable)
 	void Client_SendChat(const FString& TeamID, const FString& CurrentTime, const int32& UserID, const FString& Name, const FString& Text, const int32& TendencyID);
+
+	UFUNCTION(Client, Reliable)
+	void Client_UpdateMeetingStatus(const FString& TeamID, bool bMeetingActive);
 	
 	UPROPERTY()
 	TObjectPtr<class ACuteAlienController> owner;

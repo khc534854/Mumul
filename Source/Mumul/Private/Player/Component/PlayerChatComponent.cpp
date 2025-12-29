@@ -113,6 +113,14 @@ void UPlayerChatComponent::OnServerCreateTeamChatResponse(bool bSuccess, FString
 	}
 }
 
+void UPlayerChatComponent::Client_UpdateMeetingStatus_Implementation(const FString& TeamID, bool bMeetingActive)
+{
+	if (GroupChatUI)
+	{
+		GroupChatUI->OnUpdateMeetingStatus(TeamID, bMeetingActive);
+	}
+}
+
 void UPlayerChatComponent::Server_AddTeamChatList_Implementation(const FString& TeamID)
 {
 	if (AMumulGameState* GS = Cast<AMumulGameState>(GetWorld()->GetGameState()))
@@ -222,7 +230,6 @@ void UPlayerChatComponent::Client_SendChat_Implementation(const FString& TeamID,
 {
 	if (GroupChatUI)
 	{
-		// [수정] 조건부 처리 함수 호출 (알림 기능 O)
 		GroupChatUI->OnReceiveRealtimeChat(TeamID, CurrentTime, UserID, Name, Text, TendencyID);
 	}
 }

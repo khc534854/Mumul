@@ -228,6 +228,7 @@ public:
 	void OnReceiveRealtimeChat(const FString& TeamID, const FString& CurrentTime, int32 UserID, const FString& UserName, const FString& Message, int32 TendencyID);
 	
 	UGroupIconUI* FindGroupIconByTeamID(const FString& TeamID);
+	void OnUpdateMeetingStatus(const FString& TeamID, bool bIsActive);
 protected:
 	UPROPERTY()
 	UPlayerUI* LinkedPlayerUI;

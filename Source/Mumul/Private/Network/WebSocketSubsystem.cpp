@@ -101,6 +101,7 @@ void UWebSocketSubsystem::Connect()
 
 void UWebSocketSubsystem::Close()
 {
+    UE_LOG(LogTemp, Error, TEXT("[WS] Connection Close"));
     bShouldBeConnected = false;
     
     StopReconnectTimer();

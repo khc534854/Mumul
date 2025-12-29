@@ -141,6 +141,9 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_SitAtLocation(FVector TargetLoc, FRotator TargetRot, ACampFireActor* TargetFire);
 
+	void UpdateNameTagVisibility();
+
+	float NameTagVisibleDistance = 1500.0f;
 private:
 	UPROPERTY()
 	USceneComponent* OriginalCameraParent = nullptr;

@@ -393,7 +393,7 @@ void UGroupChatUI::SelectGroupChat(class UGroupIconUI* SelectedIcon)
             // 아이콘 UI 상태를 일반 모드로 복구 (무물이는 숨기고 나눔이/초대 버튼 표시)
             // (아래에서 새 방 진입 시 다시 세팅하므로 여기선 생략 가능하지만 안전하게 처리)
             MumuLeeSizeBox->SetVisibility(ESlateVisibility::Collapsed);
-            InviteBtn->SetVisibility(ESlateVisibility::Visible);
+            //InviteBtn->SetVisibility(ESlateVisibility::Visible);
             NaNumiSizeBox->SetVisibility(ESlateVisibility::Visible);
         }
         
@@ -498,7 +498,7 @@ void UGroupChatUI::SelectGroupChat(class UGroupIconUI* SelectedIcon)
             if (ChatbotIcon) ChatbotIcon->SetIconIMG(MumuLeeOffIMG);
             MumuLeeSizeBox->SetVisibility(ESlateVisibility::Collapsed);
 
-            InviteBtn->SetVisibility(ESlateVisibility::Visible);
+            //InviteBtn->SetVisibility(ESlateVisibility::Visible);
             NaNumiSizeBox->SetVisibility(ESlateVisibility::Visible);
 
             // 방을 옮겼으므로 AI 도우미(나눔이)는 꺼진 상태로 시작
@@ -1524,6 +1524,27 @@ UGroupIconUI* UGroupChatUI::FindGroupIconByTeamID(const FString& TeamID)
 		}
 	}
 	return nullptr;
+}
+
+void UGroupChatUI::OnUpdateMeetingStatus(const FString& TeamID, bool bIsActive)
+{
+	UGroupIconUI* TargetIcon = FindGroupIconByTeamID(TeamID);
+    
+	if (TargetIcon)
+	{
+		TargetIcon->SetMeetingStatus(bIsActive);
+	}
+
+	if (bIsActive)
+	{
+		bool bIsCurrentRoom = (CurrentSelectedGroup && 
+							   CurrentSelectedGroup->ChatBlockUI && 
+							   CurrentSelectedGroup->ChatBlockUI->GetTeamID() == TeamID);
+                               
+		if (!bIsCurrentRoom && LinkedPlayerUI)
+		{
+		}
+	}
 }
 
 void UGroupChatUI::UpdateDot()

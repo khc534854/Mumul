@@ -100,6 +100,14 @@ void UGroupIconUI::SetNewMessageNotice(bool bVisible)
 	}
 }
 
+void UGroupIconUI::SetMeetingStatus(bool bIsActive)
+{
+	if (MeetingActiveNotice)
+	{
+		MeetingActiveNotice->SetVisibility(bIsActive ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	}
+}
+
 void UGroupIconUI::SetIconIMG(UTexture2D* IMG)
 {
 	FSlateBrush NormalBrush;

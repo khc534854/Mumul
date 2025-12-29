@@ -11,6 +11,7 @@
 #include "Components/Image.h"
 #include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
+#include "Data/AudioManager.h"
 #include "Data/FCustomItemData.h"
 #include "Data/FHousingItemData.h"
 #include "Engine/TextureRenderTarget2D.h"
@@ -65,6 +66,7 @@ void UPlayerUI::NativeConstruct()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("RadialUI Can't Find PlayerController"))
 	}
+	AudioManager = GetGameInstance()->GetSubsystem<UAudioManager>();
 
 	GetWorld()->GetTimerManager().SetTimer(
 		MinimapBindTimer, 
@@ -648,6 +650,7 @@ void UPlayerUI::CloseCustomUI()
 	bIsOpenCustomizeUI = false;
 	PlayAnimation(CustomizeBoxAnim, 0, 1, EUMGSequencePlayMode::Reverse);
 	SetButtonActiveState(PlayerCustomizeBtn, false);
+	AudioManager->PlayPopDownSound();
 }
 
 void UPlayerUI::CloseHousingUI()
@@ -662,6 +665,7 @@ void UPlayerUI::CloseHousingUI()
 		PC->HousingComp->StopPreviewHousingItem();
 	}
 	SetButtonActiveState(HousingBtn, false);
+	AudioManager->PlayPopDownSound();
 }
 
 void UPlayerUI::CloseChatUI()
@@ -677,6 +681,7 @@ void UPlayerUI::CloseChatUI()
 			GroupChatUI->ToggleCreateGroupChatUI();
 		}
 	}
+	AudioManager->PlayPopDownSound();
 }
 
 void UPlayerUI::CloseNoticeUI()
@@ -693,6 +698,7 @@ void UPlayerUI::CloseNoticeUI()
 		}
 	}
 	SetButtonActiveState(NoticeBtn, false);
+	AudioManager->PlayPopDownSound();
 }
 
 void UPlayerUI::CloseAllSidePanels()

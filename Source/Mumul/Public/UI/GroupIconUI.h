@@ -22,6 +22,9 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	class UImage* NewMessageNotice;
+
+	UPROPERTY(meta = (BindWidget))
+	class UImage* MeetingActiveNotice;
 	
 	UPROPERTY()
 	TObjectPtr<class UHttpNetworkSubsystem> HttpSystem;
@@ -37,6 +40,8 @@ public:
 	void SetHighlight(bool bIsFocus);
 
 	void SetNewMessageNotice(bool bVisible);
+
+	void SetMeetingStatus(bool bIsActive);
 protected:
 	UPROPERTY(meta=(BindWidget))               
 	TObjectPtr<class UBorder> BackgroundBorder;

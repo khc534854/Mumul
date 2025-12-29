@@ -220,6 +220,12 @@ void UPlayerMeetingManagerComponent::Client_StopChannelRecording_Implementation(
 				VoiceComp->OnRecordingStopped.RemoveDynamic(this, &UPlayerMeetingManagerComponent::OnHostRecordingStopped);
 				VoiceComp->OnRecordingStopped.AddDynamic(this, &UPlayerMeetingManagerComponent::OnHostRecordingStopped);
 
+				AMumulPlayerState* PS = owner->GetPlayerState<AMumulPlayerState>();
+				if (PS)
+				{
+					Server_UpdateMeetingStatus(PS->VoiceChannelID, false);
+				}
+				
 				UE_LOG(LogTemp, Warning, TEXT("[Host] Binded OnHostRecordingStopped delegate."));
 			}
 			owner->ChatComp->GroupChatUI->OnRecordBtnState(false);
@@ -349,6 +355,32 @@ void UPlayerMeetingManagerComponent::OnHostRecordingStopped()
 			}
 		}
 	}, UploadWaitTime, false);
+}
+
+void UPlayerMeetingManagerComponent::Server_UpdateMeetingStatus_Implementation(const FString& TeamID, bool bMeetingActive)
+{
+	if (UWorld* World = GetWorld())
+	{
+		if (AGameStateBase* GameState = World->GetGameState())
+		{
+			for (APlayerState* PS : GameState->PlayerArray)
+			{
+				AMumulPlayerState* MumulPS = Cast<AMumulPlayerState>(PS);
+                
+				if (MumulPS && MumulPS->VoiceChannelID == TeamID)
+				{
+					if (ACuteAlienController* TargetPC = Cast<ACuteAlienController>(PS->GetOwner()))
+					{
+						if (TargetPC->ChatComp)
+						{
+							// [전송] 각 클라이언트의 ChatComp에게 알림
+							TargetPC->ChatComp->Client_UpdateMeetingStatus(TeamID, bMeetingActive);
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 void UPlayerMeetingManagerComponent::OpenMeetingSetupUI()
@@ -564,6 +596,8 @@ void UPlayerMeetingManagerComponent::OnStartMeetingResponse(bool bSuccess, FStri
 		{
 			Server_RegisterMeetingState(PS->VoiceChannelID, MeetingID);
 			Server_BroadcastJoinMeeting(PS->VoiceChannelID, MeetingID);
+
+			Server_UpdateMeetingStatus(PS->VoiceChannelID, true);
 		}
 	}
 	else

@@ -46,6 +46,9 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Server_BroadcastJoinMeeting(const FString& TargetChannelID, const FString& MeetingID);
 
+	UFUNCTION(Server, Reliable)
+	void Server_UpdateMeetingStatus(const FString& TeamID, bool bMeetingActive);
+
 	UFUNCTION(Client, Reliable)
 	void Client_RequestJoinMeeting(const FString& MeetingID);
 	
