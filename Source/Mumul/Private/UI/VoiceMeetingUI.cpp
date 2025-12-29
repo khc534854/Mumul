@@ -4,6 +4,7 @@
 #include "Components/EditableTextBox.h"
 #include "Components/MultiLineEditableTextBox.h"
 #include "Components/WidgetSwitcher.h"
+#include "Data/AudioManager.h"
 #include "Player/MumulPlayerState.h"
 #include "Player/Component/PlayerMeetingManagerComponent.h"
 #include "UI/BaseUI/BaseButton.h"
@@ -52,7 +53,7 @@ void UVoiceMeetingUI::SetMeetingState(bool bIsActive)
     }
 }
 
-// [시작 요청]
+// [시작 요청]z
 void UVoiceMeetingUI::OnClickStartMeeting()
 {
     ACuteAlienController* PC = GetMyController();
@@ -84,6 +85,7 @@ void UVoiceMeetingUI::OnClickConfirmEnd()
     }
     SetVisibility(ESlateVisibility::SelfHitTestInvisible);
     PlayAnimation(EndMeeting_SlideAnim, 0, 1, EUMGSequencePlayMode::Reverse);
+    GetMyController()->AudioManager->PlayPopDownSound();
 }
 
 // [종료 확인 - 아니오]
@@ -91,6 +93,7 @@ void UVoiceMeetingUI::OnClickReturnMeeting()
 {
     SetVisibility(ESlateVisibility::SelfHitTestInvisible);
     PlayAnimation(EndMeeting_SlideAnim, 0, 1, EUMGSequencePlayMode::Reverse);
+    GetMyController()->AudioManager->PlayPopDownSound();
     
     if (ACuteAlienController* PC = GetMyController())
     {
@@ -108,6 +111,7 @@ void UVoiceMeetingUI::OnClickMeetingCancel()
 {
     SetVisibility(ESlateVisibility::SelfHitTestInvisible);
     PlayAnimation(StartMeeting_SlideAnim, 0, 1, EUMGSequencePlayMode::Reverse);
+    GetMyController()->AudioManager->PlayPopDownSound();
     
     if (ACuteAlienController* PC = GetMyController())
     {

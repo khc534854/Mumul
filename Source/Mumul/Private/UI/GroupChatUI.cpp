@@ -26,6 +26,7 @@
 #include "Base/MumulGameInstance.h" // 필수
 #include "Components/Image.h"
 #include "Components/VerticalBoxSlot.h"
+#include "Data/AudioManager.h"
 #include "Library/MathLibrary.h"
 #include "Data/IMGManager.h"
 #include "Kismet/GameplayStatics.h"
@@ -45,6 +46,7 @@ void UGroupChatUI::NativeConstruct()
 		RootWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	}
 
+	AudioManager = GetGameInstance()->GetSubsystem<UAudioManager>();
 	IMGManager = NewObject<UIMGManager>(this, UIMGManager::StaticClass());
 
 	ChatEnter->OnPressed.AddDynamic(this, &UGroupChatUI::OnTextBoxCommitted);
@@ -1245,11 +1247,13 @@ void UGroupChatUI::ToggleCreateGroupChatUI()
 	{
 		bCreateGroupVisible = false;
 		PlayAnimation(CreateGroupUI_Slide, 0, 1, EUMGSequencePlayMode::Reverse);
+		AudioManager->PlayPopDownSound();
 	}
 	else
 	{
 		bCreateGroupVisible = true;
 		PlayAnimation(CreateGroupUI_Slide);
+		AudioManager->PlayPopUpSound();
 	}
 }
 
@@ -1274,7 +1278,7 @@ void UGroupChatUI::ToggleGroupChatAlignment()
 	// Change Toggle State
 	bIsToggled = !bIsToggled;
 
-	if (bIsToggled && LinkedPlayerUI)
+	if (bIsToggled)
 	{
 		LinkedPlayerUI->CloseSidePanels();
 	}

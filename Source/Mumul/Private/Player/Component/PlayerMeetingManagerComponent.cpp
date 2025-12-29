@@ -3,11 +3,14 @@
 
 #include "Player/Component/PlayerMeetingManagerComponent.h"
 
+#include "AssetTypeActions/AssetDefinition_SoundBase.h"
 #include "Base/MumulGameInstance.h"
 #include "Base/MumulGameState.h"
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
+#include "Data/AudioManager.h"
 #include "GameFramework/GameStateBase.h"
+#include "Kismet/GameplayStatics.h"
 #include "Net/VoiceConfig.h"
 #include "Network/HttpNetworkSubsystem.h"
 #include "Player/CuteAlienController.h"
@@ -363,6 +366,7 @@ void UPlayerMeetingManagerComponent::OpenMeetingSetupUI()
 		VoiceMeetingUI->TeamNameText->BaseText->SetText(FText::FromString(owner->ChatComp->GroupChatUI->GetCurrentTeamName()));
 		VoiceMeetingUI->SetVisibility(ESlateVisibility::Visible);
 		VoiceMeetingUI->PlayAnimation(VoiceMeetingUI->StartMeeting_SlideAnim);
+		owner->AudioManager->PlayPopUpSound();
 	}
 }
 
@@ -383,7 +387,8 @@ void UPlayerMeetingManagerComponent::OpenEndMeetingPopup()
 		}
 
 		VoiceMeetingUI->SetVisibility(ESlateVisibility::Visible);
-		VoiceMeetingUI->PlayAnimation(VoiceMeetingUI->EndMeeting_SlideAnim, 0, 1, EUMGSequencePlayMode::Reverse);
+		VoiceMeetingUI->PlayAnimation(VoiceMeetingUI->EndMeeting_SlideAnim);
+		owner->AudioManager->PlayPopUpSound();
 	}
 }
 

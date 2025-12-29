@@ -56,7 +56,15 @@ void UNoticeContentUI::InitUI(const FDispatchPayloadBase& Data)
 		CreatedAt = Data.CreatedAt;
 		bIsConfirmed = Data.IsConfirmed;
 
-		FString Content = FString::Printf(TEXT("[%s] \n%s"), *Data.Title, *Data.Text);
+		FString Content;
+		if (Data.Title.IsEmpty())
+		{
+			Content = FString::Printf(TEXT("[개인메시지] \n%s"), *Data.Text);
+		}
+		else
+		{
+			Content = FString::Printf(TEXT("[%s] \n%s"), *Data.Title, *Data.Text);
+		}
 
 		NoticeContentText->SetText(FText::FromString(Content));
 		UpdateConfirmButtonUI();

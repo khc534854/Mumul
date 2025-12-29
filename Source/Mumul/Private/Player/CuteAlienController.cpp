@@ -145,10 +145,6 @@ void ACuteAlienController::BeginPlay()
 		return;
 
 	AudioManager = GetGameInstance()->GetSubsystem<UAudioManager>();
-	if (AudioManager)
-	{
-		AudioManager->PlayIslandBGM();
-	}
 	
 	IMGManager = NewObject<UIMGManager>(this, UIMGManager::StaticClass());
 
@@ -559,12 +555,14 @@ void ACuteAlienController::OpenLogoutUI(int32 StartWidgetIndex)
 		{
 			LogoutUI->WidgetSwitcher->SetActiveWidgetIndex(StartWidgetIndex);
 			LogoutUI->PlayAnimation(LogoutUI->LogOut_SlideAnim);
+			AudioManager->PlayPopUpSound();
            
 			// 도움말(1)인 경우 초기화 로직이 있다면 호출
 			if (StartWidgetIndex == 1) 
 			{
 				LogoutUI->OpenHelpPopup();
 				LogoutUI->PlayAnimation(LogoutUI->Help_SlideAnim);
+				AudioManager->PlayPopUpSound();
 			}
 		}
 
@@ -779,6 +777,11 @@ void ACuteAlienController::OnIntroSequenceFinished()
 	if (PlayerCameraManager)
 	{
 		PlayerCameraManager->StopCameraFade();
+	}
+	
+	if (AudioManager && IsLocalController())
+	{
+		AudioManager->PlayIslandBGM();
 	}
 }
 

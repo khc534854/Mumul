@@ -5,6 +5,7 @@
 
 #include "Base/MumulGameState.h"
 #include "Components/Border.h"
+#include "Data/AudioManager.h"
 #include "Data/ObjectAndClassFinder.h"
 #include "Network/HttpNetworkSubsystem.h"
 #include "Network/WebSocketSubsystem.h"
@@ -133,6 +134,8 @@ void UPlayerNoticeComponent::OnNotice(const FDispatchPayloadBase& Notice)
 {
 	if (NoticeUI)
 	{
+		owner->AudioManager->PlayNoticeSound();
+		EnqueueDispatch(Notice);
 		NoticeUI->AddNotice(Notice);
 		owner->PlayerUI->NewNoticeBorder->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	}
@@ -141,6 +144,39 @@ void UPlayerNoticeComponent::OnNotice(const FDispatchPayloadBase& Notice)
 void UPlayerNoticeComponent::OnDirectMessage(const FDispatchPayloadBase& DM)
 {
 	Server_OnSendDM(DM);
+}
+
+void UPlayerNoticeComponent::EnqueueDispatch(const FDispatchPayloadBase& Dispatch)
+{
+	DispatchQueue.Enqueue(Dispatch);
+	
+	if (bIsDisplaying == false)
+	{
+		DisplayNextDispatch();
+	}
+}
+
+void UPlayerNoticeComponent::DisplayNextDispatch()
+{
+	if (DispatchQueue.IsEmpty())
+	{
+		bIsDisplaying = false;
+		NoticeUI->HideDispatchPopUp();
+		return;
+	}
+		
+	bIsDisplaying = true;
+	FDispatchPayloadBase Dispatch;
+	DispatchQueue.Dequeue(Dispatch);
+	NoticeUI->DisplayDispatchPopUp(Dispatch);
+	
+	GetWorld()->GetTimerManager().SetTimer(
+		DispatchDisplayTimer,
+		this,
+		&UPlayerNoticeComponent::DisplayNextDispatch,
+		DisplayTime,
+		false
+	);
 }
 
 void UPlayerNoticeComponent::Server_OnSendDM_Implementation(const FDispatchPayloadBase& DM)
@@ -159,6 +195,8 @@ void UPlayerNoticeComponent::Client_OnSendDM_Implementation(const FDispatchPaylo
 {
 	if (NoticeUI)
 	{
+		owner->AudioManager->PlayNoticeSound();
+		EnqueueDispatch(DM);
 		NoticeUI->AddDM(DM);
 		owner->PlayerUI->NewNoticeBorder->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	}

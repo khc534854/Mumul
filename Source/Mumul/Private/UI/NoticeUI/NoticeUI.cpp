@@ -7,11 +7,14 @@
 #include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/ScrollBox.h"
+#include "Components/SizeBox.h"
 #include "Components/VerticalBox.h"
 #include "Components/WidgetSwitcher.h"
+#include "Data/AudioManager.h"
 #include "Data/ObjectAndClassFinder.h"
 #include "Player/CuteAlienController.h"
 #include "UI/PlayerUI.h"
+#include "UI/NoticeUI/DispatchPopUI.h"
 #include "UI/NoticeUI/NoticeContentUI.h"
 
 void UNoticeUI::NativeConstruct()
@@ -23,6 +26,8 @@ void UNoticeUI::NativeConstruct()
 	DirectMessageTap->OnClicked.AddDynamic(this, &UNoticeUI::OnSwitchToDM);
 
 	ChangeNoticeState(ENoticeState::Notice);
+	
+	AudioManager = GetGameInstance()->GetSubsystem<UAudioManager>();
 }
 
 void UNoticeUI::NativeOnInitialized()
@@ -89,6 +94,7 @@ void UNoticeUI::OnToggleNoticeVisibility()
 	{
 		bIsNoticeVisible = false;
 		PlayAnimation(NoticeUI_SildeUpAnim, 0, 1, EUMGSequencePlayMode::Reverse);
+		AudioManager->PlayPopDownSound();
 	}
 	else
 	{
@@ -105,6 +111,7 @@ void UNoticeUI::OnToggleNoticeVisibility()
 		}
 		bIsNoticeVisible = true;
 		PlayAnimation(NoticeUI_SildeUpAnim);
+		AudioManager->PlayPopUpSound();
 		
 		if (UnConfirmedVBox->GetChildrenCount() == 0)
 		{
@@ -166,10 +173,10 @@ void UNoticeUI::SortNotices(UVerticalBox* ConfirmedBox, UVerticalBox* UnConfirme
 
 void UNoticeUI::AddNotice(const FDispatchPayloadBase& Data)
 {
-	if (TSubclassOf<UNoticeContentUI> UNoticeContentUIClass = UObjectAndClassFinder::Get()->GetWidgetClass<
+	if (TSubclassOf<UNoticeContentUI> NoticeContentUIClass = UObjectAndClassFinder::Get()->GetWidgetClass<
 		UNoticeContentUI>("WBP_NoticeContent"))
 	{
-		NoticeContentUI = CreateWidget<UNoticeContentUI>(this, UNoticeContentUIClass);
+		NoticeContentUI = CreateWidget<UNoticeContentUI>(this, NoticeContentUIClass);
 		NoticeContentUI->InitUI(Data);
 		UnConfirmedVBox->InsertChildAt(0, NoticeContentUI);
 	}
@@ -177,11 +184,39 @@ void UNoticeUI::AddNotice(const FDispatchPayloadBase& Data)
 
 void UNoticeUI::AddDM(const FDispatchPayloadBase& Data)
 {
-	if (TSubclassOf<UNoticeContentUI> UNoticeContentUIClass = UObjectAndClassFinder::Get()->GetWidgetClass<
+	if (TSubclassOf<UNoticeContentUI> NoticeContentUIClass = UObjectAndClassFinder::Get()->GetWidgetClass<
 		UNoticeContentUI>("WBP_NoticeContent"))
 	{
-		NoticeContentUI = CreateWidget<UNoticeContentUI>(this, UNoticeContentUIClass);
+		NoticeContentUI = CreateWidget<UNoticeContentUI>(this, NoticeContentUIClass);
 		NoticeContentUI->InitUI(Data);
 		DMUnConfirmedVBox->InsertChildAt(0, NoticeContentUI);
 	}
+}
+
+void UNoticeUI::DisplayDispatchPopUp(const FDispatchPayloadBase& DispatchPayload)
+{
+	DispatchBox->ClearChildren();
+	PlayAnimation(DispatchBox_SlideAnim);
+	
+	if (TSubclassOf<UDispatchPopUI> DispatchPopUIClass = UObjectAndClassFinder::Get()->GetWidgetClass<
+		UDispatchPopUI>("WBP_DispatchPop"))
+	{
+		DispatchPopUI = CreateWidget<UDispatchPopUI>(this, DispatchPopUIClass);
+		FString Content;
+		if (DispatchPayload.Title.IsEmpty())
+		{
+			Content = FString::Printf(TEXT("[개인메시지] \n%s"), *DispatchPayload.Text);
+		}
+		else
+		{
+			Content = FString::Printf(TEXT("[%s] \n%s"), *DispatchPayload.Title, *DispatchPayload.Text);
+		}
+		DispatchPopUI->SetDispatchText(Content);
+		DispatchBox->AddChild(DispatchPopUI);
+	}
+}
+
+void UNoticeUI::HideDispatchPopUp()
+{
+	PlayAnimation(DispatchBox_SlideAnim, 0, 1, EUMGSequencePlayMode::Reverse);
 }

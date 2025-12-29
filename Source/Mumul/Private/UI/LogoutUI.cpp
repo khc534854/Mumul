@@ -6,6 +6,7 @@
 #include "Base/MumulGameInstance.h"
 #include "Components/Button.h"
 #include "Components/Image.h"
+#include "Data/AudioManager.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Network/HttpNetworkSubsystem.h"
 #include "Network/WebSocketSubsystem.h"
@@ -67,6 +68,7 @@ void ULogoutUI::OnClickedLogoutNoBtn()
 {
 	PlayAnimation(LogOut_SlideAnim, 0, 1, EUMGSequencePlayMode::Reverse);
 	SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	PC->AudioManager->PlayPopDownSound();
 	
 	// 입력 모드 복구 (게임 모드로)
 	if (PC)
@@ -111,6 +113,7 @@ void ULogoutUI::OnClickedNextBtn()
 		// 도움말이 끝나면 창 닫기 (또는 로그아웃 페이지로 돌아가기)
 		PlayAnimation(Help_SlideAnim, 0, 1, EUMGSequencePlayMode::Reverse);
 		SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		PC->AudioManager->PlayPopDownSound();
 	
 		// 입력 모드 복구 (게임 모드로)
 		if (PC)
