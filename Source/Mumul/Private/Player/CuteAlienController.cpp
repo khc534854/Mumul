@@ -792,6 +792,27 @@ void ACuteAlienController::OnIntroSequenceFinished()
 	}
 }
 
+void ACuteAlienController::Client_CheckMeetingJoinCondition_Implementation()
+{
+	if (ChatComp && ChatComp->GroupChatUI)
+	{
+		FString CurrentTeamID = ChatComp->GroupChatUI->GetCurrentTeamID();
+        
+		// 1. 현재 보고 있는 방이 있고
+		if (!CurrentTeamID.IsEmpty())
+		{
+			// 2. 그 방이 회의 중이라면
+			if (ChatComp->IsMeetingActive(CurrentTeamID))
+			{
+				// 3. 앉기 시도 (이미 모닥불 근처임은 확인됨)
+				Server_TrySitAtCampfire();
+                
+				ChatComp->GroupChatUI->AddBotChat(TEXT("회의에 참여합니다."));
+			}
+		}
+	}
+}
+
 void ACuteAlienController::Server_TrySitAtCampfire_Implementation()
 {
 	ACuteAlienPlayer* MyPawn = Cast<ACuteAlienPlayer>(GetPawn());

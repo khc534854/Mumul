@@ -186,4 +186,7 @@ public:
 	// 현재 앉아있는 모닥불 저장용
 	UPROPERTY()
 	TObjectPtr<class ACampFireActor> CurrentMeetingCampFire;
+
+	UFUNCTION(Client, Reliable)
+	void Client_CheckMeetingJoinCondition();
 };

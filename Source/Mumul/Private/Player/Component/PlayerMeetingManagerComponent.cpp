@@ -369,14 +369,20 @@ void UPlayerMeetingManagerComponent::Server_UpdateMeetingStatus_Implementation(c
                 
 				if (MumulPS && MumulPS->VoiceChannelID == TeamID)
 				{
-					if (ACuteAlienController* TargetPC = Cast<ACuteAlienController>(PS->GetOwner()))
+					for (auto dt : MumulPS->PS_PlayerTeamList)
 					{
-						if (TargetPC->ChatComp)
+						if (dt.UniqueTeamID == TeamID)
 						{
-							// [전송] 각 클라이언트의 ChatComp에게 알림
-							TargetPC->ChatComp->Client_UpdateMeetingStatus(TeamID, bMeetingActive);
+							if (ACuteAlienController* TargetPC = Cast<ACuteAlienController>(PS->GetOwner()))
+							{
+								if (TargetPC->ChatComp)
+								{
+									TargetPC->ChatComp->Client_UpdateMeetingStatus(TeamID, bMeetingActive);
+								}
+							}
 						}
 					}
+
 				}
 			}
 		}

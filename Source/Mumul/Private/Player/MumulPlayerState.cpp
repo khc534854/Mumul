@@ -49,6 +49,8 @@ void AMumulPlayerState::Server_SetVoiceChannelID_Implementation(const FString& N
 
 				// 컨트롤러에게 "너도 빨리 참가해!" 명령 (기존 함수 재활용)
 				PC->MeetingComp->Client_RequestJoinMeeting(ActiveMeetingID);
+
+				PC->Server_TrySitAtCampfire();
 			}
 		}
 	}

@@ -30,6 +30,7 @@
 #include "Data/AudioManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Net/VoiceConfig.h"
 #include "Object/CampFireActor.h"
 
@@ -638,7 +639,7 @@ void ACuteAlienPlayer::SetIsMeetingSitting(bool bIsSitting, AActor* FocusTarget)
     		FVector DirToFire = (FireLoc - MyLoc).GetSafeNormal2D();
     		if (!DirToFire.IsZero())
     		{
-    			SetActorRotation(DirToFire.Rotation());
+    			SetActorRotation(DirToFire.Rotation(), ETeleportType::TeleportPhysics);
     		}
     	}
 
@@ -667,7 +668,6 @@ void ACuteAlienPlayer::SetIsMeetingSitting(bool bIsSitting, AActor* FocusTarget)
                 	FRotator LookAtRot = DirToMe.Rotation();
 
                 	PC->SetControlRotation(LookAtRot);
-                	PC->OnToggleMouse();
                 	PC->OnToggleMouse();
                 	PC->OnToggleMouse();
 
@@ -757,8 +757,14 @@ void ACuteAlienPlayer::Multicast_SitAtLocation_Implementation(FVector TargetLoc,
 		GetCharacterMovement()->StopMovementImmediately();
 		GetCharacterMovement()->DisableMovement();
 	}
+
+	FRotator LookAtRot = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), TargetFire->GetActorLocation());
+	FRotator Origin = GetActorRotation();
+
+	LookAtRot.Pitch = Origin.Pitch;
+	LookAtRot.Roll = Origin.Roll;
     
-	SetActorLocationAndRotation(TargetLoc, TargetRot, false, nullptr, ETeleportType::TeleportPhysics);
+	SetActorLocationAndRotation(TargetLoc, LookAtRot, false, nullptr, ETeleportType::TeleportPhysics);
 	SetIsMeetingSitting(true, TargetFire);
 
 

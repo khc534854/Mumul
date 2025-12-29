@@ -64,4 +64,8 @@ public:
 	TObjectPtr<class ACuteAlienController> owner;
 	UPROPERTY()
 	TObjectPtr<class ACuteAlienPlayer> player;
+
+	TSet<FString> ActiveMeetingTeams;
+
+	bool IsMeetingActive(const FString& TeamID) const;
 };

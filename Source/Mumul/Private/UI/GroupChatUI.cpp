@@ -23,6 +23,7 @@
 #include "UI/InvitationUI.h"
 #include "UI/BaseUI/BaseText.h"
 #include "Base/MumulGameInstance.h" // 필수
+#include "Base/MumulGameState.h"
 #include "Components/Image.h"
 #include "Components/VerticalBoxSlot.h"
 #include "Data/AudioManager.h"
@@ -1529,21 +1530,16 @@ UGroupIconUI* UGroupChatUI::FindGroupIconByTeamID(const FString& TeamID)
 void UGroupChatUI::OnUpdateMeetingStatus(const FString& TeamID, bool bIsActive)
 {
 	UGroupIconUI* TargetIcon = FindGroupIconByTeamID(TeamID);
-    
 	if (TargetIcon)
 	{
 		TargetIcon->SetMeetingStatus(bIsActive);
 	}
 
-	if (bIsActive)
+	if (GetCurrentTeamID() == TeamID)
 	{
-		bool bIsCurrentRoom = (CurrentSelectedGroup && 
-							   CurrentSelectedGroup->ChatBlockUI && 
-							   CurrentSelectedGroup->ChatBlockUI->GetTeamID() == TeamID);
-                               
-		if (!bIsCurrentRoom && LinkedPlayerUI)
-		{
-		}
+		bIsMeetingChatbotActive = bIsActive;
+		UpdateQuestionButtonState(); 
+		OnRecordBtnState(bIsActive); 
 	}
 }
 

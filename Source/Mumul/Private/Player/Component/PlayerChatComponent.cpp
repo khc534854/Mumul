@@ -113,8 +113,23 @@ void UPlayerChatComponent::OnServerCreateTeamChatResponse(bool bSuccess, FString
 	}
 }
 
+bool UPlayerChatComponent::IsMeetingActive(const FString& TeamID) const
+{
+	return ActiveMeetingTeams.Contains(TeamID);
+}
+
 void UPlayerChatComponent::Client_UpdateMeetingStatus_Implementation(const FString& TeamID, bool bMeetingActive)
 {
+	if (bMeetingActive)
+	{
+		ActiveMeetingTeams.Add(TeamID);
+	}
+	else
+	{
+		ActiveMeetingTeams.Remove(TeamID);
+	}
+
+	// 2. UI 업데이트
 	if (GroupChatUI)
 	{
 		GroupChatUI->OnUpdateMeetingStatus(TeamID, bMeetingActive);
