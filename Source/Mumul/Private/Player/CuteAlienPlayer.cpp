@@ -627,26 +627,20 @@ void ACuteAlienPlayer::SetIsMeetingSitting(bool bIsSitting, AActor* FocusTarget)
         GetCharacterMovement()->StopMovementImmediately();
         GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 
-        // [신규 1] 캐릭터 회전 및 컨트롤러 시선 강제 고정 (모닥불 바라보기)
-        if (FocusTarget)
-        {
-            FVector FireLoc = FocusTarget->GetActorLocation();
-            FVector MyLoc = GetActorLocation();
-            FVector DirToFire = (FireLoc - MyLoc).GetSafeNormal2D();
-            FRotator LookAtFireRot = DirToFire.Rotation();
+    	bUseControllerRotationYaw = false;
 
-            // (A) 캐릭터 몸 회전
-            SetActorRotation(LookAtFireRot);
-
-            // (B) 컨트롤러 시선 회전 (중요: 이걸 해야 카메라가 홱 돌아가지 않음)
-            if (IsLocallyControlled())
-            {
-                if (AController* PC = GetController())
-                {
-                    PC->SetControlRotation(LookAtFireRot);
-                }
-            }
-        }
+    	if (FocusTarget)
+    	{
+    		FVector FireLoc = FocusTarget->GetActorLocation();
+    		FVector MyLoc = GetActorLocation();
+            
+    		// 높이(Z) 무시하고 평면 방향 계산
+    		FVector DirToFire = (FireLoc - MyLoc).GetSafeNormal2D();
+    		if (!DirToFire.IsZero())
+    		{
+    			SetActorRotation(DirToFire.Rotation());
+    		}
+    	}
 
         Server_SitDown();
 
@@ -667,22 +661,14 @@ void ACuteAlienPlayer::SetIsMeetingSitting(bool bIsSitting, AActor* FocusTarget)
             
             if (IsLocallyControlled())
             {
-                if (APlayerController* PC = Cast<APlayerController>(GetController()))
+                if (ACuteAlienController* PC = Cast<ACuteAlienController>(GetController()))
                 {
                 	FVector DirToMe = (GetActorLocation() - FireCenter).GetSafeNormal();
                 	FRotator LookAtRot = DirToMe.Rotation();
 
                 	PC->SetControlRotation(LookAtRot);
-
-                	if (FSlateApplication::IsInitialized())
-                	{
-                		FSlateApplication::Get().SetAllUserFocusToGameViewport();
-                	}
-
-                	PC->SetShowMouseCursor(false);
-                	FInputModeGameOnly InputMode;
-                	InputMode.SetConsumeCaptureMouseDown(false); 
-                	PC->SetInputMode(InputMode);
+                	PC->OnToggleMouse();
+                	PC->OnToggleMouse();
 
                 	if (GetCameraBoom())
                 	{
