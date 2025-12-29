@@ -60,7 +60,7 @@ void AMumulMumulGameMode::BeginPlay()
 				// SpawnTent 로직을 분리하는 것이 좋습니다.
 
 				// 일단 직접 배치 로직 (SpawnTent 함수 활용)
-				SpawnTent(Data.Transform, Data.OwnerUserIndex, false, Data.HousingItems); // false: 저장하지 마라 (불러오는 중이니까)
+				SpawnTent(Data.Transform, Data.OwnerUserIndex, Data.OwnerName, false, Data.HousingItems); // false: 저장하지 마라 (불러오는 중이니까)
 			}
 		}
 	}
@@ -119,8 +119,8 @@ void AMumulMumulGameMode::SaveUserData(AController* Controller)
 	}
 }
 
-void AMumulMumulGameMode::SpawnTent(const FTransform& SpawnTransform, int32 UserIndex, bool bSaveToDisk,
-	const TArray<FHousingSaveData>& LoadedItems)
+void AMumulMumulGameMode::SpawnTent(const FTransform& SpawnTransform, int32 UserIndex, const FString& OwnerName,
+	bool bSaveToDisk, const TArray<FHousingSaveData>& LoadedItems)
 {
 	bool bTentProcessed = false;
 	ATentActor* TargetTent = nullptr;
@@ -135,6 +135,7 @@ void AMumulMumulGameMode::SpawnTent(const FTransform& SpawnTransform, int32 User
 		{
 			TargetTent = PoolElem.Key;
 			TargetTent->ChangeTransform(SpawnTransform);
+			TargetTent->SetOwnerName(OwnerName);
 			TargetTent->Mulicast_OnScaleAnimation(bPlayInstallSound);
 
 			bTentProcessed = true;
@@ -152,6 +153,7 @@ void AMumulMumulGameMode::SpawnTent(const FTransform& SpawnTransform, int32 User
 			{
 				TargetTent = PoolElem.Key;
 				TargetTent->SetOwnerUserIndex(UserIndex);
+				TargetTent->SetOwnerName(OwnerName);
 				TargetTent->Activate(SpawnTransform);
 				TargetTent->Mulicast_OnScaleAnimation(bPlayInstallSound);
 				PoolElem.Value = UserIndex;
@@ -170,6 +172,7 @@ void AMumulMumulGameMode::SpawnTent(const FTransform& SpawnTransform, int32 User
 		if (TargetTent)
 		{
 			TargetTent->SetOwnerUserIndex(UserIndex);
+			TargetTent->SetOwnerName(OwnerName);
 			TargetTent->Activate(SpawnTransform);
 			TentPool.Add(TargetTent, UserIndex);
             
@@ -216,7 +219,7 @@ void AMumulMumulGameMode::SpawnTent(const FTransform& SpawnTransform, int32 User
 	{
 		if (GS)
 		{
-			GS->Multicast_SaveTentData(UserIndex, SpawnTransform);
+			GS->Multicast_SaveTentData(UserIndex, OwnerName, SpawnTransform);
 			UE_LOG(LogTemp, Log, TEXT("[GameMode] Requesting Multicast Save for User %d..."), UserIndex);
 		}
 	}

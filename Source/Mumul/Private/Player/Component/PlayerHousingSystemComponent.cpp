@@ -546,7 +546,7 @@ void UPlayerHousingSystemComponent::Server_DestroyHousingItem_Implementation(ATe
         if (AMumulGameState* GS = GetWorld()->GetGameState<AMumulGameState>())
         {
             // 변경된 데이터 저장
-            GS->Multicast_SaveTentData(ParentTent->OwnerUserIndex, ParentTent->GetActorTransform());
+            GS->Multicast_SaveTentData(ParentTent->OwnerUserIndex, ParentTent->OwnerName, ParentTent->GetActorTransform());
             UE_LOG(LogTemp, Log, TEXT("[Server] Delete Success. Data Removed. (Actor Destroyed: %s)"), bActorFound ? TEXT("Yes") : TEXT("No"));
         }
     }
@@ -574,7 +574,8 @@ void UPlayerHousingSystemComponent::Server_SpawnTent_Implementation(const FTrans
 		AMumulPlayerState* PS = owner->GetPlayerState<AMumulPlayerState>();
 		if (PS)
 		{
-			GM->SpawnTent(TentTransform, PS->PS_UserIndex, true);
+			UE_LOG(LogTemp, Warning, TEXT("[Server_SpawnTent] UserIndex: %d, Name: %s"), PS->PS_UserIndex, *PS->PS_RealName);
+			GM->SpawnTent(TentTransform, PS->PS_UserIndex, PS->PS_RealName, true);
 		}
 	}
 }

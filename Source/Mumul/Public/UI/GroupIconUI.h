@@ -19,6 +19,10 @@ class MUMUL_API UGroupIconUI : public UUserWidget
 protected:
 	UPROPERTY()
 	TObjectPtr<class UIMGManager> IMGManager;
+
+	UPROPERTY(meta = (BindWidget))
+	class UImage* NewMessageNotice;
+	
 	UPROPERTY()
 	TObjectPtr<class UHttpNetworkSubsystem> HttpSystem;
 	//UFUNCTION()
@@ -31,6 +35,8 @@ public:
 	void InitParentUI(class UGroupChatUI* Parent);
 
 	void SetHighlight(bool bIsFocus);
+
+	void SetNewMessageNotice(bool bVisible);
 protected:
 	UPROPERTY(meta=(BindWidget))               
 	TObjectPtr<class UBorder> BackgroundBorder;

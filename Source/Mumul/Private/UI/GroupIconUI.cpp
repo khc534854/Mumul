@@ -7,6 +7,7 @@
 #include "Network/HttpNetworkSubsystem.h"
 #include "UI/ChatBlockUI.h"
 #include "Components/Button.h"
+#include "Components/Image.h"
 #include "Components/ScrollBox.h"
 #include "Components/SizeBox.h"
 #include "Data/IMGManager.h"
@@ -89,6 +90,14 @@ void UGroupIconUI::SetHighlight(bool bIsFocus)
 	BorderBrush.TintColor = bIsFocus ? FSlateColor(FLinearColor(0.013702,0.015209,0.029557,1.000000)) : FSlateColor(FLinearColor(1, 1, 1, 0.0f));
 	
 	BackgroundBorder->SetBrush(BorderBrush);
+}
+
+void UGroupIconUI::SetNewMessageNotice(bool bVisible)
+{
+	if (NewMessageNotice)
+	{
+		NewMessageNotice->SetVisibility(bVisible ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	}
 }
 
 void UGroupIconUI::SetIconIMG(UTexture2D* IMG)

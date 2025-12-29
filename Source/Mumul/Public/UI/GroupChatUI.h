@@ -38,7 +38,6 @@ protected:
 	UPROPERTY()
 	TObjectPtr<class UHttpNetworkSubsystem> HttpSystem;
 	
-	bool bCreateGroupVisible = false;
 	void ToggleVisibility(UWidget* Widget);
 
 	// [신규] 웹소켓 서브시스템
@@ -50,6 +49,7 @@ protected:
 	TObjectPtr<class UGroupIconUI> CurrentSelectedGroup;
 
 public:
+	bool bCreateGroupVisible = false;
 	// [신규] 그룹 아이콘이 클릭되었을 때 호출되는 함수 (방 전환 메인 로직)
 	void SelectGroupChat(class UGroupIconUI* SelectedIcon);
 
@@ -176,11 +176,12 @@ protected:
 	TObjectPtr<class UTexture2D> RightIMG;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class USizeBox> GroupChatBox;
+	bool bIsToggled = false;
 	UFUNCTION()
 	void ToggleInvitationUI();
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> ToggleVisibilityBtn;
-	bool bIsToggled = false;
+	
 	float AlignmentVal = 0.1968f;
 	float StartVal;
 	float TargetVal;
@@ -194,7 +195,7 @@ public:
 	void InitPlayerUI(class UPlayerUI* InPlayerUI);
 
 	// [신규] 외부에서 채팅창을 강제로 닫게 하는 함수
-	void CloseChatUI();
+	void CloseChatUIPannel();
     
 	// [신규] 현재 채팅창이 열려있는지 확인하는 함수
 	bool IsChatOpen() const { return bIsToggled; }
@@ -221,6 +222,10 @@ public:
 	FString GetCurrentTeamID() const;
 	FString GetCurrentTeamName() const;
 
+	UFUNCTION(BlueprintCallable)
+	void OnReceiveRealtimeChat(const FString& TeamID, const FString& CurrentTime, int32 UserID, const FString& UserName, const FString& Message, int32 TendencyID);
+	
+	UGroupIconUI* FindGroupIconByTeamID(const FString& TeamID);
 protected:
 	UPROPERTY()
 	UPlayerUI* LinkedPlayerUI;

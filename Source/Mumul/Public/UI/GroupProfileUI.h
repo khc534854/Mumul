@@ -18,6 +18,7 @@ class MUMUL_API UGroupProfileUI : public UUserWidget
 protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UImage> ProfileIMG;
+
 	int32 UserIndex;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UTextBlock> PlayerNameText;

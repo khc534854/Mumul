@@ -5,7 +5,6 @@
 
 #include "Animation/WidgetAnimation.h"
 #include "Network/HttpNetworkSubsystem.h"
-#include "Components/Border.h"
 #include "Network/WebSocketSubsystem.h"
 #include "Components/Button.h"
 #include "Components/CanvasPanelSlot.h"
@@ -419,6 +418,11 @@ void UGroupChatUI::SelectGroupChat(class UGroupIconUI* SelectedIcon)
         CurrentSelectedGroup->SetHighlight(true);
     }
 
+	if (SelectedIcon)
+	{
+		SelectedIcon->SetNewMessageNotice(false);
+	}
+
     // =================================================================================
     // 6. [새 방 진입] 방 성격에 따른 로직 분기
     // =================================================================================
@@ -572,12 +576,20 @@ void UGroupChatUI::OnMeetingChatStarted(const FMeetingResponsePayload& Info)
 
 void UGroupChatUI::OnMeetingAnswer(const FMeetingResponsePayload& Answer)
 {
-	// Answer.groupId 확인
-	if (CurrentSelectedGroup && CurrentSelectedGroup->ChatBlockUI)
+	bool bIsCurrentRoom = (CurrentSelectedGroup && 
+							   CurrentSelectedGroup->ChatBlockUI && 
+							   CurrentSelectedGroup->ChatBlockUI->GetTeamID() == Answer.groupId);
+
+	if (bIsCurrentRoom)
 	{
-		if (CurrentSelectedGroup->ChatBlockUI->GetTeamID() == Answer.groupId)
+		AddBotChat(Answer.answer);
+	}
+	else
+	{
+		// 안 보고 있는 방이면 알림 표시
+		if (UGroupIconUI* TargetIcon = FindGroupIconByTeamID(Answer.groupId))
 		{
-			AddBotChat(Answer.answer);
+			TargetIcon->SetNewMessageNotice(true);
 		}
 	}
 }
@@ -811,8 +823,6 @@ void UGroupChatUI::OnServerChatHistoryResponse(bool bSuccess, FString Message)
 							targetTendency = *LoadInst->PlayerTendency.Find(MyID) - 1;
 						}
 					}
-					
-
 					
 					AddChat(CurrentSelectedGroup->ChatBlockUI->GetTeamID(), ParsedTime, MyID, MyName, Msg.content, targetTendency);
 				}
@@ -1168,6 +1178,10 @@ void UGroupChatUI::AddChat(const FString& TeamID, const FString& CurrentTime, co
 			}, 0.01f, false);
 		}
 	}
+	else
+	{
+		
+	}
 }
 
 void UGroupChatUI::OnServerTeamChatListResponse(bool bSuccess, FString Message)
@@ -1236,11 +1250,12 @@ void UGroupChatUI::SetGroupNameTitle(const FString& GroupName)
 
 void UGroupChatUI::ToggleCreateGroupChatUI()
 {
+	LinkedPlayerUI->TryLockUI(0.5f);
+	
+	if (IsAnimationPlaying(CreateGroupUI_Slide)) return;
+
 	CreateGroupChatUI->RefreshJoinedPlayerList();
 
-	if (IsAnimationPlaying(CreateGroupUI_Slide))
-		return;
-	
 	if (bCreateGroupVisible)
 	{
 		bCreateGroupVisible = false;
@@ -1249,7 +1264,30 @@ void UGroupChatUI::ToggleCreateGroupChatUI()
 	else
 	{
 		bCreateGroupVisible = true;
+
+		if (!bIsToggled)
+		{
+			ToggleGroupChatAlignment();
+		}
+
+		if (LinkedPlayerUI)
+		{
+			LinkedPlayerUI->CloseCustomUI();
+			LinkedPlayerUI->CloseHousingUI();
+			LinkedPlayerUI->CloseNoticeUI();
+          
+			// PlayerUI가 채팅창이 열렸음을 알도록 플래그 설정 (friend class가 아니면 함수 필요)
+			// 여기서는 PlayerUI쪽에서 bIsOpenChatUI를 public으로 풀거나 Setter가 있다고 가정
+			// 혹은 ToggleGroupChatAlignment 내부에서 처리됨
+		}
+
 		PlayAnimation(CreateGroupUI_Slide);
+	}
+
+	// [중요] 상태 변경 후 마우스 모드 갱신
+	if (LinkedPlayerUI)
+	{
+		LinkedPlayerUI->RefreshInputMode();
 	}
 }
 
@@ -1271,30 +1309,48 @@ void UGroupChatUI::ToggleInvitationUI()
 
 void UGroupChatUI::ToggleGroupChatAlignment()
 {
-	// Change Toggle State
+	LinkedPlayerUI->TryLockUI(0.5f);
+	
 	bIsToggled = !bIsToggled;
 
-	if (bIsToggled && LinkedPlayerUI)
+	if (LinkedPlayerUI)
 	{
-		LinkedPlayerUI->CloseSidePanels();
+		if (bIsToggled)
+		{
+			LinkedPlayerUI->CloseCustomUI();
+			LinkedPlayerUI->CloseHousingUI();
+			LinkedPlayerUI->CloseNoticeUI();
+          
+			LinkedPlayerUI->bIsOpenChatUI = true; 
+		}
+		else
+		{
+			LinkedPlayerUI->bIsOpenChatUI = false;
+		}
 	}
-	
+
+	if (!bIsToggled && bCreateGroupVisible)
+	{
+		bCreateGroupVisible = false;
+		PlayAnimation(CreateGroupUI_Slide, 0, 1, EUMGSequencePlayMode::Reverse);
+	}
+    
 	// 버튼 이미지 처리
 	FSlateBrush Brush;
 	Brush.ImageSize = FVector2D(30.f, 50.f);
 	Brush.SetResourceObject(bIsToggled ? RightIMG : LeftIMG);
-
-	// FButtonStyle Style;
-	// Style.Normal = Brush;
-	// Style.Hovered = Brush;
-	// Style.Pressed = Brush;
 	ArrowBtnImg->SetBrush(Brush);
 
-	// 애니메이션 시작
+	// 슬라이드 애니메이션 시작
 	StartVal = AlignmentVal;
-	TargetVal = bIsToggled ? 0.76 : 0.f;
+	TargetVal = bIsToggled ? 0.76f : 0.f;
 	Elapsed = 0.f;
 	bAnimating = true;
+
+	if (LinkedPlayerUI)
+	{
+		LinkedPlayerUI->RefreshInputMode();
+	}
 }
 
 void UGroupChatUI::InitPlayerUI(UPlayerUI* InPlayerUI)
@@ -1302,11 +1358,17 @@ void UGroupChatUI::InitPlayerUI(UPlayerUI* InPlayerUI)
 	LinkedPlayerUI = InPlayerUI;
 }
 
-void UGroupChatUI::CloseChatUI()
+void UGroupChatUI::CloseChatUIPannel()
 {
+	if (bCreateGroupVisible)
+	{
+		bCreateGroupVisible = false;
+		PlayAnimation(CreateGroupUI_Slide, 0, 1, EUMGSequencePlayMode::Reverse);
+	}
+
 	if (bIsToggled)
 	{
-		ToggleGroupChatAlignment();
+		ToggleGroupChatAlignment(); 
 	}
 }
 
@@ -1418,6 +1480,46 @@ FString UGroupChatUI::GetCurrentTeamName() const
 		return CurrentSelectedGroup->ChatBlockUI->GetTeamName();
 	}
 	return TEXT("");
+}
+
+void UGroupChatUI::OnReceiveRealtimeChat(const FString& TeamID, const FString& CurrentTime, int32 UserID,
+	const FString& UserName, const FString& Message, int32 TendencyID)
+{
+	bool bIsCurrentRoom = (CurrentSelectedGroup && 
+						   CurrentSelectedGroup->ChatBlockUI && 
+						   CurrentSelectedGroup->ChatBlockUI->GetTeamID() == TeamID);
+
+	if (bIsCurrentRoom)
+	{
+		// [A] 보고 있는 방 -> 채팅창에 바로 추가
+		// (RPC로 넘어온 CurrentTime을 그대로 사용)
+		AddChat(TeamID, CurrentTime, UserID, UserName, Message, TendencyID);
+	}
+	else
+	{
+		// [B] 안 보고 있는 방 -> 해당 아이콘 찾아서 '알림(NewMessageNotice)' 켜기
+		if (UGroupIconUI* TargetIcon = FindGroupIconByTeamID(TeamID))
+		{
+			TargetIcon->SetNewMessageNotice(true);
+		}
+	}
+}
+
+UGroupIconUI* UGroupChatUI::FindGroupIconByTeamID(const FString& TeamID)
+{
+	if (!GroupScrollBox) return nullptr;
+
+	for (UWidget* Child : GroupScrollBox->GetAllChildren())
+	{
+		if (UGroupIconUI* IconUI = Cast<UGroupIconUI>(Child))
+		{
+			if (IconUI->ChatBlockUI && IconUI->ChatBlockUI->GetTeamID() == TeamID)
+			{
+				return IconUI;
+			}
+		}
+	}
+	return nullptr;
 }
 
 void UGroupChatUI::UpdateDot()

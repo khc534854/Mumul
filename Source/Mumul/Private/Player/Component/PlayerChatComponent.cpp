@@ -220,5 +220,9 @@ void UPlayerChatComponent::Server_RequestChat_Implementation(const FString& Team
 void UPlayerChatComponent::Client_SendChat_Implementation(const FString& TeamID, const FString& CurrentTime,
                                                           const int32& UserID, const FString& Name, const FString& Text, const int32& TendencyID)
 {
-	GroupChatUI->AddChat(TeamID, CurrentTime, UserID, Name, Text, TendencyID);
+	if (GroupChatUI)
+	{
+		// [수정] 조건부 처리 함수 호출 (알림 기능 O)
+		GroupChatUI->OnReceiveRealtimeChat(TeamID, CurrentTime, UserID, Name, Text, TendencyID);
+	}
 }

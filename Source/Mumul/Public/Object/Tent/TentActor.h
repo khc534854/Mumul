@@ -23,7 +23,20 @@ protected:
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	void UpdateNameTagVisibility();
+	
+	UPROPERTY(ReplicatedUsing = OnRep_OwnerName)
+	FString OwnerName;
 
+	UFUNCTION()
+	void OnRep_OwnerName();
+
+	// [신규] 실제 UI 텍스트를 변경하는 함수
+	void UpdateNameTagUI();
+
+	// [신규] 주인 이름 설정 함수 (서버용)
+	void SetOwnerName(const FString& InName);
+	
 	void SetOwnerUserIndex(const int32 UserIndex);
 	UPROPERTY(Replicated)
 	bool bIsActive = false;
@@ -39,6 +52,10 @@ public:
 	
 	UPROPERTY()
 	class ACampFireActor* ChildCampFire;
+
+
+	UPROPERTY()
+	class UWidgetComponent* NameTagWidget;
 
 	UPROPERTY(ReplicatedUsing=OnRep_HousingItems)
 	TArray<FHousingSaveData> HousingItems;

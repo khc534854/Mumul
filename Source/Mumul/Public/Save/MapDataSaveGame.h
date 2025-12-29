@@ -31,6 +31,9 @@ struct FTentSaveData
 	FTransform Transform;     // 텐트 위치 및 회전
 
 	UPROPERTY()
+	FString OwnerName;
+
+	UPROPERTY()
 	TArray<FHousingSaveData> HousingItems;
 };
 

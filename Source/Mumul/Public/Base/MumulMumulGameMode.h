@@ -41,7 +41,8 @@ protected:
 	// 저장 로직이 중복되므로 함수로 분리
 	void SaveUserData(AController* Controller);
 public:
-	void SpawnTent(const FTransform& SpawnTransform, int32 UserIndex, bool bSaveToDisk, const TArray<FHousingSaveData>& LoadedItems = TArray<FHousingSaveData>());
+	// SpawnTent 선언부 수정
+	void SpawnTent(const FTransform& SpawnTransform, int32 UserIndex, const FString& OwnerName, bool bSaveToDisk, const TArray<FHousingSaveData>& LoadedItems = TArray<FHousingSaveData>());
 	
 	TMap<TObjectPtr<class ACuteAlienController>, TArray<bool>> ParticipatingPlayers;
 	TMap<TObjectPtr<class ACuteAlienController>, FVector> PlayerPreviousLocations;

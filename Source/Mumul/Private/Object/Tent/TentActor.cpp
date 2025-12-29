@@ -5,6 +5,9 @@
 
 #include "Base/MumulGameState.h"
 #include "Components/AudioComponent.h"
+#include "Components/SphereComponent.h"
+#include "Components/TextBlock.h"
+#include "Components/WidgetComponent.h"
 #include "Data/FHousingItemData.h"
 #include "Kismet/GameplayStatics.h"
 #include "Object/CampFireActor.h"
@@ -30,6 +33,7 @@ void ATentActor::BeginPlay()
 {
 	Super::BeginPlay();
 
+
 	UChildActorComponent* ChildComp = FindComponentByClass<UChildActorComponent>();
 	if (ChildComp)
 	{
@@ -40,6 +44,19 @@ void ATentActor::BeginPlay()
 			ChildCampFire->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 		}
 	}
+
+	UWidgetComponent* NameTagWidgetComp = FindComponentByClass<UWidgetComponent>();
+	if (NameTagWidgetComp)
+	{
+		NameTagWidget = Cast<UWidgetComponent>(NameTagWidgetComp);
+
+		if (!OwnerName.IsEmpty())
+		{
+			UpdateNameTagUI();
+		}
+		
+		NameTagWidget->SetVisibility(false);
+	}
 }
 
 void ATentActor::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -49,6 +66,7 @@ void ATentActor::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& Out
 	DOREPLIFETIME(ATentActor, bIsActive)
 	DOREPLIFETIME(ATentActor, HousingItems);
 	DOREPLIFETIME(ATentActor, OwnerUserIndex);
+	DOREPLIFETIME(ATentActor, OwnerName);
 }
 
 
@@ -96,6 +114,81 @@ void ATentActor::Tick(float DeltaTime)
 
 		SetActorScale3D(FVector(XY, XY, Z));
 	}
+
+	UpdateNameTagVisibility();
+}
+
+void ATentActor::UpdateNameTagVisibility()
+{
+	if (!NameTagWidget) return;
+
+	// 1. 로컬 플레이어 컨트롤러 가져오기
+	APlayerController* PC = GetWorld()->GetFirstPlayerController();
+	if (!PC) return;
+
+	APawn* MyPawn = PC->GetPawn();
+	if (!MyPawn) return;
+
+	// 2. 거리 체크 (오버랩 이벤트보다 확실함)
+	// 텐트와 플레이어 사이의 거리 제곱 계산
+	float DistSq = FVector::DistSquared(GetActorLocation(), MyPawn->GetActorLocation());
+	float Radius = 2000.f;
+    
+	// 반지름보다 조금 여유를 두거나 딱 맞춰서 판정 (여기선 제곱 비교로 최적화)
+	bool bIsInRange = DistSq <= (Radius * Radius);
+
+	// 3. 카메라 페이드 상태 체크
+	// FadeAmount가 0보다 크면(화면이 조금이라도 어두워지면) 숨김 처리
+	bool bIsFading = false;
+	if (PC->PlayerCameraManager)
+	{
+		// 0.0 = 투명(평소), 1.0 = 완전 검음
+		bIsFading = PC->PlayerCameraManager->FadeAmount > 0.0f;
+	}
+
+	// 4. 최종 결정: "범위 안이고" AND "페이드 중이 아닐 때"만 보임
+	bool bShouldBeVisible = bIsInRange && !bIsFading;
+
+	// 현재 상태와 다를 때만 변경 (최적화)
+	if (NameTagWidget->IsVisible() != bShouldBeVisible)
+	{
+		// 이름 데이터가 아직 UI에 반영 안 됐을 수도 있으니 켤 때 업데이트
+		if (bShouldBeVisible)
+		{
+			UpdateNameTagUI();
+		}
+		NameTagWidget->SetVisibility(bShouldBeVisible);
+	}
+}
+
+void ATentActor::SetOwnerName(const FString& InName)
+{
+	OwnerName = InName;
+    
+	UpdateNameTagUI();
+}
+
+void ATentActor::OnRep_OwnerName()
+{
+	UpdateNameTagUI();
+}
+
+void ATentActor::UpdateNameTagUI()
+{
+	UE_LOG(LogTemp, Error, TEXT("[Name Tag] 1"));
+	if (!NameTagWidget) return;
+	UE_LOG(LogTemp, Error, TEXT("[Name Tag] 2"));
+	UUserWidget* WidgetObj = NameTagWidget->GetUserWidgetObject();
+	if (!WidgetObj) return;
+
+	UE_LOG(LogTemp, Error, TEXT("[Name Tag] 3"));
+	if (UTextBlock* TextBlock = Cast<UTextBlock>(WidgetObj->GetWidgetFromName(TEXT("NameText"))))
+	{
+		FString FinalText = FString::Printf(TEXT("%s의 텐트"), *OwnerName);
+		TextBlock->SetText(FText::FromString(FinalText));
+		UE_LOG(LogTemp, Error, TEXT("[Name Tag] 4"));
+	}
+	UE_LOG(LogTemp, Error, TEXT("[Name Tag] 5"));
 }
 
 void ATentActor::Activate(const FTransform& SpawnTransform)
@@ -192,7 +285,7 @@ void ATentActor::Server_PlaceHousingItem(FName ItemID, FTransform Transform)
 	if (AMumulGameState* GS = GetWorld()->GetGameState<AMumulGameState>())
 	{
 		// 텐트 위치 + 하우징 아이템 목록 통째로 저장
-		GS->Multicast_SaveTentData(OwnerUserIndex, GetActorTransform()); 
+		GS->Multicast_SaveTentData(OwnerUserIndex, OwnerName, GetActorTransform()); 
 	}
 }
 

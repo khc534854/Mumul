@@ -262,6 +262,8 @@ void ULobbyWidget::OnSurveyAnimFinished()
         CurrentQuestionIndex++;
         UpdateSurveyUI();
 
+        btn_SurveyYes->BaseButton->SetIsEnabled(true);
+        btn_SurveyNo->BaseButton->SetIsEnabled(true);
         PlayAnimation(SurveyAnim, 0.0f, 1, EUMGSequencePlayMode::Forward);
     }
 }
@@ -325,6 +327,8 @@ void ULobbyWidget::OnSurveyChoiceClicked(int32 ChoiceIndex)
             bIsSurveyFadingOut = true;
             
             // 2. 애니메이션 역재생 (투명도 1 -> 0)
+            btn_SurveyYes->BaseButton->SetIsEnabled(false);
+            btn_SurveyNo->BaseButton->SetIsEnabled(false);
             PlayAnimation(SurveyAnim, 0.0f, 1, EUMGSequencePlayMode::Reverse);
         }
         else

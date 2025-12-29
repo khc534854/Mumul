@@ -38,8 +38,6 @@ protected:
 	UPROPERTY(Transient, meta = (BindWidgetAnim))
 	TObjectPtr<class UWidgetAnimation > CustomizeBoxAnim;
 
-	bool bIsOpenCustomizeUI = false;
-
 	UPROPERTY(EditDefaultsOnly, Category="Cosmetic")
 	TSubclassOf<class UCustomItemEntryUI> ItemEntryUIClass;
     
@@ -76,7 +74,7 @@ protected:
 	UPROPERTY(Transient, meta = (BindWidgetAnim))
 	TObjectPtr<class UWidgetAnimation > HousingBoxAnim;
 
-	bool bIsOpenHousingUI = false;
+
 	
 	UPROPERTY(EditDefaultsOnly, Category="Housing")
 	TSubclassOf<class UCustomItemEntryUI> HousingItemEntryUIClass;
@@ -166,7 +164,7 @@ public:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UBorder> NewNoticeBorder;
 	
-	void CloseNoticeUI();
+
 	
 	// Time
 protected:
@@ -211,8 +209,26 @@ protected:
 	// [신규] 모든 메뉴 버튼의 시각적 상태를 초기화(OFF)하는 함수
 	void ResetAllMenuButtons();
 
-	
+	// toggle bool
+public:
+	bool bIsOpenCustomizeUI = false;
+	bool bIsOpenHousingUI = false;
+	bool bIsOpenNoticeUI = false;
+	bool bIsOpenChatUI = false;
 
+	void CloseCustomUI();
+	void CloseHousingUI();
+	void CloseNoticeUI();
+	void CloseChatUI();
+
+	void CloseAllSidePanels();
+	
+	void RefreshInputMode();
+
+	bool IsAnyPopupOpen() const;
+
+public:
+	bool TryLockUI(float Duration = 0.3f);
 protected:
 	// UI 조작이 가능한지 확인하는 플래그
 	bool bIsUIBusy = false;
@@ -224,5 +240,4 @@ protected:
 	void UnlockUIInteraction() { bIsUIBusy = false; }
     
 	// UI 잠금을 거는 헬퍼 함수 (시간 지정 가능)
-	bool TryLockUI(float Duration = 0.3f);
 };
