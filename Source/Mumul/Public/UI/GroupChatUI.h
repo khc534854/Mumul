@@ -34,6 +34,8 @@ protected:
 	EMumuLeeDifficulty Difficulty = EMumuLeeDifficulty::Beginner;
 	
 	UPROPERTY()
+	TObjectPtr<class UAudioManager> AudioManager;
+	UPROPERTY()
 	TObjectPtr<class UIMGManager> IMGManager;
 	UPROPERTY()
 	TObjectPtr<class UHttpNetworkSubsystem> HttpSystem;
@@ -182,7 +184,7 @@ protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> ToggleVisibilityBtn;
 	
-	float AlignmentVal = 0.1968f;
+	float AlignmentVal = 0.0;
 	float StartVal;
 	float TargetVal;
 	float Elapsed;

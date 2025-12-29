@@ -44,6 +44,15 @@ protected:
 	TObjectPtr<class UAudioComponent> CampFireComp;
 	UPROPERTY()
 	TObjectPtr<class UAudioComponent> FeedbackComp;
+	
+	UPROPERTY()
+	TObjectPtr<USoundBase> ClickSFX;
+	UPROPERTY()
+	TObjectPtr<USoundBase> PopUpSFX;
+	UPROPERTY()
+	TObjectPtr<USoundBase> PopDownSFX;
+	UPROPERTY()
+	TObjectPtr<USoundBase> NoticeSFX;
 
 public:
 	void PlayIslandBGM();
@@ -58,4 +67,9 @@ public:
 	
 	void StartFeedbackMute();
 	void EndFeedbackMute();
+	
+	void PlayClickSound();
+	void PlayPopUpSound();
+	void PlayPopDownSound();
+	void PlayNoticeSound();
 };

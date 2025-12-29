@@ -23,7 +23,10 @@ void UAudioManager::Initialize(FSubsystemCollectionBase& Collection)
 	
 	CampfireSFX = Finder->GetSound(TEXT("Campfire"));
 	
-	PlayIslandBGM();
+	ClickSFX = Finder->GetSound(TEXT("Click"));
+	PopUpSFX = Finder->GetSound(TEXT("PopUp"));
+	PopDownSFX = Finder->GetSound(TEXT("PopDown"));
+	NoticeSFX = Finder->GetSound(TEXT("Notice"));
 }
 
 void UAudioManager::PlayIslandBGM()
@@ -177,4 +180,24 @@ void UAudioManager::EndFeedbackMute()
 	}
 	
 	PlayIslandBGM();
+}
+
+void UAudioManager::PlayClickSound()
+{
+	UGameplayStatics::PlaySound2D(GetWorld(), ClickSFX);
+}
+
+void UAudioManager::PlayPopUpSound()
+{
+	UGameplayStatics::PlaySound2D(GetWorld(), PopUpSFX);
+}
+
+void UAudioManager::PlayPopDownSound()
+{
+	UGameplayStatics::PlaySound2D(GetWorld(), PopDownSFX);
+}
+
+void UAudioManager::PlayNoticeSound()
+{
+	UGameplayStatics::PlaySound2D(GetWorld(), NoticeSFX);
 }

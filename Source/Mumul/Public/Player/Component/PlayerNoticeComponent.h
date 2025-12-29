@@ -38,6 +38,14 @@ protected:
 	UFUNCTION(Client, Reliable)
 	void Client_OnSendDM(const FDispatchPayloadBase& DM);
 	
+	TQueue<FDispatchPayloadBase> DispatchQueue;
+	bool bIsDisplaying = false;
+	UPROPERTY(EditDefaultsOnly)
+	float DisplayTime = 5.f;
+	FTimerHandle DispatchDisplayTimer;
+	void EnqueueDispatch(const FDispatchPayloadBase& Dispatch);
+	void DisplayNextDispatch();
+	
 public:
 	UPROPERTY()
 	TObjectPtr<class UNoticeUI> NoticeUI;

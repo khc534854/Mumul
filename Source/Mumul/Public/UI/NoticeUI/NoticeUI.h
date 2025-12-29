@@ -29,6 +29,9 @@ protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeOnInitialized() override;
 	
+	UPROPERTY()
+	TObjectPtr<class UAudioManager> AudioManager;
+	
 	ENoticeState CurNoticeState = ENoticeState::Notice;
 	
 	void ChangeNoticeState(ENoticeState NewState);
@@ -74,10 +77,20 @@ protected:
 	
 	void SortNotices(UVerticalBox* ConfirmedBox, UVerticalBox* UnConfirmedBox);
 	
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class USizeBox> DispatchBox;
+	UPROPERTY()
+	TObjectPtr<class UDispatchPopUI> DispatchPopUI;
+	UPROPERTY(meta=(BindWidgetAnim), Transient)
+	TObjectPtr<class UWidgetAnimation> DispatchBox_SlideAnim;
+	
 public:
 	void OnToggleNoticeVisibility();
 	void AddNotice(const FDispatchPayloadBase& Data);
 	void AddDM(const FDispatchPayloadBase& Data);
 	
 	bool bIsNoticeVisible = false;
+	
+	void DisplayDispatchPopUp(const FDispatchPayloadBase& DispatchPayload);
+	void HideDispatchPopUp();
 };

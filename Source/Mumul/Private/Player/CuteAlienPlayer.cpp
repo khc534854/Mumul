@@ -27,6 +27,7 @@
 #include "Components/AudioComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/Image.h"
+#include "Data/AudioManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/VoiceConfig.h"
@@ -230,6 +231,7 @@ void ACuteAlienPlayer::OnClickInteraction()
 		{
 			AOXQuizTriggerActor* QuizTriggerActor = Cast<AOXQuizTriggerActor>(WidgetComp->GetOwner());
 			ACuteAlienController* PC = Cast<ACuteAlienController>(GetController());
+			PC->AudioManager->PlayClickSound();
 			
 			if (PC->OXQuizComp->OXQuizUI->GetVisibility() == ESlateVisibility::Collapsed || PC->OXQuizComp->OXQuizUI->GetVisibility() == ESlateVisibility::SelfHitTestInvisible)
 			{
