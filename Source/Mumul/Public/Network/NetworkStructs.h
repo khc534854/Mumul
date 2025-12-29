@@ -148,6 +148,9 @@ struct FDispatchAckPayload
 
     UPROPERTY()
     int32 messageId = 0;
+	
+	UPROPERTY()
+	int32 userId = 0;
 
     UPROPERTY()
     FString receivedAt;

@@ -3,9 +3,15 @@
 
 #include "UI/NoticeUI/NoticeContentUI.h"
 
+#include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
+#include "Components/VerticalBox.h"
 #include "Network/WebSocketSubsystem.h"
+#include "Player/CuteAlienController.h"
+#include "Player/MumulPlayerState.h"
+#include "Player/Component/PlayerNoticeComponent.h"
+#include "UI/PlayerUI.h"
 #include "UI/NoticeUI/NoticeUI.h"
 
 void UNoticeContentUI::NativeConstruct()
@@ -43,8 +49,14 @@ void UNoticeContentUI::OnConfirmClicked()
 	{
 		if (bIsNotice)
 		{
-			WebSocketSystem->SendDispatchAck(TEXT("notice"), ContentID);
+			AMumulPlayerState* PS = Cast<AMumulPlayerState>(GetOwningPlayerState());
+			WebSocketSystem->SendDispatchAck(TEXT("notice"), ContentID, PS->PS_UserIndex);
 		}
+	}
+	
+	if (Cast<ACuteAlienController>(GetOwningPlayer())->NoticeComp->NoticeUI->UnConfirmedVBox->GetChildrenCount() == 0)
+	{
+		Cast<ACuteAlienController>(GetOwningPlayer())->PlayerUI->NewNoticeBorder->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }
 
@@ -84,8 +96,8 @@ void UNoticeContentUI::UpdateConfirmButtonUI()
 		NoticeConfirmBtn->SetIsEnabled(false);
 
 		// 확인됨 색상
-		FSlateColor ConfirmColor(FLinearColor::Green);
-		NoticeConfirmText->SetColorAndOpacity(ConfirmColor);
+		// FSlateColor ConfirmColor(FLinearColor::Green);
+		// NoticeConfirmText->SetColorAndOpacity(ConfirmColor);
 	}
 	else
 	{
@@ -93,7 +105,7 @@ void UNoticeContentUI::UpdateConfirmButtonUI()
 		NoticeConfirmBtn->SetIsEnabled(true);
 
 		// 확인전 색상
-		FSlateColor NeedConfirmColor(FLinearColor::Red);
-		NoticeConfirmText->SetColorAndOpacity(NeedConfirmColor);
+		// FSlateColor NeedConfirmColor(FLinearColor::Red);
+		// NoticeConfirmText->SetColorAndOpacity(NeedConfirmColor);
 	}
 }

@@ -60,8 +60,10 @@ protected:
 	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UScrollBox> NoticeScrollBox;
+public:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UVerticalBox> UnConfirmedVBox;
+protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UVerticalBox> ConfirmedVBox;
 	UPROPERTY(meta=(BindWidget))

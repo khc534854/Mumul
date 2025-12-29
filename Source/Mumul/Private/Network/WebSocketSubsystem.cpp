@@ -309,11 +309,12 @@ void UWebSocketSubsystem::EndLearningChat(int32 SessionId, int32 UserId)
     SendEnvelope(TEXT("learning"), TEXT("end_chat"), Payload);
 }
 
-void UWebSocketSubsystem::SendDispatchAck(FString Kind, int32 MessageId)
+void UWebSocketSubsystem::SendDispatchAck(FString Kind, int32 MessageId, int32 UserId)
 {
     FDispatchAckPayload Payload;
     Payload.kind = Kind;
     Payload.messageId = MessageId;
+    Payload.userId = UserId;
     Payload.receivedAt = FDateTime::Now().ToIso8601();
     SendEnvelope(TEXT("dispatch"), TEXT("ack"), Payload);
 }

@@ -112,11 +112,6 @@ void UNoticeUI::OnToggleNoticeVisibility()
 		bIsNoticeVisible = true;
 		PlayAnimation(NoticeUI_SildeUpAnim);
 		AudioManager->PlayPopUpSound();
-		
-		if (UnConfirmedVBox->GetChildrenCount() == 0)
-		{
-			Cast<ACuteAlienController>(GetOwningPlayer())->PlayerUI->NewNoticeBorder->SetVisibility(ESlateVisibility::Collapsed);
-		}
 	}
 }
 
@@ -176,7 +171,7 @@ void UNoticeUI::AddNotice(const FDispatchPayloadBase& Data)
 	if (TSubclassOf<UNoticeContentUI> NoticeContentUIClass = UObjectAndClassFinder::Get()->GetWidgetClass<
 		UNoticeContentUI>("WBP_NoticeContent"))
 	{
-		NoticeContentUI = CreateWidget<UNoticeContentUI>(this, NoticeContentUIClass);
+		NoticeContentUI = CreateWidget<UNoticeContentUI>(GetOwningPlayer(), NoticeContentUIClass);
 		NoticeContentUI->InitUI(Data);
 		UnConfirmedVBox->InsertChildAt(0, NoticeContentUI);
 	}
@@ -187,7 +182,7 @@ void UNoticeUI::AddDM(const FDispatchPayloadBase& Data)
 	if (TSubclassOf<UNoticeContentUI> NoticeContentUIClass = UObjectAndClassFinder::Get()->GetWidgetClass<
 		UNoticeContentUI>("WBP_NoticeContent"))
 	{
-		NoticeContentUI = CreateWidget<UNoticeContentUI>(this, NoticeContentUIClass);
+		NoticeContentUI = CreateWidget<UNoticeContentUI>(GetOwningPlayer(), NoticeContentUIClass);
 		NoticeContentUI->InitUI(Data);
 		DMUnConfirmedVBox->InsertChildAt(0, NoticeContentUI);
 	}
@@ -212,6 +207,7 @@ void UNoticeUI::DisplayDispatchPopUp(const FDispatchPayloadBase& DispatchPayload
 			Content = FString::Printf(TEXT("[%s] \n%s"), *DispatchPayload.Title, *DispatchPayload.Text);
 		}
 		DispatchPopUI->SetDispatchText(Content);
+		DispatchPopUI->SetTimeStampText(DispatchPayload.CreatedAt);
 		DispatchBox->AddChild(DispatchPopUI);
 	}
 }

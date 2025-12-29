@@ -76,7 +76,7 @@ public:
 
     // --- D. Dispatch ---
     UFUNCTION(BlueprintCallable, Category = "Network|WS|Dispatch")
-    void SendDispatchAck(FString Kind, int32 MessageId);
+    void SendDispatchAck(FString Kind, int32 MessageId, int32 UserId);
 
     UFUNCTION(BlueprintCallable, Category = "Network|WS|Dispatch")
     void SendPing();
