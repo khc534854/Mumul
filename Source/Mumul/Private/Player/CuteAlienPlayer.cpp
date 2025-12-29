@@ -669,14 +669,25 @@ void ACuteAlienPlayer::SetIsMeetingSitting(bool bIsSitting, AActor* FocusTarget)
             {
                 if (APlayerController* PC = Cast<APlayerController>(GetController()))
                 {
-                    if (PC->PlayerCameraManager)
-                    {
-                        FVector DirToMe = (GetActorLocation() - FireCenter).GetSafeNormal();
-                        PC->SetControlRotation(DirToMe.Rotation());
-                        
-                        // 카메라 강제 업데이트
-                        PC->PlayerCameraManager->UpdateCamera(0.0f);
-                    }
+                	FVector DirToMe = (GetActorLocation() - FireCenter).GetSafeNormal();
+                	FRotator LookAtRot = DirToMe.Rotation();
+
+                	PC->SetShowMouseCursor(false); 
+                	FInputModeGameOnly InputMode;
+                	PC->SetInputMode(InputMode);
+                	PC->FlushPressedKeys(); // 눌려있는 키 상태 초기화
+
+                	PC->SetControlRotation(LookAtRot);
+
+                	bool bWasLagEnabled = GetCameraBoom()->bEnableCameraLag;
+                	GetCameraBoom()->bEnableCameraLag = false; 
+                    
+                	if (PC->PlayerCameraManager)
+                	{
+                		PC->PlayerCameraManager->UpdateCamera(0.0f);
+                	}
+
+                	GetCameraBoom()->bEnableCameraLag = bWasLagEnabled;
                 }
             }
         }
