@@ -425,6 +425,13 @@ void ACuteAlienController::OnClick(const FVector& TentLocation, const FRotator& 
 
 void ACuteAlienController::ShowRadialUI()
 {
+	ACuteAlienPlayer* MyPawn = Cast<ACuteAlienPlayer>(GetPawn());
+    
+	if (MyPawn && MyPawn->GetCharacterMovement()->MovementMode == MOVE_None)
+	{
+		return; 
+	}
+	
 	// Init UI
 	OnCancelUI();
 

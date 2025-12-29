@@ -616,8 +616,8 @@ void ACuteAlienPlayer::SetIsMeetingSitting(bool bIsSitting, AActor* FocusTarget)
 {
     if (!GetCameraBoom())
     {
-    	UE_LOG(LogTemp, Warning, TEXT("[Player] No Camera Boom"));
-	    return;
+        UE_LOG(LogTemp, Warning, TEXT("[Player] No Camera Boom"));
+        return;
     }
 
     if (bIsSitting)
@@ -625,36 +625,60 @@ void ACuteAlienPlayer::SetIsMeetingSitting(bool bIsSitting, AActor* FocusTarget)
         // 1. 물리/이동 멈춤
         GetCharacterMovement()->DisableMovement();
         GetCharacterMovement()->StopMovementImmediately();
+        GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 
-    	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-        // 2. 앉기 애니메이션 재생
-        Server_SitDown();
-
-        // 3. [신규] 카메라를 모닥불 중심으로 이동
+        // [신규 1] 캐릭터 회전 및 컨트롤러 시선 강제 고정 (모닥불 바라보기)
         if (FocusTarget)
         {
-            // 원래 상태 저장 (복구용)
+            FVector FireLoc = FocusTarget->GetActorLocation();
+            FVector MyLoc = GetActorLocation();
+            FVector DirToFire = (FireLoc - MyLoc).GetSafeNormal2D();
+            FRotator LookAtFireRot = DirToFire.Rotation();
+
+            // (A) 캐릭터 몸 회전
+            SetActorRotation(LookAtFireRot);
+
+            // (B) 컨트롤러 시선 회전 (중요: 이걸 해야 카메라가 홱 돌아가지 않음)
+            if (IsLocallyControlled())
+            {
+                if (AController* PC = GetController())
+                {
+                    PC->SetControlRotation(LookAtFireRot);
+                }
+            }
+        }
+
+        Server_SitDown();
+
+        if (FocusTarget)
+        {
             OriginalCameraParent = GetCameraBoom()->GetAttachParent();
             OriginalCameraTransform = GetCameraBoom()->GetRelativeTransform();
             OriginalArmLength = GetCameraBoom()->TargetArmLength;
             OriginalSocketOffset = GetCameraBoom()->SocketOffset;
 
-            // 모닥불에 부착 (월드 트랜스폼 유지 X -> 모닥불 기준 로컬 0,0,0으로 가기 위해)
-            GetCameraBoom()->AttachToComponent(FocusTarget->GetRootComponent(), FAttachmentTransformRules::KeepWorldTransform);
+            FVector FireCenter = FocusTarget->GetActorLocation() + FVector(0.f, 0.f, 120.f);
 
-            // 모닥불 중심에서 살짝 위로 올림 (불꽃 때문에 시야 가림 방지)
-            FVector ViewCenterOffset = FVector(0.f, 0.f, 120.f); 
-            
-            // 위치 이동 (부드럽게 이동하고 싶으면 Tick에서 보간해야 하지만, 여기선 즉시 이동)
-            GetCameraBoom()->SetWorldLocation(FocusTarget->GetActorLocation() + ViewCenterOffset);
-            
-            // 설정 변경: 모닥불 중심에서 360도 회전하며 주변을 보도록 설정
-            GetCameraBoom()->TargetArmLength = 0.0f; // 중심점에서 1인칭처럼 보거나
-            // CameraBoom->TargetArmLength = 300.0f; // 약간 뒤로 빼서 모닥불 전체를 조망할 수도 있음
-            
+            GetCameraBoom()->AttachToComponent(FocusTarget->GetRootComponent(), FAttachmentTransformRules::KeepWorldTransform);
+            GetCameraBoom()->SetWorldLocation(FireCenter);
+
+            GetCameraBoom()->TargetArmLength = 0.0f; // 중심점 뷰
             GetCameraBoom()->SocketOffset = FVector::ZeroVector;
             
-            // 회전 제어는 Controller의 Input을 계속 따르도록 유지 (bUsePawnControlRotation = true 가정)
+            if (IsLocallyControlled())
+            {
+                if (APlayerController* PC = Cast<APlayerController>(GetController()))
+                {
+                    if (PC->PlayerCameraManager)
+                    {
+                        FVector DirToMe = (GetActorLocation() - FireCenter).GetSafeNormal();
+                        PC->SetControlRotation(DirToMe.Rotation());
+                        
+                        // 카메라 강제 업데이트
+                        PC->PlayerCameraManager->UpdateCamera(0.0f);
+                    }
+                }
+            }
         }
     }
     else
