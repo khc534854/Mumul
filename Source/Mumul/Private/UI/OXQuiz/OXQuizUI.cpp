@@ -39,6 +39,9 @@ void UOXQuizUI::NativeConstruct()
 
 void UOXQuizUI::OnCancelClicked()
 {
+	if (IsAnimationPlaying(Confirm_PopUp))
+		return;
+	
 	SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	PlayAnimation(Confirm_PopUp, 0, 1, EUMGSequencePlayMode::Reverse);
 }
@@ -68,6 +71,9 @@ void UOXQuizUI::UpdateTimer()
 
 void UOXQuizUI::OnConfirmResult()
 {
+	if (IsAnimationPlaying(Result_PopUp))
+		return;
+	
 	SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	PlayAnimation(Result_PopUp, 0, 1, EUMGSequencePlayMode::Reverse);
 }

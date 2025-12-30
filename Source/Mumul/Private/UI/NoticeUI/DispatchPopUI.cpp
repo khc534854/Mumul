@@ -3,8 +3,30 @@
 
 #include "UI/NoticeUI/DispatchPopUI.h"
 
+#include "Components/Button.h"
 #include "Components/TextBlock.h"
+#include "Player/CuteAlienController.h"
+#include "Player/Component/PlayerNoticeComponent.h"
+#include "UI/NoticeUI/NoticeUI.h"
 
+
+void UDispatchPopUI::NativeConstruct()
+{
+	Super::NativeConstruct();
+	
+	PC = Cast<ACuteAlienController>(GetOwningPlayer());
+	
+	DispatchBtn->OnClicked.AddDynamic(this, &UDispatchPopUI::OnClickPopUp);
+}
+
+void UDispatchPopUI::OnClickPopUp()
+{
+	if (PC->NoticeComp->NoticeUI->bIsNoticeVisible == false)
+	{
+		PC->NoticeComp->NoticeUI->OnToggleNoticeVisibility();
+	}
+	DispatchBtn->OnClicked.RemoveDynamic(this, &UDispatchPopUI::OnClickPopUp);
+}
 
 FString UDispatchPopUI::MakePreviewText(const FString& OriginalText, int32 MaxLength)
 {

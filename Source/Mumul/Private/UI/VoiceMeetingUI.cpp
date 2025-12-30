@@ -56,6 +56,9 @@ void UVoiceMeetingUI::SetMeetingState(bool bIsActive)
 // [시작 요청]z
 void UVoiceMeetingUI::OnClickStartMeeting()
 {
+    if (IsAnimationPlaying(StartMeeting_SlideAnim))
+        return;
+    
     ACuteAlienController* PC = GetMyController();
     if (PC)
     {
@@ -77,6 +80,9 @@ void UVoiceMeetingUI::OnClickStartMeeting()
 // [종료 확인 - 예]
 void UVoiceMeetingUI::OnClickConfirmEnd()
 {
+    if (IsAnimationPlaying(EndMeeting_SlideAnim))
+        return;
+    
     ACuteAlienController* PC = GetMyController();
     if (PC)
     {
@@ -91,6 +97,9 @@ void UVoiceMeetingUI::OnClickConfirmEnd()
 // [종료 확인 - 아니오]
 void UVoiceMeetingUI::OnClickReturnMeeting()
 {
+    if (IsAnimationPlaying(EndMeeting_SlideAnim))
+        return;
+    
     SetVisibility(ESlateVisibility::SelfHitTestInvisible);
     PlayAnimation(EndMeeting_SlideAnim, 0, 1, EUMGSequencePlayMode::Reverse);
     GetMyController()->AudioManager->PlayPopDownSound();
@@ -109,6 +118,9 @@ ACuteAlienController* UVoiceMeetingUI::GetMyController()
 
 void UVoiceMeetingUI::OnClickMeetingCancel()
 {
+    if (IsAnimationPlaying(StartMeeting_SlideAnim))
+        return;
+    
     SetVisibility(ESlateVisibility::SelfHitTestInvisible);
     PlayAnimation(StartMeeting_SlideAnim, 0, 1, EUMGSequencePlayMode::Reverse);
     GetMyController()->AudioManager->PlayPopDownSound();

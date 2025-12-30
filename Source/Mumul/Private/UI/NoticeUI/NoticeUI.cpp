@@ -195,7 +195,7 @@ void UNoticeUI::DisplayDispatchPopUp(const FDispatchPayloadBase& DispatchPayload
 	if (TSubclassOf<UDispatchPopUI> DispatchPopUIClass = UObjectAndClassFinder::Get()->GetWidgetClass<
 		UDispatchPopUI>("WBP_DispatchPop"))
 	{
-		DispatchPopUI = CreateWidget<UDispatchPopUI>(this, DispatchPopUIClass);
+		DispatchPopUI = CreateWidget<UDispatchPopUI>(GetOwningPlayer(), DispatchPopUIClass);
 		FString Content;
 		if (DispatchPayload.Title.IsEmpty())
 		{

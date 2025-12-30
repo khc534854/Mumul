@@ -33,6 +33,9 @@ void UFeedbackUI::NativeConstruct()
 
 void UFeedbackUI::OnClickedConfirmEndBtn()
 {
+	if (IsAnimationPlaying(Feedback_SlideAnim))
+		return;
+	
 	FString ContentStr;
 	if (FeedbackText)
 	{
@@ -61,7 +64,7 @@ void UFeedbackUI::OnClickedConfirmEndBtn()
 
 			// 요청 전송 (PlayerID는 GI에서 가져옴)
 			Http->SendFeedbackRequest(GI->PlayerUniqueID, ContentStr);
-            
+
 			// (선택) 버튼 비활성화 등 중복 전송 방지 처리
 		}
 	}
@@ -69,9 +72,12 @@ void UFeedbackUI::OnClickedConfirmEndBtn()
 
 void UFeedbackUI::OnClickedCancelEndBtn()
 {
+	if (IsAnimationPlaying(Feedback_SlideAnim))
+		return;
+
 	SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	PlayAnimation(Feedback_SlideAnim, 0, 1, EUMGSequencePlayMode::Reverse);
-	
+
 	// 입력 모드 복구 (게임 모드로)
 	if (APlayerController* PC = GetOwningPlayer())
 	{
@@ -83,9 +89,12 @@ void UFeedbackUI::OnClickedCancelEndBtn()
 
 void UFeedbackUI::OnClickedFeedbackExitBtn()
 {
+	if (IsAnimationPlaying(Feedback_SlideAnim))
+		return;
+
 	SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	PlayAnimation(FeedbackResult_SlideAnim, 0, 1, EUMGSequencePlayMode::Reverse);
-	
+
 	// 입력 모드 복구 (게임 모드로)
 	if (APlayerController* PC = GetOwningPlayer())
 	{
@@ -110,7 +119,7 @@ void UFeedbackUI::OnFeedbackResponseReceived(bool bSuccess, FString Message)
 		FString ResultMsg = bSuccess ? TEXT("피드백이 성공적으로 전송되었습니다.") : Message;
 		FeedbackResultText->BaseText->SetText(FText::FromString(ResultMsg));
 	}
-    
+
 	// 델리게이트 해제
 	if (UMumulGameInstance* GI = Cast<UMumulGameInstance>(GetGameInstance()))
 	{
@@ -123,8 +132,11 @@ void UFeedbackUI::OnFeedbackResponseReceived(bool bSuccess, FString Message)
 
 void UFeedbackUI::OpenFeedbackUI()
 {
-	SetVisibility(ESlateVisibility::Visible);
+	if (IsAnimationPlaying(Feedback_SlideAnim))
+		return;
 	
+	SetVisibility(ESlateVisibility::Visible);
+
 	// 첫 번째 화면(입력창)으로 전환
 	if (FeedbackWidgetSwitcher)
 	{

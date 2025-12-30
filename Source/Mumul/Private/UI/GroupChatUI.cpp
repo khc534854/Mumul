@@ -1253,6 +1253,9 @@ void UGroupChatUI::SetGroupNameTitle(const FString& GroupName)
 
 void UGroupChatUI::ToggleCreateGroupChatUI()
 {
+	if (IsAnimationPlaying(CreateGroupUI_Slide))
+		return;
+	
 	LinkedPlayerUI->TryLockUI(0.5f);
 	
 	if (IsAnimationPlaying(CreateGroupUI_Slide)) return;
@@ -1336,13 +1339,16 @@ void UGroupChatUI::ToggleGroupChatAlignment()
 
 	if (!bIsToggled && bCreateGroupVisible)
 	{
+		if (IsAnimationPlaying(CreateGroupUI_Slide))
+			return;
+		
 		bCreateGroupVisible = false;
 		PlayAnimation(CreateGroupUI_Slide, 0, 1, EUMGSequencePlayMode::Reverse);
 	}
     
 	// 버튼 이미지 처리
 	FSlateBrush Brush;
-	Brush.ImageSize = FVector2D(30.f, 50.f);
+	Brush.ImageSize = FVector2D(300.f, 500.f);
 	Brush.SetResourceObject(bIsToggled ? RightIMG : LeftIMG);
 	ArrowBtnImg->SetBrush(Brush);
 

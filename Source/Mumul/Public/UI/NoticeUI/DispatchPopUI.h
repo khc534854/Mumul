@@ -15,6 +15,15 @@ class MUMUL_API UDispatchPopUI : public UUserWidget
 	GENERATED_BODY()
 	
 protected:
+	virtual void NativeConstruct() override;
+	
+	UPROPERTY()
+	TObjectPtr<class ACuteAlienController> PC;
+	
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UButton> DispatchBtn;
+	UFUNCTION()
+	void OnClickPopUp();
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UTextBlock> DispatchText;
 	FString MakePreviewText(const FString& OriginalText, int32 MaxLength);

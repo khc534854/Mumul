@@ -40,7 +40,6 @@ void UPlayerNoticeComponent::BeginPlay()
 			{
 				NoticeUI->AddToViewport();
 				NoticeUI->SetVisibility(ESlateVisibility::Visible);
-				NoticeUI->SortNotices(NoticeUI->ConfirmedVBox, NoticeUI->UnConfirmedVBox);
 			}
 		}
 		HttpSystem = owner->GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>();
@@ -124,6 +123,7 @@ void UPlayerNoticeComponent::OnServerDispatchHistoryResponse(bool bSuccess, FStr
 		{
 			UE_LOG(LogTemp, Error, TEXT("DispatchHistory 파싱 실패"));
 		}
+		NoticeUI->SortNotices(NoticeUI->ConfirmedVBox, NoticeUI->UnConfirmedVBox);
 	}
 	else
 	{

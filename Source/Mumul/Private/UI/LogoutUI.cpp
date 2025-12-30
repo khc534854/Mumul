@@ -66,6 +66,9 @@ void ULogoutUI::OnClickedLogoutYesBtn()
 
 void ULogoutUI::OnClickedLogoutNoBtn()
 {
+	if (IsAnimationPlaying(LogOut_SlideAnim))
+		return;
+	
 	PlayAnimation(LogOut_SlideAnim, 0, 1, EUMGSequencePlayMode::Reverse);
 	SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	PC->AudioManager->PlayPopDownSound();
@@ -106,6 +109,9 @@ void ULogoutUI::OpenHelpPopup()
 
 void ULogoutUI::OnClickedNextBtn()
 {
+	if (IsAnimationPlaying(Help_SlideAnim))
+		return;
+	
 	CurImageIdx++;
 	
 	if (!HelpImages.IsValidIndex(CurImageIdx))

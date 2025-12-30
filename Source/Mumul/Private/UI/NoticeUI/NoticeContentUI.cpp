@@ -84,7 +84,7 @@ void UNoticeContentUI::InitUI(const FDispatchPayloadBase& Data)
 	else
 	{
 		NoticeContentText->SetText(FText::FromString(Data.Text));
-		NoticeConfirmBtn->SetVisibility(ESlateVisibility::Collapsed);
+		NoticeConfirmBtn->SetVisibility(ESlateVisibility::Hidden);
 	}
 }
 
