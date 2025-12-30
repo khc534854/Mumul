@@ -108,7 +108,6 @@ protected:
 	virtual FReply NativeOnPreviewKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
 	UFUNCTION()
 	void OnTextBoxChanged(const FText& Text);
-	bool bPendingInvalidate = false;
 	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UMultiLineEditableTextBox> EditBox;

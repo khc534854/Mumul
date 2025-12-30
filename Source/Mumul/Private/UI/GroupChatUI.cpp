@@ -1078,21 +1078,9 @@ FReply UGroupChatUI::NativeOnPreviewKeyDown(const FGeometry& InGeometry, const F
 
 void UGroupChatUI::OnTextBoxChanged(const FText& Text)
 {
-	if (!EditBox)
-		return;
-
-	if (!bPendingInvalidate)
+	if (FSlateApplication::IsInitialized())
 	{
-		bPendingInvalidate = true;
-
-		GetWorld()->GetTimerManager().SetTimerForNextTick([this]()
-		{
-			if (EditBox && EditBox->GetCachedWidget().IsValid())
-			{
-				EditBox->GetCachedWidget()->Invalidate(EInvalidateWidget::Paint);
-			}
-			bPendingInvalidate = false;
-		});
+		FSlateApplication::Get().GetRenderer()->FlushCommands();
 	}
 }
 
