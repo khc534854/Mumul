@@ -154,12 +154,12 @@ protected:
 	TObjectPtr<class UTexture2D> MumuLeeOffIMG;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class USizeBox> MumuLeeBox;
-	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UScrollBox> GroupScrollBox;
 	
 public:
 	void AddGroupIcon(class UGroupIconUI* UI) const;
 	
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UScrollBox> GroupScrollBox;
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="UI Class")
 	TSubclassOf<class UInvitationUI> InvitationUIClass;
@@ -219,6 +219,9 @@ public:
 	void UpdateQuestionButtonState();
 	// 현재 AI 도우미가 켜져 있는지 확인하는 플래그
 	bool bIsMeetingChatbotActive = false;
+	
+	// 회의 진행 중 플래그
+	bool bIsMeetingRecordActive = false;
 	
 	// 헬퍼: 현재 방 정보 가져오기
 	FString GetCurrentTeamID() const;

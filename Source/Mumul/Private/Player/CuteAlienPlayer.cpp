@@ -615,93 +615,131 @@ void ACuteAlienPlayer::PlayTentSpawnSound()
 
 void ACuteAlienPlayer::SetIsMeetingSitting(bool bIsSitting, AActor* FocusTarget)
 {
-    if (!GetCameraBoom())
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[Player] No Camera Boom"));
-        return;
-    }
+    if (!GetCameraBoom()) return;
 
     if (bIsSitting)
     {
-        // 1. 물리/이동 멈춤
-        GetCharacterMovement()->DisableMovement();
-        GetCharacterMovement()->StopMovementImmediately();
+        // 1. [수정] 이동 모드 체크(MOVE_None) 삭제! 
+        // Multicast에서 이미 DisableMovement를 하고 들어오기 때문에 여기서 체크하면 안 됩니다.
+
+        // 2. 물리/충돌 설정
+        GetCharacterMovement()->DisableMovement(); // 안전하게 한 번 더 호출 (비용 없음)
         GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 
-    	bUseControllerRotationYaw = false;
-
-    	if (FocusTarget)
-    	{
-    		FVector FireLoc = FocusTarget->GetActorLocation();
-    		FVector MyLoc = GetActorLocation();
-            
-    		// 높이(Z) 무시하고 평면 방향 계산
-    		FVector DirToFire = (FireLoc - MyLoc).GetSafeNormal2D();
-    		if (!DirToFire.IsZero())
-    		{
-    			SetActorRotation(DirToFire.Rotation(), ETeleportType::TeleportPhysics);
-    		}
-    	}
-
-        Server_SitDown();
-
-        if (FocusTarget)
+        // 3. 카메라 정보 백업 (이미 저장된 상태가 아닐 때만 저장)
+        // OriginalCameraParent가 nullptr일 때만 저장하므로 중복 저장을 방지합니다.
+        if (OriginalCameraParent == nullptr)
         {
             OriginalCameraParent = GetCameraBoom()->GetAttachParent();
             OriginalCameraTransform = GetCameraBoom()->GetRelativeTransform();
             OriginalArmLength = GetCameraBoom()->TargetArmLength;
             OriginalSocketOffset = GetCameraBoom()->SocketOffset;
+            
+            // [디버그] 저장된 부모 확인
+            if (OriginalCameraParent)
+            {
+                UE_LOG(LogTemp, Log, TEXT("[Camera] Saved Original Parent: %s"), *OriginalCameraParent->GetName());
+            }
+            else
+            {
+                UE_LOG(LogTemp, Warning, TEXT("[Camera] Warning: Original Parent is NULL during Save!"));
+            }
+        }
 
+        // 4. 애니메이션 실행
+        Server_SitDown();
+
+        // 5. 카메라 이동 (모닥불 보기)
+        if (FocusTarget)
+        {
             FVector FireCenter = FocusTarget->GetActorLocation() + FVector(0.f, 0.f, 120.f);
-
             GetCameraBoom()->AttachToComponent(FocusTarget->GetRootComponent(), FAttachmentTransformRules::KeepWorldTransform);
             GetCameraBoom()->SetWorldLocation(FireCenter);
 
-            GetCameraBoom()->TargetArmLength = 0.0f; // 중심점 뷰
+            GetCameraBoom()->TargetArmLength = 0.0f;
             GetCameraBoom()->SocketOffset = FVector::ZeroVector;
-            
+            GetCameraBoom()->bUsePawnControlRotation = true;
+
+            // 로컬 플레이어 시점 처리
             if (IsLocallyControlled())
             {
                 if (ACuteAlienController* PC = Cast<ACuteAlienController>(GetController()))
                 {
-                	FVector DirToMe = (GetActorLocation() - FireCenter).GetSafeNormal();
-                	FRotator LookAtRot = DirToMe.Rotation();
+                    FVector DirToMe = (GetActorLocation() - FireCenter).GetSafeNormal();
+                    FRotator TargetCamRot = DirToMe.Rotation();
+                    TargetCamRot.Pitch = -20.0f;
 
-                	PC->SetControlRotation(LookAtRot);
+                    PC->SetControlRotation(TargetCamRot);
                 	PC->OnToggleMouse();
                 	PC->OnToggleMouse();
 
-                	if (GetCameraBoom())
-                	{
-                		bool bOldLag = GetCameraBoom()->bEnableCameraLag;
-                		GetCameraBoom()->bEnableCameraLag = false;
-                    
-                		if (PC->PlayerCameraManager)
-                		{
-                			PC->PlayerCameraManager->UpdateCamera(0.0f);
-                		}
-                	}
+                    if (FSlateApplication::IsInitialized())
+                    {
+                        FSlateApplication::Get().SetAllUserFocusToGameViewport();
+                    }
+
+                    PC->SetShowMouseCursor(false);
+                    PC->SetInputMode(FInputModeGameOnly());
+
+                    if (PC->PlayerCameraManager)
+                    {
+                        bool bOldLag = GetCameraBoom()->bEnableCameraLag;
+                        GetCameraBoom()->bEnableCameraLag = false;
+                        PC->PlayerCameraManager->UpdateCamera(0.0f);
+                        GetCameraBoom()->bEnableCameraLag = bOldLag;
+                    }
                 }
             }
         }
     }
-    else
+    else // 일어서기 (Stand Up)
     {
-        // 1. 이동 재개
+        // 1. 이동/물리 복구
         GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-    	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+        GetCharacterMovement()->bOrientRotationToMovement = true;
+        GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+        bUseControllerRotationYaw = false; 
 
-    	Server_StandUp();
+        Server_StandUp();
 
-        // 3. [신규] 카메라 복구 (캐릭터 등 뒤로)
-        if (OriginalCameraParent)
+        // 2. 카메라 복구
+        USceneComponent* TargetParent = OriginalCameraParent;
+        
+        // 정보 유실 대비 (루트 컴포넌트로 복구)
+        if (!TargetParent)
         {
-            GetCameraBoom()->AttachToComponent(OriginalCameraParent, FAttachmentTransformRules::KeepWorldTransform);
+            TargetParent = GetRootComponent();
             
-            // 원래 위치/설정으로 복원
-            GetCameraBoom()->SetRelativeTransform(OriginalCameraTransform);
-            GetCameraBoom()->TargetArmLength = OriginalArmLength;
-            GetCameraBoom()->SocketOffset = OriginalSocketOffset;
+            // 기본값으로 초기화 (필요시 값 조정)
+            OriginalCameraTransform = FTransform(FRotator(-20.f, 0.f, 0.f), FVector(0.f, 0.f, 0.f), FVector(1.f));
+            OriginalArmLength = 400.0f; 
+            OriginalSocketOffset = FVector(0.f, 0.f, 60.f);
+            
+            UE_LOG(LogTemp, Warning, TEXT("[Camera] Original Parent Lost! Resetting to RootComponent."));
+        }
+
+        GetCameraBoom()->AttachToComponent(TargetParent, FAttachmentTransformRules::SnapToTargetIncludingScale);
+        GetCameraBoom()->SetRelativeTransform(OriginalCameraTransform);
+        GetCameraBoom()->TargetArmLength = OriginalArmLength;
+        GetCameraBoom()->SocketOffset = OriginalSocketOffset;
+        GetCameraBoom()->bUsePawnControlRotation = true; 
+
+        // [중요] 복구 후 변수 초기화 (다음에 앉을 때 다시 저장하도록)
+        OriginalCameraParent = nullptr;
+
+        // 3. 카메라 즉시 갱신
+        if (IsLocallyControlled())
+        {
+             if (APlayerController* PC = Cast<APlayerController>(GetController()))
+             {
+                 if (PC->PlayerCameraManager)
+                 {
+                     bool bOldLag = GetCameraBoom()->bEnableCameraLag;
+                     GetCameraBoom()->bEnableCameraLag = false;
+                     PC->PlayerCameraManager->UpdateCamera(0.0f);
+                     GetCameraBoom()->bEnableCameraLag = bOldLag;
+                 }
+             }
         }
     }
 }

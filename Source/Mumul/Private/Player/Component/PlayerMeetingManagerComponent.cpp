@@ -213,41 +213,44 @@ void UPlayerMeetingManagerComponent::Client_StopChannelRecording_Implementation(
 	{
 		if (UVoiceChatComponent* VoiceComp = player->FindComponentByClass<UVoiceChatComponent>())
 		{
-			// [핵심] 방장(Authority)이라면 종료 처리를 위해 바인딩 필수!
+			// 1. [순서 변경] 상태 업데이트를 최우선으로 처리
+			// 일어서서 채널이 바뀌기 전에, "회의 끝났다"는 정보를 확실히 전파해야 함
 			if (owner->HasAuthority())
 			{
-				// 기존 바인딩이 있을 수 있으니 안전하게 제거 후 추가 (중복 방지)
 				VoiceComp->OnRecordingStopped.RemoveDynamic(this, &UPlayerMeetingManagerComponent::OnHostRecordingStopped);
 				VoiceComp->OnRecordingStopped.AddDynamic(this, &UPlayerMeetingManagerComponent::OnHostRecordingStopped);
 
 				AMumulPlayerState* PS = owner->GetPlayerState<AMumulPlayerState>();
 				if (PS)
 				{
+					// 여기서 모든 클라이언트(나 포함)의 UI를 끕니다.
+					// 아직 채널이 바뀌기 전이므로 모든 팀원이 메시지를 잘 받습니다.
 					Server_UpdateMeetingStatus(PS->VoiceChannelID, false);
 				}
-				
+             
 				UE_LOG(LogTemp, Warning, TEXT("[Host] Binded OnHostRecordingStopped delegate."));
 			}
-			owner->ChatComp->GroupChatUI->OnRecordBtnState(false);
 
+			// 2. 내 로컬 UI 즉시 끄기 (방어 코드)
+			// 혹시 Server_UpdateMeetingStatus가 늦게 와도 즉시 꺼지도록 함
+			if (owner->ChatComp && owner->ChatComp->GroupChatUI)
+			{
+				owner->ChatComp->GroupChatUI->OnRecordBtnState(false);
+				owner->ChatComp->GroupChatUI->AddBotChat(TEXT("회의가 종료되었습니다."));
+             
+				// [추가] 중요! 아이콘 상태도 즉시 끔 (MeetingActiveNotice 관련)
+				owner->ChatComp->GroupChatUI->OnUpdateMeetingStatus(owner->ChatComp->GroupChatUI->GetCurrentTeamID(), false);
+			}
+
+			// 3. 일어서기 (이제 채널이 바뀌어도 상관없음)
 			if (owner)
 			{
-				// 1. 움직임 허용
 				owner->SetIgnoreMoveInput(false);
 				owner->SetIgnoreLookInput(false);
 				owner->Server_StandUpFromMeeting();
-
-				if (owner->ChatComp && owner->ChatComp->GroupChatUI)
-				{
-					// 2. 녹음 UI 끄기
-					owner->ChatComp->GroupChatUI->OnRecordBtnState(false);
-                
-					// 3. 종료 알림 메시지
-					owner->ChatComp->GroupChatUI->AddBotChat(TEXT("회의가 종료되었습니다."));
-				}
 			}
-			
-			// 녹음 종료 및 마지막 파일 전송 시작
+          
+			// 4. 녹음 중지
 			VoiceComp->StopRecording();
 
 			if (!owner->HasAuthority())
@@ -323,7 +326,7 @@ void UPlayerMeetingManagerComponent::OnHostRecordingStopped()
 
 	// 2. [수정] 3초 딜레이 후 회의 종료 요청 (오디오 업로드 대기)
 	// 네트워크 속도에 따라 시간을 조절하세요 (2.0f ~ 5.0f)
-	float UploadWaitTime = 5.0f;
+	float UploadWaitTime = 0.3f;
 
 	FTimerHandle WaitTimerHandle;
 

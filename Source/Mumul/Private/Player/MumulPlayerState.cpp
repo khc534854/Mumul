@@ -28,6 +28,12 @@ void AMumulPlayerState::BeginPlay()
 
 void AMumulPlayerState::Server_SetVoiceChannelID_Implementation(const FString& NewChannelID)
 {
+	if (VoiceChannelID == NewChannelID)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("VoiceChannelID is already set"));
+		return;
+	}
+	
 	VoiceChannelID = NewChannelID;
 
 	if (GetNetMode() != NM_Client)

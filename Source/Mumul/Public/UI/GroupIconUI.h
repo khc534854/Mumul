@@ -60,4 +60,7 @@ public:
 public:
 	// [신규] 이 아이콘이 챗봇 방인지 여부
 	bool bIsChatbotRoom = false;
+
+	UPROPERTY()
+	TObjectPtr<class UAudioManager> AudioManager;
 };

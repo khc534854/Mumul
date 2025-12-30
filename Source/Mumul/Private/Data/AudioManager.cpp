@@ -27,6 +27,12 @@ void UAudioManager::Initialize(FSubsystemCollectionBase& Collection)
 	PopUpSFX = Finder->GetSound(TEXT("PopUp"));
 	PopDownSFX = Finder->GetSound(TEXT("PopDown"));
 	NoticeSFX = Finder->GetSound(TEXT("Notice"));
+
+	         MicOnSFX = Finder->GetSound(TEXT("MicOn"));
+	        MicOffSFX = Finder->GetSound(TEXT("MicOff"));
+	     MeetingOnSFX = Finder->GetSound(TEXT("MeetingOn"));
+	    MeetingOffSFX = Finder->GetSound(TEXT("MeetingOff"));
+	MassageReceiveSFX = Finder->GetSound(TEXT("MassageReceive"));
 }
 
 void UAudioManager::PlayIslandBGM()
@@ -200,4 +206,29 @@ void UAudioManager::PlayPopDownSound()
 void UAudioManager::PlayNoticeSound()
 {
 	UGameplayStatics::PlaySound2D(GetWorld(), NoticeSFX);
+}
+
+void UAudioManager::PlayMicOnSound()
+{
+	UGameplayStatics::PlaySound2D(GetWorld(), MicOnSFX);
+}
+
+void UAudioManager::PlayMicOffSound()
+{
+	UGameplayStatics::PlaySound2D(GetWorld(), MicOffSFX);
+}
+
+void UAudioManager::PlayMeetingOnSound()
+{
+	UGameplayStatics::PlaySound2D(GetWorld(), MeetingOnSFX);
+}
+
+void UAudioManager::PlayMeetingOffSound()
+{
+	UGameplayStatics::PlaySound2D(GetWorld(), MeetingOffSFX);
+}
+
+void UAudioManager::PlayMassageReceiveSound()
+{
+	UGameplayStatics::PlaySound2D(GetWorld(), MassageReceiveSFX);
 }

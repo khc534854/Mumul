@@ -54,6 +54,17 @@ protected:
 	UPROPERTY()
 	TObjectPtr<USoundBase> NoticeSFX;
 
+	UPROPERTY()
+	TObjectPtr<USoundBase> MicOnSFX;
+	UPROPERTY()
+	TObjectPtr<USoundBase> MicOffSFX;
+	UPROPERTY()
+	TObjectPtr<USoundBase> MeetingOnSFX;
+	UPROPERTY()
+	TObjectPtr<USoundBase> MeetingOffSFX;
+	UPROPERTY()
+	TObjectPtr<USoundBase> MassageReceiveSFX;
+
 public:
 	void PlayIslandBGM();
 	
@@ -72,4 +83,10 @@ public:
 	void PlayPopUpSound();
 	void PlayPopDownSound();
 	void PlayNoticeSound();
+
+	void PlayMicOnSound();
+	void PlayMicOffSound();
+	void PlayMeetingOnSound();
+	void PlayMeetingOffSound();
+	void PlayMassageReceiveSound();
 };

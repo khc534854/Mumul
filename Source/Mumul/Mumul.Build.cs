@@ -25,7 +25,8 @@ public class Mumul : ModuleRules
 			"DeveloperSettings",
 			"Niagara",
 			"LevelSequence", "MovieScene",
-			"PCG"
+			"PCG",
+			"SignalProcessing"
 		});
 	}
 }

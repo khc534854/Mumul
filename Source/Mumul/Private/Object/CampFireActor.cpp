@@ -156,9 +156,13 @@ void ACampFireActor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor*
 	{
 		PS->bIsNearByCampFire = true;
 
-		if (PS->WaitingChannelID != TEXT("Lobby"))
+		if (PS->WaitingChannelID.Len() > 0 && PS->WaitingChannelID != TEXT("Lobby"))
 		{
 			PS->Server_SetVoiceChannelID(PS->WaitingChannelID); // 모닥불 채널로 변경
+		}
+		else
+		{
+			PS->Server_SetVoiceChannelID(TEXT("Lobby"));
 		}
 
 		if (ACuteAlienController* PC = Cast<ACuteAlienController>(PS->GetOwningController()))

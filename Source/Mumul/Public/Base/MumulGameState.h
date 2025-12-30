@@ -7,7 +7,23 @@
 #include "Player/MumulPlayerState.h"
 #include "MumulGameState.generated.h"
 
+USTRUCT(BlueprintType)
+struct FMeetingInfo
+{
+	GENERATED_BODY()
 
+	UPROPERTY()
+	FString ChannelID; // Key (채팅방 ID)
+
+	UPROPERTY()
+	FString MeetingID; // Value (회의 세션 ID)
+
+	// 비교 연산자 (Remove 등을 위해 필요할 수 있음)
+	bool operator==(const FMeetingInfo& Other) const
+	{
+		return ChannelID == Other.ChannelID;
+	}
+};
 
 
 UCLASS()
@@ -36,12 +52,17 @@ public:
 protected:
 	UPROPERTY(Replicated)
 	TArray<FString> TeamChatList;
+
+	UPROPERTY(ReplicatedUsing = OnRep_ActiveMeetings)
+	TArray<FMeetingInfo> ActiveMeetings;
+
+	UFUNCTION()
+	void OnRep_ActiveMeetings();
 public:
 	TArray<FString> GetTeamChatList() { return TeamChatList; }
 
 public:
 	// 진행 중인 회의 목록 (Key: 채널ID, Value: 미팅ID)
-	TMap<FString, FString> ActiveMeetings;
 
 	// 회의 등록/해제 함수
 	void RegisterMeeting(FString ChannelID, FString MeetingID);

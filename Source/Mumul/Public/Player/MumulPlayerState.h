@@ -21,8 +21,8 @@ struct FTeamData
 	//UPROPERTY()
 	//int32 TeamLeaderID;
 
-	UPROPERTY()
-	TArray<int32> TeamMateList;
+	//UPROPERTY()
+	//TArray<int32> TeamMateList;
 };
 
 UCLASS()

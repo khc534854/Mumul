@@ -436,10 +436,12 @@ void UPlayerUI::UpdateMicButtonState(bool bActive)
 	if (bActive)
 	{
 		PlayAnimation(MicOn, 0, 0);
+		AudioManager->PlayMicOnSound();
 	}
 	else
 	{
 		StopAnimation(MicOn);
+		AudioManager->PlayMicOffSound();
 	}
 	ChangeMicStateImage();
 }

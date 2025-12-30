@@ -10,6 +10,7 @@
 #include "Components/Image.h"
 #include "Components/ScrollBox.h"
 #include "Components/SizeBox.h"
+#include "Data/AudioManager.h"
 #include "Data/IMGManager.h"
 #include "Network/NetworkStructs.h"
 #include "UI/ChatMessageBlockUI.h"
@@ -36,6 +37,7 @@ void UGroupIconUI::NativeConstruct()
 	}
 
 	GroupIconBtn->OnPressed.AddDynamic(this, &UGroupIconUI::DisplayGroupChat);
+	AudioManager = GetGameInstance()->GetSubsystem<UAudioManager>();
 }
 
 void UGroupIconUI::DisplayGroupChat()
@@ -97,6 +99,9 @@ void UGroupIconUI::SetNewMessageNotice(bool bVisible)
 	if (NewMessageNotice)
 	{
 		NewMessageNotice->SetVisibility(bVisible ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+
+		if (bVisible)
+			AudioManager->PlayMassageReceiveSound();
 	}
 }
 
@@ -105,6 +110,11 @@ void UGroupIconUI::SetMeetingStatus(bool bIsActive)
 	if (MeetingActiveNotice)
 	{
 		MeetingActiveNotice->SetVisibility(bIsActive ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+
+		if (bIsActive)
+			AudioManager->PlayMeetingOnSound();
+		else
+			AudioManager->PlayMeetingOffSound();
 	}
 }
 
