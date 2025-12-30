@@ -73,9 +73,7 @@ protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UScrollBox> DMScrollBox;
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UVerticalBox> DMUnConfirmedVBox;
-	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UVerticalBox> DMConfirmedVBox;
+	TObjectPtr<class UVerticalBox> DMVBox;
 	UPROPERTY()
 	TObjectPtr<class UNoticeContentUI> NoticeContentUI;
 	
@@ -88,6 +86,7 @@ protected:
 	
 public:
 	void SortNotices(UVerticalBox* ConfirmedBox, UVerticalBox* UnConfirmedBox);
+	void SortDMs();
 	void OnToggleNoticeVisibility();
 	void AddNotice(const FDispatchPayloadBase& Data);
 	void AddDM(const FDispatchPayloadBase& Data);
@@ -96,4 +95,6 @@ public:
 	
 	void DisplayDispatchPopUp(const FDispatchPayloadBase& DispatchPayload);
 	void HideDispatchPopUp();
+	
+	bool IsAllConfirmed();
 };

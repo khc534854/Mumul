@@ -23,14 +23,14 @@ void UNoticeUI::NativeConstruct()
 	DirectMessageTap->OnClicked.AddDynamic(this, &UNoticeUI::OnSwitchToDM);
 
 	ChangeNoticeState(ENoticeState::Notice);
-	
+
 	AudioManager = GetGameInstance()->GetSubsystem<UAudioManager>();
 }
 
 void UNoticeUI::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
-	
+
 	// Init NoticeUI position
 	PlayAnimation(NoticeUI_SildeUpAnim, NoticeUI_SildeUpAnim->GetEndTime(), 1, EUMGSequencePlayMode::Reverse);
 }
@@ -39,27 +39,32 @@ void UNoticeUI::ChangeNoticeState(ENoticeState NewState)
 {
 	CurNoticeState = NewState;
 
+	FLinearColor Color;
+	
 	switch (NewState)
 	{
 	case ENoticeState::Notice:
 		NoticeWS->SetActiveWidgetIndex(0);
-		NoticeTap->SetIsEnabled(false);
-		InformationTap->SetIsEnabled(true);
-		DirectMessageTap->SetIsEnabled(true);
-		break;
-	case ENoticeState::Information:
-		NoticeWS->SetActiveWidgetIndex(1);
-		NoticeTap->SetIsEnabled(true);
-		InformationTap->SetIsEnabled(false);
-		DirectMessageTap->SetIsEnabled(true);
+		NoticeTap->SetVisibility(ESlateVisibility::HitTestInvisible);
+		DirectMessageTap->SetVisibility(ESlateVisibility::Visible);
+
+		Color = FLinearColor::FromSRGBColor(FColor(70, 75, 95, 255));
+		NoticeTap->SetColorAndOpacity(Color);
+		DirectMessageTap->SetColorAndOpacity(FLinearColor(1.f, 1.f, 1.f, 1.f));
 		break;
 	case ENoticeState::DM:
 		NoticeWS->SetActiveWidgetIndex(2);
-		NoticeTap->SetIsEnabled(true);
-		InformationTap->SetIsEnabled(true);
-		DirectMessageTap->SetIsEnabled(false);
+		NoticeTap->SetVisibility(ESlateVisibility::Visible);
+		DirectMessageTap->SetVisibility(ESlateVisibility::HitTestInvisible);
+		
+		Color = FLinearColor::FromSRGBColor(FColor(70, 75, 95, 255));
+		DirectMessageTap->SetColorAndOpacity(Color);
+		NoticeTap->SetColorAndOpacity(FLinearColor(1.f, 1.f, 1.f, 1.f));
 		break;
+	default:
+		return;
 	}
+
 }
 
 
@@ -77,7 +82,7 @@ void UNoticeUI::OnSwitchToInformation()
 
 void UNoticeUI::OnSwitchToDM()
 {
-	//SortNotices(DMConfirmedVBox, DMUnConfirmedVBox);
+	SortDMs();
 	ChangeNoticeState(ENoticeState::DM);
 }
 
@@ -86,7 +91,7 @@ void UNoticeUI::OnToggleNoticeVisibility()
 {
 	if (IsAnimationPlaying(NoticeUI_SildeUpAnim))
 		return;
-	
+
 	if (bIsNoticeVisible)
 	{
 		bIsNoticeVisible = false;
@@ -103,7 +108,7 @@ void UNoticeUI::OnToggleNoticeVisibility()
 		case ENoticeState::Information:
 			break;
 		case ENoticeState::DM:
-			//SortNotices(DMConfirmedVBox, DMUnConfirmedVBox);
+			SortDMs();
 			break;
 		}
 		bIsNoticeVisible = true;
@@ -116,7 +121,7 @@ void UNoticeUI::SortNotices(UVerticalBox* ConfirmedBox, UVerticalBox* UnConfirme
 {
 	TArray<UNoticeContentUI*> AllNoticeUIs;
 
-	// 1️⃣ 모든 공지 아이템 수집
+	// 1️. 모든 공지 아이템 수집
 	for (UWidget* Child : UnConfirmedBox->GetAllChildren())
 	{
 		if (UNoticeContentUI* NoticeUI = Cast<UNoticeContentUI>(Child))
@@ -133,7 +138,7 @@ void UNoticeUI::SortNotices(UVerticalBox* ConfirmedBox, UVerticalBox* UnConfirme
 		}
 	}
 
-	// 2️⃣ 상태 + 시간 기준 정렬
+	// 2. 상태 + 시간 기준 정렬
 	AllNoticeUIs.Sort([](const UNoticeContentUI& First, const UNoticeContentUI& Second)
 	{
 		// 1차: 미확인 공지 우선
@@ -146,7 +151,7 @@ void UNoticeUI::SortNotices(UVerticalBox* ConfirmedBox, UVerticalBox* UnConfirme
 		return First.GetCreatedAt() > Second.GetCreatedAt();
 	});
 
-	// 3️⃣ 정렬 결과를 UI에 반영
+	// 3. 정렬 결과를 UI에 반영
 	UnConfirmedBox->ClearChildren();
 	ConfirmedBox->ClearChildren();
 
@@ -160,6 +165,34 @@ void UNoticeUI::SortNotices(UVerticalBox* ConfirmedBox, UVerticalBox* UnConfirme
 		{
 			UnConfirmedBox->AddChild(NoticeUI);
 		}
+	}
+}
+
+void UNoticeUI::SortDMs()
+{
+	if (!DMVBox) return;
+
+	TArray<UNoticeContentUI*> AllDMs;
+
+	for (UWidget* Child : DMVBox->GetAllChildren())
+	{
+		if (UNoticeContentUI* DMUI = Cast<UNoticeContentUI>(Child))
+		{
+			AllDMs.Add(DMUI);
+		}
+	}
+
+	// 최근순 정렬
+	AllDMs.Sort([](const UNoticeContentUI& A, const UNoticeContentUI& B)
+	{
+		return A.GetCreatedAt() > B.GetCreatedAt();
+	});
+
+	DMVBox->ClearChildren();
+
+	for (UNoticeContentUI* DMUI : AllDMs)
+	{
+		DMVBox->AddChild(DMUI);
 	}
 }
 
@@ -183,7 +216,7 @@ void UNoticeUI::AddDM(const FDispatchPayloadBase& Data)
 		NoticeContentUI = CreateWidget<UNoticeContentUI>(GetOwningPlayer(), NoticeContentUIClass);
 		NoticeContentUI->InitUI(Data);
 		NoticeContentUI->SetTimeStampText(Data.CreatedAt);
-		DMUnConfirmedVBox->InsertChildAt(0, NoticeContentUI);
+		DMVBox->InsertChildAt(0, NoticeContentUI);
 	}
 }
 
@@ -191,7 +224,7 @@ void UNoticeUI::DisplayDispatchPopUp(const FDispatchPayloadBase& DispatchPayload
 {
 	DispatchBox->ClearChildren();
 	PlayAnimation(DispatchBox_SlideAnim);
-	
+
 	if (TSubclassOf<UDispatchPopUI> DispatchPopUIClass = UObjectAndClassFinder::Get()->GetWidgetClass<
 		UDispatchPopUI>("WBP_DispatchPop"))
 	{
@@ -213,4 +246,33 @@ void UNoticeUI::DisplayDispatchPopUp(const FDispatchPayloadBase& DispatchPayload
 void UNoticeUI::HideDispatchPopUp()
 {
 	PlayAnimation(DispatchBox_SlideAnim, 0, 1, EUMGSequencePlayMode::Reverse);
+}
+
+bool UNoticeUI::IsAllConfirmed()
+{
+	// 미확인 VBox
+	for (UWidget* Child : UnConfirmedVBox->GetAllChildren())
+	{
+		if (UNoticeContentUI* NoticeUI = Cast<UNoticeContentUI>(Child))
+		{
+			if (!NoticeUI->IsConfirmed())
+			{
+				return false;
+			}
+		}
+	}
+
+	// 확인 VBox
+	for (UWidget* Child : ConfirmedVBox->GetAllChildren())
+	{
+		if (UNoticeContentUI* NoticeUI = Cast<UNoticeContentUI>(Child))
+		{
+			if (!NoticeUI->IsConfirmed())
+			{
+				return false;
+			}
+		}
+	}
+
+	return true;
 }

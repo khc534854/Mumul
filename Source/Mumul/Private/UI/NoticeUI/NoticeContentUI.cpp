@@ -54,7 +54,7 @@ void UNoticeContentUI::OnConfirmClicked()
 		}
 	}
 	
-	if (Cast<ACuteAlienController>(GetOwningPlayer())->NoticeComp->NoticeUI->UnConfirmedVBox->GetChildrenCount() == 0)
+	if (Cast<ACuteAlienController>(GetOwningPlayer())->NoticeComp->NoticeUI->IsAllConfirmed())
 	{
 		Cast<ACuteAlienController>(GetOwningPlayer())->PlayerUI->NewNoticeBorder->SetVisibility(ESlateVisibility::Collapsed);
 	}
@@ -113,20 +113,36 @@ void UNoticeContentUI::UpdateConfirmButtonUI()
 void UNoticeContentUI::SetTimeStampText(const FDateTime& Time)
 {
 	// UTC → KST
-	FDateTime Kst = Time + FTimespan(9, 0, 0);
+	const FDateTime Kst = Time + FTimespan(9, 0, 0);
 
+	// 날짜
+	const FString DatePart = FString::Printf(
+		TEXT("%04d-%02d-%02d"),
+		Kst.GetYear(),
+		Kst.GetMonth(),
+		Kst.GetDay()
+	);
+
+	// 시간 (12시간제)
 	int32 Hour = Kst.GetHour();
 	const TCHAR* AmPm = Hour < 12 ? TEXT("AM") : TEXT("PM");
 
 	Hour %= 12;
 	if (Hour == 0) Hour = 12;
 
-	FString TimeOnly = FString::Printf(
+	const FString TimePart = FString::Printf(
 		TEXT("%s %02d:%02d"),
 		AmPm,
 		Hour,
 		Kst.GetMinute()
 	);
 
-	TimeStampText->SetText(FText::FromString(TimeOnly));
+	// 최종 텍스트
+	const FString FinalText = FString::Printf(
+		TEXT("%s %s"),
+		*DatePart,
+		*TimePart
+	);
+
+	TimeStampText->SetText(FText::FromString(FinalText));
 }

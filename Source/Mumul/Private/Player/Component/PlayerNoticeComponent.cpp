@@ -124,6 +124,7 @@ void UPlayerNoticeComponent::OnServerDispatchHistoryResponse(bool bSuccess, FStr
 			UE_LOG(LogTemp, Error, TEXT("DispatchHistory 파싱 실패"));
 		}
 		NoticeUI->SortNotices(NoticeUI->ConfirmedVBox, NoticeUI->UnConfirmedVBox);
+		NoticeUI->SortDMs();
 	}
 	else
 	{
@@ -138,7 +139,11 @@ void UPlayerNoticeComponent::OnNotice(const FDispatchPayloadBase& Notice)
 		owner->AudioManager->PlayNoticeSound();
 		EnqueueDispatch(Notice);
 		NoticeUI->AddNotice(Notice);
-		owner->PlayerUI->NewNoticeBorder->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+
+		if (Notice.IsConfirmed == false)
+		{
+			owner->PlayerUI->NewNoticeBorder->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		}
 	}
 }
 
@@ -150,7 +155,7 @@ void UPlayerNoticeComponent::OnDirectMessage(const FDispatchPayloadBase& DM)
 void UPlayerNoticeComponent::EnqueueDispatch(const FDispatchPayloadBase& Dispatch)
 {
 	DispatchQueue.Enqueue(Dispatch);
-	
+
 	if (bIsDisplaying == false)
 	{
 		DisplayNextDispatch();
@@ -165,12 +170,12 @@ void UPlayerNoticeComponent::DisplayNextDispatch()
 		NoticeUI->HideDispatchPopUp();
 		return;
 	}
-		
+
 	bIsDisplaying = true;
 	FDispatchPayloadBase Dispatch;
 	DispatchQueue.Dequeue(Dispatch);
 	NoticeUI->DisplayDispatchPopUp(Dispatch);
-	
+
 	GetWorld()->GetTimerManager().SetTimer(
 		DispatchDisplayTimer,
 		this,
@@ -199,6 +204,5 @@ void UPlayerNoticeComponent::Client_OnSendDM_Implementation(const FDispatchPaylo
 		owner->AudioManager->PlayNoticeSound();
 		EnqueueDispatch(DM);
 		NoticeUI->AddDM(DM);
-		owner->PlayerUI->NewNoticeBorder->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	}
 }
