@@ -342,6 +342,7 @@ void UPlayerUI::OnCustomizeBoxClick()
 		CloseAllSidePanels();
 
 		bIsOpenCustomizeUI = true;
+		AudioManager->PlayPopUpSound();
 		PlayAnimation(CustomizeBoxAnim, 0, 1, EUMGSequencePlayMode::Forward);
 		CheckEquippedCustomItem();
 		SetButtonActiveState(PlayerCustomizeBtn, true);
@@ -482,6 +483,7 @@ void UPlayerUI::OnHousingBoxClick()
 		CloseAllSidePanels();
 
 		bIsOpenHousingUI = true;
+		AudioManager->PlayPopUpSound();
 		PlayAnimation(HousingBoxAnim, 0, 1, EUMGSequencePlayMode::Forward);
 		CheckPlacedHousingItems();
 		SetButtonActiveState(HousingBtn, true);
@@ -650,7 +652,6 @@ void UPlayerUI::CloseCustomUI()
 	bIsOpenCustomizeUI = false;
 	PlayAnimation(CustomizeBoxAnim, 0, 1, EUMGSequencePlayMode::Reverse);
 	SetButtonActiveState(PlayerCustomizeBtn, false);
-	AudioManager->PlayPopDownSound();
 }
 
 void UPlayerUI::CloseHousingUI()
@@ -665,7 +666,6 @@ void UPlayerUI::CloseHousingUI()
 		PC->HousingComp->StopPreviewHousingItem();
 	}
 	SetButtonActiveState(HousingBtn, false);
-	AudioManager->PlayPopDownSound();
 }
 
 void UPlayerUI::CloseChatUI()
@@ -681,7 +681,6 @@ void UPlayerUI::CloseChatUI()
 			GroupChatUI->ToggleCreateGroupChatUI();
 		}
 	}
-	AudioManager->PlayPopDownSound();
 }
 
 void UPlayerUI::CloseNoticeUI()
@@ -698,7 +697,6 @@ void UPlayerUI::CloseNoticeUI()
 		}
 	}
 	SetButtonActiveState(NoticeBtn, false);
-	AudioManager->PlayPopDownSound();
 }
 
 void UPlayerUI::CloseAllSidePanels()

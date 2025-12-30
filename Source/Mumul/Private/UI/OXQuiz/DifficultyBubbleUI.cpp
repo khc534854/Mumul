@@ -20,7 +20,7 @@ void UDifficultyBubbleUI::NativeConstruct()
 
 void UDifficultyBubbleUI::UpdateBorderColor()
 {
-	DifficultyBorder->SetBrushColor(bIsHovered ? FLinearColor::Green : FLinearColor::White);
+	DifficultyBorder->SetBrushColor(bIsHovered ? FLinearColor(0.10f, 0.48f, 0.18f, 1.0f) : FLinearColor::White);
 }
 
 void UDifficultyBubbleUI::OnHoveredBorderColor()

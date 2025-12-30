@@ -45,7 +45,7 @@ void UCreateGroupChatUI::RefreshJoinedPlayerList()
 			AMumulPlayerState* MPS = Cast<AMumulPlayerState>(PS);
 
 			UGroupProfileUI* ProfileUI = CreateWidget<UGroupProfileUI>(GetWorld(), GroupProfileUIClass);
-			ProfileUI->SetProfileIMG(IMGManager->GetImageByUserID(MPS->PS_TendencyID));
+			ProfileUI->SetProfileIMG(IMGManager->GetImageByUserID(MPS->PS_TendencyID - 1));
 			ProfileUI->SetPlayerName(MPS->PS_RealName);
 			ProfileUI->SetUserIndex(MPS->PS_UserIndex);
 			

@@ -114,6 +114,12 @@ void UNoticeContentUI::SetTimeStampText(const FDateTime& Time)
 {
 	// UTC → KST
 	const FDateTime Kst = Time + FTimespan(9, 0, 0);
+	
+	UE_LOG(LogTemp, Warning, TEXT("Dispatch -> SetTimeStampText()"));
+	UE_LOG(LogTemp, Warning, TEXT("Raw Time (Server): %s"), *Time.ToString());
+	UE_LOG(LogTemp, Warning, TEXT("After +9h: %s"), *Kst.ToString());
+	UE_LOG(LogTemp, Warning, TEXT("Local Now: %s"), *FDateTime::Now().ToString());
+	UE_LOG(LogTemp, Warning, TEXT("UTC Now: %s"), *FDateTime::UtcNow().ToString());
 
 	// 날짜
 	const FString DatePart = FString::Printf(

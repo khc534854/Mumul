@@ -403,8 +403,8 @@ void UPlayerMeetingManagerComponent::OpenMeetingSetupUI()
 		VoiceMeetingUI->InitMeetingUI(true); // 방장 모드
 		VoiceMeetingUI->TeamNameText->BaseText->SetText(FText::FromString(owner->ChatComp->GroupChatUI->GetCurrentTeamName()));
 		VoiceMeetingUI->SetVisibility(ESlateVisibility::Visible);
-		VoiceMeetingUI->PlayAnimation(VoiceMeetingUI->StartMeeting_SlideAnim);
 		owner->AudioManager->PlayPopUpSound();
+		VoiceMeetingUI->PlayAnimation(VoiceMeetingUI->StartMeeting_SlideAnim);
 	}
 }
 
@@ -425,8 +425,8 @@ void UPlayerMeetingManagerComponent::OpenEndMeetingPopup()
 		}
 
 		VoiceMeetingUI->SetVisibility(ESlateVisibility::Visible);
-		VoiceMeetingUI->PlayAnimation(VoiceMeetingUI->EndMeeting_SlideAnim);
 		owner->AudioManager->PlayPopUpSound();
+		VoiceMeetingUI->PlayAnimation(VoiceMeetingUI->EndMeeting_SlideAnim);
 	}
 }
 

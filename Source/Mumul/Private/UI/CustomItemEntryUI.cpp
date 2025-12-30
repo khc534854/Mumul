@@ -17,7 +17,7 @@ void UCustomItemEntryUI::InitItem(FName ItemID, UTexture2D* Thumbnail, FString I
 	if (ThumbnailImage && Thumbnail)
 	{
 		ThumbnailImage->SetBrushFromTexture(Thumbnail);
-		ThumbnailImage->SetColorAndOpacity(FLinearColor::White);
+		ThumbnailImage->SetColorAndOpacity(FLinearColor(0.99f, 0.99f, 0.99f, 1.0f));
 	}
     
 	if (ItemNameText)
@@ -74,7 +74,7 @@ void UCustomItemEntryUI::UpdateVisualState()
     // 1. 공통 초기화 (기본 상태: 이름 숨김, 이미지 원래 색)
     // -------------------------------------------------------
     ItemNameText->SetVisibility(ESlateVisibility::Hidden);
-    ThumbnailImage->SetColorAndOpacity(FLinearColor::White);
+    ThumbnailImage->SetColorAndOpacity(FLinearColor(0.99f, 0.99f, 0.99f, 1.0f));
 
     // -------------------------------------------------------
     // 2. 타입별 분기 처리
@@ -92,7 +92,7 @@ void UCustomItemEntryUI::UpdateVisualState()
           ItemNameText->SetColorAndOpacity(FLinearColor::White); 
 
           // 2. 이미지 톤 다운 (회색)
-          ThumbnailImage->SetColorAndOpacity(FLinearColor(0.3f, 0.3f, 0.3f, 1.0f));
+          ThumbnailImage->SetColorAndOpacity(FLinearColor(0.34f, 0.34f, 0.34f, 1.0f));
        }
        else
        {
@@ -125,7 +125,7 @@ void UCustomItemEntryUI::UpdateVisualState()
              ItemNameText->SetColorAndOpacity(FLinearColor::White);
 
              // 2. 이미지 톤 다운 (회색) -> 이미 설치했으므로 비활성 느낌
-             ThumbnailImage->SetColorAndOpacity(FLinearColor(0.3f, 0.3f, 0.3f, 1.0f));
+             ThumbnailImage->SetColorAndOpacity(FLinearColor(0.34f, 0.34f, 0.34f, 1.0f));
           }
           else
           {

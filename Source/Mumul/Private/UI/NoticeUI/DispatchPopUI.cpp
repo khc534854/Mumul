@@ -13,9 +13,9 @@
 void UDispatchPopUI::NativeConstruct()
 {
 	Super::NativeConstruct();
-	
+
 	PC = Cast<ACuteAlienController>(GetOwningPlayer());
-	
+
 	DispatchBtn->OnClicked.AddDynamic(this, &UDispatchPopUI::OnClickPopUp);
 }
 
@@ -39,9 +39,8 @@ FString UDispatchPopUI::MakePreviewText(const FString& OriginalText, int32 MaxLe
 
 void UDispatchPopUI::SetDispatchText(const FString& Text)
 {
-	const int32 PreviewLength = 80; // 원하는 미리보기 길이
+	const int32 PreviewLength = 75; // 원하는 미리보기 길이
 	FString PreviewText = MakePreviewText(Text, PreviewLength);
-	
+
 	DispatchText->SetText(FText::FromString(PreviewText));
 }
-

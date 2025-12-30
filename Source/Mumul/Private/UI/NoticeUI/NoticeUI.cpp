@@ -96,10 +96,9 @@ void UNoticeUI::OnToggleNoticeVisibility()
 	{
 		bIsNoticeVisible = false;
 		PlayAnimation(NoticeUI_SildeUpAnim, 0, 1, EUMGSequencePlayMode::Reverse);
-		AudioManager->PlayPopDownSound();
 	}
 	else
-	{
+	{		
 		switch (CurNoticeState)
 		{
 		case ENoticeState::Notice:
@@ -112,8 +111,8 @@ void UNoticeUI::OnToggleNoticeVisibility()
 			break;
 		}
 		bIsNoticeVisible = true;
-		PlayAnimation(NoticeUI_SildeUpAnim);
 		AudioManager->PlayPopUpSound();
+		PlayAnimation(NoticeUI_SildeUpAnim);
 	}
 }
 
