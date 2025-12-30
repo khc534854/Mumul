@@ -62,12 +62,12 @@ void UNoticeContentUI::OnConfirmClicked()
 
 void UNoticeContentUI::InitUI(const FDispatchPayloadBase& Data)
 {
+	ContentID = Data.MessageId;
+	CreatedAt = Data.CreatedAt;
+	bIsConfirmed = Data.IsConfirmed;
+
 	if (Data.NeedConfirmation)
 	{
-		ContentID = Data.MessageId;
-		CreatedAt = Data.CreatedAt;
-		bIsConfirmed = Data.IsConfirmed;
-
 		FString Content;
 		if (Data.Title.IsEmpty())
 		{

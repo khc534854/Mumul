@@ -50,7 +50,8 @@ void UGroupChatUI::NativeConstruct()
 
 	AudioManager = GetGameInstance()->GetSubsystem<UAudioManager>();
 	IMGManager = NewObject<UIMGManager>(this, UIMGManager::StaticClass());
-
+	
+	EditBox->OnTextChanged.AddDynamic(this,&UGroupChatUI::OnTextBoxChanged);
 	ChatEnter->OnPressed.AddDynamic(this, &UGroupChatUI::OnTextBoxCommitted);
 	AddGroupBtn->OnPressed.AddDynamic(this, &UGroupChatUI::ToggleCreateGroupChatUI);
 
@@ -1075,11 +1076,33 @@ FReply UGroupChatUI::NativeOnPreviewKeyDown(const FGeometry& InGeometry, const F
 	return Super::NativeOnPreviewKeyDown(InGeometry, InKeyEvent);
 }
 
+void UGroupChatUI::OnTextBoxChanged(const FText& Text)
+{
+	if (!EditBox)
+		return;
+
+	if (!bPendingInvalidate)
+	{
+		bPendingInvalidate = true;
+
+		GetWorld()->GetTimerManager().SetTimerForNextTick([this]()
+		{
+			if (EditBox && EditBox->GetCachedWidget().IsValid())
+			{
+				EditBox->GetCachedWidget()->Invalidate(EInvalidateWidget::Paint);
+			}
+			bPendingInvalidate = false;
+		});
+	}
+}
+
 void UGroupChatUI::OnTextBoxCommitted()
 {
 	FText Text = EditBox->GetText();
 	if (Text.IsEmpty()) return;
 	if (!CurrentSelectedGroup) return;
+	
+	AudioManager->PlayClickSound();
 
 	FString Content = Text.ToString();
 	FString TimeStamp = MakeChatTimeStamp();

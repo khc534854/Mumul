@@ -11,6 +11,7 @@
 #include "Components/WidgetSwitcher.h"
 #include "Data/AudioManager.h"
 #include "Data/ObjectAndClassFinder.h"
+#include "Algo/StableSort.h"
 #include "UI/NoticeUI/DispatchPopUI.h"
 #include "UI/NoticeUI/NoticeContentUI.h"
 
@@ -171,25 +172,33 @@ void UNoticeUI::SortDMs()
 {
 	if (!DMVBox) return;
 
-	TArray<UNoticeContentUI*> AllDMs;
+	TArray<UNoticeContentUI*> DMs;
+	DMs.Reserve(DMVBox->GetChildrenCount());
 
 	for (UWidget* Child : DMVBox->GetAllChildren())
 	{
 		if (UNoticeContentUI* DMUI = Cast<UNoticeContentUI>(Child))
 		{
-			AllDMs.Add(DMUI);
+			DMs.Add(DMUI);
 		}
 	}
 
-	// 최근순 정렬
-	AllDMs.Sort([](const UNoticeContentUI& A, const UNoticeContentUI& B)
+	DMs.Sort([](const UNoticeContentUI& A, const UNoticeContentUI& B)
 	{
-		return A.GetCreatedAt() > B.GetCreatedAt();
+		const FDateTime TimeA = A.GetCreatedAt();
+		const FDateTime TimeB = B.GetCreatedAt();
+
+		// 1. 최신 시간 우선
+		if (TimeA > TimeB) return true;
+		if (TimeA < TimeB) return false;
+
+		// 2. 시간 완전히 같을 때 → MessageId 큰 게 최신
+		return A.GetMessageId() > B.GetMessageId();
 	});
 
 	DMVBox->ClearChildren();
 
-	for (UNoticeContentUI* DMUI : AllDMs)
+	for (UNoticeContentUI* DMUI : DMs)
 	{
 		DMVBox->AddChild(DMUI);
 	}

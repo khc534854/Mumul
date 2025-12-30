@@ -46,6 +46,7 @@ protected:
 public:
 	void InitUI(const FDispatchPayloadBase& Data);
 	FDateTime GetCreatedAt() const { return CreatedAt; }
+	int32 GetMessageId() const { return ContentID; }
 	bool IsConfirmed() const { return bIsConfirmed; }
 	void UpdateConfirmButtonUI();
 	void SetTimeStampText(const FDateTime& Text);
