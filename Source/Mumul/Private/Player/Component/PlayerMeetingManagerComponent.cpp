@@ -402,6 +402,8 @@ void UPlayerMeetingManagerComponent::OpenMeetingSetupUI()
 			VoiceMeetingUI->AddToViewport(100);
 		}
 		owner->SetIgnoreMoveInput(true);
+		
+		VoiceMeetingUI->ResetInputFields();
 
 		VoiceMeetingUI->InitMeetingUI(true); // 방장 모드
 		VoiceMeetingUI->TeamNameText->BaseText->SetText(FText::FromString(owner->ChatComp->GroupChatUI->GetCurrentTeamName()));

@@ -44,6 +44,7 @@ public:
 	// 함수들
 	void InitMeetingUI(bool bIsHost); // UI 초기화
 	void SetMeetingState(bool bIsActive); // 화면 전환
+	void ResetInputFields();
 
 private:
 	class ACuteAlienController* GetMyController();

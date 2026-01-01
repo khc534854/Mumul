@@ -124,7 +124,7 @@ void ACuteAlienController::BeginPlay()
 	{
 		// 1. 도착하자마자 화면을 검게 유지 (로비에서 넘어온 페이드가 풀릴 수 있으므로 강제 설정)
 		// Alpha 1.0 -> 1.0 (계속 검음)
-		PlayerCameraManager->StartCameraFade(1.0f, 1.0f, 10.0f, FLinearColor::Black, true, true);
+		PlayerCameraManager->StartCameraFade(1.0f, 1.0f, 10.0f, FLinearColor::Black, false, true);
 
 		// 2. 조작 및 UI 차단 (Cinematic Mode)
 		// bInCinematicMode, bHidePlayer, bAffectsHUD, bAffectsMovement, bAffectsTurning
@@ -395,6 +395,8 @@ void ACuteAlienController::OnToggleMouse()
 	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
 	SetIgnoreLookInput(true);
 	SetShowMouseCursor(true);
+	
+	InputMode.SetHideCursorDuringCapture(false);
 	SetInputMode(InputMode);
 }
 

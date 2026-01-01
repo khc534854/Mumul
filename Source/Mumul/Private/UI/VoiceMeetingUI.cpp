@@ -53,6 +53,24 @@ void UVoiceMeetingUI::SetMeetingState(bool bIsActive)
     }
 }
 
+void UVoiceMeetingUI::ResetInputFields()
+{
+    if (MeetingTitleText)
+    {
+        MeetingTitleText->BaseTextBox->SetText(FText::GetEmpty());
+    }
+
+    if (MeetingAgendaText)
+    {
+        MeetingAgendaText->BaseTextBox->SetText(FText::GetEmpty());
+    }
+
+    if (MeetingDescText)
+    {
+        MeetingDescText->BaseTextBox->SetText(FText::GetEmpty());
+    }
+}
+
 // [시작 요청]z
 void UVoiceMeetingUI::OnClickStartMeeting()
 {
