@@ -78,7 +78,7 @@ void UPlayerUI::NativeConstruct()
 	
 	if (UVoiceChatComponent* VoiceComp = GetVoiceComponent())
 	{
-		UpdateMicButtonState(VoiceComp->IsSpeaking());
+		InitMicButtonState();
 		UpdateRecordButtonState(VoiceComp->IsRecording());
 
 		VoiceComp->OnSpeakingStateChanged.AddDynamic(this, &UPlayerUI::UpdateMicButtonState);
@@ -429,6 +429,12 @@ void UPlayerUI::OnCustomItemEntryChecked(FName ItemID, bool bIsChecked)
 			Player->Server_EquipCustom(NAME_None); // NAME_None은 해제를 의미
 		}
 	}
+}
+
+void UPlayerUI::InitMicButtonState()
+{
+	StopAnimation(MicOn);
+	ChangeMicStateImage();
 }
 
 void UPlayerUI::UpdateMicButtonState(bool bActive)

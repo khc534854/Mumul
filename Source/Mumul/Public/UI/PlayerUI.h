@@ -150,6 +150,7 @@ protected:
 	UVoiceChatComponent* GetVoiceComponent() const;
 	UFUNCTION(BlueprintImplementableEvent)
 	void ChangeMicStateImage();
+	void InitMicButtonState();
 	UFUNCTION()
 	void UpdateMicButtonState(bool bActive);
 	UFUNCTION()

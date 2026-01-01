@@ -3,7 +3,6 @@
 
 #include "Player/CuteAlienAnim.h"
 
-#include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Player/CuteAlienPlayer.h"
 
@@ -11,13 +10,11 @@ void UCuteAlienAnim::NativeInitializeAnimation()
 {
 	Super::NativeInitializeAnimation();
 
-	Owner = Cast<ACuteAlienPlayer>(TryGetPawnOwner());
-	if (Owner)
+	// 중복 호출 제거 및 안전한 캐스팅
+	APawn* PawnOwner = TryGetPawnOwner();
+	if (PawnOwner)
 	{
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("UCuteAlienAnim, Owner is nullptr"))
+		Owner = Cast<ACuteAlienPlayer>(PawnOwner);
 	}
 }
 
@@ -25,12 +22,25 @@ void UCuteAlienAnim::NativeUpdateAnimation(float DeltaSeconds)
 {
 	Super::NativeUpdateAnimation(DeltaSeconds);
 
-	if (Owner)
+	// Owner가 nullptr이거나 유효하지 않으면 즉시 중단
+	if (!IsValid(Owner))
 	{
-		FVector Velocity = Owner->GetVelocity();
-		Velocity.Z = 0.f;
-		CharacterSpeed = FMath::FInterpTo(CharacterSpeed, Velocity.Size(), DeltaSeconds, Smoothness);
+		// 런타임 중에 Owner가 사라졌을 수 있으므로 다시 시도
+		APawn* PawnOwner = TryGetPawnOwner();
+		if (PawnOwner)
+		{
+			Owner = Cast<ACuteAlienPlayer>(PawnOwner);
+		}
+		
+		if (!IsValid(Owner)) return;
 	}
+	
+	HeadYaw = Owner->GetLookYaw();
+	HeadPitch = Owner->GetLookPitch();
+
+	FVector Velocity = Owner->GetVelocity();
+	Velocity.Z = 0.f;
+	CharacterSpeed = FMath::FInterpTo(CharacterSpeed, Velocity.Size(), DeltaSeconds, Smoothness);
 }
 
 void UCuteAlienAnim::AnimNotify_StartJump()
@@ -49,7 +59,7 @@ void UCuteAlienAnim::AnimNotify_OnJump()
 				JumpSound
 			);
 		}
-		
+
 		Owner->Jump();
 	}
 	JumpPlayRate = 1.f;

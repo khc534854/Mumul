@@ -144,6 +144,16 @@ public:
 	void UpdateNameTagVisibility();
 
 	float NameTagVisibleDistance = 1500.0f;
+	
+protected:
+	bool bIsLookingAtCamera = false;
+	float LookYaw;
+	float LookPitch;
+	void UpdateLook();
+public:
+	float GetLookYaw() const { return LookYaw; }
+	float GetLookPitch() const { return LookPitch; }
+	
 private:
 	UPROPERTY()
 	USceneComponent* OriginalCameraParent = nullptr;

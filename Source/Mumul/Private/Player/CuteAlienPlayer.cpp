@@ -3,6 +3,7 @@
 
 #include "Player/CuteAlienPlayer.h"
 
+#include "ARTrackable.h"
 #include "EnhancedInputComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Base/MumulGameState.h"
@@ -211,6 +212,7 @@ void ACuteAlienPlayer::Tick(float DeltaTime)
 
 	UpdateVoiceIconState();
 	UpdateNameTagVisibility();
+	UpdateLook();
 }
 
 // Called to bind functionality to input
@@ -840,11 +842,102 @@ void ACuteAlienPlayer::Multicast_StandUp_Implementation()
 	}
 }
 
-
 void ACuteAlienPlayer::OnSoundFinished()
 {
 	UGameplayStatics::PlaySound2D(
 	this,
 	Boing
 	);
+}
+
+void ACuteAlienPlayer::UpdateLook()
+{
+	if (!IsLocallyControlled())
+		return;
+
+	if (!GetFollowCamera() || !GetWorld())
+		return;
+
+	// === 카메라 방향 계산 ===
+	FVector ToCamera =
+		GetFollowCamera()->GetComponentLocation() - GetActorLocation();
+	ToCamera.Normalize();
+
+	FRotator LookAtRot = ToCamera.Rotation();
+	FRotator ActorRot  = GetActorRotation();
+	FRotator DeltaRot  = (LookAtRot - ActorRot).GetNormalized();
+
+	// ======================================================
+	// 1. 허용 범위 (히스테리시스 적용)
+	// ======================================================
+
+	// 진입 조건 (볼 때)
+	constexpr float EnterYaw = 34.f;
+	constexpr float EnterPitchUp   = 36.f;
+	constexpr float EnterPitchDown = 6.f;
+
+	// 이탈 조건 (그만 볼 때)
+	constexpr float ExitYaw = 41.f;
+	constexpr float ExitPitchUp   = 44.f;
+	constexpr float ExitPitchDown = 14.f;
+
+	bool bEnterYaw =
+		FMath::Abs(DeltaRot.Yaw) <= EnterYaw;
+
+	bool bEnterPitch =
+		(DeltaRot.Pitch >= -EnterPitchDown) &&
+		(DeltaRot.Pitch <=  EnterPitchUp);
+
+	bool bExitYaw =
+		FMath::Abs(DeltaRot.Yaw) <= ExitYaw;
+
+	bool bExitPitch =
+		(DeltaRot.Pitch >= -ExitPitchDown) &&
+		(DeltaRot.Pitch <=  ExitPitchUp);
+
+	// ======================================================
+	// 2. 상태 전이
+	// ======================================================
+
+	if (!bIsLookingAtCamera)
+	{
+		if (bEnterYaw && bEnterPitch)
+			bIsLookingAtCamera = true;
+	}
+	else
+	{
+		if (!bExitYaw || !bExitPitch)
+			bIsLookingAtCamera = false;
+	}
+
+	// ======================================================
+	// 3. 목표 각도 결정
+	// ======================================================
+
+	float TargetYaw   = 0.f;
+	float TargetPitch = 0.f;
+
+	if (bIsLookingAtCamera)
+	{
+		TargetYaw   = DeltaRot.Yaw;
+		TargetPitch = -DeltaRot.Pitch; // Pitch 반전 보정
+	}
+
+	// ======================================================
+	// 4. 보간 속도 (볼 때 빠르게 / 복귀는 느리게)
+	// ======================================================
+
+	const float LookSpeed   = 6.1f;
+	const float ReturnSpeed = 1.9f;
+
+	float InterpSpeed =
+		bIsLookingAtCamera ? LookSpeed : ReturnSpeed;
+
+	LookYaw = FMath::FInterpTo(
+		LookYaw, TargetYaw,
+		GetWorld()->GetDeltaSeconds(), InterpSpeed);
+
+	LookPitch = FMath::FInterpTo(
+		LookPitch, TargetPitch,
+		GetWorld()->GetDeltaSeconds(), InterpSpeed);
 }

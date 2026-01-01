@@ -6,6 +6,7 @@ public class Mumul : ModuleRules
 {
 	public Mumul(ReadOnlyTargetRules Target) : base(Target)
 	{
+		PrivateDependencyModuleNames.AddRange(new string[] { "AugmentedReality" });
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
         PrivateIncludePaths.AddRange(new string[] {

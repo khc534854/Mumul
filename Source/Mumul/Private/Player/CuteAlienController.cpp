@@ -3,6 +3,7 @@
 
 #include "Player/CuteAlienController.h"
 
+#include "AudioDevice.h"
 #include "EngineUtils.h"
 #include "Player/CuteAlienPlayer.h"
 #include "EnhancedInputComponent.h"
@@ -128,7 +129,7 @@ void ACuteAlienController::BeginPlay()
 
 		// 2. 조작 및 UI 차단 (Cinematic Mode)
 		// bInCinematicMode, bHidePlayer, bAffectsHUD, bAffectsMovement, bAffectsTurning
-		SetCinematicMode(true, false, true, true, true);
+		SetCinematicMode(true, false, true, true, false);
         
 		// 마우스 커서도 숨김
 		bShowMouseCursor = false;
@@ -723,7 +724,19 @@ void ACuteAlienController::CheckPCGAndPlayIntro(bool SkipIntro)
 			{
 				// 1. [중요] 시네마틱 종료 이벤트 바인딩
 				IntroSequencePlayer->OnFinished.AddDynamic(this, &ACuteAlienController::OnIntroSequenceFinished);
-
+				
+				// if (FAudioDevice* AudioDevice = GetWorld()->GetAudioDeviceRaw())
+				// {
+				// 	AudioDevice->SetTransientPrimaryVolume(1.0f);
+				// }
+				
+				// [추가/수정] BGM을 시퀀스 재생 직전에 실행하거나 
+				// 시퀀스가 오디오를 제어하지 못하도록 확인이 필요합니다.
+				if (AudioManager && IsLocalController())
+				{
+					AudioManager->PlayIslandBGM();
+				}
+				
 				// 2. 재생 시작
 				IntroSequencePlayer->Play();
 
@@ -786,11 +799,6 @@ void ACuteAlienController::OnIntroSequenceFinished()
 	if (PlayerCameraManager)
 	{
 		PlayerCameraManager->StopCameraFade();
-	}
-	
-	if (AudioManager && IsLocalController())
-	{
-		AudioManager->PlayIslandBGM();
 	}
 }
 
@@ -903,4 +911,3 @@ void ACuteAlienController::Client_StandUp_Implementation()
 		ResetIgnoreLookInput();
 	}
 }
-

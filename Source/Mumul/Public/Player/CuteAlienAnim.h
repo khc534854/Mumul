@@ -42,4 +42,9 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category="Sound")
 	TObjectPtr<class USoundBase> JumpSound;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Look")
+	float HeadYaw;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Look")
+	float HeadPitch;
 };

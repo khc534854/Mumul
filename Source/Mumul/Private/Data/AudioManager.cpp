@@ -33,6 +33,9 @@ void UAudioManager::Initialize(FSubsystemCollectionBase& Collection)
 	     MeetingOnSFX = Finder->GetSound(TEXT("MeetingOn"));
 	    MeetingOffSFX = Finder->GetSound(TEXT("MeetingOff"));
 	MassageReceiveSFX = Finder->GetSound(TEXT("MassageReceive"));
+	
+	PlacingSFX = Finder->GetSound(TEXT("PlacingSFX"));
+	RemovingSFX = Finder->GetSound(TEXT("RemovingSFX"));
 }
 
 void UAudioManager::PlayIslandBGM()
@@ -41,7 +44,7 @@ void UAudioManager::PlayIslandBGM()
 		return;
 	
 	IslandBGMComp = UGameplayStatics::SpawnSound2D(
-		this,
+		GetWorld(),
 		IslandBGM,
 		1.0f,
 		1.0f,
@@ -231,4 +234,14 @@ void UAudioManager::PlayMeetingOffSound()
 void UAudioManager::PlayMassageReceiveSound()
 {
 	UGameplayStatics::PlaySound2D(GetWorld(), MassageReceiveSFX);
+}
+
+void UAudioManager::PlayPlacingSound()
+{
+	UGameplayStatics::PlaySound2D(GetWorld(), PlacingSFX);
+}
+
+void UAudioManager::PlayRemovingSound()
+{
+	UGameplayStatics::PlaySound2D(GetWorld(), RemovingSFX);
 }

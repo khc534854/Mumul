@@ -9,6 +9,7 @@
 
 #include "Base/MumulMumulGameMode.h"
 #include "Components/BoxComponent.h"
+#include "Data/AudioManager.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Object/Tent/PreviewTentActor.h"
 #include "Player/CuteAlienController.h"
@@ -195,6 +196,8 @@ void UPlayerHousingSystemComponent::TickComponent(float DeltaTime, ELevelTick Ti
             		owner->PlayerUI->ResetHousingSelection(); // 체크 해제 -> "배치됨" 텍스트 표시
             	}
             	
+            	owner->AudioManager->PlayPlacingSound();
+            	
                 StopPreviewHousingItem();
                 
                 if (AMumulCharacter* MyChar = Cast<AMumulCharacter>(player))
@@ -282,6 +285,8 @@ void UPlayerHousingSystemComponent::TickComponent(float DeltaTime, ELevelTick Ti
             if (CurrentTargetItem)
             {
                 TryDeleteHousingItem();
+            	
+            	owner->AudioManager->PlayRemovingSound();
             }
         }
         else if (owner->WasInputKeyJustPressed(EKeys::RightMouseButton))

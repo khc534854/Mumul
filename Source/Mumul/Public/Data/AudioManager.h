@@ -64,6 +64,11 @@ protected:
 	TObjectPtr<USoundBase> MeetingOffSFX;
 	UPROPERTY()
 	TObjectPtr<USoundBase> MassageReceiveSFX;
+	
+	UPROPERTY()
+	TObjectPtr<USoundBase> PlacingSFX;
+	UPROPERTY()
+	TObjectPtr<USoundBase> RemovingSFX;
 
 public:
 	void PlayIslandBGM();
@@ -89,4 +94,7 @@ public:
 	void PlayMeetingOnSound();
 	void PlayMeetingOffSound();
 	void PlayMassageReceiveSound();
+	
+	void PlayPlacingSound();
+	void PlayRemovingSound();
 };
