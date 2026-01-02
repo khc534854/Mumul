@@ -231,6 +231,10 @@ void AMumulCharacter::Server_OnJump_Implementation()
 
 	if (GetCharacterMovement()->IsFalling())
 	{
+		FVector Dir = GetActorForwardVector() + FVector(0, 0, 0.21f);
+		Dir.Normalize();
+		LaunchCharacter(Dir * RollStrength, false, false);
+		
 		Multicast_OnRollAnimation();
 		Client_PlayRollSound(); 
 		return;
@@ -252,9 +256,6 @@ void AMumulCharacter::Multicast_OnRollAnimation_Implementation()
 {
 	if (PlayerAnim->Montage_IsPlaying(RollMontage) == false)
 	{
-		FVector Dir = GetActorForwardVector() + FVector(0, 0, 0.21f);
-		Dir.Normalize();
-		LaunchCharacter(Dir * RollStrength, false, false);
 		PlayerAnim->Montage_Play(RollMontage);
 
 		// UGameplayStatics::PlaySoundAtLocation(
