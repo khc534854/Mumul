@@ -212,7 +212,10 @@ void UNoticeUI::AddNotice(const FDispatchPayloadBase& Data)
 		NoticeContentUI = CreateWidget<UNoticeContentUI>(GetOwningPlayer(), NoticeContentUIClass);
 		NoticeContentUI->InitUI(Data);
 		NoticeContentUI->SetTimeStampText(Data.CreatedAt);
-		UnConfirmedVBox->InsertChildAt(0, NoticeContentUI);
+
+		UnConfirmedVBox->AddChild(NoticeContentUI);
+
+		SortNotices(ConfirmedVBox, UnConfirmedVBox);
 	}
 }
 
@@ -224,7 +227,10 @@ void UNoticeUI::AddDM(const FDispatchPayloadBase& Data)
 		NoticeContentUI = CreateWidget<UNoticeContentUI>(GetOwningPlayer(), NoticeContentUIClass);
 		NoticeContentUI->InitUI(Data);
 		NoticeContentUI->SetTimeStampText(Data.CreatedAt);
-		DMVBox->InsertChildAt(0, NoticeContentUI);
+
+		DMVBox->AddChild(NoticeContentUI);
+
+		SortDMs();
 	}
 }
 
