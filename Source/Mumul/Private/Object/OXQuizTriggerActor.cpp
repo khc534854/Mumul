@@ -77,12 +77,12 @@ void AOXQuizTriggerActor::BeginPlay()
 
 			DifficultyBubble->SetWidgetSpace(EWidgetSpace::World);
 			DifficultyBubble->SetDrawSize(FVector2D(350.f, 400.f));
-			DifficultyBubble->SetVisibility(false);
 			
 			if (UDifficultyBubbleUI* Widget = Cast<UDifficultyBubbleUI>(DifficultyBubble->GetUserWidgetObject()))
 			{
 				const FText DifficultyText = GetDifficultyText();
 				Widget->SetDifficultyText(DifficultyText);
+				Widget->SetVisibility(ESlateVisibility::Collapsed);
 			}
 		}
 	}
@@ -149,7 +149,10 @@ void AOXQuizTriggerActor::OnBeginOverlapPlayer(UPrimitiveComponent* OverlappedCo
 	{
 		if (Player->IsLocallyControlled())
 		{
-			DifficultyBubble->SetVisibility(true);
+			if (UDifficultyBubbleUI* Widget = Cast<UDifficultyBubbleUI>(DifficultyBubble->GetUserWidgetObject()))
+			{
+				Widget->SetVisibility(ESlateVisibility::Visible);
+			}
 		}
 	}
 }
@@ -161,7 +164,10 @@ void AOXQuizTriggerActor::OnEndOverlapPlayer(UPrimitiveComponent* OverlappedComp
 	{
 		if (Player->IsLocallyControlled())
 		{
-			DifficultyBubble->SetVisibility(false);
+			if (UDifficultyBubbleUI* Widget = Cast<UDifficultyBubbleUI>(DifficultyBubble->GetUserWidgetObject()))
+			{
+				Widget->SetVisibility(ESlateVisibility::Collapsed);
+			}
 		}
 	}
 }

@@ -858,6 +858,8 @@ void ACuteAlienPlayer::UpdateLook()
 	if (!GetFollowCamera() || !GetWorld())
 		return;
 
+	const float DeltaSeconds = GetWorld()->GetDeltaSeconds();
+
 	// === 카메라 방향 계산 ===
 	FVector ToCamera =
 		GetFollowCamera()->GetComponentLocation() - GetActorLocation();
@@ -868,15 +870,13 @@ void ACuteAlienPlayer::UpdateLook()
 	FRotator DeltaRot  = (LookAtRot - ActorRot).GetNormalized();
 
 	// ======================================================
-	// 1. 허용 범위 (히스테리시스 적용)
+	// 1. 허용 범위 (히스테리시스)
 	// ======================================================
 
-	// 진입 조건 (볼 때)
 	constexpr float EnterYaw = 34.f;
 	constexpr float EnterPitchUp   = 36.f;
 	constexpr float EnterPitchDown = 6.f;
 
-	// 이탈 조건 (그만 볼 때)
 	constexpr float ExitYaw = 41.f;
 	constexpr float ExitPitchUp   = 44.f;
 	constexpr float ExitPitchDown = 14.f;
@@ -895,23 +895,48 @@ void ACuteAlienPlayer::UpdateLook()
 		(DeltaRot.Pitch >= -ExitPitchDown) &&
 		(DeltaRot.Pitch <=  ExitPitchUp);
 
+	bool bInEnterRange = bEnterYaw && bEnterPitch;
+	bool bInExitRange  = bExitYaw  && bExitPitch;
+
 	// ======================================================
-	// 2. 상태 전이
+	// 2. 상태 전이 + 시간 관리
 	// ======================================================
 
 	if (!bIsLookingAtCamera)
 	{
-		if (bEnterYaw && bEnterPitch)
+		// 응시 진입
+		if (bInEnterRange && !bLookTimeStopped)
+		{
 			bIsLookingAtCamera = true;
+			LookElapsedTime = 0.f;
+		}
 	}
 	else
 	{
-		if (!bExitYaw || !bExitPitch)
+		// 응시 중
+		LookElapsedTime += DeltaSeconds;
+
+		// 3초 초과 → 강제 종료 + 잠금
+		if (LookElapsedTime >= 4.7f)
+		{
 			bIsLookingAtCamera = false;
+			bLookTimeStopped = true;
+		}
+		// 범위 이탈 → 정상 종료
+		else if (!bInExitRange)
+		{
+			bIsLookingAtCamera = false;
+		}
+	}
+
+	// 범위를 완전히 벗어나면 잠금 해제
+	if (!bInExitRange)
+	{
+		bLookTimeStopped = false;
 	}
 
 	// ======================================================
-	// 3. 목표 각도 결정
+	// 3. 목표 각도
 	// ======================================================
 
 	float TargetYaw   = 0.f;
@@ -920,11 +945,11 @@ void ACuteAlienPlayer::UpdateLook()
 	if (bIsLookingAtCamera)
 	{
 		TargetYaw   = DeltaRot.Yaw;
-		TargetPitch = -DeltaRot.Pitch; // Pitch 반전 보정
+		TargetPitch = -DeltaRot.Pitch;
 	}
 
 	// ======================================================
-	// 4. 보간 속도 (볼 때 빠르게 / 복귀는 느리게)
+	// 4. 보간
 	// ======================================================
 
 	const float LookSpeed   = 6.1f;
@@ -934,10 +959,8 @@ void ACuteAlienPlayer::UpdateLook()
 		bIsLookingAtCamera ? LookSpeed : ReturnSpeed;
 
 	LookYaw = FMath::FInterpTo(
-		LookYaw, TargetYaw,
-		GetWorld()->GetDeltaSeconds(), InterpSpeed);
+		LookYaw, TargetYaw, DeltaSeconds, InterpSpeed);
 
 	LookPitch = FMath::FInterpTo(
-		LookPitch, TargetPitch,
-		GetWorld()->GetDeltaSeconds(), InterpSpeed);
+		LookPitch, TargetPitch, DeltaSeconds, InterpSpeed);
 }

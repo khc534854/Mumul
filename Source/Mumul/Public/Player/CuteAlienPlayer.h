@@ -147,6 +147,8 @@ public:
 	
 protected:
 	bool bIsLookingAtCamera = false;
+	bool bLookTimeStopped = false;
+	float LookElapsedTime;
 	float LookYaw;
 	float LookPitch;
 	void UpdateLook();
