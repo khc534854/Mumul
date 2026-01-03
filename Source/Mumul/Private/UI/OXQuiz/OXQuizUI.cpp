@@ -44,6 +44,8 @@ void UOXQuizUI::OnCancelClicked()
 	
 	SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	PlayAnimation(Confirm_PopUp, 0, 1, EUMGSequencePlayMode::Reverse);
+	
+	bIsAskQuizPopped = false;
 }
 
 void UOXQuizUI::SetTimerText(const int32& NewTime)

@@ -388,7 +388,7 @@ void UGroupChatUI::SelectGroupChat(class UGroupIconUI* SelectedIcon)
             // (아래에서 새 방 진입 시 다시 세팅하므로 여기선 생략 가능하지만 안전하게 처리)
             MumuLeeSizeBox->SetVisibility(ESlateVisibility::Collapsed);
             //InviteBtn->SetVisibility(ESlateVisibility::Visible);
-            NaNumiSizeBox->SetVisibility(ESlateVisibility::Visible);
+            NaNumiSizeBox->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
         }
         
         // 버튼 색상 초기화
@@ -430,7 +430,7 @@ void UGroupChatUI::SelectGroupChat(class UGroupIconUI* SelectedIcon)
         if (InviteBtn && NaNumiSizeBox && MumuLeeSizeBox)
         {
             if (ChatbotIcon) ChatbotIcon->SetIconIMG(MumuLeeOnIMG);
-            MumuLeeSizeBox->SetVisibility(ESlateVisibility::Visible);
+            MumuLeeSizeBox->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 
             InviteBtn->SetVisibility(ESlateVisibility::Collapsed);
             NaNumiSizeBox->SetVisibility(ESlateVisibility::Collapsed);
@@ -499,7 +499,7 @@ void UGroupChatUI::SelectGroupChat(class UGroupIconUI* SelectedIcon)
             MumuLeeSizeBox->SetVisibility(ESlateVisibility::Collapsed);
 
             //InviteBtn->SetVisibility(ESlateVisibility::Visible);
-            NaNumiSizeBox->SetVisibility(ESlateVisibility::Visible);
+            NaNumiSizeBox->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 
             // 방을 옮겼으므로 AI 도우미(나눔이)는 꺼진 상태로 시작
             bIsMeetingChatbotActive = false;

@@ -229,7 +229,7 @@ void AMumulCharacter::Server_OnJump_Implementation()
 	if (!IsValid(PlayerAnim) || !IsValid(JumpMontage) || !IsValid(RollMontage))
 		return;
 
-	if (GetCharacterMovement()->IsFalling())
+	if (GetCharacterMovement()->IsFalling() && PlayerAnim->Montage_IsPlaying(RollMontage) == false)
 	{
 		FVector Dir = GetActorForwardVector() + FVector(0, 0, 0.21f);
 		Dir.Normalize();

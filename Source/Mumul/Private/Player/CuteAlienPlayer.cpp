@@ -235,10 +235,14 @@ void ACuteAlienPlayer::OnClickInteraction()
 		{
 			AOXQuizTriggerActor* QuizTriggerActor = Cast<AOXQuizTriggerActor>(WidgetComp->GetOwner());
 			ACuteAlienController* PC = Cast<ACuteAlienController>(GetController());
-			PC->AudioManager->PlayClickSound();
 			
-			if (PC->OXQuizComp->OXQuizUI->GetVisibility() == ESlateVisibility::Collapsed || PC->OXQuizComp->OXQuizUI->GetVisibility() == ESlateVisibility::SelfHitTestInvisible)
+			
+			if (PC->OXQuizComp->OXQuizUI->bIsAskQuizPopped == false)
 			{
+				PC->OXQuizComp->OXQuizUI->bIsAskQuizPopped = true;
+				
+				PC->AudioManager->PlayClickSound();
+				
 				// Set Mouse
 				int32 SizeX, SizeY;
 				PC->GetViewportSize(SizeX, SizeY);
@@ -257,7 +261,7 @@ void ACuteAlienPlayer::OnClickInteraction()
 				PC->OXQuizComp->OXQuizUI->AskOXQuizUI->SetAskQuizText(QuizTriggerActor->GetDifficultyText());
 				PC->OXQuizComp->OXQuizUI->PlayAnimation(PC->OXQuizComp->OXQuizUI->Confirm_PopUp);
 			}
-			PC->OXQuizComp->OXQuizUI->SetVisibility(ESlateVisibility::Visible);
+			PC->OXQuizComp->OXQuizUI->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 		}
 	}
 }

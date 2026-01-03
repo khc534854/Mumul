@@ -178,7 +178,7 @@ void ACuteAlienController::BeginPlay()
 		// 채팅창은 HUD보다 위에 있어야 함 (20)
 		if (!ChatComp->GroupChatUI->IsInViewport())
 		{
-			ChatComp->GroupChatUI->AddToViewport(10);
+			ChatComp->GroupChatUI->AddToViewport(6);
 		}
 		ChatComp->GroupChatUI->SetVisibility(ESlateVisibility::Collapsed);
 	}
@@ -190,7 +190,7 @@ void ACuteAlienController::BeginPlay()
 		if (RadialUI)
 		{
 			// 메뉴는 채팅창보다도 위에 뜰 수 있음 (30)
-			RadialUI->AddToViewport(30);
+			RadialUI->AddToViewport(20);
 			RadialUI->SetVisibility(ESlateVisibility::Collapsed);
 		}
 	}
@@ -510,7 +510,7 @@ void ACuteAlienController::TryInteractWithFeedbackActor()
 			if (!FeedbackUI && FeedbackUIClass)
 			{
 				FeedbackUI = CreateWidget<UFeedbackUI>(this, FeedbackUIClass);
-				FeedbackUI->AddToViewport(50); // 다른 UI보다 위에 오도록 Z-Order 설정
+				FeedbackUI->AddToViewport(8); // 다른 UI보다 위에 오도록 Z-Order 설정
 			}
 
 			// UI 표시 및 입력 모드 전환
@@ -553,7 +553,7 @@ void ACuteAlienController::OpenLogoutUI(int32 StartWidgetIndex)
 		LogoutUI = CreateWidget<ULogoutUI>(this, LogoutUIClass);
 		if (LogoutUI)
 		{
-			LogoutUI->AddToViewport(100);
+			LogoutUI->AddToViewport(11);
 		}
 	}
 	

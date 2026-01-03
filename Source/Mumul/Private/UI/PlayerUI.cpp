@@ -809,7 +809,7 @@ void UPlayerUI::OnProfileBtnHovered()
 	bIsMainHovered = true;
 	GetWorld()->GetTimerManager().ClearTimer(HideLogOutTimer);
 	bIsTryingToHide = false;
-	ProfileUISizeBox->SetVisibility(ESlateVisibility::Visible);
+	ProfileUISizeBox->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 }
 
 void UPlayerUI::OnProfileBtnUnhovered()

@@ -87,7 +87,7 @@ void UCustomItemEntryUI::UpdateVisualState()
        {
           // [착용 상태]
           // 1. 텍스트 표시: "착용 해제"
-          ItemNameText->SetVisibility(ESlateVisibility::Visible);
+          ItemNameText->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
           ItemNameText->SetText(FText::FromString(TEXT("착용\n해제")));
           ItemNameText->SetColorAndOpacity(FLinearColor::White); 
 
@@ -108,7 +108,7 @@ void UCustomItemEntryUI::UpdateVisualState()
        {
           // [설치 중 (프리뷰) 상태]
           // 1. 텍스트 표시: "배치 중"
-          ItemNameText->SetVisibility(ESlateVisibility::Visible);
+          ItemNameText->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
           ItemNameText->SetText(FText::FromString(TEXT("배치 중")));
           ItemNameText->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 0.0f, 1.0f)); // 강조색(노랑) 유지
           
@@ -120,7 +120,7 @@ void UCustomItemEntryUI::UpdateVisualState()
           {
              // [설치 완료 상태]
              // 1. 텍스트 표시: "배치 됨"
-             ItemNameText->SetVisibility(ESlateVisibility::Visible);
+             ItemNameText->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
              ItemNameText->SetText(FText::FromString(TEXT("배치 됨")));
              ItemNameText->SetColorAndOpacity(FLinearColor::White);
 

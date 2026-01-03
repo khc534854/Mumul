@@ -38,8 +38,8 @@ void UPlayerNoticeComponent::BeginPlay()
 			NoticeUI = CreateWidget<UNoticeUI>(owner, NoticeUIClass);
 			if (NoticeUI)
 			{
-				NoticeUI->AddToViewport();
-				NoticeUI->SetVisibility(ESlateVisibility::Visible);
+				NoticeUI->AddToViewport(9);
+				NoticeUI->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 			}
 		}
 		HttpSystem = owner->GetGameInstance()->GetSubsystem<UHttpNetworkSubsystem>();

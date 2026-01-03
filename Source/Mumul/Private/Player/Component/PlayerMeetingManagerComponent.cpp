@@ -81,7 +81,7 @@ void UPlayerMeetingManagerComponent::BeginPlay()
 			VoiceMeetingUI = CreateWidget<UVoiceMeetingUI>(owner, VoiceMeetingUIClass);
 			if (VoiceMeetingUI)
 			{
-				VoiceMeetingUI->AddToViewport(100);
+				VoiceMeetingUI->AddToViewport(7);
 				VoiceMeetingUI->SetVisibility(ESlateVisibility::Collapsed);
 			}
 		}
@@ -397,7 +397,7 @@ void UPlayerMeetingManagerComponent::OpenMeetingSetupUI()
 		if (!VoiceMeetingUI)
 		{
 			VoiceMeetingUI = CreateWidget<UVoiceMeetingUI>(owner, VoiceMeetingUIClass);
-			VoiceMeetingUI->AddToViewport(100);
+			VoiceMeetingUI->AddToViewport(7);
 		}
 		owner->SetIgnoreMoveInput(true);
 		
@@ -405,7 +405,7 @@ void UPlayerMeetingManagerComponent::OpenMeetingSetupUI()
 
 		VoiceMeetingUI->InitMeetingUI(true); // 방장 모드
 		VoiceMeetingUI->TeamNameText->BaseText->SetText(FText::FromString(owner->ChatComp->GroupChatUI->GetCurrentTeamName()));
-		VoiceMeetingUI->SetVisibility(ESlateVisibility::Visible);
+		VoiceMeetingUI->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 		owner->AudioManager->PlayPopUpSound();
 		VoiceMeetingUI->PlayAnimation(VoiceMeetingUI->StartMeeting_SlideAnim);
 	}
@@ -418,7 +418,7 @@ void UPlayerMeetingManagerComponent::OpenEndMeetingPopup()
 		if (!VoiceMeetingUI)
 		{
 			VoiceMeetingUI = CreateWidget<UVoiceMeetingUI>(owner, VoiceMeetingUIClass);
-			VoiceMeetingUI->AddToViewport(100);
+			VoiceMeetingUI->AddToViewport(7);
 		}
 
 		// 종료 확인 화면(Index 1)으로 전환
@@ -427,7 +427,7 @@ void UPlayerMeetingManagerComponent::OpenEndMeetingPopup()
 			VoiceMeetingUI->MeetingWidgetSwitcher->SetActiveWidgetIndex(1);
 		}
 
-		VoiceMeetingUI->SetVisibility(ESlateVisibility::Visible);
+		VoiceMeetingUI->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 		owner->AudioManager->PlayPopUpSound();
 		VoiceMeetingUI->PlayAnimation(VoiceMeetingUI->EndMeeting_SlideAnim);
 	}

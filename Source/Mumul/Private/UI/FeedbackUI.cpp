@@ -135,7 +135,7 @@ void UFeedbackUI::OpenFeedbackUI()
 	if (IsAnimationPlaying(Feedback_SlideAnim))
 		return;
 	
-	SetVisibility(ESlateVisibility::Visible);
+	SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 
 	// 첫 번째 화면(입력창)으로 전환
 	if (FeedbackWidgetSwitcher)

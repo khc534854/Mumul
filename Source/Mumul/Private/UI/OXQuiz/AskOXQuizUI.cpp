@@ -20,6 +20,8 @@ void UAskOXQuizUI::NativeConstruct()
 
 void UAskOXQuizUI::OnConfirmQuiz()
 {
+	OXQuizUI->bIsAskQuizPopped = false;
+	
 	if (PC && QuizTriggerActor)
 	{
 		PC->Server_RequestStartQuiz(QuizTriggerActor);

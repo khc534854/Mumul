@@ -36,7 +36,7 @@ void UPlayerOXQuizComponent::BeginPlay()
 			OXQuizUI = CreateWidget<UOXQuizUI>(owner, OXQuizUIClass);
 			if (OXQuizUI)
 			{
-				OXQuizUI->AddToViewport(1000);
+				OXQuizUI->AddToViewport(8);
 				OXQuizUI->SetVisibility(ESlateVisibility::Collapsed);
 			}
 		}
@@ -50,7 +50,7 @@ void UPlayerOXQuizComponent::Client_DisplayReady_Implementation()
 	{
 		OXQuizUI->ReadyText->SetText(FText::FromString(TEXT("준비되셨나요 !")));
 		OXQuizUI->OXQuizWS->SetActiveWidgetIndex(3);
-		OXQuizUI->SetVisibility(ESlateVisibility::Visible);
+		OXQuizUI->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 		owner->AudioManager->StartQuizBGM();
 	}
 }
@@ -162,7 +162,7 @@ void UPlayerOXQuizComponent::Client_DisplayResult_Implementation(const int32& Qu
 	}
 
 	OXQuizUI->SwitchQuizState(false);
-	OXQuizUI->SetVisibility(ESlateVisibility::Visible);
+	OXQuizUI->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	OXQuizUI->SetQuizResult(QuestionIdx, CheckAnswer, QuestionText, AnswerText, CommentaryText);
 }
 

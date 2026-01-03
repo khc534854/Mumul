@@ -20,6 +20,7 @@ protected:
 public:
 	UPROPERTY()
 	TObjectPtr<class UAskOXQuizUI> AskOXQuizUI;
+	bool bIsAskQuizPopped = false;
 	UFUNCTION()
 	void OnCancelClicked();
 	UPROPERTY(meta=(BindWidgetAnim), Transient)

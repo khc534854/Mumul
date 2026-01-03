@@ -7,6 +7,7 @@
 #include "Components/TextBlock.h"
 #include "Player/CuteAlienController.h"
 #include "Player/Component/PlayerNoticeComponent.h"
+#include "UI/PlayerUI.h"
 #include "UI/NoticeUI/NoticeUI.h"
 
 
@@ -23,7 +24,19 @@ void UDispatchPopUI::OnClickPopUp()
 {
 	if (PC->NoticeComp->NoticeUI->bIsNoticeVisible == false)
 	{
-		PC->NoticeComp->NoticeUI->OnToggleNoticeVisibility();
+		if (!PC->PlayerUI->TryLockUI(0.5f)) return;
+		
+		PC->PlayerUI->CloseAllSidePanels();
+
+		// 공지 열기 (NoticeUI의 토글 함수 호출)
+		if (PC && PC->NoticeComp && PC->NoticeComp->NoticeUI)
+		{
+			PC->NoticeComp->NoticeUI->OnToggleNoticeVisibility();
+			PC->PlayerUI->bIsOpenNoticeUI = true;
+			// SetButtonActiveState(NoticeBtn, true); // 버튼 스타일이 있다면
+		}
+		
+		PC->PlayerUI->RefreshInputMode();
 	}
 	DispatchBtn->OnClicked.RemoveDynamic(this, &UDispatchPopUI::OnClickPopUp);
 }
