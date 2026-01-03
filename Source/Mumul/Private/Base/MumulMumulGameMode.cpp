@@ -269,6 +269,7 @@ void AMumulMumulGameMode::OnServerLearningQuizResponse(bool bSuccess, FString Me
 		// Send back Players
 		for (TPair<TObjectPtr<ACuteAlienController>, FVector>& Elem : PlayerPreviousLocations)
 		{
+			Elem.Value.Z += 100.f;
 			Elem.Key->GetCharacter()->SetActorLocation(Elem.Value);
 		
 			Elem.Key->OXQuizComp->Client_HideOXQuizUI();

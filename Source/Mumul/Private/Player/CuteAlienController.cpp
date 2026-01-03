@@ -732,10 +732,7 @@ void ACuteAlienController::CheckPCGAndPlayIntro(bool SkipIntro)
 				
 				// [추가/수정] BGM을 시퀀스 재생 직전에 실행하거나 
 				// 시퀀스가 오디오를 제어하지 못하도록 확인이 필요합니다.
-				if (AudioManager && IsLocalController())
-				{
-					AudioManager->PlayIslandBGM();
-				}
+
 				
 				// 2. 재생 시작
 				IntroSequencePlayer->Play();
@@ -799,6 +796,11 @@ void ACuteAlienController::OnIntroSequenceFinished()
 	if (PlayerCameraManager)
 	{
 		PlayerCameraManager->StopCameraFade();
+	}
+
+	if (AudioManager && IsLocalController())
+	{
+		AudioManager->PlayIslandBGM();
 	}
 }
 
