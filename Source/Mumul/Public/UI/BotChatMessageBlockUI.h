@@ -15,10 +15,10 @@ class MUMUL_API UBotChatMessageBlockUI : public UUserWidget
 	GENERATED_BODY()
 
 protected:
+	// UPROPERTY(meta=(BindWidget))
+	// TObjectPtr<class UTextBlock> TextContent;
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<class UTextBlock> TextContent;
-	//UPROPERTY(meta=(BindWidget))
-	//TObjectPtr<class URichTextBlock> TextContent;
+	TObjectPtr<class URichTextBlock> TextContent;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UTextBlock> PlayerName;
 	UPROPERTY(meta=(BindWidget))
@@ -27,6 +27,7 @@ protected:
 	int32 UserID;
 	
 public:
+	FString ParseInlineStyle(const FString& InSource, const FString& Delimiter, const FString& TagOpen, const FString& TagClose) const;
 	void SetContent(const FString& CurrentTime, const FString& Name, const FString& Content) const;
 	void SetChatID(const FString& ID) { ChatID = ID; }
 	void SetUserID(const int32& ID) { UserID = ID; }

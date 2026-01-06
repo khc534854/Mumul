@@ -62,7 +62,7 @@ void UGroupIconUI::DisplayGroupChat()
 	//
 	// // Send TeamChatMessage Request
 	// HttpSystem->SendTeamChatMessageRequest(ChatBlockUI->GetTeamID());
-	SetHighlight(true);
+	//SetHighlight(true);
 
 	if (ParentUI)
 	{

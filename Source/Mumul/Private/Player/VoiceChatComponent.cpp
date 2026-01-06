@@ -8,6 +8,7 @@
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerState.h"
 #include "Library/MumulVoiceFunctionLibrary.h"
+#include "Temp/DebugUtils.h"
 
 UVoiceChatComponent::UVoiceChatComponent()
 {
@@ -122,10 +123,11 @@ void UVoiceChatComponent::StartRecording()
 	   1024
 	);
 
+	bIsRecording = true;
+	
 	if (bOpened)
 	{
 		AudioCapture.StartStream();
-		bIsRecording = true;
 		OnRecordingStateChanged.Broadcast(true);
 		UE_LOG(LogTemp, Log, TEXT("Voice Recording Started!"));
 

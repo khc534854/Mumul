@@ -16,6 +16,7 @@
 #include "Player/MumulPlayerState.h"
 #include "Player/VoiceChatComponent.h"
 #include "Player/Component/PlayerChatComponent.h"
+#include "Temp/DebugUtils.h"
 #include "UI/GroupChatUI.h"
 #include "UI/VoiceMeetingUI.h"
 #include "UI/BaseUI/BaseText.h"
@@ -139,7 +140,6 @@ void UPlayerMeetingManagerComponent::RequestStopMeetingRecording()
 void UPlayerMeetingManagerComponent::Server_StartChannelRecording_Implementation(const FString& TargetChannelID)
 {
 	UE_LOG(LogTemp, Warning, TEXT("[Server] Request Start for Ch: %s"), *TargetChannelID);
-
 
 	// [핵심 변경] GameState를 통해 접속한 모든 플레이어(Controller)를 찾음
 	if (UWorld* World = GetWorld())
@@ -570,7 +570,7 @@ void UPlayerMeetingManagerComponent::OnStartMeetingResponse(bool bSuccess, FStri
 				VoiceComp->SetCurrentMeetingID(CurrentMeetingSessionID);
 				VoiceComp->StartRecording();
 
-				if (owner && owner->ChatComp && owner->ChatComp->GroupChatUI)
+				if (owner && owner->ChatComp && owner->ChatComp->GroupChatUI && VoiceComp->IsRecording())
 				{
 					owner->ChatComp->GroupChatUI->OnRecordBtnState(true);
 				}

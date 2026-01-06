@@ -1,5 +1,18 @@
 #pragma once
 
+
+#define LOG_NET() \
+do { \
+if (UWorld* W = GetWorld()) \
+{ \
+UE_LOG(LogTemp, Warning, TEXT("[Net=%s]"), \
+(W->GetNetMode() == NM_Client) ? TEXT("CLIENT") : \
+(W->GetNetMode() == NM_ListenServer) ? TEXT("LISTEN_SERVER") : \
+(W->GetNetMode() == NM_DedicatedServer) ? TEXT("DEDICATED_SERVER") : \
+TEXT("STANDALONE")); \
+} \
+} while (0)
+
 // MACRO : RPC
 // LOG_RPC("")
 #define LOG_RPC(Format, ...) \

@@ -605,6 +605,8 @@ void UPlayerUI::OnRecordClicked()
 	{
 		if (PC)
 		{
+			UE_LOG(LogTemp,	Warning, TEXT("[OnRecordClicked] IsRecording : %s"), VoiceComp->IsRecording() ? TEXT("true") : TEXT("false"))
+			
 			// 녹음 중이면 -> 종료 팝업 띄우기
 			if (VoiceComp->IsRecording())
 			{

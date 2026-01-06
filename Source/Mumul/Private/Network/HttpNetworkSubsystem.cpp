@@ -5,6 +5,7 @@
 #include "Misc/Base64.h" // [필수] Base64 인코딩용
 #include "Network/NetworkStructs.h"
 #include "Misc/DateTime.h"
+#include "Temp/DebugUtils.h"
 
 void UHttpNetworkSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
