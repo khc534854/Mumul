@@ -102,4 +102,6 @@ UGameInstanceSubsystem을 중심으로 HTTP / WebSocket 통합 네트워크 구�
 
 ## 4. 결과 및 회고 (Result & Retrospective)
 
-- 결과 : 기업
+- 결과 : 기업 초청 심사 최종 3등
+- 잘한점 : 기획에 알맞은 컨텐츠와 높은 완성도, 안정적인 패키징 및 멀티플레이 환경 구축
+- 아쉬운점 : 핵심 컨텐츠 고도화 부족
