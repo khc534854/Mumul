@@ -1,13 +1,22 @@
 # 머물머물
 
-## 1. 개요 (Overview)
-
 멀티플레이 기반 메타버스 플랫폼으로,  
 실시간 네트워크 통신, 플레이어 상호작용, 데이터 기반 콘텐츠 확장성을 핵심 목표로 설계·구현한 프로젝트입니다.
 
 UGameInstanceSubsystem을 중심으로 HTTP / WebSocket 통합 네트워크 구조를 설계했으며,  
 컴포넌트 기반 플레이어 콘텐츠(하우징, 커스터마이징, 회의 시스템)를 통해  
 확장성과 협업 효율을 고려한 아키텍처를 구축했습니다.
+
+---
+
+## 📌 개요 (Overview)
+
+- **장르**: 메타버스 플랫폼 / 멀티플레이  
+- **플랫폼**: PC  
+- **개발 엔진**: Unreal Engine 5, AI
+- **개발 언어**: C++  
+- **개발 인원**: 5인 팀 프로젝트(UE5 2인, AI 3인)  
+- **개발 기간**: 2025.10 – 2025.11(4주)
 
 ### 기술 스택
 - Engine: Unreal Engine 5
@@ -20,7 +29,7 @@ UGameInstanceSubsystem을 중심으로 HTTP / WebSocket 통합 네트워크 구�
 
 ---
 
-## 2. 담당 역할 (Role)
+## 👤 담당 역할 (Role)
 
 - 협업 툴 세팅 및 일정 관리, 회의 진행
 - 언리얼 개발 일정 리딩 및 업무 분담
@@ -28,7 +37,7 @@ UGameInstanceSubsystem을 중심으로 HTTP / WebSocket 통합 네트워크 구�
 
 ---
 
-## 3. 핵심 기능 및 시스템 (Key Features & Systems)
+## ⭐ 핵심 기능 및 시스템 (Key Features & Systems)
 
 ### 3.1 Subsystem 기반 네트워크 아키텍처
 
@@ -46,7 +55,7 @@ UGameInstanceSubsystem을 중심으로 HTTP / WebSocket 통합 네트워크 구�
 
 ---
 
-### 3.2 메타버스 플레이어 핵심 콘텐츠
+### 1. 메타버스 플레이어 핵심 콘텐츠
 
 #### 커스터마이징 시스템
 - Data-Driven 설계
@@ -71,7 +80,7 @@ UGameInstanceSubsystem을 중심으로 HTTP / WebSocket 통합 네트워크 구�
 
 ---
 
-### 3.3 보이스 챗 시스템
+### 2. 보이스 챗 시스템
 
 - 거리 기반 음성 채팅 (Spatial Voice Chat)
   - Sound Attenuation을 활용한 거리 감쇠 및 3D 음향
@@ -81,7 +90,7 @@ UGameInstanceSubsystem을 중심으로 HTTP / WebSocket 통합 네트워크 구�
 
 ---
 
-### 3.4 PCG 기반 레벨 디자인
+### 3. PCG 기반 레벨 디자인
 
 - Unreal PCG Plugin 활용
 - Difference Node를 이용해 설치 가능 / 불가능 영역 분리
@@ -100,8 +109,14 @@ UGameInstanceSubsystem을 중심으로 HTTP / WebSocket 통합 네트워크 구�
 
 ---
 
-## 4. 결과 및 회고 (Result & Retrospective)
+## 📊 결과 및 회고 (Result & Retrospective)
 
 - 결과 : 기업 초청 심사 최종 3등
 - 잘한점 : 기획에 알맞은 컨텐츠와 높은 완성도, 안정적인 패키징 및 멀티플레이 환경 구축
 - 아쉬운점 : 핵심 컨텐츠 고도화 부족
+
+---
+
+## 🔗 링크
+  
+- 🎥 [시연 영상](https://youtu.be/VVDUrQgd7yk)
