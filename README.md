@@ -1,4 +1,4 @@
-# 머물머물
+# 🌍머물머물
 
 멀티플레이 기반 메타버스 플랫폼으로,  
 실시간 네트워크 통신, 플레이어 상호작용, 데이터 기반 콘텐츠 확장성을 핵심 목표로 설계·구현한 프로젝트입니다.
@@ -39,7 +39,7 @@ UGameInstanceSubsystem을 중심으로 HTTP / WebSocket 통합 네트워크 구�
 
 ## ⭐ 핵심 기능 및 시스템 (Key Features & Systems)
 
-### 3.1 Subsystem 기반 네트워크 아키텍처
+### 1. Subsystem 기반 네트워크 아키텍처
 
 - UGameInstanceSubsystem 기반 전역 네트워크 시스템 설계
 - HTTP / WebSocket 하이브리드 통신 구조
@@ -55,7 +55,7 @@ UGameInstanceSubsystem을 중심으로 HTTP / WebSocket 통합 네트워크 구�
 
 ---
 
-### 1. 메타버스 플레이어 핵심 콘텐츠
+### 2. 메타버스 플레이어 핵심 콘텐츠
 
 #### 커스터마이징 시스템
 - Data-Driven 설계
@@ -80,7 +80,7 @@ UGameInstanceSubsystem을 중심으로 HTTP / WebSocket 통합 네트워크 구�
 
 ---
 
-### 2. 보이스 챗 시스템
+### 3. 보이스 챗 시스템
 
 - 거리 기반 음성 채팅 (Spatial Voice Chat)
   - Sound Attenuation을 활용한 거리 감쇠 및 3D 음향
@@ -90,7 +90,7 @@ UGameInstanceSubsystem을 중심으로 HTTP / WebSocket 통합 네트워크 구�
 
 ---
 
-### 3. PCG 기반 레벨 디자인
+### 4. PCG 기반 레벨 디자인
 
 - Unreal PCG Plugin 활용
 - Difference Node를 이용해 설치 가능 / 불가능 영역 분리
