@@ -3,10 +3,6 @@
 멀티플레이 기반 메타버스 플랫폼으로,  
 실시간 네트워크 통신, 플레이어 상호작용, 데이터 기반 콘텐츠 확장성을 핵심 목표로 설계·구현한 프로젝트입니다.
 
-UGameInstanceSubsystem을 중심으로 HTTP / WebSocket 통합 네트워크 구조를 설계했으며,  
-컴포넌트 기반 플레이어 콘텐츠(하우징, 커스터마이징, 회의 시스템)를 통해  
-확장성과 협업 효율을 고려한 아키텍처를 구축했습니다.
-
 ---
 
 ## 📌 개요 (Overview)
@@ -16,15 +12,14 @@ UGameInstanceSubsystem을 중심으로 HTTP / WebSocket 통합 네트워크 구�
 - **개발 엔진**: Unreal Engine 5, AI
 - **개발 언어**: C++  
 - **개발 인원**: 5인 팀 프로젝트(UE5 2인, AI 3인)  
-- **개발 기간**: 2025.10 – 2025.11(4주)
+- **개발 기간**: 2025.11 – 2026.01(9주)
 
 ### 기술 스택
 - Engine: Unreal Engine 5
 - Language: C++
 - Network: HTTP, WebSocket
-- Architecture: UGameInstanceSubsystem, Component-based Design
-- Data: DataTable, DataAsset, JSON Serialization
-- Collaboration Tools: Git, Jira, Figma / FigJam
+- Data: DataTable, DataAsset, JSON Serialization, CSV(Excel)
+- Collaboration Tools: Git, Jira, Figma / FigJam, Discord
 - ETC: Steam Online Subsystem, PCG Plugin
 
 ---
@@ -34,6 +29,14 @@ UGameInstanceSubsystem을 중심으로 HTTP / WebSocket 통합 네트워크 구�
 - 협업 툴 세팅 및 일정 관리, 회의 진행
 - 언리얼 개발 일정 리딩 및 업무 분담
 - 멀티플레이 및 네트워크 통신 핵심 기능 구현
+
+---
+
+## 🛠 주요 담당 구현 (Responsibilities)
+
+- **Steam 기반 멀티플레이 세션 및 네트워크 초기 구조 구축**
+- **템플릿·리플렉션 기반 HTTP / WebSocket 통신 시스템 구현**
+- **메타버스 핵심 플레이어 기능(커스터마이징, 하우징, 회의 등) 개발**
 
 ---
 
