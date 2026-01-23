@@ -1,4 +1,4 @@
-# Metaverse Platform Project
+# 머물머물
 
 ## 1. 개요 (Overview)
 
